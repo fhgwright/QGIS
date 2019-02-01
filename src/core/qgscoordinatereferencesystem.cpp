@@ -448,8 +448,10 @@ bool QgsCoordinateReferenceSystem::createFromWkt( const QString &theWkt )
   {
     CPLFree( proj4src );
 
+#if GDAL_VERSION_NUM < GDAL_COMPUTE_VERSION(2,5,0)
     // try fixed up version
     OSRFixup( d->mCRS );
+#endif
 
     OSRExportToProj4( d->mCRS, &proj4src );
 
@@ -958,9 +960,11 @@ void QgsCoordinateReferenceSystem::setMapUnits()
 
   char *unitName;
 
+#if GDAL_VERSION_NUM < GDAL_COMPUTE_VERSION(2,5,0)
   // Of interest to us is that this call adds in a unit parameter if
   // one doesn't already exist.
   OSRFixup( d->mCRS );
+#endif
 
   if ( OSRIsProjected( d->mCRS ) )
   {
