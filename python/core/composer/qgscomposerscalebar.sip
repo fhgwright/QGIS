@@ -13,7 +13,7 @@ class QgsComposerScaleBar: QgsComposerItem
     /**Added in version 1.8*/
     enum Alignment
     {
-      Left = 0,
+      Left,
       Middle,
       Right
     };
@@ -21,7 +21,7 @@ class QgsComposerScaleBar: QgsComposerItem
     /**Added in version 1.9*/
     enum ScaleBarUnits
     {
-      MapUnits = 0,
+      MapUnits,
       Meters,
       Feet,
       NauticalMiles
@@ -92,6 +92,34 @@ class QgsComposerScaleBar: QgsComposerItem
     /**@note: this method was added in version 1.9*/
     void setUnits( ScaleBarUnits u );
 
+    /** Returns the join style used for drawing lines in the scalebar
+     * @returns Join style for lines
+     * @note introduced in 2.3
+     * @see setLineJoinStyle
+     */
+    Qt::PenJoinStyle lineJoinStyle() const;
+    /** Sets join style used when drawing the lines in the scalebar
+     * @param style Join style for lines
+     * @returns nothing
+     * @note introduced in 2.3
+     * @see lineJoinStyle
+     */
+    void setLineJoinStyle( Qt::PenJoinStyle style );
+
+    /** Returns the cap style used for drawing lines in the scalebar
+     * @returns Cap style for lines
+     * @note introduced in 2.3
+     * @see setLineCapStyle
+     */
+    Qt::PenCapStyle lineCapStyle() const;
+    /** Sets cap style used when drawing the lines in the scalebar
+     * @param style Cap style for lines
+     * @returns nothing
+     * @note introduced in 2.3
+     * @see lineCapStyle
+     */
+    void setLineCapStyle( Qt::PenCapStyle style );
+
     /**Apply default settings*/
     void applyDefaultSettings();
     /**Apply default size (scale bar 1/5 of map item width)
@@ -109,7 +137,7 @@ class QgsComposerScaleBar: QgsComposerItem
      of the segment
      @note python bindings not available on android
      */
-%If (!ANDROID)
+%If (!ARM)
     void segmentPositions( QList<QPair<double, double> >& posWidthList ) const;
 %End
 
@@ -148,4 +176,5 @@ class QgsComposerScaleBar: QgsComposerItem
 
     /**Returns diagonal of composer map in selected units (map units / meters / feet / nautical miles)*/
     double mapWidth() const;
+
 };

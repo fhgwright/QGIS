@@ -334,6 +334,7 @@ void QgsDiagramProperties::on_mDiagramTypeComboBox_currentIndexChanged( int inde
     mLabelPlacementLabel->show();
     mBackgroundColorLabel->show();
     mBackgroundColorButton->show();
+    mDiagramFontButton->show();
   }
   else
   {
@@ -341,6 +342,7 @@ void QgsDiagramProperties::on_mDiagramTypeComboBox_currentIndexChanged( int inde
     mLabelPlacementLabel->hide();
     mBackgroundColorLabel->hide();
     mBackgroundColorButton->hide();
+    mDiagramFontButton->hide();
   }
 
   if ( DIAGRAM_NAME_HISTOGRAM == diagramType )
@@ -502,7 +504,7 @@ void QgsDiagramProperties::on_mDiagramAttributesTreeWidget_itemDoubleClicked( QT
 
 void QgsDiagramProperties::on_mEngineSettingsButton_clicked()
 {
-  QgsLabelEngineConfigDialog dlg( QgisApp::instance()->palLabeling(), this );
+  QgsLabelEngineConfigDialog dlg( this );
   dlg.exec();
 }
 
@@ -704,7 +706,7 @@ void QgsDiagramProperties::showSizeAttributeExpressionDialog()
 
   QgsDistanceArea myDa;
   myDa.setSourceCrs( mLayer->crs().srsid() );
-  myDa.setEllipsoidalMode( QgisApp::instance()->mapCanvas()->mapRenderer()->hasCrsTransformEnabled() );
+  myDa.setEllipsoidalMode( QgisApp::instance()->mapCanvas()->mapSettings().hasCrsTransformEnabled() );
   myDa.setEllipsoid( QgsProject::instance()->readEntry( "Measure", "/Ellipsoid", GEO_NONE ) );
   dlg.setGeomCalculator( myDa );
 
@@ -734,7 +736,7 @@ void QgsDiagramProperties::showAddAttributeExpressionDialog()
 
   QgsDistanceArea myDa;
   myDa.setSourceCrs( mLayer->crs().srsid() );
-  myDa.setEllipsoidalMode( QgisApp::instance()->mapCanvas()->mapRenderer()->hasCrsTransformEnabled() );
+  myDa.setEllipsoidalMode( QgisApp::instance()->mapCanvas()->mapSettings().hasCrsTransformEnabled() );
   myDa.setEllipsoid( QgsProject::instance()->readEntry( "Measure", "/Ellipsoid", GEO_NONE ) );
   dlg.setGeomCalculator( myDa );
 

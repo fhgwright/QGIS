@@ -56,6 +56,7 @@ QgsComposerItem::QgsComposerItem( QgsComposition* composition, bool manageZValue
     , mFrame( false )
     , mBackground( true )
     , mBackgroundColor( QColor( 255, 255, 255, 255 ) )
+    , mFrameJoinStyle( Qt::MiterJoin )
     , mItemPositionLocked( false )
     , mLastValidViewScaleFactor( -1 )
     , mItemRotation( 0 )
@@ -63,6 +64,7 @@ QgsComposerItem::QgsComposerItem( QgsComposition* composition, bool manageZValue
     , mEffectsEnabled( true )
     , mTransparency( 0 )
     , mLastUsedPositionMode( UpperLeft )
+    , mCurrentExportLayer( -1 )
     , mId( "" )
     , mUuid( QUuid::createUuid().toString() )
 {
@@ -79,6 +81,7 @@ QgsComposerItem::QgsComposerItem( qreal x, qreal y, qreal width, qreal height, Q
     , mFrame( false )
     , mBackground( true )
     , mBackgroundColor( QColor( 255, 255, 255, 255 ) )
+    , mFrameJoinStyle( Qt::MiterJoin )
     , mItemPositionLocked( false )
     , mLastValidViewScaleFactor( -1 )
     , mItemRotation( 0 )
@@ -86,6 +89,7 @@ QgsComposerItem::QgsComposerItem( qreal x, qreal y, qreal width, qreal height, Q
     , mEffectsEnabled( true )
     , mTransparency( 0 )
     , mLastUsedPositionMode( UpperLeft )
+    , mCurrentExportLayer( -1 )
     , mId( "" )
     , mUuid( QUuid::createUuid().toString() )
 {
@@ -100,7 +104,7 @@ void QgsComposerItem::init( bool manageZValue )
   setBrush( QBrush( QColor( 255, 255, 255, 255 ) ) );
   QPen defaultPen( QColor( 0, 0, 0 ) );
   defaultPen.setWidthF( 0.3 );
-  defaultPen.setJoinStyle( Qt::MiterJoin );
+  defaultPen.setJoinStyle( mFrameJoinStyle );
   setPen( defaultPen );
   //let z-Value be managed by composition
   if ( mComposition && manageZValue )
@@ -168,13 +172,18 @@ bool QgsComposerItem::_writeXML( QDomElement& itemElem, QDomDocument& doc ) cons
   }
 
   //scene rect
+  QPointF pagepos = pagePos();
   composerItemElem.setAttribute( "x", QString::number( pos().x() ) );
   composerItemElem.setAttribute( "y", QString::number( pos().y() ) );
+  composerItemElem.setAttribute( "page", page() );
+  composerItemElem.setAttribute( "pagex", QString::number( pagepos.x() ) );
+  composerItemElem.setAttribute( "pagey", QString::number( pagepos.y() ) );
   composerItemElem.setAttribute( "width", QString::number( rect().width() ) );
   composerItemElem.setAttribute( "height", QString::number( rect().height() ) );
   composerItemElem.setAttribute( "positionMode", QString::number(( int ) mLastUsedPositionMode ) );
   composerItemElem.setAttribute( "zValue", QString::number( zValue() ) );
   composerItemElem.setAttribute( "outlineWidth", QString::number( pen().widthF() ) );
+  composerItemElem.setAttribute( "frameJoinStyle", QgsSymbolLayerV2Utils::encodePenJoinStyle( mFrameJoinStyle ) );
   composerItemElem.setAttribute( "itemRotation",  QString::number( mItemRotation ) );
   composerItemElem.setAttribute( "uuid", mUuid );
   composerItemElem.setAttribute( "id", mId );
@@ -229,10 +238,7 @@ bool QgsComposerItem::_readXML( const QDomElement& itemElem, const QDomDocument&
   }
 
   //rotation
-  if ( itemElem.attribute( "itemRotation", "0" ).toDouble() != 0 )
-  {
-    setItemRotation( itemElem.attribute( "itemRotation", "0" ).toDouble() );
-  }
+  setItemRotation( itemElem.attribute( "itemRotation", "0" ).toDouble() );
 
   //uuid
   mUuid = itemElem.attribute( "uuid", QUuid::createUuid().toString() );
@@ -278,17 +284,28 @@ bool QgsComposerItem::_readXML( const QDomElement& itemElem, const QDomDocument&
   }
 
   //position
-  double x, y, width, height;
-  bool xOk, yOk, widthOk, heightOk, positionModeOK;
+  int page;
+  double x, y, pagex, pagey, width, height;
+  bool xOk, yOk, pageOk, pagexOk, pageyOk, widthOk, heightOk, positionModeOK;
 
   x = itemElem.attribute( "x" ).toDouble( &xOk );
   y = itemElem.attribute( "y" ).toDouble( &yOk );
+  page = itemElem.attribute( "page" ).toInt( &pageOk );
+  pagex = itemElem.attribute( "pagex" ).toDouble( &pagexOk );
+  pagey = itemElem.attribute( "pagey" ).toDouble( &pageyOk );
   width = itemElem.attribute( "width" ).toDouble( &widthOk );
   height = itemElem.attribute( "height" ).toDouble( &heightOk );
   mLastUsedPositionMode = ( ItemPositionMode )itemElem.attribute( "positionMode" ).toInt( &positionModeOK );
   if ( !positionModeOK )
   {
     mLastUsedPositionMode = UpperLeft;
+  }
+  if ( pageOk && pagexOk && pageyOk )
+  {
+    xOk = true;
+    yOk = true;
+    x = pagex;
+    y = ( page - 1 ) * ( mComposition->paperHeight() + composition()->spaceBetweenPages() ) + pagey;
   }
 
   if ( !xOk || !yOk || !widthOk || !heightOk )
@@ -315,11 +332,13 @@ bool QgsComposerItem::_readXML( const QDomElement& itemElem, const QDomDocument&
     penGreen = frameColorElem.attribute( "green" ).toDouble( &greenOk );
     penBlue = frameColorElem.attribute( "blue" ).toDouble( &blueOk );
     penAlpha = frameColorElem.attribute( "alpha" ).toDouble( &alphaOk );
+    mFrameJoinStyle = QgsSymbolLayerV2Utils::decodePenJoinStyle( itemElem.attribute( "frameJoinStyle", "miter" ) );
+
     if ( redOk && greenOk && blueOk && alphaOk && widthOk )
     {
       QPen framePen( QColor( penRed, penGreen, penBlue, penAlpha ) );
       framePen.setWidthF( penWidth );
-      framePen.setJoinStyle( Qt::MiterJoin );
+      framePen.setJoinStyle( mFrameJoinStyle );
       setPen( framePen );
     }
   }
@@ -366,6 +385,21 @@ void QgsComposerItem::setFrameOutlineWidth( double outlineWidth )
     return;
   }
   itemPen.setWidthF( outlineWidth );
+  setPen( itemPen );
+  emit frameChanged();
+}
+
+void QgsComposerItem::setFrameJoinStyle( Qt::PenJoinStyle style )
+{
+  if ( mFrameJoinStyle == style )
+  {
+    //no change
+    return;
+  }
+  mFrameJoinStyle = style;
+
+  QPen itemPen = pen();
+  itemPen.setJoinStyle( mFrameJoinStyle );
   setPen( itemPen );
   emit frameChanged();
 }
@@ -462,17 +496,53 @@ void QgsComposerItem::move( double dx, double dy )
   setSceneRect( newSceneRect );
 }
 
-void QgsComposerItem::setItemPosition( double x, double y, ItemPositionMode itemPoint )
+int QgsComposerItem::page() const
+{
+  double y = pos().y();
+  double h = composition()->paperHeight() + composition()->spaceBetweenPages();
+  int page = 1;
+  while ( y - h >= 0. )
+  {
+    y -= h;
+    ++page;
+  }
+  return page;
+}
+
+QPointF QgsComposerItem::pagePos() const
+{
+  QPointF p = pos();
+  double h = composition()->paperHeight() + composition()->spaceBetweenPages();
+  p.ry() -= ( page() - 1 ) * h;
+  return p;
+}
+
+void QgsComposerItem::updatePagePos( double newPageWidth, double newPageHeight )
+{
+  Q_UNUSED( newPageWidth )
+  QPointF curPagePos = pagePos();
+  int curPage = page() - 1;
+  setY( curPage * ( newPageHeight + composition()->spaceBetweenPages() ) + curPagePos.y() );
+  emit sizeChanged();
+}
+
+void QgsComposerItem::setItemPosition( double x, double y, ItemPositionMode itemPoint, int page )
 {
   double width = rect().width();
   double height = rect().height();
-  setItemPosition( x, y, width, height, itemPoint );
+  setItemPosition( x, y, width, height, itemPoint, false, page );
 }
 
-void QgsComposerItem::setItemPosition( double x, double y, double width, double height, ItemPositionMode itemPoint, bool posIncludesFrame )
+void QgsComposerItem::setItemPosition( double x, double y, double width, double height, ItemPositionMode itemPoint, bool posIncludesFrame, int page )
 {
   double upperLeftX = x;
   double upperLeftY = y;
+
+  if ( page > 0 )
+  {
+    double h = composition()->paperHeight() + composition()->spaceBetweenPages();
+    upperLeftY += ( page - 1 ) * h;
+  }
 
   //store the item position mode
   mLastUsedPositionMode = itemPoint;
@@ -600,7 +670,7 @@ void QgsComposerItem::drawText( QPainter* p, double x, double y, const QString& 
   p->restore();
 }
 
-void QgsComposerItem::drawText( QPainter* p, const QRectF& rect, const QString& text, const QFont& font, Qt::AlignmentFlag halignment, Qt::AlignmentFlag valignment ) const
+void QgsComposerItem::drawText( QPainter* p, const QRectF& rect, const QString& text, const QFont& font, Qt::AlignmentFlag halignment, Qt::AlignmentFlag valignment, int flags ) const
 {
   QFont textFont = scaledFontPixelSize( font );
 
@@ -611,7 +681,7 @@ void QgsComposerItem::drawText( QPainter* p, const QRectF& rect, const QString& 
   p->setFont( textFont );
   double scaleFactor = 1.0 / FONT_WORKAROUND_SCALE;
   p->scale( scaleFactor, scaleFactor );
-  p->drawText( scaledRect, halignment | valignment | Qt::TextWordWrap, text );
+  p->drawText( scaledRect, halignment | valignment | flags, text );
   p->restore();
 }
 void QgsComposerItem::drawArrowHead( QPainter* p, double x, double y, double angle, double arrowHeadWidth ) const
@@ -677,6 +747,13 @@ double QgsComposerItem::fontDescentMillimeters( const QFont& font ) const
   QFont metricsFont = scaledFontPixelSize( font );
   QFontMetricsF fontMetrics( metricsFont );
   return ( fontMetrics.descent() / FONT_WORKAROUND_SCALE );
+}
+
+double QgsComposerItem::fontHeightMillimeters( const QFont& font ) const
+{
+  QFont metricsFont = scaledFontPixelSize( font );
+  QFontMetricsF fontMetrics( metricsFont );
+  return ( fontMetrics.height() / FONT_WORKAROUND_SCALE );
 }
 
 double QgsComposerItem::pixelFontSize( double pointSize ) const

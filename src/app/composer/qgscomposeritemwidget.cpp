@@ -18,6 +18,7 @@
 #include "qgscomposeritemwidget.h"
 #include "qgscomposeritem.h"
 #include "qgscomposermap.h"
+#include "qgscomposition.h"
 #include "qgspoint.h"
 #include <QColorDialog>
 #include <QPen>
@@ -46,7 +47,9 @@ QgsComposerItemWidget::QgsComposerItemWidget( QWidget* parent, QgsComposerItem* 
   mHeightLineEdit->setValidator( new QDoubleValidator( 0 ) );
 
   setValuesForGuiElements();
+  connect( mItem->composition(), SIGNAL( paperSizeChanged() ), this, SLOT( setValuesForGuiPositionElements() ) );
   connect( mItem, SIGNAL( sizeChanged() ), this, SLOT( setValuesForGuiPositionElements() ) );
+  connect( mItem, SIGNAL( itemChanged() ), this, SLOT( setValuesForGuiNonPositionElements() ) );
 
   connect( mTransparencySlider, SIGNAL( valueChanged( int ) ), mTransparencySpnBx, SLOT( setValue( int ) ) );
   connect( mTransparencySpnBx, SIGNAL( valueChanged( int ) ), mTransparencySlider, SLOT( setValue( int ) ) );
@@ -141,7 +144,7 @@ void QgsComposerItemWidget::changeItemPosition()
     return;
   }
 
-  mItem->setItemPosition( x, y, width, height, positionMode() );
+  mItem->setItemPosition( x, y, width, height, positionMode(), false, mPageSpinBox->value() );
 
   mItem->update();
   mItem->endCommand();
@@ -200,6 +203,19 @@ void QgsComposerItemWidget::on_mOutlineWidthSpinBox_valueChanged( double d )
   mItem->endCommand();
 }
 
+void QgsComposerItemWidget::on_mFrameJoinStyleCombo_currentIndexChanged( int index )
+{
+  Q_UNUSED( index );
+  if ( !mItem )
+  {
+    return;
+  }
+
+  mItem->beginCommand( tr( "Item frame join style" ) );
+  mItem->setFrameJoinStyle( mFrameJoinStyleCombo->penJoinStyle() );
+  mItem->endCommand();
+}
+
 void QgsComposerItemWidget::on_mFrameGroupBox_toggled( bool state )
 {
   if ( !mItem )
@@ -247,89 +263,109 @@ void QgsComposerItemWidget::setValuesForGuiPositionElements()
   mYLineEdit->blockSignals( true );
   mWidthLineEdit->blockSignals( true );
   mHeightLineEdit->blockSignals( true );
+  mUpperLeftCheckBox->blockSignals( true );
+  mUpperMiddleCheckBox->blockSignals( true );
+  mUpperRightCheckBox->blockSignals( true );
+  mMiddleLeftCheckBox->blockSignals( true );
+  mMiddleCheckBox->blockSignals( true );
+  mMiddleRightCheckBox->blockSignals( true );
+  mLowerLeftCheckBox->blockSignals( true );
+  mLowerMiddleCheckBox->blockSignals( true );
+  mLowerRightCheckBox->blockSignals( true );
+  mPageSpinBox->blockSignals( true );
 
+  QPointF pos = mItem->pagePos();
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::UpperLeft )
   {
     mUpperLeftCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() ) );
+    mXLineEdit->setText( QString::number( pos.x() ) );
+    mYLineEdit->setText( QString::number( pos.y() ) );
   }
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::UpperMiddle )
   {
     mUpperMiddleCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() + mItem->rect().width() / 2.0 ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() ) );
+    mXLineEdit->setText( QString::number( pos.x() + mItem->rect().width() / 2.0 ) );
+    mYLineEdit->setText( QString::number( pos.y() ) );
   }
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::UpperRight )
   {
     mUpperRightCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() + mItem->rect().width() ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() ) );
+    mXLineEdit->setText( QString::number( pos.x() + mItem->rect().width() ) );
+    mYLineEdit->setText( QString::number( pos.y() ) );
   }
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::MiddleLeft )
   {
     mMiddleLeftCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() + mItem->rect().height() / 2.0 ) );
+    mXLineEdit->setText( QString::number( pos.x() ) );
+    mYLineEdit->setText( QString::number( pos.y() + mItem->rect().height() / 2.0 ) );
   }
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::Middle )
   {
     mMiddleCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() + mItem->rect().width() / 2.0 ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() + mItem->rect().height() / 2.0 ) );
+    mXLineEdit->setText( QString::number( pos.x() + mItem->rect().width() / 2.0 ) );
+    mYLineEdit->setText( QString::number( pos.y() + mItem->rect().height() / 2.0 ) );
   }
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::MiddleRight )
   {
     mMiddleRightCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() + mItem->rect().width() ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() + mItem->rect().height() / 2.0 ) );
+    mXLineEdit->setText( QString::number( pos.x() + mItem->rect().width() ) );
+    mYLineEdit->setText( QString::number( pos.y() + mItem->rect().height() / 2.0 ) );
   }
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::LowerLeft )
   {
     mLowerLeftCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() + mItem->rect().height() ) );
+    mXLineEdit->setText( QString::number( pos.x() ) );
+    mYLineEdit->setText( QString::number( pos.y() + mItem->rect().height() ) );
   }
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::LowerMiddle )
   {
     mLowerMiddleCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() + mItem->rect().width() / 2.0 ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() + mItem->rect().height() ) );
+    mXLineEdit->setText( QString::number( pos.x() + mItem->rect().width() / 2.0 ) );
+    mYLineEdit->setText( QString::number( pos.y() + mItem->rect().height() ) );
   }
 
   if ( mItem->lastUsedPositionMode() == QgsComposerItem::LowerRight )
   {
     mLowerRightCheckBox->setChecked( true );
-    mXLineEdit->setText( QString::number( mItem->pos().x() + mItem->rect().width() ) );
-    mYLineEdit->setText( QString::number( mItem->pos().y() + mItem->rect().height() ) );
+    mXLineEdit->setText( QString::number( pos.x() + mItem->rect().width() ) );
+    mYLineEdit->setText( QString::number( pos.y() + mItem->rect().height() ) );
   }
 
   mWidthLineEdit->setText( QString::number( mItem->rect().width() ) );
   mHeightLineEdit->setText( QString::number( mItem->rect().height() ) );
+  mPageSpinBox->setValue( mItem->page() );
 
 
   mXLineEdit->blockSignals( false );
   mYLineEdit->blockSignals( false );
   mWidthLineEdit->blockSignals( false );
   mHeightLineEdit->blockSignals( false );
+  mUpperLeftCheckBox->blockSignals( false );
+  mUpperMiddleCheckBox->blockSignals( false );
+  mUpperRightCheckBox->blockSignals( false );
+  mMiddleLeftCheckBox->blockSignals( false );
+  mMiddleCheckBox->blockSignals( false );
+  mMiddleRightCheckBox->blockSignals( false );
+  mLowerLeftCheckBox->blockSignals( false );
+  mLowerMiddleCheckBox->blockSignals( false );
+  mLowerRightCheckBox->blockSignals( false );
+  mPageSpinBox->blockSignals( false );
 }
 
-void QgsComposerItemWidget::setValuesForGuiElements()
+void QgsComposerItemWidget::setValuesForGuiNonPositionElements()
 {
   if ( !mItem )
   {
     return;
   }
-
-  setValuesForGuiPositionElements();
 
   mOutlineWidthSpinBox->blockSignals( true );
   mFrameGroupBox->blockSignals( true );
@@ -339,16 +375,14 @@ void QgsComposerItemWidget::setValuesForGuiElements()
   mTransparencySlider->blockSignals( true );
   mTransparencySpnBx->blockSignals( true );
   mFrameColorButton->blockSignals( true );
+  mFrameJoinStyleCombo->blockSignals( true );
   mBackgroundColorButton->blockSignals( true );
   mItemRotationSpinBox->blockSignals( true );
 
   mBackgroundColorButton->setColor( mItem->brush().color() );
-  mBackgroundColorButton->setColorDialogTitle( tr( "Select background color" ) );
-  mBackgroundColorButton->setColorDialogOptions( QColorDialog::ShowAlphaChannel );
   mFrameColorButton->setColor( mItem->pen().color() );
-  mFrameColorButton->setColorDialogTitle( tr( "Select frame color" ) );
-  mFrameColorButton->setColorDialogOptions( QColorDialog::ShowAlphaChannel );
-  mOutlineWidthSpinBox->setValue( mItem->pen().widthF() );
+  mOutlineWidthSpinBox->setValue( mItem->frameOutlineWidth() );
+  mFrameJoinStyleCombo->setPenJoinStyle( mItem->frameJoinStyle() );
   mItemIdLineEdit->setText( mItem->id() );
   mFrameGroupBox->setChecked( mItem->hasFrame() );
   mBackgroundGroupBox->setChecked( mItem->hasBackground() );
@@ -359,6 +393,7 @@ void QgsComposerItemWidget::setValuesForGuiElements()
 
   mBackgroundColorButton->blockSignals( false );
   mFrameColorButton->blockSignals( false );
+  mFrameJoinStyleCombo->blockSignals( false );
   mOutlineWidthSpinBox->blockSignals( false );
   mFrameGroupBox->blockSignals( false );
   mBackgroundGroupBox->blockSignals( false );
@@ -369,12 +404,30 @@ void QgsComposerItemWidget::setValuesForGuiElements()
   mItemRotationSpinBox->blockSignals( false );
 }
 
+void QgsComposerItemWidget::setValuesForGuiElements()
+{
+  if ( !mItem )
+  {
+    return;
+  }
+
+  mBackgroundColorButton->setColorDialogTitle( tr( "Select background color" ) );
+  mBackgroundColorButton->setColorDialogOptions( QColorDialog::ShowAlphaChannel );
+  mFrameColorButton->setColorDialogTitle( tr( "Select frame color" ) );
+  mFrameColorButton->setColorDialogOptions( QColorDialog::ShowAlphaChannel );
+
+  setValuesForGuiPositionElements();
+  setValuesForGuiNonPositionElements();
+}
+
 void QgsComposerItemWidget::on_mBlendModeCombo_currentIndexChanged( int index )
 {
   Q_UNUSED( index );
   if ( mItem )
   {
+    mItem->beginCommand( tr( "Item blend mode changed" ) );
     mItem->setBlendMode( mBlendModeCombo->blendMode() );
+    mItem->endCommand();
   }
 }
 
@@ -382,7 +435,9 @@ void QgsComposerItemWidget::on_mTransparencySlider_valueChanged( int value )
 {
   if ( mItem )
   {
+    mItem->beginCommand( tr( "Item transparency changed" ), QgsComposerMergeCommand::ItemTransparency );
     mItem->setTransparency( value );
+    mItem->endCommand();
   }
 }
 

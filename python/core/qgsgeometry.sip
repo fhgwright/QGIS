@@ -314,6 +314,23 @@ class QgsGeometry
         of segments used to approximate curves */
     QgsGeometry* buffer( double distance, int segments ) /Factory/;
 
+    /** Returns a buffer region around the geometry, with additional style options.
+     * @param segments    For round joins, number of segments to approximate quarter-circle
+     * @param endCapStyle Round (1) / Flat (2) / Square (3) end cap style
+     * @param joinStyle   Round (1) / Mitre (2) / Bevel (3) join style
+     * @param mitreLimit  Limit on the mitre ratio used for very sharp corners
+     * @note added in 2.4
+     * @note needs GEOS >= 3.3 - otherwise always returns 0
+     */
+    QgsGeometry* buffer( double distance, int segments, int endCapStyle, int joinStyle, double mitreLimit ) /Factory/;
+
+    /** Returns an offset line at a given distance and side from an input line.
+     * See buffer() method for details on parameters.
+     * @note added in 2.4
+     * @note needs GEOS >= 3.3 - otherwise always returns 0
+     */
+    QgsGeometry* offsetCurve( double distance, int segments, int joinStyle, double mitreLimit ) /Factory/;
+
     /** Returns a simplified version of this geometry using a specified tolerance value */
     QgsGeometry* simplify( double tolerance ) /Factory/;
 
@@ -321,6 +338,9 @@ class QgsGeometry
     * @note for line based geometries, the center point of the line is returned,
     * and for point based geometries, the point itself is returned */
     QgsGeometry* centroid() /Factory/;
+
+    /** Returns a point within a geometry */
+    QgsGeometry* pointOnSurface() /Factory/;
 
     /** Returns the smallest convex polygon that contains all the points in the geometry. */
     QgsGeometry* convexHull() /Factory/;
@@ -355,6 +375,14 @@ class QgsGeometry
      *  @note python binding added in 1.9
      */
     QString exportToGeoJSON() const;
+
+    /** try to convert the geometry to the requested type
+     * @param destType the geometry type to be converted to
+     * @param destMultipart determines if the output geometry will be multipart or not
+     * @return the converted geometry or NULL pointer if the conversion fails.
+     * @note added in 2.2
+     */
+    QgsGeometry* convertToType( QGis::GeometryType destType, bool destMultipart = false ) /Factory/;
 
     /* Accessor functions for getting geometry data */
 
@@ -429,5 +457,11 @@ class QgsGeometry
      * @note python binding added in 1.6
      **/
     void validateGeometry( QList<QgsGeometry::Error> &errors /Out/ );
+
+    /** compute the unary union on a list of geometries. May be faster than an iterative union on a set of geometries.
+        @param geometryList a list of QgsGeometry* as input
+        @returns the new computed QgsGeometry, or null
+    */
+    static QgsGeometry *unaryUnion( const QList<QgsGeometry*>& geometryList ) /Factory/;
 }; // class QgsGeometry
 

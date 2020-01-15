@@ -43,7 +43,7 @@ class QgsCategorizedSymbolRendererV2 : QgsFeatureRendererV2
 
     virtual QgsSymbolV2* symbolForFeature( QgsFeature& feature );
 
-    virtual void startRender( QgsRenderContext& context, const QgsVectorLayer *vlayer );
+    virtual void startRender( QgsRenderContext& context, const QgsFields& fields );
 
     virtual void stopRender( QgsRenderContext& context );
 
@@ -63,7 +63,7 @@ class QgsCategorizedSymbolRendererV2 : QgsFeatureRendererV2
     //! @note added in 2.0
     void updateSymbols( QgsSymbolV2 * sym );
 
-    const QgsCategoryList& categories();
+    const QgsCategoryList& categories() const;
 
     //! return index of category with specified value (-1 if not found)
     int categoryIndexForValue( QVariant val );

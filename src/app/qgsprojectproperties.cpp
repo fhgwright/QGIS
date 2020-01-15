@@ -58,7 +58,7 @@ const char * QgsProjectProperties::GEO_NONE_DESC = QT_TRANSLATE_NOOP( "QgsOption
 
 //stdc++ includes
 
-QgsProjectProperties::QgsProjectProperties( QgsMapCanvas* mapCanvas, QWidget *parent, Qt::WFlags fl )
+QgsProjectProperties::QgsProjectProperties( QgsMapCanvas* mapCanvas, QWidget *parent, Qt::WindowFlags fl )
     : QgsOptionsDialogBase( "ProjectProperties", parent, fl )
     , mMapCanvas( mapCanvas )
     , mEllipsoidList()
@@ -74,6 +74,7 @@ QgsProjectProperties::QgsProjectProperties( QgsMapCanvas* mapCanvas, QWidget *pa
   connect( buttonBox->button( QDialogButtonBox::Apply ), SIGNAL( clicked() ), this, SLOT( apply() ) );
   connect( this, SIGNAL( accepted() ), this, SLOT( apply() ) );
   connect( projectionSelector, SIGNAL( sridSelected( QString ) ), this, SLOT( setMapUnitsToCurrentProjection() ) );
+  connect( projectionSelector, SIGNAL( initialized() ), this, SLOT( projectionSelectorInitialized() ) );
 
   connect( cmbEllipsoid, SIGNAL( currentIndexChanged( int ) ), this, SLOT( updateEllipsoidUI( int ) ) );
 
@@ -89,13 +90,12 @@ QgsProjectProperties::QgsProjectProperties( QgsMapCanvas* mapCanvas, QWidget *pa
   // Properties stored in map canvas's QgsMapRenderer
   // these ones are propagated to QgsProject by a signal
 
-  QgsMapRenderer* myRenderer = mMapCanvas->mapRenderer();
-  QGis::UnitType myUnit = myRenderer->mapUnits();
+  QGis::UnitType myUnit = mMapCanvas->mapSettings().mapUnits();
   setMapUnits( myUnit );
 
   // we need to initialize it, since the on_cbxProjectionEnabled_toggled()
   // slot triggered by setChecked() might use it.
-  mProjectSrsId = myRenderer->destinationCrs().srsid();
+  mProjectSrsId = mMapCanvas->mapSettings().destinationCrs().srsid();
 
   QgsDebugMsg( "Read project CRSID: " + QString::number( mProjectSrsId ) );
   projectionSelector->setSelectedCrsId( mProjectSrsId );
@@ -124,32 +124,9 @@ QgsProjectProperties::QgsProjectProperties( QgsMapCanvas* mapCanvas, QWidget *pa
   cbxAbsolutePath->setCurrentIndex( QgsProject::instance()->readBoolEntry( "Paths", "/Absolute", true ) ? 0 : 1 );
 
   // populate combo box with ellipsoids
-
-  QgsDebugMsg( "Setting upp ellipsoid" );
-
+  // selection of the ellipsoid from settings is defferred to a later point, because it would
+  // be overridden in the meanwhile by the projection selector
   populateEllipsoidList();
-
-  // Reading ellipsoid from setttings
-  QStringList mySplitEllipsoid = QgsProject::instance()->readEntry( "Measure", "/Ellipsoid", GEO_NONE ).split( ':' );
-
-  int myIndex = 0;
-  for ( int i = 0; i < mEllipsoidList.length(); i++ )
-  {
-    if ( mEllipsoidList[ i ].acronym.startsWith( mySplitEllipsoid[ 0 ] ) )
-    {
-      myIndex = i;
-      break;
-    }
-  }
-
-  // Update paramaters if present.
-  if ( mySplitEllipsoid.length() >= 3 )
-  {
-    mEllipsoidList[ myIndex ].semiMajor =  mySplitEllipsoid[ 1 ].toDouble();
-    mEllipsoidList[ myIndex ].semiMinor =  mySplitEllipsoid[ 2 ].toDouble();
-  }
-
-  updateEllipsoidUI( myIndex );
 
 
   int dp = QgsProject::instance()->readNumEntry( "PositionPrecision", "/DecimalPlaces" );
@@ -352,6 +329,13 @@ QgsProjectProperties::QgsProjectProperties( QgsMapCanvas* mapCanvas, QWidget *pa
     mMaxHeightLineEdit->setText( QString::number( maxHeight ) );
   }
 
+  // WMS imageQuality
+  int imageQuality = QgsProject::instance()->readNumEntry( "WMSImageQuality", "/", -1 );
+  if ( imageQuality != -1 )
+  {
+    mWMSImageQualitySpinBox->setValue( imageQuality );
+  }
+
   mWFSUrlLineEdit->setText( QgsProject::instance()->readEntry( "WFSUrl", "/", "" ) );
   QStringList wfsLayerIdList = QgsProject::instance()->readListEntry( "WFSLayers", "/" );
   QStringList wfstUpdateLayerIdList = QgsProject::instance()->readListEntry( "WFSTLayers", "Update" );
@@ -500,7 +484,7 @@ QgsProjectProperties::QgsProjectProperties( QgsMapCanvas* mapCanvas, QWidget *pa
   mRelationManagerDlg->setLayers( vectorLayers );
 
   // Update projection selector (after mLayerSrsId is set)
-  bool myProjectionEnabled = myRenderer->hasCrsTransformEnabled();
+  bool myProjectionEnabled = mMapCanvas->mapSettings().hasCrsTransformEnabled();
   bool onFlyChecked = cbxProjectionEnabled->isChecked();
   cbxProjectionEnabled->setChecked( myProjectionEnabled );
 
@@ -522,7 +506,7 @@ QgsProjectProperties::~QgsProjectProperties()
 // return the map units
 QGis::UnitType QgsProjectProperties::mapUnits() const
 {
-  return mMapCanvas->mapRenderer()->mapUnits();
+  return mMapCanvas->mapSettings().mapUnits();
 }
 
 void QgsProjectProperties::setMapUnits( QGis::UnitType unit )
@@ -538,7 +522,7 @@ void QgsProjectProperties::setMapUnits( QGis::UnitType unit )
   radNMiles->setChecked( unit == QGis::NauticalMiles );
   radDegrees->setChecked( unit == QGis::Degrees );
 
-  mMapCanvas->mapRenderer()->setMapUnits( unit );
+  mMapCanvas->setMapUnits( unit );
 }
 
 QString QgsProjectProperties::title() const
@@ -576,9 +560,8 @@ void QgsProjectProperties::apply()
     mapUnit = QGis::Meters;
   }
 
-  QgsMapRenderer* myRenderer = mMapCanvas->mapRenderer();
-  myRenderer->setMapUnits( mapUnit );
-  myRenderer->setProjectionsEnabled( cbxProjectionEnabled->isChecked() );
+  mMapCanvas->setMapUnits( mapUnit );
+  mMapCanvas->setCrsTransformEnabled( cbxProjectionEnabled->isChecked() );
 
   // Only change the projection if there is a node in the tree
   // selected that has an srid. This prevents error if the user
@@ -588,7 +571,7 @@ void QgsProjectProperties::apply()
   if ( myCRSID )
   {
     QgsCoordinateReferenceSystem srs( myCRSID, QgsCoordinateReferenceSystem::InternalCrsId );
-    myRenderer->setDestinationCrs( srs );
+    mMapCanvas->setDestinationCrs( srs );
     QgsDebugMsg( QString( "Selected CRS " ) + srs.description() );
     // write the currently selected projections _proj string_ to project settings
     QgsDebugMsg( QString( "SpatialRefSys/ProjectCRSProj4String: %1" ).arg( projectionSelector->selectedProj4String() ) );
@@ -602,7 +585,13 @@ void QgsProjectProperties::apply()
       // If we couldn't get the map units, default to the value in the
       // projectproperties dialog box (set above)
       if ( srs.mapUnits() != QGis::UnknownUnit )
-        myRenderer->setMapUnits( srs.mapUnits() );
+        mMapCanvas->setMapUnits( srs.mapUnits() );
+    }
+
+    if ( cbxProjectionEnabled->isChecked() )
+    {
+      // mark selected projection for push to front
+      projectionSelector->pushProjectionToFront();
     }
   }
 
@@ -649,6 +638,7 @@ void QgsProjectProperties::apply()
   QgsProject::instance()->writeEntry( "Gui", "/SelectionColorGreenPart", myColor.green() );
   QgsProject::instance()->writeEntry( "Gui", "/SelectionColorBluePart", myColor.blue() );
   QgsProject::instance()->writeEntry( "Gui", "/SelectionColorAlphaPart", myColor.alpha() );
+  mMapCanvas->setSelectionColor( myColor );
 
   //set the color for canvas
   myColor = pbnCanvasColor->color();
@@ -805,6 +795,17 @@ void QgsProjectProperties::apply()
   else
   {
     QgsProject::instance()->writeEntry( "WMSMaxHeight", "/", maxHeightText.toInt() );
+  }
+
+  // WMS Image quality
+  int imageQualityValue = mWMSImageQualitySpinBox->value();
+  if ( imageQualityValue == 0 )
+  {
+    QgsProject::instance()->removeEntry( "WMSImageQuality", "/" );
+  }
+  else
+  {
+    QgsProject::instance()->writeEntry( "WMSImageQuality", "/", imageQualityValue );
   }
 
   QgsProject::instance()->writeEntry( "WFSUrl", "/", mWFSUrlLineEdit->text() );
@@ -1607,4 +1608,31 @@ void QgsProjectProperties::updateEllipsoidUI( int newIndex )
     cmbEllipsoid->setToolTip( tr( "Can only use ellipsoidal calculations when CRS transformation is enabled" ) );
   }
   cmbEllipsoid->setCurrentIndex( mEllipsoidIndex ); // Not always necessary
+}
+
+void QgsProjectProperties::projectionSelectorInitialized()
+{
+  QgsDebugMsg( "Setting up ellipsoid" );
+
+  // Reading ellipsoid from setttings
+  QStringList mySplitEllipsoid = QgsProject::instance()->readEntry( "Measure", "/Ellipsoid", GEO_NONE ).split( ':' );
+
+  int myIndex = 0;
+  for ( int i = 0; i < mEllipsoidList.length(); i++ )
+  {
+    if ( mEllipsoidList[ i ].acronym.startsWith( mySplitEllipsoid[ 0 ] ) )
+    {
+      myIndex = i;
+      break;
+    }
+  }
+
+  // Update paramaters if present.
+  if ( mySplitEllipsoid.length() >= 3 )
+  {
+    mEllipsoidList[ myIndex ].semiMajor =  mySplitEllipsoid[ 1 ].toDouble();
+    mEllipsoidList[ myIndex ].semiMinor =  mySplitEllipsoid[ 2 ].toDouble();
+  }
+
+  updateEllipsoidUI( myIndex );
 }

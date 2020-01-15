@@ -26,6 +26,7 @@ import tempfile
 
 from utilities import (
     unitTestDataPath,
+    getExecutablePath,
     openInBrowserTab
 )
 
@@ -68,6 +69,7 @@ class ServerProcess(object):
         self._process = None
         """:type : subprocess.Popen"""
         self._win = self._mac = self._linux = self._unix = False
+        self._dist = ()
         self._resolve_platform()
 
     # noinspection PyMethodMayBeStatic
@@ -78,7 +80,7 @@ class ServerProcess(object):
                              stdout=subprocess.PIPE,
                              env=env,
                              close_fds=True)
-        err = p.stderr.read()
+        err = p.communicate()[1]
         if err:
             if p:
                 p.kill()
@@ -156,6 +158,7 @@ class ServerProcess(object):
         self._mac = s.startswith('dar')
         self._unix = self._linux or self._mac
         self._win = s.startswith('win')
+        self._dist = platform.dist()
 
 
 class WebServerProcess(ServerProcess):
@@ -167,15 +170,25 @@ class WebServerProcess(ServerProcess):
             conf = os.path.join(conf_dir, 'lighttpd', 'config',
                                 'lighttpd_{0}.conf'.format(sufx))
             self.set_startenv({'QGIS_SERVER_TEMP_DIR': temp_dir})
+            init_scr_dir = os.path.join(conf_dir, 'lighttpd', 'scripts')
             if self._mac:
-                init_scr = os.path.join(conf_dir, 'lighttpd', 'scripts',
-                                        'lighttpd_mac.sh')
+                init_scr = os.path.join(init_scr_dir, 'lighttpd_mac.sh')
                 self.set_startcmd([init_scr, 'start', exe, conf, temp_dir])
                 self.set_stopcmd([init_scr, 'stop'])
                 self.set_restartcmd([init_scr, 'restart', exe, conf, temp_dir])
                 self.set_statuscmd([init_scr, 'status'])
             elif self._linux:
-                pass
+                dist = self._dist[0].lower()
+                if dist == 'debian' or dist == 'ubuntu':
+                    init_scr = os.path.join(init_scr_dir, 'lighttpd_debian.sh')
+                    self.set_startcmd([
+                        init_scr, 'start', exe, temp_dir, conf])
+                    self.set_stopcmd([init_scr, 'stop', exe, temp_dir])
+                    self.set_restartcmd([
+                        init_scr, 'restart', exe, temp_dir, conf])
+                    self.set_statuscmd([init_scr, 'status', exe, temp_dir])
+                elif dist == 'fedora' or dist == 'rhel':  # are these correct?
+                    pass
             else:  # win
                 pass
 
@@ -188,25 +201,42 @@ class FcgiServerProcess(ServerProcess):
             if self._unix:
                 fcgi_sock = os.path.join(temp_dir, 'var', 'run',
                                          'qgs_mapserv.sock')
+                init_scr_dir = os.path.join(conf_dir, 'fcgi', 'scripts')
+                self.set_startenv({
+                    'QGIS_LOG_FILE':
+                    os.path.join(temp_dir, 'log', 'qgis_server.log')})
                 if self._mac:
-                    self.set_startenv({
-                        'QGIS_LOG_FILE':
-                        '{0}/log/qgis_server.log'.format(temp_dir)})
-                    init_scr = os.path.join(conf_dir, 'fcgi', 'scripts',
-                                            'spawn_fcgi_mac.sh')
+                    init_scr = os.path.join(init_scr_dir, 'spawn_fcgi_mac.sh')
                     self.set_startcmd([init_scr, 'start', exe, fcgi_sock,
                                        temp_dir + fcgi_bin, temp_dir])
                     self.set_stopcmd([init_scr, 'stop'])
                     self.set_restartcmd([init_scr, 'restart', exe, fcgi_sock,
                                          temp_dir + fcgi_bin, temp_dir])
                     self.set_statuscmd([init_scr, 'status'])
-                else:  # linux
-                    pass
+                elif self._linux:
+                    dist = self._dist[0].lower()
+                    if dist == 'debian' or dist == 'ubuntu':
+                        init_scr = os.path.join(init_scr_dir,
+                                                'spawn_fcgi_debian.sh')
+                        self.set_startcmd([
+                            init_scr, 'start', exe, fcgi_sock,
+                            temp_dir + fcgi_bin, temp_dir])
+                        self.set_stopcmd([
+                            init_scr, 'stop', exe, fcgi_sock,
+                            temp_dir + fcgi_bin, temp_dir])
+                        self.set_restartcmd([
+                            init_scr, 'restart', exe, fcgi_sock,
+                            temp_dir + fcgi_bin, temp_dir])
+                        self.set_statuscmd([
+                            init_scr, 'status', exe, fcgi_sock,
+                            temp_dir + fcgi_bin, temp_dir])
+                    elif dist == 'fedora' or dist == 'rhel':
+                        pass
             else:  # win
                 pass
 
 
-# noinspection PyPep8Naming
+# noinspection PyPep8Naming,PyShadowingNames
 class QgisLocalServer(object):
 
     def __init__(self, fcgi_bin):
@@ -239,8 +269,8 @@ class QgisLocalServer(object):
 
         chkd = ''
         for fcgi, web in servers:
-            fcgi_path = self._exe_path(fcgi)
-            web_path = self._exe_path(web)
+            fcgi_path = getExecutablePath(fcgi)
+            web_path = getExecutablePath(web)
             if fcgi_path and web_path:
                 self._fcgiserv_path = fcgi_path
                 self._webserv_path = web_path
@@ -312,8 +342,7 @@ class QgisLocalServer(object):
         return self._web_dir
 
     def open_web_dir(self):
-        if os.path.exists(self._web_dir):
-            subprocess.call(['open', self._web_dir])
+        self._open_fs_item(self._web_dir)
 
     def web_dir_install(self, items, src_dir=''):
         msg = 'Items parameter should be passed in as a list'
@@ -349,19 +378,7 @@ class QgisLocalServer(object):
         return self._temp_dir
 
     def open_temp_dir(self):
-        if not os.path.exists(self._temp_dir):
-            return
-        s = platform.system().lower()
-        if s.startswith('dar'):
-            subprocess.call(['open', self._temp_dir])
-        elif s.startswith('lin'):
-            # xdg-open "$1" &> /dev/null &
-            subprocess.call(['xdg-open', self._temp_dir,
-                             '&>', '/dev/null', '&'])
-        elif s.startswith('win'):
-            subprocess.call([self._temp_dir])
-        else:  # ?
-            pass
+        self._open_fs_item(self._temp_dir)
 
     def remove_temp_dir(self):
         if os.path.exists(self._temp_dir):
@@ -413,7 +430,7 @@ class QgisLocalServer(object):
             openInBrowserTab(url)
             return False, ''
 
-        success = ('perhaps you left off the .qgs extension' in xml or
+        success = ('error reading the project file' in xml or
                    'WMS_Capabilities' in xml)
         return success, xml
 
@@ -508,7 +525,7 @@ class QgisLocalServer(object):
                 'No valid PNG output'
             )
 
-        return success, filepath
+        return success, filepath, url
 
     def process_params(self, params):
         # set all keys to uppercase
@@ -580,6 +597,21 @@ class QgisLocalServer(object):
                 if os.path.exists(exe_path + ext):
                     return exe_path
         return ''
+
+    @staticmethod
+    def _open_fs_item(item):
+        if not os.path.exists(item):
+            return
+        s = platform.system().lower()
+        if s.startswith('dar'):
+            subprocess.call(['open', item])
+        elif s.startswith('lin'):
+            # xdg-open "$1" &> /dev/null &
+            subprocess.call(['xdg-open', item])
+        elif s.startswith('win'):
+            subprocess.call([item])
+        else:  # ?
+            pass
 
 
 # noinspection PyPep8Naming
@@ -735,13 +767,24 @@ def getLocalServer():
 if __name__ == '__main__':
     # NOTE: see test_qgis_local_server.py for CTest suite
 
-    # this is a symlink to <build dir>/output/bin/qgis_mapserv.fcgi
-    # (because <build dir> is not known, unless this is imported to ctest)
-    fcgibin = '/opt/qgis_mapserv/qgis_mapserv.fcgi'
-    local_srv = QgisLocalServer(fcgibin)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'fcgi', metavar='fcgi-bin-path',
+        help='Path to qgis_mapserv.fcgi'
+    )
+    args = parser.parse_args()
+
+    fcgi = os.path.realpath(args.fcgi)
+    if not os.path.isabs(fcgi) or not os.path.exists(fcgi):
+        print 'qgis_mapserv.fcgi not resolved to existing absolute path.'
+        sys.exit(1)
+
+    local_srv = QgisLocalServer(fcgi)
     proj_dir = os.path.join(local_srv.config_dir(), 'test-project')
     local_srv.web_dir_install(os.listdir(proj_dir), proj_dir)
-    # local_srv.open_web_dir()
+    # local_srv.open_temp_dir()
+    # sys.exit()
     # creating crs needs app instance to access /resources/srs.db
     #   crs = QgsCoordinateReferenceSystem()
     # default for labeling test data sources: WGS 84 / UTM zone 13N
@@ -769,11 +812,16 @@ if __name__ == '__main__':
         'IgnoreGetMapUrl': '1'
     }
 
-    local_srv.startup(True)
+    # local_srv.web_server_process().start()
+    # openInBrowserTab('http://127.0.0.1:8448')
+    # local_srv.web_server_process().stop()
+    # sys.exit()
+    local_srv.startup(False)
+    openInBrowserTab('http://127.0.0.1:8448')
     try:
         local_srv.check_server_capabilities()
         # open resultant png with system
-        result, png = local_srv.get_map(req_params)
+        result, png, url = local_srv.get_map(req_params)
     finally:
         local_srv.shutdown()
 

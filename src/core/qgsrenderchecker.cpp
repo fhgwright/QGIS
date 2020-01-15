@@ -14,7 +14,9 @@
  ***************************************************************************/
 
 #include "qgsrenderchecker.h"
+
 #include "qgis.h"
+#include "qgsmaprenderersequentialjob.h"
 
 #include <QColor>
 #include <QPainter>
@@ -28,7 +30,6 @@
 QgsRenderChecker::QgsRenderChecker( ) :
     mReport( "" ),
     mMatchTarget( 0 ),
-    mpMapRenderer( NULL ),
     mElapsedTime( 0 ),
     mRenderedImageFile( "" ),
     mExpectedImageFile( "" ),
@@ -37,7 +38,6 @@ QgsRenderChecker::QgsRenderChecker( ) :
     mElapsedTimeTarget( 0 ),
     mControlPathPrefix( "" )
 {
-
 }
 
 QString QgsRenderChecker::controlImagePath() const
@@ -66,6 +66,16 @@ QString QgsRenderChecker::imageToHash( QString theImageFile )
   QCryptographicHash myHash( QCryptographicHash::Md5 );
   myHash.addData( myImageString.toUtf8() );
   return myHash.result().toHex().constData();
+}
+
+void QgsRenderChecker::setMapRenderer( QgsMapRenderer* thepMapRenderer )
+{
+  mMapSettings = thepMapRenderer->mapSettings();
+}
+
+void QgsRenderChecker::setMapSettings( const QgsMapSettings& mapSettings )
+{
+  mMapSettings = mapSettings;
 }
 
 bool QgsRenderChecker::isKnownAnomaly( QString theDiffImageFile )
@@ -139,29 +149,30 @@ bool QgsRenderChecker::runTest( QString theTestName,
   //
   // Now render our layers onto a pixmap
   //
-  QImage myImage( myExpectedImage.width(),
-                  myExpectedImage.height(),
-                  QImage::Format_RGB32 );
-  myImage.setDotsPerMeterX( myExpectedImage.dotsPerMeterX() );
-  myImage.setDotsPerMeterY( myExpectedImage.dotsPerMeterY() );
-  myImage.fill( qRgb( 152, 219, 249 ) );
-  QPainter myPainter( &myImage );
-  myPainter.setRenderHint( QPainter::Antialiasing );
-  mpMapRenderer->setOutputSize( QSize(
-                                  myExpectedImage.width(),
-                                  myExpectedImage.height() ),
-                                myExpectedImage.logicalDpiX() );
+  mMapSettings.setBackgroundColor( qRgb( 152, 219, 249 ) );
+  mMapSettings.setFlag( QgsMapSettings::Antialiasing );
+  mMapSettings.setOutputSize( QSize( myExpectedImage.width(), myExpectedImage.height() ) );
+
   QTime myTime;
   myTime.start();
-  mpMapRenderer->render( &myPainter );
+
+  QgsMapRendererSequentialJob job( mMapSettings );
+  job.start();
+  job.waitForFinished();
+
   mElapsedTime = myTime.elapsed();
-  myPainter.end();
+
+  QImage myImage = job.renderedImage();
+
   //
   // Save the pixmap to disk so the user can make a
   // visual assessment if needed
   //
   mRenderedImageFile = QDir::tempPath() + QDir::separator() +
                        theTestName + "_result.png";
+
+  myImage.setDotsPerMeterX( myExpectedImage.dotsPerMeterX() );
+  myImage.setDotsPerMeterY( myExpectedImage.dotsPerMeterY() );
   myImage.save( mRenderedImageFile, "PNG", 100 );
 
   //create a world file to go with the image...
@@ -169,14 +180,14 @@ bool QgsRenderChecker::runTest( QString theTestName,
   QFile wldFile( QDir::tempPath() + QDir::separator() + theTestName + "_result.wld" );
   if ( wldFile.open( QIODevice::WriteOnly ) )
   {
-    QgsRectangle r = mpMapRenderer->extent();
+    QgsRectangle r = mMapSettings.extent();
 
     QTextStream stream( &wldFile );
     stream << QString( "%1\r\n0 \r\n0 \r\n%2\r\n%3\r\n%4\r\n" )
-    .arg( qgsDoubleToString( mpMapRenderer->mapUnitsPerPixel() ) )
-    .arg( qgsDoubleToString( -mpMapRenderer->mapUnitsPerPixel() ) )
-    .arg( qgsDoubleToString( r.xMinimum() + mpMapRenderer->mapUnitsPerPixel() / 2.0 ) )
-    .arg( qgsDoubleToString( r.yMaximum() - mpMapRenderer->mapUnitsPerPixel() / 2.0 ) );
+    .arg( qgsDoubleToString( mMapSettings.mapUnitsPerPixel() ) )
+    .arg( qgsDoubleToString( -mMapSettings.mapUnitsPerPixel() ) )
+    .arg( qgsDoubleToString( r.xMinimum() + mMapSettings.mapUnitsPerPixel() / 2.0 ) )
+    .arg( qgsDoubleToString( r.yMaximum() - mMapSettings.mapUnitsPerPixel() / 2.0 ) );
   }
 
   return compareImages( theTestName, theMismatchCount );
@@ -339,7 +350,7 @@ bool QgsRenderChecker::compareImages( QString theTestName,
   //
   // Send match result to debug
   //
-  qDebug( "%d/%d pixels mismatched", mMismatchCount, mMatchTarget );
+  qDebug( "%d/%d pixels mismatched (%d allowed)", mMismatchCount, mMatchTarget, theMismatchCount );
 
   //
   // Send match result to report

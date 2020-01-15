@@ -14,6 +14,8 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#include <QGraphicsView>
+#include <QGraphicsSceneHoverEvent>
 #include <QPainter>
 #include <QWidget>
 
@@ -25,6 +27,7 @@
 #include "qgspaperitem.h"
 #include "qgis.h"
 #include "qgslogger.h"
+#include "qgsproject.h"
 
 QgsComposerMouseHandles::QgsComposerMouseHandles( QgsComposition *composition ) : QObject( 0 ),
     QGraphicsRectItem( 0 ),
@@ -43,7 +46,7 @@ QgsComposerMouseHandles::QgsComposerMouseHandles( QgsComposition *composition ) 
   QObject::connect( mComposition, SIGNAL( selectionChanged() ), this, SLOT( selectionChanged() ) );
 
   //accept hover events, required for changing cursor to resize cursors
-  setAcceptsHoverEvents( true );
+  setAcceptHoverEvents( true );
 }
 
 QgsComposerMouseHandles::~QgsComposerMouseHandles()
@@ -437,6 +440,17 @@ QgsComposerMouseHandles::MouseAction QgsComposerMouseHandles::mouseActionForPosi
   bool nearLowerBorder = false;
   bool nearUpperBorder = false;
 
+  bool withinWidth = false;
+  bool withinHeight = false;
+  if ( itemCoordPos.x() >= 0 && itemCoordPos.x() <= rect().width() )
+  {
+    withinWidth = true;
+  }
+  if ( itemCoordPos.y() >= 0 && itemCoordPos.y() <= rect().height() )
+  {
+    withinHeight = true;
+  }
+
   double borderTolerance = rectHandlerBorderTolerance();
 
   if ( itemCoordPos.x() >= 0 && itemCoordPos.x() < borderTolerance )
@@ -472,19 +486,19 @@ QgsComposerMouseHandles::MouseAction QgsComposerMouseHandles::mouseActionForPosi
   {
     return QgsComposerMouseHandles::ResizeRightDown;
   }
-  else if ( nearLeftBorder )
+  else if ( nearLeftBorder && withinHeight )
   {
     return QgsComposerMouseHandles::ResizeLeft;
   }
-  else if ( nearRightBorder )
+  else if ( nearRightBorder && withinHeight )
   {
     return QgsComposerMouseHandles::ResizeRight;
   }
-  else if ( nearUpperBorder )
+  else if ( nearUpperBorder && withinWidth )
   {
     return QgsComposerMouseHandles::ResizeUp;
   }
-  else if ( nearLowerBorder )
+  else if ( nearLowerBorder && withinWidth )
   {
     return QgsComposerMouseHandles::ResizeDown;
   }
@@ -607,7 +621,7 @@ void QgsComposerMouseHandles::mouseReleaseEvent( QGraphicsSceneMouseEvent* event
       subcommand->saveAfterState();
     }
     mComposition->undoStack()->push( parentCommand );
-
+    QgsProject::instance()->dirty( true );
   }
   else if ( mCurrentMouseMoveAction != QgsComposerMouseHandles::NoAction )
   {
@@ -647,6 +661,7 @@ void QgsComposerMouseHandles::mouseReleaseEvent( QGraphicsSceneMouseEvent* event
       subcommand->saveAfterState();
     }
     mComposition->undoStack()->push( parentCommand );
+    QgsProject::instance()->dirty( true );
   }
 
   deleteAlignItems();
@@ -723,6 +738,11 @@ void QgsComposerMouseHandles::mousePressEvent( QGraphicsSceneMouseEvent* event )
 
   }
 
+}
+
+void QgsComposerMouseHandles::mouseDoubleClickEvent( QGraphicsSceneMouseEvent *event )
+{
+  Q_UNUSED( event );
 }
 
 QSizeF QgsComposerMouseHandles::calcCursorEdgeOffset( const QPointF &cursorPos )
@@ -1298,7 +1318,7 @@ void QgsComposerMouseHandles::checkNearestItem( double checkCoord, const QMap< d
   }
 
   double currentDiff = abs( checkCoord - currentCoord );
-  if ( currentDiff < mComposition->alignmentSnapTolerance() )
+  if ( currentDiff < mComposition->alignmentSnapTolerance() && currentDiff < smallestDiff )
   {
     itemCoord = currentCoord + itemCoordOffset;
     alignCoord = currentCoord;
@@ -1346,3 +1366,4 @@ bool QgsComposerMouseHandles::nearestItem( const QMap< double, const QgsComposer
     }
   }
 }
+

@@ -1130,7 +1130,8 @@ long QgsCoordinateReferenceSystem::findMatchingProj()
 
 bool QgsCoordinateReferenceSystem::operator==( const QgsCoordinateReferenceSystem &theSrs ) const
 {
-  return mIsValidFlag && theSrs.mIsValidFlag && theSrs.authid() == authid();
+  return ( !mIsValidFlag && !theSrs.mIsValidFlag ) ||
+         ( mIsValidFlag && theSrs.mIsValidFlag && theSrs.authid() == authid() );
 }
 
 bool QgsCoordinateReferenceSystem::operator!=( const QgsCoordinateReferenceSystem &theSrs ) const
@@ -1515,7 +1516,7 @@ bool QgsCoordinateReferenceSystem::saveAsUserCRS( QString name )
 
   QgsMessageLog::logMessage( QObject::tr( "Saved user CRS [%1]" ).arg( toProj4() ), QObject::tr( "CRS" ) );
 
-  int return_id;
+  qint64 return_id;
   if ( myResult == SQLITE_OK )
   {
     return_id = sqlite3_last_insert_rowid( myDatabase );
@@ -2052,8 +2053,6 @@ bool QgsCoordinateReferenceSystem::syncDatumTransform( const QString& dbPath )
 
     insert += map[i].dst;
     values += QString( "%%1" ).arg( i + 1 );
-
-    qWarning( "%d: src=%s dst=%s idx=%d", i, map[i].src, map[i].dst, map[i].idx );
   }
 
   insert = "INSERT INTO tbl_datum_transform(" + insert + ") VALUES (" + values + ")";

@@ -235,9 +235,9 @@ class GeometryDialog( QDialog, Ui_Dialog ):
       self.encoding = None
 
       res = QMessageBox.warning( self, self.tr( "Geometry"),
-                                 self.tr( "Currently QGIS doesn't allow simultaneous access from \
-                                 different threads to the same datasource. Make sure your layer's \
-                                 attribute tables are closed. Continue?"),
+                                 self.tr( "Currently QGIS doesn't allow simultaneous access from "
+                                 "different threads to the same datasource. Make sure your layer's "
+                                 "attribute tables are closed. Continue?"),
                                  QMessageBox.Yes | QMessageBox.No )
       if res == QMessageBox.No:
         return
@@ -392,7 +392,7 @@ class geometryThread( QThread ):
             else:
               idVarMod = idVar
           else:
-            idVar = ""
+            idVarMod = ""
           if idVarMod == iMod or merge_all:
             if first:
               atts = atMap

@@ -82,7 +82,6 @@ void QgsDistanceArea::_copy( const QgsDistanceArea & origDA )
   // Some calculations and trig. Should not be TOO time consuming.
   // Alternatively we could copy the temp vars?
   computeAreaInit();
-  mSourceRefSys = origDA.mSourceRefSys;
   mCoordTransform = new QgsCoordinateTransform( origDA.mCoordTransform->sourceCrs(), origDA.mCoordTransform->destCRS() );
 }
 
@@ -475,7 +474,7 @@ double QgsDistanceArea::measureLine( const QgsPoint &p1, const QgsPoint &p2 )
     else
     {
       QgsDebugMsgLevel( "Cartesian calculation on canvas coordinates", 4 );
-      result = sqrt(( p2.x() - p1.x() ) * ( p2.x() - p1.x() ) + ( p2.y() - p1.y() ) * ( p2.y() - p1.y() ) );
+      result = computeDistanceFlat( p1, p2 );
     }
   }
   catch ( QgsCsException &cse )
@@ -566,7 +565,7 @@ const unsigned char *QgsDistanceArea::measurePolygon( const unsigned char* featu
           if ( idx == 0 )
           {
             // exterior ring
-            *perimeter += measureLine( points );
+            *perimeter += computeDistance( points );
           }
         }
       }
@@ -711,6 +710,48 @@ double QgsDistanceArea::computeDistanceBearing(
   }
 
   return s;
+}
+
+double QgsDistanceArea::computeDistanceFlat( const QgsPoint& p1, const QgsPoint& p2 )
+{
+  return sqrt(( p2.x() - p1.x() ) * ( p2.x() - p1.x() ) + ( p2.y() - p1.y() ) * ( p2.y() - p1.y() ) );
+}
+
+double QgsDistanceArea::computeDistance( const QList<QgsPoint>& points )
+{
+  if ( points.size() < 2 )
+    return 0;
+
+  double total = 0;
+  QgsPoint p1, p2;
+
+  try
+  {
+    p1 = points[0];
+
+    for ( QList<QgsPoint>::const_iterator i = points.begin(); i != points.end(); ++i )
+    {
+      p2 = *i;
+      if ( mEllipsoidalMode && ( mEllipsoid != GEO_NONE ) )
+      {
+        total += computeDistanceBearing( p1, p2 );
+      }
+      else
+      {
+        total += computeDistanceFlat( p1, p2 );
+      }
+
+      p1 = p2;
+    }
+
+    return total;
+  }
+  catch ( QgsCsException &cse )
+  {
+    Q_UNUSED( cse );
+    QgsMessageLog::logMessage( QObject::tr( "Caught a coordinate system exception while trying to transform a point. Unable to calculate line length." ) );
+    return 0.0;
+  }
 }
 
 
@@ -1008,3 +1049,4 @@ void QgsDistanceArea::convertMeasurement( double &measure, QGis::UnitType &measu
   QgsDebugMsg( QString( "to %1 %2" ).arg( QString::number( measure ), QGis::toLiteral( displayUnits ) ) );
   measureUnits = displayUnits;
 }
+

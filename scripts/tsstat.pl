@@ -35,8 +35,8 @@ my @lang;
 
 # translator names here as a hash where the key is the lang_country code used for the ts file name
 my $translators= {
-	af => 'Hendrik Bosman',
-	ar => 'Assem Kamal, Latif Jalil, Hosham Munier Galal',
+	af => '',
+	ar => '',
 	bg => 'Захари Савов, Jordan Tzvetkov',
 	bs => 'Almir Karabegovic',
 	ca => 'Xavier Roijals',
@@ -54,7 +54,7 @@ my $translators= {
 	hi => 'Harish Kumar Solanki',
 	hu => 'Zoltan Siki',
 	hr => 'Zoran Jankovic',
-	is => 'Thordur Ivarsson',
+	is => 'Ásta Kristín Óladóttir, Thordur Ivarsson',
 	id => 'Trias Aditya, Januar V. Simarmata, I Made Anombawa',
 	it => 'Roberto Angeletti, Michele Beneventi, Marco Braida, Stefano Campus, Luca Casagrande, Paolo Cavallini, Giuliano Curti, Luca Delucchi, Alessandro Fanna, Michele Ferretti, Matteo Ghetta, Anne Gishla, Maurizio Napolitano, Flavio Rigolon',
 	ja => 'BABA Yoshihiko, Yoichi Kayama, Minoru Akagi, Takayuki Nuimura, Takayuki Mizutani, Norihiro Yamate',
@@ -70,21 +70,23 @@ my $translators= {
 	nb => 'James Stott, Maléne Peterson',
 	nl => 'Richard Duivenvoorde, Raymond Nijssen, Carlo van Rijswijk, Diethard Jansen, Willem Hoffmans',
 	pl => 'Robert Szczepanek, Milena Nowotarska, Borys Jurgiel, Mateusz Łoskot, Tomasz Paul, Andrzej Świąder ',
-	pt_BR => 'Arthur Nanni, Marcelo Soares Souza',
-	pt_PT => 'Giovanni Manghi, Joana Simões, Duarte Carreira, Alexandre Neto, Pedro Pereira, Pedro Palheiro, Nelson Silva, Ricardo Sena, Leandro Infantini',
+	pt_BR => 'Sidney Schaberle Goveia, Arthur Nanni, Marcelo Soares Souza',
+	pt_PT => 'Giovanni Manghi, Joana Simões, Duarte Carreira, Alexandre Neto, Pedro Pereira, Pedro Palheiro, Nelson Silva, Ricardo Sena, Leandro Infantini, João Gaspar',
 	ro => 'Lonut Losifescu-Enescu, Bogdan Pacurar',
-	ru => 'Artem Popov, Alexander Bruy',
+	ru => 'Alexander Bruy, Artem Popov',
 	sk => 'Lubos Balazovic, Jana Kormanikova, Ivan Mincik',
 	sl => 'Jože Detečnik, Dejan Gregor, Jaka Kranjc',
 	sq => '',
 	sr_Latn => 'Goran Ivanković',
 	sr_Cyrl => 'Goran Ivanković',
 	sv => 'Lars Luthman, Magnus Homann, Victor Axbom',
-	sw => 'Yohana Mapala',
+	sw => '',
+	ta => '',
 	te => '',
 	th => 'Man Chao',
-	tr => 'Osman Yilmaz',
-	uk => 'Сергей Якунин',
+        tl => 'Kathrina Gregana',
+	tr => 'Osman Yalçın YILMAZ',
+	uk => 'Alexander Bruy',
 	vi => 'Phan Anh, Bùi Hữu Mạnh',
 	zh_CN => 'Calvin Ngei, Zhang Jun, Richard Xie',
 	zh_TW => 'Nung-yao Lin',
@@ -140,7 +142,7 @@ for my $i (<i18n/qgis_*.ts>) {
 	$maxn = $n unless defined $maxn;
 
 	if( $n>$maxn ) {
-		print STDERR "$i: more translation than others. ($n>$maxn)\n";
+		print STDERR "$i: more translations than others. ($n>$maxn)\n";
 		$maxn = $n;
 	}
 

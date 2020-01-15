@@ -41,6 +41,7 @@ class QgsRasterInterface
 %End
 
   public:
+    //! If you add to this, please also add to capabilitiesString()
     enum Capability
     {
       NoCapabilities,
@@ -52,7 +53,7 @@ class QgsRasterInterface
       IdentifyValue,
       IdentifyText,
       IdentifyHtml,
-      IdentifyFeature
+      IdentifyFeature,
     };
 
     QgsRasterInterface( QgsRasterInterface * input = 0 );
@@ -97,7 +98,7 @@ class QgsRasterInterface
     virtual int ySize() const;
 
     /** \brief helper function to create zero padded band names */
-    virtual QString  generateBandName( int theBandNumber ) const;
+    virtual QString generateBandName( int theBandNumber ) const;
 
     /** Read block of data using given extent and size.
      *  Returns pointer to data.

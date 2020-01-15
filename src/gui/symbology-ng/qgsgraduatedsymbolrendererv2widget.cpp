@@ -93,6 +93,11 @@ QgsRendererRangeV2 QgsGraduatedSymbolRendererV2Model::rendererRange( const QMode
 
 Qt::ItemFlags QgsGraduatedSymbolRendererV2Model::flags( const QModelIndex & index ) const
 {
+  if ( !index.isValid() )
+  {
+    return Qt::ItemIsDropEnabled;
+  }
+
   Qt::ItemFlags flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 
   if ( index.column() == 2 )
@@ -178,7 +183,10 @@ QVariant QgsGraduatedSymbolRendererV2Model::headerData( int section, Qt::Orienta
 
 int QgsGraduatedSymbolRendererV2Model::rowCount( const QModelIndex &parent ) const
 {
-  if ( parent.column() > 0 || !mRenderer ) return 0;
+  if ( parent.isValid() || !mRenderer )
+  {
+    return 0;
+  }
   return mRenderer->ranges().size();
 }
 
@@ -358,7 +366,8 @@ QgsGraduatedSymbolRendererV2Widget::QgsGraduatedSymbolRendererV2Widget( QgsVecto
   // setup user interface
   setupUi( this );
 
-  populateColumns();
+  mExpressionWidget->setFilters( QgsFieldProxyModel::Numeric | QgsFieldProxyModel::Date );
+  mExpressionWidget->setLayer( mLayer );
 
   cboGraduatedColorRamp->populate( mStyle );
 
@@ -382,8 +391,7 @@ QgsGraduatedSymbolRendererV2Widget::QgsGraduatedSymbolRendererV2Widget( QgsVecto
 
   mGraduatedSymbol = QgsSymbolV2::defaultSymbol( mLayer->geometryType() );
 
-  connect( cboGraduatedColumn, SIGNAL( currentIndexChanged( int ) ), this, SLOT( graduatedColumnChanged() ) );
-  connect( btnExpression, SIGNAL( clicked() ), this, SLOT( setExpression() ) );
+  connect( mExpressionWidget, SIGNAL( fieldChanged( QString ) ), this, SLOT( graduatedColumnChanged( QString ) ) );
   connect( viewGraduated, SIGNAL( doubleClicked( const QModelIndex & ) ), this, SLOT( rangesDoubleClicked( const QModelIndex & ) ) );
   connect( viewGraduated, SIGNAL( clicked( const QModelIndex & ) ), this, SLOT( rangesClicked( const QModelIndex & ) ) );
   connect( viewGraduated, SIGNAL( customContextMenuRequested( const QPoint& ) ),  this, SLOT( contextMenuViewCategories( const QPoint& ) ) );
@@ -439,16 +447,10 @@ void QgsGraduatedSymbolRendererV2Widget::updateUiFromRenderer()
     spinGraduatedClasses->setValue( mRenderer->ranges().count() );
 
   // set column
-  disconnect( cboGraduatedColumn, SIGNAL( currentIndexChanged( int ) ), this, SLOT( graduatedColumnChanged() ) );
+  disconnect( mExpressionWidget, SIGNAL( fieldChanged( QString ) ), this, SLOT( graduatedColumnChanged( QString ) ) );
   QString attrName = mRenderer->classAttribute();
-  int idx = cboGraduatedColumn->findText( attrName, Qt::MatchExactly );
-  if ( idx == -1 )
-  {
-    cboGraduatedColumn->addItem( attrName );
-    idx = cboGraduatedColumn->count() - 1;
-  }
-  cboGraduatedColumn->setCurrentIndex( idx );
-  connect( cboGraduatedColumn, SIGNAL( currentIndexChanged( int ) ), this, SLOT( graduatedColumnChanged() ) );
+  mExpressionWidget->setField( attrName );
+  connect( mExpressionWidget, SIGNAL( fieldChanged( QString ) ), this, SLOT( graduatedColumnChanged( QString ) ) );
 
   // set source symbol
   if ( mRenderer->sourceSymbol() )
@@ -466,43 +468,14 @@ void QgsGraduatedSymbolRendererV2Widget::updateUiFromRenderer()
   }
 }
 
-void QgsGraduatedSymbolRendererV2Widget::populateColumns()
+void QgsGraduatedSymbolRendererV2Widget::graduatedColumnChanged( QString field )
 {
-  cboGraduatedColumn->clear();
-  const QgsFields& flds = mLayer->pendingFields();
-  for ( int idx = 0; idx < flds.count(); ++idx )
-  {
-    if ( flds[idx].type() == QVariant::Double || flds[idx].type() == QVariant::Int || flds[idx].type() == QVariant::LongLong )
-      cboGraduatedColumn->addItem( flds[idx].name() );
-  }
-}
-
-void QgsGraduatedSymbolRendererV2Widget::graduatedColumnChanged()
-{
-  mRenderer->setClassAttribute( cboGraduatedColumn->currentText() );
-  classifyGraduated();
-}
-
-
-void QgsGraduatedSymbolRendererV2Widget::setExpression()
-{
-  QgsExpressionBuilderDialog dlg( mLayer, cboGraduatedColumn->currentText(), this );
-  dlg.setWindowTitle( "Set column expression" );
-  if ( dlg.exec() )
-  {
-    QString expression = dlg.expressionText();
-    if ( !expression.isEmpty() )
-    {
-      cboGraduatedColumn->addItem( expression );
-      cboGraduatedColumn->setCurrentIndex( cboGraduatedColumn->count() - 1 );
-    }
-  }
-
+  mRenderer->setClassAttribute( field );
 }
 
 void QgsGraduatedSymbolRendererV2Widget::classifyGraduated()
 {
-  QString attrName = cboGraduatedColumn->currentText();
+  QString attrName = mExpressionWidget->currentField();
 
   int classes = spinGraduatedClasses->value();
 

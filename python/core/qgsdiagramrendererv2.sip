@@ -3,6 +3,7 @@ struct QgsDiagramLayerSettings
 %TypeHeaderCode
 #include <qgsdiagramrendererv2.h>
 %End
+  public:
     //avoid inclusion of QgsPalLabeling
     enum Placement
     {
@@ -16,13 +17,15 @@ struct QgsDiagramLayerSettings
 
     enum LinePlacementFlags
     {
-      OnLine    = 1,
-      AboveLine = 2,
-      BelowLine = 4,
-      MapOrientation = 8
+      OnLine,
+      AboveLine,
+      BelowLine,
+      MapOrientation,
     };
 
     QgsDiagramLayerSettings();
+
+    ~QgsDiagramLayerSettings();
 
     //pal placement properties
     Placement placement;
@@ -30,7 +33,7 @@ struct QgsDiagramLayerSettings
     int priority; // 0 = low, 10 = high
     bool obstacle; // whether it's an obstacle
     double dist; // distance from the feature (in mm)
-    QgsDiagramRendererV2* renderer;
+    QgsDiagramRendererV2* renderer; // if any renderer is assigned, it is owned by this class
     int xPosColumn; //attribute index for x coordinate (or -1 if position not data defined)
     int yPosColumn;//attribute index for y coordinate (or -1 if position not data defined)
 
@@ -121,6 +124,10 @@ class QgsDiagramRendererV2
     QgsDiagramRendererV2();
     virtual ~QgsDiagramRendererV2();
 
+    /** Returns new instance that is equivalent to this one
+     * @note added in 2.4 */
+    virtual QgsDiagramRendererV2* clone() const = 0;
+
     /**Returns size of the diagram for a feature in map units. Returns an invalid QSizeF in case of error*/
     virtual QSizeF sizeMapUnits( const QgsFeature& feature, const QgsRenderContext& c );
 
@@ -132,7 +139,7 @@ class QgsDiagramRendererV2
     void renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QPointF& pos );
 
     void setDiagram( QgsDiagram* d /Transfer/ );
-    const QgsDiagram* diagram() const;
+    QgsDiagram* diagram() const;
 
     /**Returns list with all diagram settings in the renderer*/
     virtual QList<QgsDiagramSettings> diagramSettings() const = 0;
@@ -174,6 +181,8 @@ class QgsSingleCategoryDiagramRenderer : QgsDiagramRendererV2
     QgsSingleCategoryDiagramRenderer();
     ~QgsSingleCategoryDiagramRenderer();
 
+    QgsDiagramRendererV2* clone() const;
+
     QString rendererName() const;
 
     QList<QString> diagramAttributes() const;
@@ -200,6 +209,8 @@ class QgsLinearlyInterpolatedDiagramRenderer : QgsDiagramRendererV2
   public:
     QgsLinearlyInterpolatedDiagramRenderer();
     ~QgsLinearlyInterpolatedDiagramRenderer();
+
+    QgsDiagramRendererV2* clone() const;
 
     /**Returns list with all diagram settings in the renderer*/
     QList<QgsDiagramSettings> diagramSettings() const;

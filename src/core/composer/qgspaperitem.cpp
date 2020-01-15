@@ -20,6 +20,7 @@
 #include "qgsstylev2.h"
 #include "qgslogger.h"
 #include <QGraphicsRectItem>
+#include <QGraphicsView>
 #include <QPainter>
 
 //QgsPaperGrid
@@ -153,17 +154,16 @@ void QgsPaperItem::paint( QPainter* painter, const QStyleOptionGraphicsItem* ite
     return;
   }
 
-  QgsRenderContext context;
+  //setup painter scaling to dots so that raster symbology is drawn to scale
+  double dotsPerMM = painter->device()->logicalDpiX() / 25.4;
+
+  //setup render context
+  QgsMapSettings ms = mComposition->mapSettings();
+  //context units should be in dots
+  ms.setOutputDpi( painter->device()->logicalDpiX() );
+  QgsRenderContext context = QgsRenderContext::fromMapSettings( ms );
   context.setPainter( painter );
-  context.setScaleFactor( 1.0 );
-  if ( mComposition->plotStyle() ==  QgsComposition::Preview )
-  {
-    context.setRasterScaleFactor( horizontalViewScaleFactor() );
-  }
-  else
-  {
-    context.setRasterScaleFactor( mComposition->printResolution() / 25.4 );
-  }
+  context.setForceVectorOutput( true );
 
   painter->save();
 
@@ -184,11 +184,14 @@ void QgsPaperItem::paint( QPainter* painter, const QStyleOptionGraphicsItem* ite
     painter->drawRect( QRectF( 0, 0, rect().width(), rect().height() ) );
   }
 
+  painter->scale( 1 / dotsPerMM, 1 / dotsPerMM ); // scale painter from mm to dots
+
   painter->setRenderHint( QPainter::Antialiasing );
   mComposition->pageStyleSymbol()->startRender( context );
 
   calculatePageMargin();
-  QPolygonF pagePolygon = QPolygonF( QRectF( mPageMargin, mPageMargin, rect().width() - 2 * mPageMargin, rect().height() - 2 * mPageMargin ) );
+  QPolygonF pagePolygon = QPolygonF( QRectF( mPageMargin * dotsPerMM, mPageMargin * dotsPerMM,
+                                     ( rect().width() - 2 * mPageMargin ) * dotsPerMM, ( rect().height() - 2 * mPageMargin ) * dotsPerMM ) );
   QList<QPolygonF> rings; //empty list
 
   //need to render using atlas feature properties?
@@ -251,7 +254,14 @@ void QgsPaperItem::initialize()
   //(QGraphicsRectItem considers the pen width when calculating an item's scene rect)
   setPen( QPen( QBrush( Qt::NoBrush ), 4 ) );
 
-  //create a new QgsPaperGrid for this page, and add it to the composition
-  mPageGrid = new QgsPaperGrid( pos().x(), pos().y(), rect().width(), rect().height(), mComposition );
-  mComposition->addItem( mPageGrid );
+  if ( mComposition )
+  {
+    //create a new QgsPaperGrid for this page, and add it to the composition
+    mPageGrid = new QgsPaperGrid( pos().x(), pos().y(), rect().width(), rect().height(), mComposition );
+    mComposition->addItem( mPageGrid );
+
+    //connect to atlas feature changes
+    //to update symbol style (in case of data-defined symbology)
+    connect( &mComposition->atlasComposition(), SIGNAL( featureChanged( QgsFeature* ) ), this, SLOT( repaint() ) );
+  }
 }

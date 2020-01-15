@@ -21,7 +21,7 @@
 #include <QPainter>
 
 //qgis includes...
-#include <qgsmaprenderer.h>
+#include <qgsmapsettings.h>
 #include <qgsmaplayer.h>
 #include <qgsvectorlayer.h>
 #include <qgsapplication.h>
@@ -50,7 +50,7 @@ class TestQgsBlendModes: public QObject
     void rasterBlending();
   private:
     bool imageCheck( QString theType ); //as above
-    QgsMapRenderer * mpMapRenderer;
+    QgsMapSettings mMapSettings;
     QgsMapLayer * mpPointsLayer;
     QgsVectorLayer * mpPolysLayer;
     QgsVectorLayer * mpLinesLayer;
@@ -118,8 +118,6 @@ void TestQgsBlendModes::initTestCase()
   QgsMapLayerRegistry::instance()->addMapLayers(
     QList<QgsMapLayer *>() << mRasterLayer2 );
 
-  mpMapRenderer = new QgsMapRenderer();
-
   // points extent was not always reliable
   mExtent = QgsRectangle( -118.8888888888887720, 22.8002070393376783, -83.3333333333331581, 46.8719806763287536 );
 }
@@ -141,17 +139,19 @@ void TestQgsBlendModes::vectorBlending()
   QStringList myLayers;
   myLayers << mpLinesLayer->id();
   myLayers << mpPolysLayer->id();
-  mpMapRenderer->setLayerSet( myLayers );
+  mMapSettings.setLayers( myLayers );
 
   //Set blending modes for both layers
   mpLinesLayer->setBlendMode( QPainter::CompositionMode_Difference );
   mpPolysLayer->setBlendMode( QPainter::CompositionMode_Difference );
-  mpMapRenderer->setExtent( mExtent );
-  QVERIFY( imageCheck( "vector_blendmodes" ) );
+  mMapSettings.setExtent( mExtent );
+  bool res = imageCheck( "vector_blendmodes" );
 
   //Reset layers
   mpLinesLayer->setBlendMode( QPainter::CompositionMode_SourceOver );
   mpPolysLayer->setBlendMode( QPainter::CompositionMode_SourceOver );
+
+  QVERIFY( res );
 }
 
 void TestQgsBlendModes::featureBlending()
@@ -160,15 +160,17 @@ void TestQgsBlendModes::featureBlending()
   QStringList myLayers;
   myLayers << mpLinesLayer->id();
   myLayers << mpPolysLayer->id();
-  mpMapRenderer->setLayerSet( myLayers );
+  mMapSettings.setLayers( myLayers );
 
   //Set feature blending modes for point layer
   mpLinesLayer->setFeatureBlendMode( QPainter::CompositionMode_Plus );
-  mpMapRenderer->setExtent( mExtent );
-  QVERIFY( imageCheck( "vector_featureblendmodes" ) );
+  mMapSettings.setExtent( mExtent );
+  bool res = imageCheck( "vector_featureblendmodes" );
 
   //Reset layers
   mpLinesLayer->setFeatureBlendMode( QPainter::CompositionMode_SourceOver );
+
+  QVERIFY( res );
 }
 
 void TestQgsBlendModes::vectorLayerTransparency()
@@ -177,15 +179,17 @@ void TestQgsBlendModes::vectorLayerTransparency()
   QStringList myLayers;
   myLayers << mpLinesLayer->id();
   myLayers << mpPolysLayer->id();
-  mpMapRenderer->setLayerSet( myLayers );
+  mMapSettings.setLayers( myLayers );
 
   //Set feature blending modes for point layer
   mpLinesLayer->setLayerTransparency( 50 );
-  mpMapRenderer->setExtent( mExtent );
-  QVERIFY( imageCheck( "vector_layertransparency" ) );
+  mMapSettings.setExtent( mExtent );
+  bool res = imageCheck( "vector_layertransparency" );
 
   //Reset layers
   mpLinesLayer->setLayerTransparency( 0 );
+
+  QVERIFY( res );
 }
 
 void TestQgsBlendModes::rasterBlending()
@@ -194,8 +198,8 @@ void TestQgsBlendModes::rasterBlending()
   QStringList myLayers;
   myLayers << mRasterLayer1->id();
   myLayers << mRasterLayer2->id();
-  mpMapRenderer->setLayerSet( myLayers );
-  mpMapRenderer->setExtent( mRasterLayer1->extent() );
+  mMapSettings.setLayers( myLayers );
+  mMapSettings.setExtent( mRasterLayer1->extent() );
 
   // set blending mode for top layer
   mRasterLayer1->setBlendMode( QPainter::CompositionMode_Plus );
@@ -212,8 +216,8 @@ bool TestQgsBlendModes::imageCheck( QString theTestType )
   //ensure the rendered output matches our control image
   QgsRenderChecker myChecker;
   myChecker.setControlName( "expected_" + theTestType );
-  myChecker.setMapRenderer( mpMapRenderer );
-  bool myResultFlag = myChecker.runTest( theTestType );
+  myChecker.setMapSettings( mMapSettings );
+  bool myResultFlag = myChecker.runTest( theTestType, 1500 );
   mReport += myChecker.report();
   return myResultFlag;
 }

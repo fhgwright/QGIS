@@ -85,6 +85,9 @@ namespace pal
     // do not init and exit GEOS - we do it inside QGIS
     //initGEOS( geosNotice, geosError );
 
+    fnIsCancelled = 0;
+    fnIsCancelledContext = 0;
+
     layers = new QList<Layer*>();
 
     lyrsMutex = new SimpleMutex();
@@ -316,6 +319,9 @@ namespace pal
     double scale = (( FilterContext* ) ctx )->scale;
     Pal* pal = (( FilterContext* )ctx )->pal;
 
+    if ( pal->isCancelled() )
+      return false; // do not continue searching
+
     double amin[2], amax[2];
     pset->getBoundingBox( amin, amax );
 
@@ -423,6 +429,9 @@ namespace pal
             if ( layer->getMergeConnectedLines() )
               layer->joinConnectedFeatures();
 
+            if ( layer->getRepeatDistance() > 0 )
+              layer->chopFeatures( layer->getRepeatDistance() );
+
             context->layer = layer;
             context->priority = layersFactor[i];
             // lookup for feature (and generates candidates list)
@@ -509,6 +518,13 @@ namespace pal
     filterCtx.pal = this;
     obstacles->Search( amin, amax, filteringCallback, ( void* ) &filterCtx );
 
+    if ( isCancelled() )
+    {
+      delete fFeats;
+      delete prob;
+      delete obstacles;
+      return 0;
+    }
 
     int idlp = 0;
     for ( i = 0; i < prob->nbft; i++ ) /* foreach feature into prob */
@@ -580,6 +596,14 @@ namespace pal
     j = 0;
     while ( fFeats->size() > 0 ) // foreach feature
     {
+      if ( isCancelled() )
+      {
+        delete fFeats;
+        delete prob;
+        delete obstacles;
+        return 0;
+      }
+
       feat = fFeats->pop_front();
       for ( i = 0; i < feat->nblp; i++, idlp++ )  // foreach label candidate
       {
@@ -796,6 +820,12 @@ namespace pal
     }
 
     return solution;
+  }
+
+  void Pal::registerCancellationCallback( Pal::FnIsCancelled fnCancelled, void *context )
+  {
+    fnIsCancelled = fnCancelled;
+    fnIsCancelledContext = context;
   }
 
   Problem* Pal::extractProblem( double scale, double bbox[4] )

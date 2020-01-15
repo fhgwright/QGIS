@@ -48,6 +48,8 @@ class QResizeEvent;
 class QFile;
 class QSizeGrip;
 class QUndoView;
+class QComboBox;
+class QLabel;
 
 /** \ingroup MapComposer
  * \brief A gui for composing a printable map.
@@ -427,8 +429,20 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
 
   private:
 
-    /**Establishes the signal slot connection for the class*/
-    void connectSlots();
+    /**Establishes the signal slot connections from the QgsComposerView to the composer*/
+    void connectViewSlots();
+
+    /**Establishes the signal slot connections from the QgsComposition to the composer*/
+    void connectCompositionSlots();
+
+    /**Establishes other signal slot connections for the composer*/
+    void connectOtherSlots();
+
+    /**Creates the composition widget*/
+    void createCompositionWidget();
+
+    /**Sets up the compositions undo/redo connections*/
+    void setupUndoView();
 
     //! True if a composer map contains a WMS layer
     bool containsWMSLayer() const;
@@ -481,6 +495,9 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
 
     //! Set default settings for printer page settings based on composition paper size
     void setPrinterPageDefaults();
+
+    //! Load predefined scales from the project's properties
+    void loadAtlasPredefinedScalesFromProject();
 
     /**Composer title*/
     QString mTitle;
@@ -535,6 +552,13 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
 
     QUndoView* mUndoView;
 
+    //! Preview mode actions
+    QAction *mActionPreviewModeOff;
+    QAction *mActionPreviewModeGrayscale;
+    QAction *mActionPreviewModeMono;
+    QAction *mActionPreviewProtanope;
+    QAction *mActionPreviewDeuteranope;
+
     //! We load composer map content from project xml only on demand. Therefore we need to store the real preview mode type
     QMap< QgsComposerMap*, int > mMapsToRestore;
 
@@ -559,7 +583,6 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
     QMenu* mHelpMenu;
 
     QgsMapLayerAction* mAtlasFeatureAction;
-
 
   signals:
     void printAsRasterChanged( bool state );
@@ -599,6 +622,15 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
 
     //! Sets the printer page orientation when the page orientation changes
     void setPrinterPageOrientation( QString orientation );
+
+    void disablePreviewMode();
+    void activateGrayscalePreview();
+    void activateMonoPreview();
+    void activateProtanopePreview();
+    void activateDeuteranopePreview();
+
+    //! Sets the composition for the composer window
+    void setComposition( QgsComposition* composition );
 
 };
 

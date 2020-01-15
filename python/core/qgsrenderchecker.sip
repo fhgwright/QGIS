@@ -35,7 +35,19 @@ class QgsRenderChecker
     QString imageToHash( QString theImageFile );
 
     void setRenderedImage( QString theImageFileName );
-    void setMapRenderer( QgsMapRenderer *thepMapRenderer );
+    //! @deprecated since 2.4 - use setMapSettings()
+    void setMapRenderer( QgsMapRenderer *  thepMapRenderer ) /Deprecated/;
+
+    //! @note added in 2.4
+    void setMapSettings( const QgsMapSettings& mapSettings );
+
+    /** Set tolerance for color components used by runTest() and compareImages().
+     * Default value is 0.
+     * @param theColorTolerance is maximum difference for each color component
+     * including alpha to be considered correct.
+     * @note added in 2.1
+     */
+    void setColorTolerance( unsigned int theColorTolerance );
     /**
      * Test using renderer to generate the image to be compared.
      * @param theTestName - to be used as the basis for writing a file to
@@ -70,5 +82,4 @@ class QgsRenderChecker
     bool isKnownAnomaly( QString theDiffImageFile );
 
     QString expectedImageFile();
-
 };

@@ -3,6 +3,7 @@ SET(QGIS_APP_SRCS
   qgisappinterface.cpp
   qgisappstylesheet.cpp
   qgsabout.cpp
+  qgsapplayertreeviewmenuprovider.cpp
   qgssponsors.cpp
   qgsaddattrdialog.cpp
   qgsaddtaborgroup.cpp
@@ -10,7 +11,6 @@ SET(QGIS_APP_SRCS
   qgsannotationwidget.cpp
   qgsattributeactiondialog.cpp
   qgsattributetypedialog.cpp
-  qgsattributetypeloaddialog.cpp
   qgsattributetabledialog.cpp
   qgsbookmarks.cpp
   qgsbrowserdockwidget.cpp
@@ -92,7 +92,6 @@ SET(QGIS_APP_SRCS
   qgsmeasuretool.cpp
   qgsmergeattributesdialog.cpp
   qgsoptions.cpp
-  #qgspastetransformations.cpp
   qgspointrotationitem.cpp
   qgspluginmetadata.cpp
   qgspluginregistry.cpp
@@ -129,13 +128,7 @@ SET(QGIS_APP_SRCS
   composer/qgscompositionwidget.cpp
   composer/qgsatlascompositionwidget.cpp
 
-  legend/qgslegendgroup.cpp
-  legend/qgslegend.cpp
   legend/qgsapplegendinterface.cpp
-  legend/qgslegenditem.cpp
-  legend/qgslegendlayer.cpp
-  legend/qgslegendsymbologyitem.cpp
-  legend/qgslayerorder.cpp
 
   ogr/qgsogrhelperfunctions.cpp
   ogr/qgsopenvectorlayerdialog.cpp
@@ -169,7 +162,6 @@ SET (QGIS_APP_MOC_HDRS
   qgsannotationwidget.h
   qgsattributeactiondialog.h
   qgsattributetypedialog.h
-  qgsattributetypeloaddialog.h
   qgsattributetabledialog.h
   qgsbookmarks.h
   qgsbrowserdockwidget.h
@@ -203,6 +195,7 @@ SET (QGIS_APP_MOC_HDRS
   qgsloadstylefromdbdialog.h
   qgssavestyletodbdialog.h
   qgsshortcutsmanager.h
+  qgsapplayertreeviewmenuprovider.h
 
   qgsmaptooladdfeature.h
   qgsmaptoolcapture.h
@@ -241,7 +234,6 @@ SET (QGIS_APP_MOC_HDRS
   qgsmeasuretool.h
   qgsmergeattributesdialog.h
   qgsoptions.h
-  #qgspastetransformations.h
   qgsprojectlayergroupdialog.h
   qgsprojectproperties.h
   qgsrastercalcdialog.h
@@ -272,10 +264,7 @@ SET (QGIS_APP_MOC_HDRS
   composer/qgscompositionwidget.h
   composer/qgsatlascompositionwidget.h
 
-  legend/qgslegend.h
   legend/qgsapplegendinterface.h
-  legend/qgslegendlayer.h
-  legend/qgslayerorder.h
 
   ogr/qgsopenvectorlayerdialog.h
   ogr/qgsnewogrconnection.h
@@ -406,9 +395,19 @@ ENDIF (WIN32)
 
 IF(PEDANTIC)
   # disable deprecation warnings
-  IF(NOT MSVC)
-    SET_SOURCE_FILES_PROPERTIES(qgisappinterface.cpp PROPERTIES COMPILE_FLAGS -Wno-deprecated)
-  ENDIF(NOT MSVC)
+  IF(MSVC)
+    SET_SOURCE_FILES_PROPERTIES(
+        qgisappinterface.cpp
+        ${CMAKE_BINARY_DIR}/src/app/moc_qgisappinterface.cxx
+	PROPERTIES COMPILE_FLAGS "/wd4996"
+    )
+  ELSE(MSVC)
+    SET_SOURCE_FILES_PROPERTIES(
+        qgisappinterface.cpp
+        ${CMAKE_BINARY_DIR}/src/app/moc_qgisappinterface.cxx
+        PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations"
+    )
+  ENDIF(MSVC)
 ENDIF(PEDANTIC)
 
 INCLUDE_DIRECTORIES(
@@ -418,11 +417,22 @@ INCLUDE_DIRECTORIES(
   ${QWT_INCLUDE_DIR}
   ${QT_QTUITOOLS_INCLUDE_DIR}
   ${QEXTSERIALPORT_INCLUDE_DIR}
-  ../analysis/raster ../analysis/openstreetmap
+  ../analysis/raster
+  ../analysis/openstreetmap
   ../core
   ../core/gps
-  ../core/composer ../core/dxf ../core/raster ../core/symbology-ng
-  ../gui ../gui/symbology-ng ../gui/attributetable ../gui/raster ../gui/editorwidgets ../gui/editorwidgets/core
+  ../core/composer
+  ../core/dxf
+  ../core/layertree
+  ../core/raster
+  ../core/symbology-ng
+  ../gui
+  ../gui/symbology-ng
+  ../gui/attributetable
+  ../gui/raster
+  ../gui/editorwidgets
+  ../gui/editorwidgets/core
+  ../gui/layertree
   ../plugins
   ../python
   gps
@@ -459,6 +469,11 @@ IF (ANDROID)
 ELSE (ANDROID)
   ADD_EXECUTABLE(${QGIS_APP_NAME} MACOSX_BUNDLE WIN32 main.cpp ${QGIS_APP_SRCS} ${QGIS_APP_MOC_SRCS} ${IMAGE_RCC_SRCS} ${TEST_RCC_SRCS})
 ENDIF (ANDROID)
+
+
+QT4_WRAP_CPP(tst_moc_srcs maprenderertest.h)
+ADD_EXECUTABLE(maprenderertest maprenderertest.cpp ${tst_moc_srcs})
+TARGET_LINK_LIBRARIES(maprenderertest   qgis_core qgis_gui)
 
 IF (WIN32)
   IF (MSVC)

@@ -53,34 +53,52 @@
 QgsComposition::QgsComposition( QgsMapRenderer* mapRenderer )
     : QGraphicsScene( 0 )
     , mMapRenderer( mapRenderer )
-    , mPlotStyle( QgsComposition::Preview )
-    , mPageWidth( 297 )
-    , mPageHeight( 210 )
-    , mSpaceBetweenPages( 10 )
-    , mPageStyleSymbol( 0 )
-    , mPrintAsRaster( false )
-    , mGenerateWorldFile( false )
-    , mWorldFileMap( 0 )
-    , mUseAdvancedEffects( true )
-    , mSnapToGrid( false )
-    , mGridVisible( false )
-    , mSnapGridResolution( 0 )
-    , mSnapGridTolerance( 0 )
-    , mSnapGridOffsetX( 0 )
-    , mSnapGridOffsetY( 0 )
-    , mAlignmentSnap( true )
-    , mGuidesVisible( true )
-    , mSmartGuides( true )
-    , mAlignmentSnapTolerance( 0 )
-    , mSelectionHandles( 0 )
-    , mActiveItemCommand( 0 )
-    , mActiveMultiFrameCommand( 0 )
+    , mMapSettings( mapRenderer->mapSettings() )
     , mAtlasComposition( this )
-    , mAtlasMode( QgsComposition::AtlasOff )
-    , mPreventCursorChange( false )
 {
+  init();
+}
+
+QgsComposition::QgsComposition( const QgsMapSettings& mapSettings )
+    : QGraphicsScene( 0 )
+    , mMapRenderer( 0 )
+    , mMapSettings( mapSettings )
+    , mAtlasComposition( this )
+{
+  init();
+}
+
+void QgsComposition::init()
+{
+  // these members should be ideally in constructor's initialization list, but now we have two constructors...
+  mPlotStyle = QgsComposition::Preview;
+  mPageWidth = 297;
+  mPageHeight = 210;
+  mSpaceBetweenPages = 10;
+  mPageStyleSymbol = 0;
+  mPrintAsRaster = false;
+  mGenerateWorldFile = false;
+  mWorldFileMap = 0;
+  mUseAdvancedEffects = true;
+  mSnapToGrid = false;
+  mGridVisible = false;
+  mSnapGridResolution = 0;
+  mSnapGridTolerance = 0;
+  mSnapGridOffsetX = 0;
+  mSnapGridOffsetY = 0;
+  mAlignmentSnap = true;
+  mGuidesVisible = true;
+  mSmartGuides = true;
+  mAlignmentSnapTolerance = 0;
+  mSelectionHandles = 0;
+  mActiveItemCommand = 0;
+  mActiveMultiFrameCommand = 0;
+  mAtlasMode = QgsComposition::AtlasOff;
+  mPreventCursorChange = false;
+
   setBackgroundBrush( QColor( 215, 215, 215 ) );
   createDefaultPageStyleSymbol();
+
   addPaperItem();
 
   updateBounds();
@@ -98,6 +116,8 @@ QgsComposition::QgsComposition( QgsMapRenderer* mapRenderer )
   loadSettings();
 }
 
+
+/*
 QgsComposition::QgsComposition()
     : QGraphicsScene( 0 ),
     mMapRenderer( 0 ),
@@ -130,7 +150,7 @@ QgsComposition::QgsComposition()
   //load default composition settings
   loadDefaults();
   loadSettings();
-}
+}*/
 
 QgsComposition::~QgsComposition()
 {
@@ -161,6 +181,18 @@ void QgsComposition::updateBounds()
   setSceneRect( compositionBounds() );
 }
 
+void QgsComposition::refreshItems()
+{
+  emit refreshItemsTriggered();
+}
+
+void QgsComposition::setSelectedItem( QgsComposerItem *item )
+{
+  clearSelection();
+  item->setSelected( true );
+  emit selectedItemChanged( item );
+}
+
 QRectF QgsComposition::compositionBounds() const
 {
   //start with an empty rectangle
@@ -188,6 +220,40 @@ QRectF QgsComposition::compositionBounds() const
 
 void QgsComposition::setPaperSize( double width, double height )
 {
+  //update item positions
+  QList<QGraphicsItem *> itemList = items();
+  QList<QGraphicsItem *>::iterator itemIt = itemList.begin();
+  for ( ; itemIt != itemList.end(); ++itemIt )
+  {
+    QgsComposerItem* composerItem = dynamic_cast<QgsComposerItem *>( *itemIt );
+    if ( composerItem )
+    {
+      composerItem->updatePagePos( width, height );
+    }
+  }
+  //update guide positions and size
+  QList< QGraphicsLineItem* >* guides = snapLines();
+  QList< QGraphicsLineItem* >::iterator guideIt = guides->begin();
+  double totalHeight = ( height + spaceBetweenPages() ) * ( numPages() - 1 ) + height;
+  for ( ; guideIt != guides->end(); ++guideIt )
+  {
+    QLineF line = ( *guideIt )->line();
+    if ( line.dx() == 0 )
+    {
+      //vertical line, change height of line
+      ( *guideIt )->setLine( line.x1(), 0, line.x1(), totalHeight );
+    }
+    else
+    {
+      //horizontal line
+      //move to new vertical position and change width of line
+      QPointF curPagePos = positionOnPage( line.p1() );
+      int curPage = pageNumberForPoint( line.p1() ) - 1;
+      double newY = curPage * ( height + spaceBetweenPages() ) + curPagePos.y();
+      ( *guideIt )->setLine( 0, newY, width, newY );
+    }
+  }
+
   mPageWidth = width;
   mPageHeight = height;
   double currentY = 0;
@@ -196,6 +262,7 @@ void QgsComposition::setPaperSize( double width, double height )
     mPages.at( i )->setSceneRect( QRectF( 0, currentY, width, height ) );
     currentY += ( height + mSpaceBetweenPages );
   }
+  QgsProject::instance()->dirty( true );
   updateBounds();
   emit paperSizeChanged();
 }
@@ -231,9 +298,24 @@ void QgsComposition::setNumPages( int pages )
     }
   }
 
+  //update vertical guide height
+  QList< QGraphicsLineItem* >* guides = snapLines();
+  QList< QGraphicsLineItem* >::iterator guideIt = guides->begin();
+  double totalHeight = ( mPageHeight + spaceBetweenPages() ) * ( pages - 1 ) + mPageHeight;
+  for ( ; guideIt != guides->end(); ++guideIt )
+  {
+    QLineF line = ( *guideIt )->line();
+    if ( line.dx() == 0 )
+    {
+      //vertical line, change height of line
+      ( *guideIt )->setLine( line.x1(), 0, line.x1(), totalHeight );
+    }
+  }
+
   //update the corresponding variable
   QgsExpression::setSpecialColumn( "$numpages", QVariant(( int )numPages() ) );
 
+  QgsProject::instance()->dirty( true );
   updateBounds();
 
   emit nPagesChanged();
@@ -248,6 +330,7 @@ void QgsComposition::setPageStyleSymbol( QgsFillSymbolV2* symbol )
 {
   delete mPageStyleSymbol;
   mPageStyleSymbol = symbol;
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::createDefaultPageStyleSymbol()
@@ -257,6 +340,7 @@ void QgsComposition::createDefaultPageStyleSymbol()
   properties.insert( "color", "white" );
   properties.insert( "style", "solid" );
   properties.insert( "style_border", "no" );
+  properties.insert( "joinstyle", "miter" );
   mPageStyleSymbol = QgsFillSymbolV2::createSimple( properties );
 }
 
@@ -486,6 +570,12 @@ const QgsComposerItem* QgsComposition::getComposerItemByUuid( QString theUuid ) 
   return 0;
 }
 
+void QgsComposition::setPrintResolution( int dpi )
+{
+  mPrintResolution = dpi;
+  emit printResolutionChanged();
+  QgsProject::instance()->dirty( true );
+}
 
 void QgsComposition::setUseAdvancedEffects( bool effectsEnabled )
 {
@@ -847,6 +937,12 @@ void QgsComposition::addItemsFromXML( const QDomElement& elem, const QDomDocumen
   {
     QDomElement currentComposerMapElem = composerMapList.at( i ).toElement();
     QgsComposerMap* newMap = new QgsComposerMap( this );
+
+    if ( mapsToRestore )
+    {
+      newMap->setUpdatesEnabled( false );
+    }
+
     newMap->readXML( currentComposerMapElem, doc );
     newMap->assignFreeId();
 
@@ -854,6 +950,7 @@ void QgsComposition::addItemsFromXML( const QDomElement& elem, const QDomDocumen
     {
       mapsToRestore->insert( newMap, ( int )( newMap->previewMode() ) );
       newMap->setPreviewMode( QgsComposerMap::Rectangle );
+      newMap->setUpdatesEnabled( true );
     }
     addComposerMap( newMap, false );
     newMap->setZValue( newMap->zValue() + zOrderOffset );
@@ -1148,12 +1245,19 @@ void QgsComposition::raiseItem( QgsComposerItem* item )
   QMutableLinkedListIterator<QgsComposerItem*> it( mItemZList );
   if ( it.findNext( item ) )
   {
-    if ( it.hasNext() )
+    it.remove();
+    while ( it.hasNext() )
     {
-      it.remove();
+      //search through item z list to find next item which is present in the scene
+      //(deleted items still exist in the z list so that they can be restored to their correct stacking order,
+      //but since they are not in the scene they should be ignored here)
       it.next();
-      it.insert( item );
+      if ( it.value() && it.value()->scene() )
+      {
+        break;
+      }
     }
+    it.insert( item );
   }
 }
 
@@ -1246,13 +1350,19 @@ void QgsComposition::lowerItem( QgsComposerItem* item )
   QMutableLinkedListIterator<QgsComposerItem*> it( mItemZList );
   if ( it.findNext( item ) )
   {
-    it.previous();
-    if ( it.hasPrevious() )
+    it.remove();
+    while ( it.hasPrevious() )
     {
-      it.remove();
+      //search through item z list to find previous item which is present in the scene
+      //(deleted items still exist in the z list so that they can be restored to their correct stacking order,
+      //but since they are not in the scene they should be ignored here)
       it.previous();
-      it.insert( item );
+      if ( it.value() && it.value()->scene() )
+      {
+        break;
+      }
     }
+    it.insert( item );
   }
 }
 
@@ -1334,6 +1444,7 @@ void QgsComposition::alignSelectedItemsLeft()
     subcommand->saveAfterState();
   }
   mUndoStack.push( parentCommand );
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::alignSelectedItemsHCenter()
@@ -1363,6 +1474,7 @@ void QgsComposition::alignSelectedItemsHCenter()
     subcommand->saveAfterState();
   }
   mUndoStack.push( parentCommand );
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::alignSelectedItemsRight()
@@ -1392,6 +1504,7 @@ void QgsComposition::alignSelectedItemsRight()
     subcommand->saveAfterState();
   }
   mUndoStack.push( parentCommand );
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::alignSelectedItemsTop()
@@ -1420,6 +1533,7 @@ void QgsComposition::alignSelectedItemsTop()
     subcommand->saveAfterState();
   }
   mUndoStack.push( parentCommand );
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::alignSelectedItemsVCenter()
@@ -1447,6 +1561,7 @@ void QgsComposition::alignSelectedItemsVCenter()
     subcommand->saveAfterState();
   }
   mUndoStack.push( parentCommand );
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::alignSelectedItemsBottom()
@@ -1474,6 +1589,7 @@ void QgsComposition::alignSelectedItemsBottom()
     subcommand->saveAfterState();
   }
   mUndoStack.push( parentCommand );
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::lockSelectedItems()
@@ -1491,6 +1607,7 @@ void QgsComposition::lockSelectedItems()
 
   clearSelection();
   mUndoStack.push( parentCommand );
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::unlockAllItems()
@@ -1519,6 +1636,7 @@ void QgsComposition::unlockAllItems()
     }
   }
   mUndoStack.push( parentCommand );
+  QgsProject::instance()->dirty( true );
 }
 
 void QgsComposition::updateZValues( bool addUndoCommands )
@@ -1554,6 +1672,7 @@ void QgsComposition::updateZValues( bool addUndoCommands )
   if ( addUndoCommands )
   {
     mUndoStack.push( parentCommand );
+    QgsProject::instance()->dirty( true );
   }
 }
 
@@ -2309,18 +2428,28 @@ void QgsComposition::deleteAndRemoveMultiFrames()
 
 void QgsComposition::beginPrintAsPDF( QPrinter& printer, const QString& file )
 {
-  printer.setOutputFormat( QPrinter::PdfFormat );
   printer.setOutputFileName( file );
+  // setOutputFormat should come after setOutputFileName, which auto-sets format to QPrinter::PdfFormat.
+  // [LS] This should be QPrinter::NativeFormat for Mac, otherwise fonts are not embed-able
+  // and text is not searchable; however, there are several bugs with <= Qt 4.8.5, 5.1.1, 5.2.0:
+  // https://bugreports.qt-project.org/browse/QTBUG-10094 - PDF font embedding fails
+  // https://bugreports.qt-project.org/browse/QTBUG-33583 - PDF output converts text to outline
+  // Also an issue with PDF paper size using QPrinter::NativeFormat on Mac (always outputs portrait letter-size)
+  printer.setOutputFormat( QPrinter::PdfFormat );
   printer.setPaperSize( QSizeF( paperWidth(), paperHeight() ), QPrinter::Millimeter );
+
+  // TODO: add option for this in Composer
+  // May not work on Windows or non-X11 Linux. Works fine on Mac using QPrinter::NativeFormat
+  //printer.setFontEmbeddingEnabled( true );
 
   QgsPaintEngineHack::fixEngineFlags( printer.paintEngine() );
 }
 
-void QgsComposition::exportAsPDF( const QString& file )
+bool QgsComposition::exportAsPDF( const QString& file )
 {
   QPrinter printer;
   beginPrintAsPDF( printer, file );
-  print( printer );
+  return print( printer );
 }
 
 void QgsComposition::doPrint( QPrinter& printer, QPainter& p )
@@ -2370,11 +2499,19 @@ void QgsComposition::beginPrint( QPrinter &printer )
   printer.setResolution( printResolution() );
 }
 
-void QgsComposition::print( QPrinter &printer )
+bool QgsComposition::print( QPrinter &printer )
 {
   beginPrint( printer );
-  QPainter p( &printer );
+  QPainter p;
+  bool ready = p.begin( &printer );
+  if ( !ready )
+  {
+    //error beginning print
+    return false;
+  }
   doPrint( printer, p );
+  p.end();
+  return true;
 }
 
 QImage QgsComposition::printPageAsRaster( int page )
@@ -2517,6 +2654,7 @@ bool QgsComposition::setAtlasMode( QgsComposition::AtlasMode mode )
     if ( ! atlasHasFeatures )
     {
       mAtlasMode = QgsComposition::AtlasOff;
+      mAtlasComposition.endRender();
       return false;
     }
   }
@@ -2557,3 +2695,4 @@ double QgsComposition::relativePosition( double position, double beforeMin, doub
   //return linearly scaled position
   return m * position + c;
 }
+

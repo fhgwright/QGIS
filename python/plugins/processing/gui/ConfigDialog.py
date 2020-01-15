@@ -31,7 +31,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from processing.core.ProcessingConfig import ProcessingConfig
-
+from processing.core.Processing import Processing
 from processing.ui.ui_DlgConfig import Ui_DlgConfig
 
 import processing.resources_rc
@@ -135,7 +135,7 @@ class ConfigDialog(QDialog, Ui_DlgConfig):
             if isinstance(setting.value, bool):
                 setting.value = self.items[setting].checkState() == Qt.Checked
             elif isinstance(setting.value, (float, int, long)):
-                value = str(self.items[setting].text())
+                value = unicode(self.items[setting].text())
                 try:
                     value = float(value)
                     setting.value = value
@@ -144,10 +144,9 @@ class ConfigDialog(QDialog, Ui_DlgConfig):
                             self.tr('Wrong parameter value:\n%1').arg(value))
                     return
             else:
-                setting.value = str(self.items[setting].text())
-            ProcessingConfig.addSetting(setting)
-        ProcessingConfig.saveSettings()
-        self.toolbox.updateTree()
+                setting.value = unicode(self.items[setting].text())
+            setting.save()
+        Processing.updateAlgsList()
 
         QDialog.accept(self)
 

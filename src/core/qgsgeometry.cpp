@@ -145,6 +145,7 @@ static GEOSInit geosinit;
 #define GEOSArea(g, a) GEOSArea( (GEOSGeometry*) g, a )
 #define GEOSTopologyPreserveSimplify(g, t) GEOSTopologyPreserveSimplify( (GEOSGeometry*) g, t )
 #define GEOSGetCentroid(g) GEOSGetCentroid( (GEOSGeometry*) g )
+#define GEOSPointOnSurface(g) GEOSPointOnSurface( (GEOSGeometry*) g )
 
 #define GEOSCoordSeq_getSize(cs,n) GEOSCoordSeq_getSize( (GEOSCoordSequence *) cs, n )
 #define GEOSCoordSeq_getX(cs,i,x) GEOSCoordSeq_getX( (GEOSCoordSequence *)cs, i, x )
@@ -1362,18 +1363,31 @@ bool QgsGeometry::moveVertex( double x, double y, int atVertex )
   }
 }
 
-bool QgsGeometry::deleteVertex( QgsConstWkbPtr &srcPtr, QgsWkbPtr &dstPtr, int atVertex, bool hasZValue, int &pointIndex, bool isRing, bool lastItem )
+// copy vertices from srcPtr to dstPtr and skip/delete one vertex
+// @param srcPtr ring/part starting with number of points (adjusted in each call)
+// @param dstPtr ring/part to copy to (adjusted in each call)
+// @param atVertex index of vertex to skip
+// @param hasZValue points have 3 elements
+// @param pointIndex reference to index of first ring/part vertex in overall object (adjusted in each call)
+// @param isRing srcPtr points to a ring
+// @param lastItem last ring/part, atVertex after this one must be wrong
+// @return
+//   0 no delete was done
+//   1 "normal" delete was done
+//   2 last element of the ring/part was deleted
+int QgsGeometry::deleteVertex( QgsConstWkbPtr &srcPtr, QgsWkbPtr &dstPtr, int atVertex, bool hasZValue, int &pointIndex, bool isRing, bool lastItem )
 {
   QgsDebugMsg( QString( "atVertex:%1 hasZValue:%2 pointIndex:%3 isRing:%4" ).arg( atVertex ).arg( hasZValue ).arg( pointIndex ).arg( isRing ) );
   const int ps = ( hasZValue ? 3 : 2 ) * sizeof( double );
   int nPoints;
   srcPtr >> nPoints;
 
+  // copy complete ring/part if vertex is in a following one
   if ( atVertex < pointIndex || atVertex >= pointIndex + nPoints )
   {
     // atVertex does not exist
     if ( lastItem && atVertex >= pointIndex + nPoints )
-      return false;
+      return 0;
 
     dstPtr << nPoints;
 
@@ -1382,14 +1396,25 @@ bool QgsGeometry::deleteVertex( QgsConstWkbPtr &srcPtr, QgsWkbPtr &dstPtr, int a
     dstPtr += len;
     srcPtr += len;
     pointIndex += nPoints;
-    return false;
+    return 0;
   }
 
+  // delete the first vertex of a ring instead of the last
   if ( isRing && atVertex == pointIndex + nPoints - 1 )
     atVertex = pointIndex;
 
+  if ( nPoints == ( isRing ? 2 : 1 ) )
+  {
+    // last point of the part/ring is deleted
+    // skip the whole part/ring
+    srcPtr += nPoints * ps;
+    pointIndex += nPoints;
+    return 2;
+  }
+
   dstPtr << nPoints - 1;
 
+  // copy ring before vertex
   int len = ( atVertex - pointIndex ) * ps;
   if ( len > 0 )
   {
@@ -1398,9 +1423,13 @@ bool QgsGeometry::deleteVertex( QgsConstWkbPtr &srcPtr, QgsWkbPtr &dstPtr, int a
     srcPtr += len;
   }
 
+  // skip deleted vertex
   srcPtr += ps;
 
+  // copy reset of ring
   len = ( pointIndex + nPoints - atVertex - 1 ) * ps;
+
+  // save position of vertex, if we delete the first vertex of a ring
   const unsigned char *first = 0;
   if ( isRing && atVertex == pointIndex )
   {
@@ -1415,6 +1444,7 @@ bool QgsGeometry::deleteVertex( QgsConstWkbPtr &srcPtr, QgsWkbPtr &dstPtr, int a
     srcPtr += len;
   }
 
+  // copy new first vertex instead of the old last, if we deleted the original first vertex
   if ( first )
   {
     memcpy( dstPtr, first, ps );
@@ -1422,13 +1452,14 @@ bool QgsGeometry::deleteVertex( QgsConstWkbPtr &srcPtr, QgsWkbPtr &dstPtr, int a
     srcPtr += ps;
   }
 
-  pointIndex += nPoints - 1;
+  pointIndex += nPoints;
 
-  return true;
+  return 1;
 }
 
 bool QgsGeometry::deleteVertex( int atVertex )
 {
+  QgsDebugMsg( QString( "atVertex:%1" ).arg( atVertex ) );
   if ( atVertex < 0 )
     return false;
 
@@ -1442,9 +1473,9 @@ bool QgsGeometry::deleteVertex( int atVertex )
   }
 
   QgsConstWkbPtr srcPtr( mGeometry );
-  char endianess;
+  char endianness;
   QGis::WkbType wkbType;
-  srcPtr >> endianess >> wkbType;
+  srcPtr >> endianness >> wkbType;
 
   bool hasZValue = QGis::wkbDimensions( wkbType ) == 3;
 
@@ -1454,7 +1485,7 @@ bool QgsGeometry::deleteVertex( int atVertex )
 
   unsigned char *dstBuffer = new unsigned char[mGeometrySize - ps];
   QgsWkbPtr dstPtr( dstBuffer );
-  dstPtr << endianess << wkbType;
+  dstPtr << endianness << wkbType;
 
   bool deleted = false;
   switch ( wkbType )
@@ -1467,7 +1498,14 @@ bool QgsGeometry::deleteVertex( int atVertex )
     case QGis::WKBLineString:
     {
       int pointIndex = 0;
-      deleted = deleteVertex( srcPtr, dstPtr, atVertex, hasZValue, pointIndex, false, true );
+      int res = deleteVertex( srcPtr, dstPtr, atVertex, hasZValue, pointIndex, false, true );
+      if ( res == 2 )
+      {
+        // Linestring with 0 points
+        dstPtr << 0;
+      }
+
+      deleted = res != 0;
       break;
     }
 
@@ -1476,10 +1514,17 @@ bool QgsGeometry::deleteVertex( int atVertex )
     {
       int nRings;
       srcPtr >> nRings;
+      QgsWkbPtr ptrN( dstPtr );
       dstPtr << nRings;
 
       for ( int ringnr = 0, pointIndex = 0; ringnr < nRings; ++ringnr )
-        deleted |= deleteVertex( srcPtr, dstPtr, atVertex, hasZValue, pointIndex, true, ringnr == nRings - 1 );
+      {
+        int res = deleteVertex( srcPtr, dstPtr, atVertex, hasZValue, pointIndex, true, ringnr == nRings - 1 );
+        if ( res == 2 )
+          ptrN << nRings - 1;
+
+        deleted |= res != 0;
+      }
 
       break;
     }
@@ -1523,13 +1568,24 @@ bool QgsGeometry::deleteVertex( int atVertex )
     {
       int nLines;
       srcPtr >> nLines;
+      QgsWkbPtr ptrN( dstPtr );
       dstPtr << nLines;
 
       for ( int linenr = 0, pointIndex = 0; linenr < nLines; ++linenr )
       {
-        srcPtr >> endianess >> wkbType;
-        dstPtr << endianess << wkbType;
-        deleted |= deleteVertex( srcPtr, dstPtr, atVertex, hasZValue, pointIndex, false, linenr == nLines - 1 );
+        QgsWkbPtr saveDstPtr( dstPtr );
+        srcPtr >> endianness >> wkbType;
+        dstPtr << endianness << wkbType;
+
+        int res = deleteVertex( srcPtr, dstPtr, atVertex, hasZValue, pointIndex, false, linenr == nLines - 1 );
+        if ( res == 2 )
+        {
+          // line string was completely removed
+          ptrN << nLines - 1;
+          dstPtr = saveDstPtr;
+        }
+
+        deleted |= res != 0;
       }
 
       break;
@@ -1540,16 +1596,38 @@ bool QgsGeometry::deleteVertex( int atVertex )
     {
       int nPolys;
       srcPtr >> nPolys;
+      QgsWkbPtr ptrNPolys( dstPtr );
       dstPtr << nPolys;
 
       for ( int polynr = 0, pointIndex = 0; polynr < nPolys; ++polynr )
       {
         int nRings;
-        srcPtr >> endianess >> wkbType >> nRings;
-        dstPtr << endianess << wkbType << nRings;
+        srcPtr >> endianness >> wkbType >> nRings;
+        QgsWkbPtr saveDstPolyPtr( dstPtr );
+        dstPtr << endianness << wkbType;
+        QgsWkbPtr ptrNRings( dstPtr );
+        dstPtr << nRings;
 
         for ( int ringnr = 0; ringnr < nRings; ++ringnr )
-          deleted |= deleteVertex( srcPtr, dstPtr, atVertex, hasZValue, pointIndex, true, polynr == nPolys - 1 && ringnr == nRings - 1 );
+        {
+          int res = deleteVertex( srcPtr, dstPtr, atVertex, hasZValue, pointIndex, true, polynr == nPolys - 1 && ringnr == nRings - 1 );
+          if ( res == 2 )
+          {
+            // ring was completely removed
+            if ( nRings == 1 )
+            {
+              // last ring => remove polygon
+              ptrNPolys << nPolys - 1;
+              dstPtr = saveDstPolyPtr;
+            }
+            else
+            {
+              ptrNRings << nRings - 1;
+            }
+          }
+
+          deleted |= res != 0;
+        }
       }
       break;
     }
@@ -1638,9 +1716,9 @@ bool QgsGeometry::insertVertex( double x, double y, int beforeVertex )
     return false;
 
   QgsConstWkbPtr srcPtr( mGeometry );
-  char endianess;
+  char endianness;
   QGis::WkbType wkbType;
-  srcPtr >> endianess >> wkbType;
+  srcPtr >> endianness >> wkbType;
 
   bool hasZValue = QGis::wkbDimensions( wkbType ) == 3;
 
@@ -1650,7 +1728,7 @@ bool QgsGeometry::insertVertex( double x, double y, int beforeVertex )
 
   unsigned char *dstBuffer = new unsigned char[mGeometrySize + ps];
   QgsWkbPtr dstPtr( dstBuffer );
-  dstPtr << endianess << wkbType;
+  dstPtr << endianness << wkbType;
 
   bool inserted = false;
   switch ( wkbType )
@@ -1698,7 +1776,7 @@ bool QgsGeometry::insertVertex( double x, double y, int beforeVertex )
           dstPtr += len;
         }
 
-        dstPtr << endianess << ( hasZValue ? QGis::WKBPoint25D : QGis::WKBPoint ) << x << y;
+        dstPtr << endianness << ( hasZValue ? QGis::WKBPoint25D : QGis::WKBPoint ) << x << y;
         if ( hasZValue )
           dstPtr << 0.0;
 
@@ -1721,8 +1799,8 @@ bool QgsGeometry::insertVertex( double x, double y, int beforeVertex )
 
       for ( int linenr = 0, pointIndex = 0; linenr < nLines; ++linenr )
       {
-        srcPtr >> endianess >> wkbType;
-        dstPtr << endianess << wkbType;
+        srcPtr >> endianness >> wkbType;
+        dstPtr << endianness << wkbType;
         inserted |= insertVertex( srcPtr, dstPtr, beforeVertex, x, y, hasZValue, pointIndex, false );
       }
       break;
@@ -1738,8 +1816,8 @@ bool QgsGeometry::insertVertex( double x, double y, int beforeVertex )
       for ( int polynr = 0, pointIndex = 0; polynr < nPolys; ++polynr )
       {
         int nRings;
-        srcPtr >> endianess >> wkbType >> nRings;
-        dstPtr << endianess << wkbType << nRings;
+        srcPtr >> endianness >> wkbType >> nRings;
+        dstPtr << endianness << wkbType << nRings;
 
         for ( int ringnr = 0; ringnr < nRings; ++ringnr )
           inserted |= insertVertex( srcPtr, dstPtr, beforeVertex, x, y, hasZValue, pointIndex, true );
@@ -2878,14 +2956,27 @@ int QgsGeometry::splitGeometry( const QList<QgsPoint>& splitLine, QList<QgsGeome
     return 7;
 
   //make sure splitLine is valid
-  if ( splitLine.size() < 2 )
+  if (( type() == QGis::Line    && splitLine.size() < 1 ) ||
+      ( type() == QGis::Polygon && splitLine.size() < 2 ) )
     return 1;
 
   newGeometries.clear();
 
   try
   {
-    GEOSGeometry *splitLineGeos = createGeosLineString( splitLine.toVector() );
+    GEOSGeometry* splitLineGeos;
+    if ( splitLine.size() > 1 )
+    {
+      splitLineGeos = createGeosLineString( splitLine.toVector() );
+    }
+    else if ( splitLine.size() == 1 )
+    {
+      splitLineGeos = createGeosPoint( splitLine.at( 0 ) );
+    }
+    else
+    {
+      return 1;
+    }
     if ( !GEOSisValid( splitLineGeos ) || !GEOSisSimple( splitLineGeos ) )
     {
       GEOSGeom_destroy( splitLineGeos );
@@ -4423,6 +4514,24 @@ bool QgsGeometry::exportGeosToWkb() const
   return false;
 }
 
+QgsGeometry* QgsGeometry::convertToType( QGis::GeometryType destType, bool destMultipart )
+{
+  switch ( destType )
+  {
+    case QGis::Point:
+      return convertToPoint( destMultipart );
+
+    case QGis::Line:
+      return convertToLine( destMultipart );
+
+    case QGis::Polygon:
+      return convertToPolygon( destMultipart );
+
+    default:
+      return 0;
+  }
+}
+
 bool QgsGeometry::convertToMultiType()
 {
   // TODO: implement with GEOS
@@ -4531,6 +4640,51 @@ void QgsGeometry::transformVertex( QgsWkbPtr &wkbPtr, const QgsCoordinateTransfo
 
 }
 
+GEOSGeometry* QgsGeometry::linePointDifference( GEOSGeometry* GEOSsplitPoint )
+{
+  int type = GEOSGeomTypeId( mGeos );
+  QgsMultiPolyline multiLine;
+
+  if ( type == GEOS_MULTILINESTRING )
+    multiLine = asMultiPolyline();
+  else if ( type == GEOS_LINESTRING )
+    multiLine = QgsMultiPolyline() << asPolyline();
+  else
+    return 0;
+
+  QgsPoint splitPoint = fromGeosGeom( GEOSsplitPoint )->asPoint();
+
+  QgsMultiPolyline lines;
+  QgsPolyline line;
+  QgsPolyline newline;
+
+  //For each part
+  for ( int i = 0; i < multiLine.size() ; ++i )
+  {
+    line = multiLine[i];
+    newline = QgsPolyline();
+    newline.append( line[0] );
+    //For each segment
+    for ( int j = 1; j < line.size() - 1 ; ++j )
+    {
+      newline.append( line[j] );
+      if ( line[j] == splitPoint )
+      {
+        lines.append( newline );
+        newline = QgsPolyline();
+        newline.append( line[j] );
+      }
+    }
+    newline.append( line.last() );
+    lines.append( newline );
+  }
+  QgsGeometry* splitLines = fromMultiPolyline( lines );
+  GEOSGeometry* splitGeom = GEOSGeom_clone( splitLines->asGeos() );
+
+  return splitGeom;
+
+}
+
 int QgsGeometry::splitLinearGeometry( GEOSGeometry *splitLine, QList<QgsGeometry*>& newGeometries )
 {
   if ( !splitLine )
@@ -4551,7 +4705,17 @@ int QgsGeometry::splitLinearGeometry( GEOSGeometry *splitLine, QList<QgsGeometry
   if ( linearIntersect > 0 )
     return 3;
 
-  GEOSGeometry* splitGeom = GEOSDifference( mGeos, splitLine );
+  int splitGeomType = GEOSGeomTypeId( splitLine );
+
+  GEOSGeometry* splitGeom;
+  if ( splitGeomType == GEOS_POINT )
+  {
+    splitGeom = linePointDifference( splitLine );
+  }
+  else
+  {
+    splitGeom = GEOSDifference( mGeos, splitLine );
+  }
   QVector<GEOSGeometry*> lineGeoms;
 
   int splitType = GEOSGeomTypeId( splitGeom );
@@ -5100,9 +5264,7 @@ int QgsGeometry::lineContainedInLine( const GEOSGeometry* line1, const GEOSGeome
     return -1;
   }
 
-  double bufferDistance = 0.00001;
-  if ( geomInDegrees( line2 ) ) //use more accurate tolerance for degrees
-    bufferDistance = 0.00000001;
+  double bufferDistance = pow( 1.0L, geomDigits( line2 ) - 11 );
 
   GEOSGeometry* bufferGeom = GEOSBuffer( line2, bufferDistance, DEFAULT_QUADRANT_SEGMENTS );
   if ( !bufferGeom )
@@ -5132,9 +5294,7 @@ int QgsGeometry::pointContainedInLine( const GEOSGeometry* point, const GEOSGeom
   if ( !point || !line )
     return -1;
 
-  double bufferDistance = 0.000001;
-  if ( geomInDegrees( line ) )
-    bufferDistance = 0.00000001;
+  double bufferDistance = pow( 1.0L, geomDigits( line ) - 11 );
 
   GEOSGeometry* lineBuffer = GEOSBuffer( line, bufferDistance, 8 );
   if ( !lineBuffer )
@@ -5148,39 +5308,43 @@ int QgsGeometry::pointContainedInLine( const GEOSGeometry* point, const GEOSGeom
   return contained;
 }
 
-bool QgsGeometry::geomInDegrees( const GEOSGeometry* geom )
+int QgsGeometry::geomDigits( const GEOSGeometry* geom )
 {
   GEOSGeometry* bbox = GEOSEnvelope( geom );
   if ( !bbox )
-    return false;
+    return -1;
 
   const GEOSGeometry* bBoxRing = GEOSGetExteriorRing( bbox );
   if ( !bBoxRing )
-    return false;
+    return -1;
 
   const GEOSCoordSequence* bBoxCoordSeq = GEOSGeom_getCoordSeq( bBoxRing );
 
   if ( !bBoxCoordSeq )
-    return false;
+    return -1;
 
   unsigned int nCoords = 0;
   if ( !GEOSCoordSeq_getSize( bBoxCoordSeq, &nCoords ) )
-    return false;
+    return -1;
 
-  double x, y;
-  for ( unsigned int i = 0; i < ( nCoords - 1 ); ++i )
+  int maxDigits = -1;
+  for ( unsigned int i = 0; i < nCoords - 1; ++i )
   {
-    GEOSCoordSeq_getX( bBoxCoordSeq, i, &x );
-    if ( x > 180 || x < -180 )
-      return false;
+    double t;
+    GEOSCoordSeq_getX( bBoxCoordSeq, i, &t );
 
-    GEOSCoordSeq_getY( bBoxCoordSeq, i, &y );
-    if ( y > 90 || y < -90 )
-      return false;
+    int digits;
+    digits = ceil( log10( fabs( t ) ) );
+    if ( digits > maxDigits )
+      maxDigits = digits;
 
+    GEOSCoordSeq_getY( bBoxCoordSeq, i, &t );
+    digits = ceil( log10( fabs( t ) ) );
+    if ( digits > maxDigits )
+      maxDigits = digits;
   }
 
-  return true;
+  return maxDigits;
 }
 
 int QgsGeometry::numberOfGeometries( GEOSGeometry* g ) const
@@ -5507,6 +5671,46 @@ QgsGeometry* QgsGeometry::buffer( double distance, int segments )
   CATCH_GEOS( 0 )
 }
 
+QgsGeometry*QgsGeometry::buffer( double distance, int segments, int endCapStyle, int joinStyle, double mitreLimit )
+{
+#if defined(GEOS_VERSION_MAJOR) && defined(GEOS_VERSION_MINOR) && \
+ ((GEOS_VERSION_MAJOR>3) || ((GEOS_VERSION_MAJOR==3) && (GEOS_VERSION_MINOR>=3)))
+  if ( mDirtyGeos )
+    exportWkbToGeos();
+
+  if ( !mGeos )
+    return 0;
+
+  try
+  {
+    return fromGeosGeom( GEOSBufferWithStyle( mGeos, distance, segments, endCapStyle, joinStyle, mitreLimit ) );
+  }
+  CATCH_GEOS( 0 )
+#else
+  return 0;
+#endif
+}
+
+QgsGeometry* QgsGeometry::offsetCurve( double distance, int segments, int joinStyle, double mitreLimit )
+{
+#if defined(GEOS_VERSION_MAJOR) && defined(GEOS_VERSION_MINOR) && \
+ ((GEOS_VERSION_MAJOR>3) || ((GEOS_VERSION_MAJOR==3) && (GEOS_VERSION_MINOR>=3)))
+  if ( mDirtyGeos )
+    exportWkbToGeos();
+
+  if ( !mGeos || this->type() != QGis::Line )
+    return 0;
+
+  try
+  {
+    return fromGeosGeom( GEOSOffsetCurve( mGeos, distance, segments, joinStyle, mitreLimit ) );
+  }
+  CATCH_GEOS( 0 )
+#else
+  return 0;
+#endif
+}
+
 QgsGeometry* QgsGeometry::simplify( double tolerance )
 {
   if ( mDirtyGeos )
@@ -5533,6 +5737,21 @@ QgsGeometry* QgsGeometry::centroid()
   try
   {
     return fromGeosGeom( GEOSGetCentroid( mGeos ) );
+  }
+  CATCH_GEOS( 0 )
+}
+
+QgsGeometry* QgsGeometry::pointOnSurface()
+{
+  if ( mDirtyGeos )
+    exportWkbToGeos();
+
+  if ( !mGeos )
+    return 0;
+
+  try
+  {
+    return fromGeosGeom( GEOSPointOnSurface( mGeos ) );
   }
   CATCH_GEOS( 0 )
 }
@@ -5975,4 +6194,335 @@ double QgsGeometry::leftOf( double x, double y, double& x1, double& y1, double& 
   double f3 = y - y1;
   double f4 = x2 - x1;
   return f1*f2 - f3*f4;
+}
+
+QgsGeometry* QgsGeometry::convertToPoint( bool destMultipart )
+{
+  switch ( type() )
+  {
+    case QGis::Point:
+    {
+      bool srcIsMultipart = isMultipart();
+
+      if (( destMultipart && srcIsMultipart ) ||
+          ( !destMultipart && !srcIsMultipart ) )
+      {
+        // return a copy of the same geom
+        return new QgsGeometry( *this );
+      }
+      if ( destMultipart )
+      {
+        // layer is multipart => make a multipoint with a single point
+        return fromMultiPoint( QgsMultiPoint() << asPoint() );
+      }
+      else
+      {
+        // destination is singlepart => make a single part if possible
+        QgsMultiPoint multiPoint = asMultiPoint();
+        if ( multiPoint.count() == 1 )
+        {
+          return fromPoint( multiPoint[0] );
+        }
+      }
+      return 0;
+    }
+
+    case QGis::Line:
+    {
+      // only possible if destination is multipart
+      if ( !destMultipart )
+        return 0;
+
+      // input geometry is multipart
+      if ( isMultipart() )
+      {
+        QgsMultiPolyline multiLine = asMultiPolyline();
+        QgsMultiPoint multiPoint;
+        for ( QgsMultiPolyline::const_iterator multiLineIt = multiLine.constBegin(); multiLineIt != multiLine.constEnd(); ++multiLineIt )
+          for ( QgsPolyline::const_iterator lineIt = ( *multiLineIt ).constBegin(); lineIt != ( *multiLineIt ).constEnd(); ++lineIt )
+            multiPoint << *lineIt;
+        return fromMultiPoint( multiPoint );
+      }
+      // input geometry is not multipart: copy directly the line into a multipoint
+      else
+      {
+        QgsPolyline line = asPolyline();
+        if ( !line.isEmpty() )
+          return fromMultiPoint( line );
+      }
+      return 0;
+    }
+
+    case QGis::Polygon:
+    {
+      // can only transfrom if destination is multipoint
+      if ( !destMultipart )
+        return 0;
+
+      // input geometry is multipart: make a multipoint from multipolygon
+      if ( isMultipart() )
+      {
+        QgsMultiPolygon multiPolygon = asMultiPolygon();
+        QgsMultiPoint multiPoint;
+        for ( QgsMultiPolygon::const_iterator polygonIt = multiPolygon.constBegin(); polygonIt != multiPolygon.constEnd(); ++polygonIt )
+          for ( QgsMultiPolyline::const_iterator multiLineIt = ( *polygonIt ).constBegin(); multiLineIt != ( *polygonIt ).constEnd(); ++multiLineIt )
+            for ( QgsPolyline::const_iterator lineIt = ( *multiLineIt ).constBegin(); lineIt != ( *multiLineIt ).constEnd(); ++lineIt )
+              multiPoint << *lineIt;
+        return fromMultiPoint( multiPoint );
+      }
+      // input geometry is not multipart: make a multipoint from polygon
+      else
+      {
+        QgsPolygon polygon = asPolygon();
+        QgsMultiPoint multiPoint;
+        for ( QgsMultiPolyline::const_iterator multiLineIt = polygon.constBegin(); multiLineIt != polygon.constEnd(); ++multiLineIt )
+          for ( QgsPolyline::const_iterator lineIt = ( *multiLineIt ).constBegin(); lineIt != ( *multiLineIt ).constEnd(); ++lineIt )
+            multiPoint << *lineIt;
+        return fromMultiPoint( multiPoint );
+      }
+      return 0;
+    }
+
+    default:
+      return 0;
+  }
+}
+
+QgsGeometry* QgsGeometry::convertToLine( bool destMultipart )
+{
+  switch ( type() )
+  {
+    case QGis::Point:
+    {
+      if ( !isMultipart() )
+        return 0;
+
+      QgsMultiPoint multiPoint = asMultiPoint();
+      if ( multiPoint.count() < 2 )
+        return 0;
+
+      if ( destMultipart )
+        return fromMultiPolyline( QgsMultiPolyline() << multiPoint );
+      else
+        return fromPolyline( multiPoint );
+    }
+
+    case QGis::Line:
+    {
+      bool srcIsMultipart = isMultipart();
+
+      if (( destMultipart && srcIsMultipart ) ||
+          ( !destMultipart && ! srcIsMultipart ) )
+      {
+        // return a copy of the same geom
+        return new QgsGeometry( *this );
+      }
+      if ( destMultipart )
+      {
+        // destination is multipart => makes a multipoint with a single line
+        QgsPolyline line = asPolyline();
+        if ( !line.isEmpty() )
+          return fromMultiPolyline( QgsMultiPolyline() << line );
+      }
+      else
+      {
+        // destination is singlepart => make a single part if possible
+        QgsMultiPolyline multiLine = asMultiPolyline();
+        if ( multiLine.count() == 1 )
+          return fromPolyline( multiLine[0] );
+      }
+      return 0;
+    }
+
+    case QGis::Polygon:
+    {
+      // input geometry is multipolygon
+      if ( isMultipart() )
+      {
+        QgsMultiPolygon multiPolygon = asMultiPolygon();
+        QgsMultiPolyline multiLine;
+        for ( QgsMultiPolygon::const_iterator polygonIt = multiPolygon.constBegin(); polygonIt != multiPolygon.constEnd(); ++polygonIt )
+          for ( QgsMultiPolyline::const_iterator multiLineIt = ( *polygonIt ).constBegin(); multiLineIt != ( *polygonIt ).constEnd(); ++multiLineIt )
+            multiLine << *multiLineIt;
+
+        if ( destMultipart )
+        {
+          // destination is multipart
+          return fromMultiPolyline( multiLine );
+        }
+        else if ( multiLine.count() == 1 )
+        {
+          // destination is singlepart => make a single part if possible
+          return fromPolyline( multiLine[0] );
+        }
+      }
+      // input geometry is single polygon
+      else
+      {
+        QgsPolygon polygon = asPolygon();
+        // if polygon has rings
+        if ( polygon.count() > 1 )
+        {
+          // cannot fit a polygon with rings in a single line layer
+          // TODO: would it be better to remove rings?
+          if ( destMultipart )
+          {
+            QgsPolygon polygon = asPolygon();
+            QgsMultiPolyline multiLine;
+            for ( QgsMultiPolyline::const_iterator multiLineIt = polygon.constBegin(); multiLineIt != polygon.constEnd(); ++multiLineIt )
+              multiLine << *multiLineIt;
+            return fromMultiPolyline( multiLine );
+          }
+        }
+        // no rings
+        else if ( polygon.count() == 1 )
+        {
+          if ( destMultipart )
+          {
+            return fromMultiPolyline( polygon );
+          }
+          else
+          {
+            return fromPolyline( polygon[0] );
+          }
+        }
+      }
+      return 0;
+    }
+
+    default:
+      return 0;
+  }
+}
+
+QgsGeometry* QgsGeometry::convertToPolygon( bool destMultipart )
+{
+  switch ( type() )
+  {
+    case QGis::Point:
+    {
+      if ( !isMultipart() )
+        return 0;
+
+      QgsMultiPoint multiPoint = asMultiPoint();
+      if ( multiPoint.count() < 3 )
+        return 0;
+
+      if ( multiPoint.last() != multiPoint.first() )
+        multiPoint << multiPoint.first();
+
+      QgsPolygon polygon = QgsPolygon() << multiPoint;
+      if ( destMultipart )
+        return fromMultiPolygon( QgsMultiPolygon() << polygon );
+      else
+        return fromPolygon( polygon );
+    }
+
+    case QGis::Line:
+    {
+      // input geometry is multiline
+      if ( isMultipart() )
+      {
+        QgsMultiPolyline multiLine = asMultiPolyline();
+        QgsMultiPolygon multiPolygon;
+        for ( QgsMultiPolyline::iterator multiLineIt = multiLine.begin(); multiLineIt != multiLine.end(); ++multiLineIt )
+        {
+          // do not create polygon for a 1 segment line
+          if (( *multiLineIt ).count() < 3 )
+            return 0;
+          if (( *multiLineIt ).count() == 3 && ( *multiLineIt ).first() == ( *multiLineIt ).last() )
+            return 0;
+
+          // add closing node
+          if (( *multiLineIt ).first() != ( *multiLineIt ).last() )
+            *multiLineIt << ( *multiLineIt ).first();
+          multiPolygon << ( QgsPolygon() << *multiLineIt );
+        }
+        // check that polygons were inserted
+        if ( !multiPolygon.isEmpty() )
+        {
+          if ( destMultipart )
+          {
+            return fromMultiPolygon( multiPolygon );
+          }
+          else if ( multiPolygon.count() == 1 )
+          {
+            // destination is singlepart => make a single part if possible
+            return fromPolygon( multiPolygon[0] );
+          }
+        }
+      }
+      // input geometry is single line
+      else
+      {
+        QgsPolyline line = asPolyline();
+
+        // do not create polygon for a 1 segment line
+        if ( line.count() < 3 )
+          return 0;
+        if ( line.count() == 3 && line.first() == line.last() )
+          return 0;
+
+        // add closing node
+        if ( line.first() != line.last() )
+          line << line.first();
+
+        // destination is multipart
+        if ( destMultipart )
+        {
+          return fromMultiPolygon( QgsMultiPolygon() << ( QgsPolygon() << line ) );
+        }
+        else
+        {
+          return fromPolygon( QgsPolygon() << line );
+        }
+      }
+      return 0;
+    }
+
+    case QGis::Polygon:
+    {
+      bool srcIsMultipart = isMultipart();
+
+      if (( destMultipart && srcIsMultipart ) ||
+          ( !destMultipart && ! srcIsMultipart ) )
+      {
+        // return a copy of the same geom
+        return new QgsGeometry( *this );
+      }
+      if ( destMultipart )
+      {
+        // destination is multipart => makes a multipoint with a single polygon
+        QgsPolygon polygon = asPolygon();
+        if ( !polygon.isEmpty() )
+          return fromMultiPolygon( QgsMultiPolygon() << polygon );
+      }
+      else
+      {
+        QgsMultiPolygon multiPolygon = asMultiPolygon();
+        if ( multiPolygon.count() == 1 )
+        {
+          // destination is singlepart => make a single part if possible
+          return fromPolygon( multiPolygon[0] );
+        }
+      }
+      return 0;
+    }
+
+    default:
+      return 0;
+  }
+}
+
+QgsGeometry *QgsGeometry::unaryUnion( const QList<QgsGeometry*> &geometryList )
+{
+  QList<GEOSGeometry*> geoms;
+  foreach ( QgsGeometry* g, geometryList )
+  {
+    geoms.append( GEOSGeom_clone( g->asGeos() ) );
+  }
+  GEOSGeometry *geomUnion = _makeUnion( geoms );
+  QgsGeometry *ret = new QgsGeometry();
+  ret->fromGeos( geomUnion );
+  return ret;
 }

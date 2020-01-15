@@ -29,6 +29,7 @@
 class QgsSymbolV2;
 class QgsRenderContext;
 class QgsFeature;
+class QgsFields;
 class QgsVectorLayer;
 
 typedef QMap<QString, QString> QgsStringMap;
@@ -81,7 +82,10 @@ class CORE_EXPORT QgsFeatureRendererV2
      */
     virtual QgsSymbolV2* symbolForFeature( QgsFeature& feature ) = 0;
 
-    virtual void startRender( QgsRenderContext& context, const QgsVectorLayer *vlayer ) = 0;
+    virtual void startRender( QgsRenderContext& context, const QgsFields& fields ) = 0;
+
+    //! @deprecated since 2.4 - not using QgsVectorLayer directly anymore
+    Q_DECL_DEPRECATED virtual void startRender( QgsRenderContext& context, const QgsVectorLayer* vlayer );
 
     virtual void stopRender( QgsRenderContext& context ) = 0;
 
@@ -98,11 +102,11 @@ class CORE_EXPORT QgsFeatureRendererV2
 
     enum Capabilities
     {
-      SymbolLevels = 1,     // rendering with symbol levels (i.e. implements symbols(), symbolForFeature())
-      RotationField = 1 <<  1,    // rotate symbols by attribute value
-      MoreSymbolsPerFeature = 1 << 2,  // may use more than one symbol to render a feature: symbolsForFeature() will return them
-      Filter         = 1 << 3, // features may be filtered, i.e. some features may not be rendered (categorized, rule based ...)
-      ScaleDependent = 1 << 4 // depends on scale if feature will be rendered (rule based )
+      SymbolLevels = 1,               // rendering with symbol levels (i.e. implements symbols(), symbolForFeature())
+      RotationField = 1 <<  1,        // rotate symbols by attribute value
+      MoreSymbolsPerFeature = 1 << 2, // may use more than one symbol to render a feature: symbolsForFeature() will return them
+      Filter         = 1 << 3,        // features may be filtered, i.e. some features may not be rendered (categorized, rule based ...)
+      ScaleDependent = 1 << 4         // depends on scale if feature will be rendered (rule based )
     };
 
     //! returns bitwise OR-ed capabilities of the renderer

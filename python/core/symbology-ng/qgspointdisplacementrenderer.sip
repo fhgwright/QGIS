@@ -16,7 +16,7 @@ class QgsPointDisplacementRenderer : QgsFeatureRendererV2
 
     QgsSymbolV2* symbolForFeature( QgsFeature& feature );
 
-    void startRender( QgsRenderContext& context, const QgsVectorLayer *vlayer );
+    void startRender( QgsRenderContext& context, const QgsFields& fields );
 
     void stopRender( QgsRenderContext& context );
 
@@ -40,6 +40,7 @@ class QgsPointDisplacementRenderer : QgsFeatureRendererV2
     QgsFeatureRendererV2* embeddedRenderer();
 
     //! not available in python bindings
+    //! @deprecated since 2.4
     // void setDisplacementGroups( const QList<QMap<QgsFeatureId, QgsFeature> >& list );
 
     void setLabelFont( const QFont& f );

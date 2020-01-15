@@ -14,38 +14,38 @@ class QgsVectorDataProvider : QgsDataProvider
     enum Capability
     {
       /** provider has no capabilities */
-      NoCapabilities =                     0,
+      NoCapabilities,
       /** allows adding features */
-      AddFeatures =                        1,
+      AddFeatures,
       /** allows deletion of features */
-      DeleteFeatures =               2,
+      DeleteFeatures,
       /** allows modification of attribute values */
-      ChangeAttributeValues =        4,
+      ChangeAttributeValues,
       /** allows addition of new attributes (fields) */
-      AddAttributes =                8,
+      AddAttributes,
       /** allows deletion of attributes (fields) */
-      DeleteAttributes =             16,
+      DeleteAttributes,
       /** DEPRECATED - do not use */
-      SaveAsShapefile =              32,
+      SaveAsShapefile,
       /** allows creation of spatial index */
-      CreateSpatialIndex =           64,
+      CreateSpatialIndex,
       /** fast access to features using their ID */
-      SelectAtId =                   128,
+      SelectAtId,
       /** allows modifications of geometries */
-      ChangeGeometries =             256,
+      ChangeGeometries,
       /** DEPRECATED - do not use */
-      SelectGeometryAtId =           512,
+      SelectGeometryAtId,
       /** DEPRECATED - do not use */
-      RandomSelectGeometryAtId =     1024,
+      RandomSelectGeometryAtId,
       /** DEPRECATED - do not use */
-      SequentialSelectGeometryAtId = 2048,
-      CreateAttributeIndex =         4096,
+      SequentialSelectGeometryAtId,
+      CreateAttributeIndex,
       /** allows user to select encoding */
-      SelectEncoding =               8192,
+      SelectEncoding,
       /** supports simplification of geometries on provider side according to a distance tolerance */
-      SimplifyGeometries =           32768,
+      SimplifyGeometries,
       /** supports topological simplification of geometries on provider side according to a distance tolerance */
-      SimplifyGeometriesWithTopologicalValidation = 65536,
+      SimplifyGeometriesWithTopologicalValidation,
     };
 
     /** bitmask of all provider's editing capabilities */
@@ -61,6 +61,24 @@ class QgsVectorDataProvider : QgsDataProvider
      * Destructor
      */
     virtual ~QgsVectorDataProvider();
+
+    /**
+     * Return feature source object that can be used for querying provider's data. The returned feature source
+     * is independent from provider - any changes to provider's state (e.g. change of subset string) will not be
+     * reflected in the feature source, therefore it can be safely used for processing in background without
+     * having to care about possible changes within provider that may happen concurrently. Also, even in the case
+     * of provider being deleted, any feature source obtained from the provider will be kept alive and working
+     * (they are independent and owned by the caller).
+     *
+     * Sometimes there are cases when some data needs to be shared between vector data provider and its feature source.
+     * In such cases, the implementation must ensure that the data is not susceptible to run condition. For example,
+     * if it is possible that both feature source and provider may need reading/writing to some shared data at the
+     * same time, some synchronization mechanisms must be used (e.g. mutexes) to prevent data corruption.
+     *
+     * @note added in 2.4
+     * @return new instance of QgsAbstractFeatureSource (caller is responsible for deleting it)
+     */
+    virtual QgsAbstractFeatureSource* featureSource() const /Factory/;
 
     /**
      * Returns the permanent storage type for this layer as a friendly name.
@@ -300,9 +318,9 @@ class QgsVectorDataProvider : QgsDataProvider
      */
     virtual bool isSaveAndLoadStyleToDBSupported();
 
-  protected:
-    QVariant convertValue( QVariant::Type type, QString value );
+    static QVariant convertValue( QVariant::Type type, QString value );
 
+  protected:
     void clearMinMaxCache();
     void fillMinMaxCache();
 

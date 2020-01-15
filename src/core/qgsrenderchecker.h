@@ -24,6 +24,7 @@
 
 #include <qgsmaprenderer.h>
 #include <qgslogger.h>
+#include <qgsmapsettings.h>
 
 class QImage;
 
@@ -67,7 +68,11 @@ class CORE_EXPORT QgsRenderChecker
     QString imageToHash( QString theImageFile );
 
     void setRenderedImage( QString theImageFileName ) { mRenderedImageFile = theImageFileName; }
-    void setMapRenderer( QgsMapRenderer *thepMapRenderer ) { mpMapRenderer = thepMapRenderer; }
+    //! @deprecated since 2.4 - use setMapSettings()
+    Q_DECL_DEPRECATED void setMapRenderer( QgsMapRenderer *  thepMapRenderer );
+
+    //! @note added in 2.4
+    void setMapSettings( const QgsMapSettings& mapSettings );
 
     /** Set tolerance for color components used by runTest() and compareImages().
      * Default value is 0.
@@ -112,20 +117,18 @@ class CORE_EXPORT QgsRenderChecker
     QString expectedImageFile() { return mExpectedImageFile; };
 
   protected:
-
     QString mReport;
     unsigned int mMatchTarget;
-    QgsMapRenderer * mpMapRenderer;
     int mElapsedTime;
     QString mRenderedImageFile;
     QString mExpectedImageFile;
 
   private:
-
     QString mControlName;
     unsigned int mMismatchCount;
     unsigned int mColorTolerance;
     int mElapsedTimeTarget;
+    QgsMapSettings mMapSettings;
     QString mControlPathPrefix;
 
 }; // class QgsRenderChecker

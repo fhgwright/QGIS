@@ -2076,7 +2076,7 @@ Are you sure you want to proceed?</source>
         <source>Currently QGIS doesn&apos;t allow simultaneous access from 
                                  different threads to the same datasource. Make sure your layer&apos;s 
                                  attribute tables are closed. Continue?</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -2247,6 +2247,10 @@ were reduced to %d vertices after simplification</source>
         <source>Please specify an input layer</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>Currently QGIS doesn&apos;t allow simultaneous access from different threads to the same datasource. Make sure your layer&apos;s attribute tables are closed. Continue?</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2422,6 +2426,17 @@ were reduced to %d vertices after simplification</source>
     </message>
     <message>
         <source>field type must not be empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DlgGetScriptsAndModels</name>
+    <message>
+        <source>Get scripts and models</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>about:blank</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2828,6 +2843,10 @@ geometry column - column with unique integer values</source>
     </message>
     <message>
         <source>Wrong or missing parameter values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>[Save to temporary file]</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3557,10 +3576,6 @@ Disable the &quot;Use intersected extent&quot; option to have a nonempty output.
     </message>
     <message>
         <source>The output file doesn&apos;t exist. You must set up the output size or resolution to create it.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>[select levels]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4795,7 +4810,7 @@ The &apos;gray&apos; value (from GDAL 1.7.0) enables to expand a dataset with a 
         <source>Currently QGIS doesn&apos;t allow simultaneous access from 
                                  different threads to the same datasource. Make sure your layer&apos;s 
                                  attribute tables are closed. Continue?</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -4862,6 +4877,10 @@ Would you like to add the new layer to the TOC?</source>
         <source>Created output shapefile:
 %s
 %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Currently QGIS doesn&apos;t allow simultaneous access from different threads to the same datasource. Make sure your layer&apos;s attribute tables are closed. Continue?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5368,6 +5387,10 @@ Would you like to add the new layer anyway?</source>
     <message>
         <source>Columns</source>
         <translation type="unfinished">ជួរឈរ</translation>
+    </message>
+    <message>
+        <source>Add generated file to map</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -6087,7 +6110,7 @@ Would you like to add the new layer anyway?</source>
     </message>
     <message>
         <source>Save Selection as Vector File...</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -6661,6 +6684,410 @@ Acts on currently active editable layer</source>
         <source>Fill Ring</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Add from Layer Definition File...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save As Layer Definition File...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Preview Mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Normal preview mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate photocopy (grayscale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate fax (mono)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate color blindness (protanope)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate color blindness (deuteranope)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set Scale Visibility of Layer(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate Photocopy (Grayscale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate Fax (Mono)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate Color Blindness (Protanope)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate Color Blindness (Deuteranope)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ManageConnectionsDialog</name>
+    <message>
+        <source>Manage connections</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Save to file</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation type="unfinished">រកមើល</translation>
+    </message>
+    <message>
+        <source>Load from file</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Load</source>
+        <translation type="unfinished">ផ្ទុក​</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished">រក្សាទុក</translation>
+    </message>
+    <message>
+        <source>eXtensible Markup Language (*.xml *.XML)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save connections</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Load connections</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Save Connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved to %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File %s exists. Overwrite?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading Connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MetaSearch</name>
+    <message>
+        <source>MetaSearch plugin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search Metadata Catalogues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MetaSearch plugin help</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Get Help on MetaSearch</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MetaSearchDialog</name>
+    <message>
+        <source>MetaSearch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">ស្វែងរក</translation>
+    </message>
+    <message>
+        <source>Find</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set global</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Map extent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-180</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>90</source>
+        <translation type="unfinished">១ {90?}</translation>
+    </message>
+    <message>
+        <source>Records</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-90</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>180</source>
+        <translation type="unfinished">១ {180?}</translation>
+    </message>
+    <message>
+        <source>        From</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keywords</source>
+        <translation type="unfinished">ពាក្យ​គន្លឹះ</translation>
+    </message>
+    <message>
+        <source>Results</source>
+        <translation type="unfinished">លទ្ធផល</translation>
+    </message>
+    <message>
+        <source>&gt;</source>
+        <translation type="unfinished">&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add WCS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add WMS/WMTS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;</source>
+        <translation type="unfinished">&lt;</translation>
+    </message>
+    <message>
+        <source>Add WFS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Abstract</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Double click to see full record information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">ប្រភេទ</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation type="unfinished">ចំណង​ជើង</translation>
+    </message>
+    <message>
+        <source>View search results as XML</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Service info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GetCapabilities response</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New</source>
+        <translation type="unfinished">ថ្មី</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation type="unfinished">កែសម្រួល</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished">លុប</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished">រក្សាទុក</translation>
+    </message>
+    <message>
+        <source>Add default services</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load</source>
+        <translation type="unfinished">ផ្ទុក​</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">ការ​កំណត់</translation>
+    </message>
+    <message>
+        <source>Connection naming</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When saving the connection of an OWS service</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use the OWS Service Title and ask before overwriting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use the OWS Service Title and always overwrite if already available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use a temporary name, which you can change later</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No services/connections defined. To get started with MetaSearch, create a new connection by clicking &apos;New&apos; or click &apos;Add default services&apos;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New Catalogue service</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit Catalogue service</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove service %s?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm delete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s exists.  Overwrite?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading connections</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Search error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search error: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>0 results</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Showing %d - %d of %d result%s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No abstract</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>End of results. Go to start?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Navigation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start of results. Go to end?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error connecting to %s: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection %s exists. Overwrite?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saving server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GetRecords error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error getting response: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error connecting to service: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Value Error: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown Error: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CSW Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModelerDialog</name>
@@ -6774,11 +7201,6 @@ Wrong line: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Model doesn&apos;t contains any algorithms and/or 
-                             parameters and can&apos;t be executed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Save Model As Image</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6792,16 +7214,16 @@ Wrong line: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This model can&apos;t be saved in its 
-                                     original location (probably you do not 
-                                     have permission to do it). Please, use 
-                                     the &apos;Save as...&apos; option.</source>
+        <source>Model doesn&apos;t contains any algorithms and/or parameters and can&apos;t be executed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This model can&apos;t be saved in its original location (probably you do not have permission to do it). Please, use the &apos;Save as...&apos; option.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The selected model could not be loaded.
-
-                                 Wrong line: %s</source>
+Wrong line: %s</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6818,6 +7240,33 @@ Wrong line: %1</source>
     </message>
     <message>
         <source>Toggle selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>NewConnectionDialog</name>
+    <message>
+        <source>Create a new Catalogue connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished">ឈ្មោះ</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation type="unfinished">URL</translation>
+    </message>
+    <message>
+        <source>Save connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Both Name and URL must be provided</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Overwrite %s?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7885,6 +8334,34 @@ Please change this situation first, because OSM Plugin doesn&apos;t know what la
     </message>
 </context>
 <context>
+    <name>OutputSelectionPanel</name>
+    <message>
+        <source>[Save to temporary file]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save to a temporary file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save to file...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save to memory layer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save file</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Select directory</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PGDatabase</name>
     <message>
         <source>&amp;Table</source>
@@ -8005,7 +8482,7 @@ Please change this situation first, because OSM Plugin doesn&apos;t know what la
     <name>Python</name>
     <message>
         <source>Python</source>
-        <translation>Python</translation>
+        <translation type="obsolete">Python</translation>
     </message>
     <message>
         <source>An error has occured while executing Python code:</source>
@@ -8075,6 +8552,10 @@ Please change this situation first, because OSM Plugin doesn&apos;t know what la
     </message>
     <message>
         <source>Error while unloading plugin %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Python warning</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10221,7 +10702,7 @@ Only %1 of %2 features written.</source>
     </message>
     <message>
         <source>[GDAL] All files (*)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -10745,76 +11226,76 @@ SQL: %1</source>
     <message>
         <source>day</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">ថ្ងៃ</translation>
+        <translation type="obsolete">ថ្ងៃ</translation>
     </message>
     <message>
         <source>days</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">ថ្ងៃ</translation>
+        <translation type="obsolete">ថ្ងៃ</translation>
     </message>
     <message>
         <source>week</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>weeks</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>month</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">ខែ</translation>
+        <translation type="obsolete">ខែ</translation>
     </message>
     <message>
         <source>months</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>year</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">ឆ្នាំ​​​​​​​​​​​</translation>
+        <translation type="obsolete">ឆ្នាំ​​​​​​​​​​​</translation>
     </message>
     <message>
         <source>years</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>second</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">វិនាទី</translation>
+        <translation type="obsolete">វិនាទី</translation>
     </message>
     <message>
         <source>seconds</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">វិនាទី</translation>
+        <translation type="obsolete">វិនាទី</translation>
     </message>
     <message>
         <source>minute</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">នាទី</translation>
+        <translation type="obsolete">នាទី</translation>
     </message>
     <message>
         <source>minutes</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">នាទី</translation>
+        <translation type="obsolete">នាទី</translation>
     </message>
     <message>
         <source>hour</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">ម៉ោង</translation>
+        <translation type="obsolete">ម៉ោង</translation>
     </message>
     <message>
         <source>hours</source>
         <comment>Note: Word is part matched in code</comment>
-        <translation type="unfinished">ម៉ោង</translation>
+        <translation type="obsolete">ម៉ោង</translation>
     </message>
     <message numerus="yes">
         <source>line %1 contains %n duplicate node(s) at %2</source>
@@ -11144,30 +11625,6 @@ It will be disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>empty response</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>WFS service exception:%1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>unsuccessful service response: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>WFS exception report (code=%1 text=%2)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>missing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>unhandled response: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source> sq. NM</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11196,19 +11653,11 @@ It will be disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>By default when creating new .csv files they are created with the line termination conventions of the local platform (CR/LF on win32 or LF on all other systems). This may be overridden through use of the LINEFORMAT option.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>By default, the geometry of a feature written to a .csv file is discarded. It is possible to export the geometry in its WKT representation by specifying GEOMETRY=AS_WKT. It is also possible to export point geometries into their X,Y,Z components by specifying GEOMETRY=AS_XYZ, GEOMETRY=AS_XY or GEOMETRY=AS_YX.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Create the associated .csvt file to describe the type of each column of the layer and its optional width and precision.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Field separator character. Default value : COMMA</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11529,6 +11978,182 @@ It will be disabled.</source>
     </message>
     <message>
         <source>Controls whether layer and field names will be laundered for easier use in SQLite. Laundered names will be converted to lower case and some special characters(&apos; - #) will be changed to underscores.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simplify transform error caught: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not reproject view extent: %1</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Could not reproject layer extent: %1</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Shapeburst fill</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error looking for style. The query was logged</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to save layer style. It&apos;s not possible to create the destination table on the database.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Operation aborted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error executing loading style. The query was logged</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No styles available on DB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading styles. The query was logged</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>empty capabilities document</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Dom Exception</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Could not get WMS capabilities: %1 at line %2 column %3
+This is probably due to an incorrect WMS Server URL.
+Response was:
+
+%4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not get WMS capabilities in the expected format (DTD): no %1 or %2 found.
+This might be due to an incorrect WMS Server URL.
+Tag:%3
+Response was:
+%4</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Generated default style</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Style was missing in capabilities</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>By default when creating new .csv files they are created with the line termination conventions of the local platform (CR/LF on Win32 or LF on all other systems). This may be overridden through the use of the LINEFORMAT option.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Field separator character.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Displays a combo box containing values of attributes used for classification.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Field contains a color.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Combo box with values that can be used within the column&apos;s type. Must be supported by the provider.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Simplifies file selection by adding a file chooser dialog.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>A hidden attribute will be invisible - the user is not able to see it&apos;s contents.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Read-only field that generates a UUID if empty.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Fatal error occurred in GRASS library. QGIS gets over the error but any next fatal error will cause QGIS exit without warning. This is a problem of GRASS 7.0.0beta1 and hopefully will be fixed in higher GRASS versions. Error message: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GeoPackage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>OpenFileGDB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Systematic Organization of Spatial Information [SOSI]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SQLite/SpatiaLite</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Inverted polygons</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>second|seconds</source>
+        <comment>list of words separated by | which reference years</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>minute|minutes</source>
+        <comment>list of words separated by | which reference minutes</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>hour|hours</source>
+        <comment>list of words separated by | which reference minutes hours</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>day|days</source>
+        <comment>list of words separated by | which reference days</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>week|weeks</source>
+        <comment>wordlist separated by | which reference weeks</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>month|months</source>
+        <comment>list of words separated by | which reference months</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>year|years</source>
+        <comment>list of words separated by | which reference years</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Storage and eXchange Format</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11912,7 +12537,7 @@ Please contact the developers.
     </message>
     <message>
         <source>Stop map rendering</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -11965,7 +12590,7 @@ Please contact the developers.
     </message>
     <message>
         <source>Control rendering order</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -12974,12 +13599,12 @@ Always ignore these errors?</source>
     </message>
     <message>
         <source>CRS undefined - defaulting to project CRS</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>CRS undefined - defaulting to default CRS: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -13045,10 +13670,6 @@ Please contact the developers.
     <message>
         <source>en</source>
         <comment>documentation language</comment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>http://qgis.org/de/site/forusers/commercial_support.html</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -13154,32 +13775,153 @@ Please contact the developers.
         </translation>
     </message>
     <message>
-        <source>No Object Selected</source>
+        <source>CRS was undefined</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>To remove objects, you must select them in the legend</source>
+        <source>defaulting to project CRS %1 - %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Remove objects</source>
+        <source>defaulting to CRS %1 - %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insufficient permissions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The project file is not writable.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paste features</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>no features could be successfully pasted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 features were successfully pasted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 of %2 features could be successfully pasted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No legend entries selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select the layers and groups you want to remove in the legend.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove layers and groups</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <source>Remove %n object(s)?</source>
-        <comment>number of objects to remove</comment>
+        <source>Remove %n legend entries?</source>
+        <comment>number of legend items to remove</comment>
         <translation type="unfinished">
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <source>%n object(s) removed.</source>
-        <comment>number of objects removed</comment>
+        <source>%n legend entries removed.</source>
+        <comment>number of removed legend entries</comment>
         <translation type="unfinished">
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>This project file was saved by an older version of QGIS. When saving this project file, QGIS will update it to the latest version, possibly rendering it useless for older versions of QGIS.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A network request timed out, any data received is likely incomplete.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Classification</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Range</source>
+        <translation type="unfinished">ជួរ</translation>
+    </message>
+    <message>
+        <source>Unique Values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File Name</source>
+        <translation type="unfinished">ឈ្មោះ​ឯកសារ</translation>
+    </message>
+    <message>
+        <source>Value Map</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enumeration</source>
+        <translation type="unfinished">ការ​រៀបរាប់</translation>
+    </message>
+    <message>
+        <source>Hidden</source>
+        <translation type="unfinished">ដែល​បានលាក់</translation>
+    </message>
+    <message>
+        <source>Check Box</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Value Relation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uuid Generator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Photo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Web View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Color</source>
+        <translation type="unfinished">ពណ៌</translation>
+    </message>
+    <message>
+        <source>Date/Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set scale visibility for selected layers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>http://qgis.org/en/site/forusers/commercial_support.html</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Layer creation failed. Please check the &lt;a href=&quot;#messageLog&quot;&gt;message log&lt;/a&gt; for further information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Please check the &lt;a href=&quot;#messageLog&quot;&gt;message log&lt;/a&gt; for further info.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13467,6 +14209,89 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
+    <name>QgsAppLayerTreeViewMenuProvider</name>
+    <message>
+        <source>&amp;Set Group CRS</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Zoom to Best Scale (100%)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Stretch Using Current Extent</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Duplicate</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Set Layer Scale Visibility</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Set Layer CRS</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Set &amp;Project CRS from Layer</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Open Attribute Table</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Save As...</source>
+        <translation type="unfinished">​រក្សាទុកជា...</translation>
+    </message>
+    <message>
+        <source>Save As Layer Definition File...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Filter...</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Properties</source>
+        <translation type="unfinished">លក្ខណៈ​សម្បត្តិ</translation>
+    </message>
+    <message>
+        <source>Copy Style</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Paste Style</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Expand All</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Collapse All</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Remove</source>
+        <translation type="unfinished">យក​ចេញ</translation>
+    </message>
+</context>
+<context>
     <name>QgsApplication</name>
     <message>
         <source>Exception</source>
@@ -13534,22 +14359,22 @@ User DB Path:	%9
     <name>QgsAtlasComposition</name>
     <message>
         <source>Filename parsing error: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Feature filter parser error: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Feature filter eval error: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Filename eval error: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -13558,6 +14383,18 @@ User DB Path:	%9
     </message>
     <message>
         <source>Atlas feature %1 of %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Atlas filter eval error: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Composer</source>
+        <translation type="unfinished">កម្មវិធី​តែង</translation>
+    </message>
+    <message>
+        <source>Atlas filename evaluation error: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -13584,6 +14421,16 @@ User DB Path:	%9
     </message>
     <message>
         <source>No matching atlas features found!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not evaluate filename pattern</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not set filename pattern as &apos;%1&apos;.
+Parser error:
+%2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -13987,66 +14834,54 @@ User DB Path:	%9
     <name>QgsAttributeDialog</name>
     <message>
         <source>Error</source>
-        <translation>កំហុស</translation>
+        <translation type="obsolete">កំហុស</translation>
     </message>
     <message>
         <source>Error: %1</source>
-        <translation>កំហុស ៖ %1</translation>
+        <translation type="obsolete">កំហុស ៖ %1</translation>
     </message>
     <message>
         <source>Attributes - %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
+    </message>
+    <message>
+        <source>Feature Attributes</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>QgsAttributeEditor</name>
     <message>
         <source>Select a file</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Select a date</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>(no selection)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>...</source>
-        <translation>...</translation>
+        <translation type="obsolete">...</translation>
     </message>
     <message>
         <source>&lt;</source>
-        <translation type="unfinished">&lt;</translation>
+        <translation type="obsolete">&lt;</translation>
     </message>
+</context>
+<context>
+    <name>QgsAttributeForm</name>
     <message>
-        <source>Select filename...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save current page url in attribute</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Select date in calendar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Select color in browser</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open current page in default browser</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;i&gt;Error: Field does not exist in datasource&lt;/i&gt;</source>
-        <translation type="unfinished"></translation>
+        <source>Attributes changed</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -14104,11 +14939,11 @@ User DB Path:	%9
     </message>
     <message>
         <source>Select all</source>
-        <translation>ជ្រើស​ទាំងអស់</translation>
+        <translation type="obsolete">ជ្រើស​ទាំងអស់</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>ជម្រះ</translation>
+        <translation type="obsolete">ជម្រះ</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -14116,21 +14951,29 @@ User DB Path:	%9
     </message>
     <message>
         <source>Column</source>
-        <translation>ជួរឈរ</translation>
+        <translation type="obsolete">ជួរឈរ</translation>
     </message>
     <message>
         <source>Ascending</source>
-        <translation>លំដាប់​ឡើង</translation>
+        <translation type="obsolete">លំដាប់​ឡើង</translation>
     </message>
     <message>
         <source>&lt;b&gt;Attribute&lt;/b&gt;</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&lt;b&gt;Alias&lt;/b&gt;</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
+    </message>
+    <message>
+        <source>Columns</source>
+        <translation type="unfinished">ជួរឈរ</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation type="unfinished">កំណត់​ឡើង​វិញ</translation>
     </message>
 </context>
 <context>
@@ -14542,6 +15385,32 @@ User DB Path:	%9
         <source>Form View</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>mMainViewButtonGroup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>=</source>
+        <translation type="unfinished">=</translation>
+    </message>
+    <message>
+        <source>Update All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update Filtered</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">កំហុស</translation>
+    </message>
+    <message>
+        <source>An error occured while evaluating the calculation string:
+%1</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
 </context>
 <context>
     <name>QgsAttributeTableModel</name>
@@ -14562,46 +15431,46 @@ User DB Path:	%9
     <name>QgsAttributeTypeDialog</name>
     <message>
         <source>Attribute Edit Dialog</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Simple edit box. This is the default editation widget.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Displays combo box containing values of attribute used for classification.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
-        <source>Allows one to set numeric values from a specified range. The edit widget can be either a slider or a spin box.</source>
-        <translation type="unfinished">
+        <source>Allows setting of numeric values from a specified range. The edit widget can be either a slider or a spin box.</source>
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Minimum</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Maximum</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Step</source>
-        <translation>ជំហាន</translation>
+        <translation type="obsolete">ជំហាន</translation>
     </message>
     <message>
         <source>Local minimum/maximum = 0/0</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>The user can select one of the values already used in the attribute. If editable, a line edit is shown with autocompletion support, otherwise a combo box is used.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -14610,272 +15479,248 @@ User DB Path:	%9
     </message>
     <message>
         <source>Simplifies file selection by adding a file chooser dialog.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Combo box with predefined items. Value is stored in the attribute, description is shown in the combo box.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Load Data from layer</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Value</source>
-        <translation>តម្លៃ</translation>
+        <translation type="obsolete">តម្លៃ</translation>
     </message>
     <message>
         <source>Description</source>
-        <translation>សេចក្ដី​ពិពណ៌នា</translation>
+        <translation type="obsolete">សេចក្ដី​ពិពណ៌នា</translation>
     </message>
     <message>
         <source>Remove Selected</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Load Data from CSV file</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Combo box with values that can be used within the column&apos;s type. Must be supported by the provider.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>An immutable attribute is read-only - the user is not able to modify the contents.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>A hidden attribute will be invisible - the user is not able to see it&apos;s contents.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Representation for checked state</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Representation for unchecked state</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>A text edit field that accepts multiple lines will be used.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>A calendar widget to enter a date.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Layer</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Key column</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Select layer, key column and value column</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Allow null value</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Order by value</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Allow multiple selections</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Value column</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Filter expression</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>...</source>
-        <translation>...</translation>
+        <translation type="obsolete">...</translation>
     </message>
     <message>
         <source>Read-only field that generates a UUID if empty.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Line edit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Classification</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Range</source>
-        <translation>ជួរ</translation>
+        <translation type="obsolete">ជួរ</translation>
     </message>
     <message>
         <source>Unique values</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>File name</source>
-        <translation>ឈ្មោះ​ឯកសារ</translation>
+        <translation type="obsolete">ឈ្មោះ​ឯកសារ</translation>
     </message>
     <message>
         <source>Value map</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Enumeration</source>
-        <translation>ការ​រៀបរាប់</translation>
+        <translation type="obsolete">ការ​រៀបរាប់</translation>
     </message>
     <message>
         <source>Immutable</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Hidden</source>
-        <translation>ដែល​បានលាក់</translation>
+        <translation type="obsolete">ដែល​បានលាក់</translation>
     </message>
     <message>
         <source>Checkbox</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Text edit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Calendar</source>
-        <translation>ប្រតិទិន</translation>
+        <translation type="obsolete">ប្រតិទិន</translation>
     </message>
     <message>
         <source>Value relation</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>UUID generator</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Edit filter expression</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Select a file</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>កំហុស</translation>
+        <translation type="obsolete">កំហុស</translation>
     </message>
     <message>
         <source>Could not open file %1
 Error was:%2</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Slider</source>
-        <translation>គ្រាប់​រំកិល</translation>
+        <translation type="obsolete">គ្រាប់​រំកិល</translation>
     </message>
     <message>
         <source>Dial</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Current minimum for this value is %1 and current maximum is %2.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Attribute has no integer or real type, therefore range is not usable.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Enumeration is not available for this attribute</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
-        <source>Date format</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Photo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Webview</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Color</source>
-        <translation type="unfinished">ពណ៌</translation>
+        <translation type="obsolete">ពណ៌</translation>
     </message>
     <message>
         <source>Height</source>
-        <translation type="unfinished">កម្ពស់</translation>
+        <translation type="obsolete">កម្ពស់</translation>
     </message>
     <message>
         <source>Width</source>
-        <translation type="unfinished">ទទឹង</translation>
-    </message>
-    <message>
-        <source>Field contains a filename for a picture</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Field contains a color</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">ទទឹង</translation>
     </message>
     <message>
         <source>Label on top</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Example formats:&lt;/p&gt;&lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot; bgcolor=&quot;#f6f6f6&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Format&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Result&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;dd.MM.yyyy&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;21.05.2001&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;ddd MMMM d yy&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;Tue May 21 01&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;hh:mm:ss.zzz&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;14:13:09.042&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;h:m:s ap&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;2:13:9 pm&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;&lt;a href=&quot;http://qt-project.org/doc/qt-5.0/qtcore/qdatetime.html#toString&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Reference documentation&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Field contains an URL</source>
+        <source>Edit Widget Properties</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15233,6 +16078,14 @@ Database:%2</source>
         <translation type="unfinished">
             </translation>
     </message>
+    <message>
+        <source>Case Sensitive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsBrowserDockWidgetBase</name>
@@ -15401,6 +16254,26 @@ Database:%2</source>
     </message>
 </context>
 <context>
+    <name>QgsCalendarConfigDlgBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>A calendar widget to enter a date.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Date format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Example formats:&lt;/p&gt;&lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot; bgcolor=&quot;#f6f6f6&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Format&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Result&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;dd.MM.yyyy&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;21.05.2001&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;ddd MMMM d yy&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;Tue May 21 01&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;hh:mm:ss.zzz&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;14:13:09.042&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;h:m:s ap&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;2:13:9 pm&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;&lt;a href=&quot;http://qt-project.org/doc/qt-5.0/qtcore/qdatetime.html#toString&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Reference documentation&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QgsCategorizedSymbolRendererV2Model</name>
     <message>
         <source>Symbol</source>
@@ -15531,6 +16404,23 @@ Should the existing classes be deleted before classification?</source>
     </message>
 </context>
 <context>
+    <name>QgsCheckBoxConfigDlgBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Representation for checked state</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Representation for unchecked state</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
     <name>QgsCollapsibleGroupBoxBasic</name>
     <message>
         <source>Shift-click to expand, then collapse others</source>
@@ -15545,6 +16435,14 @@ Should the existing classes be deleted before classification?</source>
     <name>QgsColorButton</name>
     <message>
         <source>Select Color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paste color</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15952,6 +16850,71 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Landscape</source>
         <translation type="unfinished">ទេសភាព</translation>
     </message>
+    <message>
+        <source> on page </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate photocopy (grayscale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate fax (mono)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate color blindness (Protanope)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate color blindness (Deuteranope)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SVG error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There was an error in SVG output for SVG layer </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate Photocopy (Grayscale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate Fax (Mono)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate Color Blindness (Protanope)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Simulate Color Blindness (Deuteranope)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Feature filter parser error: %1</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Error creating %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image export error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SVG export error</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsComposerArrowWidget</name>
@@ -16101,6 +17064,33 @@ Please try a lower resolution or a smaller papersize</source>
     <message>
         <source>Color...</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsComposerAttributeTableColumnModel</name>
+    <message>
+        <source>Center</source>
+        <translation type="unfinished">កណ្ដាល</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation type="unfinished">ស្ដាំ</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation type="unfinished">ឆ្វេង</translation>
+    </message>
+    <message>
+        <source>Attribute</source>
+        <translation type="unfinished">គុណលក្ខណៈ</translation>
+    </message>
+    <message>
+        <source>Heading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Alignment</source>
+        <translation type="unfinished">តម្រឹម​</translation>
     </message>
 </context>
 <context>
@@ -16879,12 +17869,42 @@ Please try a lower resolution or a smaller papersize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Export Atlas As PDF...</source>
+        <source>Atlas Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Atlas Settings</source>
+        <source>Export Atlas as PDF...</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export Atlas as PDF</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsComposerColumnAlignmentDelegate</name>
+    <message>
+        <source>Left</source>
+        <translation type="unfinished">ឆ្វេង</translation>
+    </message>
+    <message>
+        <source>Center</source>
+        <translation type="unfinished">កណ្ដាល</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation type="unfinished">ស្ដាំ</translation>
+    </message>
+</context>
+<context>
+    <name>QgsComposerColumnSortOrderDelegate</name>
+    <message>
+        <source>Ascending</source>
+        <translation type="unfinished">លំដាប់​ឡើង</translation>
+    </message>
+    <message>
+        <source>Descending</source>
+        <translation type="unfinished">លំដាប់​ចុះ</translation>
     </message>
 </context>
 <context>
@@ -16928,6 +17948,10 @@ Please try a lower resolution or a smaller papersize</source>
         <translation type="unfinished">
             </translation>
     </message>
+    <message>
+        <source>Use smart breaks changed</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsComposerHtmlWidgetBase</name>
@@ -16963,6 +17987,26 @@ Please try a lower resolution or a smaller papersize</source>
     <message>
         <source>Main properties</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Refresh HTML</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Frame</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use smart page breaks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Maximum distance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> mm</source>
+        <translation type="unfinished"> ម.ម​.</translation>
     </message>
 </context>
 <context>
@@ -17027,6 +18071,18 @@ Please try a lower resolution or a smaller papersize</source>
     </message>
     <message>
         <source>Item rotation changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Item frame join style</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Item blend mode changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Item transparency changed</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -17144,6 +18200,19 @@ Please try a lower resolution or a smaller papersize</source>
         <source> °</source>
         <translation type="unfinished"> °</translation>
     </message>
+    <message>
+        <source>Join style</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> mm</source>
+        <translation type="unfinished"> ម.ម​.</translation>
+    </message>
 </context>
 <context>
     <name>QgsComposerLabelWidget</name>
@@ -17190,6 +18259,10 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Label rotation changed</source>
         <translation type="obsolete">
             </translation>
+    </message>
+    <message>
+        <source>Label color changed</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -17461,6 +18534,10 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Wms Legend height</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Legend title alignment changed</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsComposerLegendWidgetBase</name>
@@ -17715,7 +18792,7 @@ Please try a lower resolution or a smaller papersize</source>
     </message>
     <message>
         <source>mm</source>
-        <translation type="unfinished">mm</translation>
+        <translation type="obsolete">mm</translation>
     </message>
     <message>
         <source>WMS LegendGraphic</source>
@@ -17748,6 +18825,22 @@ Please try a lower resolution or a smaller papersize</source>
     <message>
         <source>Item font...</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Title alignment:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation type="unfinished">ឆ្វេង</translation>
+    </message>
+    <message>
+        <source>Center</source>
+        <translation type="unfinished">កណ្ដាល</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation type="unfinished">ស្ដាំ</translation>
     </message>
 </context>
 <context>
@@ -18133,6 +19226,14 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Grid frame second fill color changed</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Overview frame style changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Grid line style changed</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsComposerMapWidgetBase</name>
@@ -18478,6 +19579,22 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Map rotation</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>View extent in map canvas</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use one of the predefined scales of the project where the atlas feature best fits.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Predefined scale (best fit)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> mm</source>
+        <translation type="unfinished"> ម.ម​.</translation>
+    </message>
 </context>
 <context>
     <name>QgsComposerMouseHandles</name>
@@ -18504,6 +19621,21 @@ Please try a lower resolution or a smaller papersize</source>
     </message>
     <message>
         <source>width: %1 mm height: %2 mm</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsComposerPicture</name>
+    <message>
+        <source>Picture expression parsing error: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Composer</source>
+        <translation type="unfinished">កម្មវិធី​តែង</translation>
+    </message>
+    <message>
+        <source>Picture expression eval error: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -18562,6 +19694,26 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Creating icon for file %1</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>Expression based image path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Picture resize mode changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Picture placement changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Picture source changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Picture source expression</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18650,6 +19802,81 @@ Please try a lower resolution or a smaller papersize</source>
     </message>
     <message>
         <source>Image rotation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image source</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Placement</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Resize mode</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation type="unfinished">ពង្រីក</translation>
+    </message>
+    <message>
+        <source>Stretch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clip</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Zoom and resize frame</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Resize frame to image size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Expression</source>
+        <translation type="unfinished">កន្សោម</translation>
+    </message>
+    <message>
+        <source>Top left</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Top center</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Top right</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Middle left</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Middle</source>
+        <translation type="unfinished">កណ្ដាល</translation>
+    </message>
+    <message>
+        <source>Middle right</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bottom left</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bottom center</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bottom right</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -18858,6 +20085,14 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Scalebar changed to meters</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Scalebar line join style</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scalebar line cap style</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsComposerScaleBarWidgetBase</name>
@@ -19014,6 +20249,16 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Fonts and colors</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Join style</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Cap style</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
 </context>
 <context>
     <name>QgsComposerShapeWidget</name>
@@ -19077,6 +20322,10 @@ Please try a lower resolution or a smaller papersize</source>
     </message>
     <message>
         <source>Shape radius changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shape style changed</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19148,6 +20397,25 @@ Please try a lower resolution or a smaller papersize</source>
     </message>
 </context>
 <context>
+    <name>QgsComposerTableSortColumnsProxyModel</name>
+    <message>
+        <source>Descending</source>
+        <translation type="unfinished">លំដាប់​ចុះ</translation>
+    </message>
+    <message>
+        <source>Ascending</source>
+        <translation type="unfinished">លំដាប់​ឡើង</translation>
+    </message>
+    <message>
+        <source>Attribute</source>
+        <translation type="unfinished">គុណលក្ខណៈ</translation>
+    </message>
+    <message>
+        <source>Sort Order</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QgsComposerTableWidget</name>
     <message>
         <source>General options</source>
@@ -19216,6 +20484,23 @@ Please try a lower resolution or a smaller papersize</source>
         <source>Table visible only toggled</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>Table feature filter toggled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Table feature filter modified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Expression based filter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Table header alignment changed</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19319,6 +20604,42 @@ Please try a lower resolution or a smaller papersize</source>
     <message>
         <source>Content font...</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filter with</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation type="unfinished">...</translation>
+    </message>
+    <message>
+        <source>Refresh table data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Header alignment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Follow column alignment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation type="unfinished">ឆ្វេង</translation>
+    </message>
+    <message>
+        <source>Center</source>
+        <translation type="unfinished">កណ្ដាល</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation type="unfinished">ស្ដាំ</translation>
+    </message>
+    <message>
+        <source> mm</source>
+        <translation type="unfinished"> ម.ម​.</translation>
     </message>
 </context>
 <context>
@@ -20362,6 +21683,14 @@ and current file is [%3]</source>
     </message>
 </context>
 <context>
+    <name>QgsCustomLayerOrderWidget</name>
+    <message>
+        <source>Control rendering order</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
     <name>QgsCustomProjectionDialog</name>
     <message>
         <source>Delete Projection Definition?</source>
@@ -20874,16 +22203,12 @@ and current file is [%3]</source>
             </translation>
     </message>
     <message>
-        <source>New Row</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Property</source>
         <translation type="unfinished">លក្ខណៈសម្បត្តិ</translation>
     </message>
     <message>
         <source>Field</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -20907,14 +22232,6 @@ and current file is [%3]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&apos;left&apos;|&apos;center&apos;|&apos;right&apos;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&apos;top&apos;|&apos;center&apos;|&apos;bottom&apos;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&apos;linear&apos;|&apos;radial&apos;|&apos;conical&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -20932,14 +22249,69 @@ and current file is [%3]</source>
     </message>
 </context>
 <context>
-    <name>QgsDatumTransformDialog</name>
+    <name>QgsDateTimeEditConfig</name>
     <message>
-        <source>Select datum transformations for layer</source>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot; bgcolor=&quot;#f6f6f6&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Format&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Examples result&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;dd.MM.yyyy&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;21.05.2001&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;ddd MMMM d yy&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;Tue May 21 01&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;hh:mm:ss.zzz&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;14:13:09.042&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;h:m:s ap&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;2:13:9 pm&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot; bgcolor=&quot;#f6f6f6&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Expression&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Date output&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;d&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the day as number without a leading zero (1 to 31)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;dd&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the day as number with a leading zero (01 to 31)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;ddd&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the abbreviated localized day name (e.g. &apos;Mon&apos; to &apos;Sun&apos;). Uses the system locale to localize the name, i.e.&lt;/span&gt;&lt;a href=&quot;http://qt-project.org/doc/qt-5/qlocale.html#system&quot;&gt;&lt;span style=&quot; font-family:&apos;Arial,FreeSans,sans-serif&apos;; font-size:12px; font-weight:600; text-decoration: underline; color:#00732f;&quot;&gt;QLocale::system&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e;&quot;&gt;().&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;dddd&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the long localized day name (e.g. &apos;Monday&apos; to &apos;&lt;/span&gt;&lt;a href=&quot;http://qt-project.org/doc/qt-5/qt.html#DayOfWeek-enum&quot;&gt;&lt;span style=&quot; font-family:&apos;Arial,FreeSans,sans-serif&apos;; font-size:12px; font-weight:600; text-decoration: underline; color:#00732f;&quot;&gt;Qt::Sunday&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e;&quot;&gt;&apos;). Uses the system locale to localize the name, i.e.&lt;/span&gt;&lt;a href=&quot;http://qt-project.org/doc/qt-5/qlocale.html#system&quot;&gt;&lt;span style=&quot; font-family:&apos;Arial,FreeSans,sans-serif&apos;; font-size:12px; font-weight:600; text-decoration: underline; color:#00732f;&quot;&gt;QLocale::system&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e;&quot;&gt;().&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;M&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the month as number without a leading zero (1-12)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;MM&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the month as number with a leading zero (01-12)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;MMM&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the abbreviated localized month name (e.g. &apos;Jan&apos; to &apos;Dec&apos;). Uses the system locale to localize the name, i.e.&lt;/span&gt;&lt;a href=&quot;http://qt-project.org/doc/qt-5/qlocale.html#system&quot;&gt;&lt;span style=&quot; font-family:&apos;Arial,FreeSans,sans-serif&apos;; font-size:12px; font-weight:600; text-decoration: underline; color:#00732f;&quot;&gt;QLocale::system&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e;&quot;&gt;().&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;MMMM&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the long localized month name (e.g. &apos;January&apos; to &apos;December&apos;). Uses the system locale to localize the name, i.e.&lt;/span&gt;&lt;a href=&quot;http://qt-project.org/doc/qt-5/qlocale.html#system&quot;&gt;&lt;span style=&quot; font-family:&apos;Arial,FreeSans,sans-serif&apos;; font-size:12px; font-weight:600; text-decoration: underline; color:#00732f;&quot;&gt;QLocale::system&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e;&quot;&gt;().&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;yy&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the year as two digit number (00-99)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;yyyy&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the year as four digit number&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot; bgcolor=&quot;#f6f6f6&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Expression&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td style=&quot; vertical-align:top; padding-left:10; padding-right:15; padding-top:5; padding-bottom:5;&quot;&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:12px; font-weight:600; color:#363534;&quot;&gt;Time output&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;h&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the hour without a leading zero (0 to 23 or 1 to 12 if AM/PM display)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;hh&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the hour with a leading zero (00 to 23 or 01 to 12 if AM/PM display)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;H&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the hour without a leading zero (0 to 23, even with AM/PM display)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;HH&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the hour with a leading zero (00 to 23, even with AM/PM display)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;m&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the minute without a leading zero (0 to 59)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;mm&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the minute with a leading zero (00 to 59)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;s&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the second without a leading zero (0 to 59)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;ss&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the second with a leading zero (00 to 59)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;z&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the milliseconds without leading zeroes (0 to 999)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;zzz&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;the milliseconds with leading zeroes (000 to 999)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;AP or A&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;use AM/PM display.&lt;/span&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; font-style:italic; color:#66666e;&quot;&gt;A/AP&lt;/span&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e;&quot;&gt; will be replaced by either &amp;quot;AM&amp;quot; or &amp;quot;PM&amp;quot;.&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;ap or a&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#ffffff&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#ffffff;&quot;&gt;use am/pm display.&lt;/span&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; font-style:italic; color:#66666e;&quot;&gt;a/ap&lt;/span&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e;&quot;&gt; will be replaced by either &amp;quot;am&amp;quot; or &amp;quot;pm&amp;quot;.&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;t&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td bgcolor=&quot;#f6f6f6&quot; style=&quot; vertical-align:top; padding-left:10; padding-right:10; padding-top:3; padding-bottom:3;&quot;&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;Open Sans,sans-serif&apos;; font-size:11px; color:#66666e; background-color:#f6f6f6;&quot;&gt;the timezone (for example &amp;quot;CEST&amp;quot;)&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Field format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>date</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>date &amp; time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>custom format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation type="unfinished">...</translation>
+    </message>
+    <message>
+        <source>Widget display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>calendar popup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>default</source>
+        <translation type="unfinished">លំនាំដើម</translation>
+    </message>
+    <message>
+        <source>custom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>preview</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsDatumTransformDialog</name>
+    <message>
         <source>File &apos;%1&apos; not found in directory &apos;%2&apos;</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation type="unfinished">មិន​ស្គាល់</translation>
     </message>
 </context>
 <context>
@@ -20963,6 +22335,19 @@ and current file is [%3]</source>
     <message>
         <source>Hide deprecated</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Destination CRS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Source CRS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Layer</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -21034,6 +22419,10 @@ and current file is [%3]</source>
         <source>Load</source>
         <comment>Load connections from file</comment>
         <translation type="unfinished">ផ្ទុក​</translation>
+    </message>
+    <message>
+        <source>Hold dialog open</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -21163,7 +22552,7 @@ p, li { white-space: pre-wrap; }
     <name>QgsDecorationGridDialog</name>
     <message>
         <source>Dialog</source>
-        <translation>ប្រអប់</translation>
+        <translation type="obsolete">ប្រអប់</translation>
     </message>
     <message>
         <source>Enable grid</source>
@@ -21276,6 +22665,10 @@ p, li { white-space: pre-wrap; }
         <source>Horizontal and Vertical</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>Grid properties</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -22691,7 +24084,7 @@ Leave empty to automatically apply the maximum value.</source>
     <name>QgsDualView</name>
     <message>
         <source>Attributes changed</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -22753,6 +24146,17 @@ Parser error:
     </message>
     <message>
         <source>Column Preview</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsDummyConfigDlgBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Dummy Text</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -22961,7 +24365,7 @@ Parser error:
     </message>
     <message>
         <source>Save settings with project</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -22974,6 +24378,10 @@ Parser error:
     </message>
     <message>
         <source>Show partials labels</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Draw text as outlines (recommended)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -23350,6 +24758,66 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
+    <name>QgsExtentGroupBox</name>
+    <message>
+        <source>layer</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>map view</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>user defined</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Extent (current: %1)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsExtentGroupBoxWidget</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>West</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>East</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>North</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>South</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Layer extent</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map view extent</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
     <name>QgsFeatureAction</name>
     <message>
         <source>Run actions</source>
@@ -23406,6 +24874,10 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished">
             </translation>
     </message>
+    <message>
+        <source>Only update %1 selected features</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsFieldCalculatorBase</name>
@@ -23452,6 +24924,13 @@ p, li { white-space: pre-wrap; }
         <source>Update existing field</source>
         <translation type="unfinished">
             </translation>
+    </message>
+</context>
+<context>
+    <name>QgsFieldExpressionWidget</name>
+    <message>
+        <source>Expression dialog</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -23768,6 +25247,31 @@ MyForms.py must live on PYTHONPATH, .qgis/python, or inside the project folder.<
     <message>
         <source>Relations</source>
         <translation type="unfinished">ទំនាក់ទំនង</translation>
+    </message>
+</context>
+<context>
+    <name>QgsFileNameWidget</name>
+    <message>
+        <source>...</source>
+        <translation type="unfinished">...</translation>
+    </message>
+    <message>
+        <source>Select a file</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsFontMarkerSymbolLayerV2Widget</name>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -24937,6 +26441,10 @@ Please reselect a valid file.</source>
         <source>Pixel Size</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Band</source>
+        <translation type="unfinished">ក្រុម</translation>
+    </message>
 </context>
 <context>
     <name>QgsGenericProjectionSelector</name>
@@ -25970,11 +27478,11 @@ p, li { white-space: pre-wrap; }
     <name>QgsGradientFillSymbolLayerV2Widget</name>
     <message>
         <source>Color</source>
-        <translation type="unfinished">ពណ៌</translation>
+        <translation type="obsolete">ពណ៌</translation>
     </message>
     <message>
         <source>Color 2</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -26016,6 +27524,24 @@ p, li { white-space: pre-wrap; }
     <message>
         <source>Reference Point 2 (is centroid)</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Color (start)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Color (end)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -28053,7 +29579,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>&lt;p align=&quot;center&quot;&gt;Existing masets&lt;/p&gt;</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -28082,6 +29608,10 @@ p, li { white-space: pre-wrap; }
         <source>Mapset:</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>&lt;p align=&quot;center&quot;&gt;Existing mapsets&lt;/p&gt;</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -28733,12 +30263,12 @@ at line %2 column %3</source>
     </message>
     <message>
         <source>New file</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>New datasource</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -28786,6 +30316,11 @@ at line %2 column %3</source>
             <numerusform></numerusform>
         </translation>
     </message>
+    <message>
+        <source>Datasource</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
 </context>
 <context>
     <name>QgsHandleBadLayersBase</name>
@@ -28796,47 +30331,48 @@ at line %2 column %3</source>
     </message>
     <message>
         <source>Layer name</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Type</source>
-        <translation>ប្រភេទ</translation>
+        <translation type="obsolete">ប្រភេទ</translation>
     </message>
     <message>
         <source>Provider</source>
-        <translation>ក្រុមហ៊ុន​ផ្ដល់</translation>
+        <translation type="obsolete">ក្រុមហ៊ុន​ផ្ដល់</translation>
     </message>
     <message>
         <source>Original filename</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>New filename</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Original datasource</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>New datasource</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
 </context>
 <context>
     <name>QgsHandleBadLayersHandler</name>
     <message>
-        <source>Handle Bad layers</source>
+        <source>%1 of %2 bad layers were not fixable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>%1 of %2 bad layers were not fixable.</source>
-        <translation type="unfinished"></translation>
+        <source>Handle bad layers</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -29067,6 +30603,59 @@ This may be a problem in your network connection or at the WMS server.</source>
         <translation type="unfinished">
             </translation>
     </message>
+    <message>
+        <source>Tree</source>
+        <translation type="obsolete">មែក​ធាង</translation>
+    </message>
+    <message>
+        <source>Table</source>
+        <translation type="obsolete">តារាង</translation>
+    </message>
+    <message>
+        <source>Layer</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>FID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Attribute</source>
+        <translation type="unfinished">គុណលក្ខណៈ</translation>
+    </message>
+    <message>
+        <source>Value</source>
+        <translation type="unfinished">តម្លៃ</translation>
+    </message>
+    <message>
+        <source>Clear Results</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Help</source>
+        <translation type="unfinished">ជំនួយ</translation>
+    </message>
+    <message>
+        <source>Mode</source>
+        <translation type="unfinished">របៀប</translation>
+    </message>
+    <message>
+        <source>Auto open form</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select identify mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select view mode for raster layers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation type="unfinished">មើល</translation>
+    </message>
 </context>
 <context>
     <name>QgsIdentifyResultsDialog</name>
@@ -29203,6 +30792,50 @@ This may be a problem in your network connection or at the WMS server.</source>
         <source>Attributes changed</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>Current layer</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Top down, stop at first</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Top down</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Layer selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Toggle feature selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Table</source>
+        <translation type="unfinished">តារាង</translation>
+    </message>
+    <message>
+        <source>Graph</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tree</source>
+        <translation type="unfinished">មែក​ធាង</translation>
+    </message>
+    <message>
+        <source>feature id</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>No attributes.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -29400,6 +31033,29 @@ This may be a problem in your network connection or at the WMS server.</source>
         <source>&amp;Interpolation</source>
         <translation type="unfinished">
             </translation>
+    </message>
+</context>
+<context>
+    <name>QgsInvertedPolygonRendererWidget</name>
+    <message>
+        <source>The inverted polygon renderer only applies to polygon and multipolygon layers. 
+&apos;%1&apos; is not a polygon layer and then cannot be displayed</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsInvertedPolygonRendererWidgetBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Sub renderer:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Merge polygons before rendering (slow)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -29923,7 +31579,7 @@ This may be a problem in your network connection or at the WMS server.</source>
     </message>
     <message>
         <source>Expression based label</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -30044,6 +31700,23 @@ This may be a problem in your network connection or at the WMS server.</source>
     </message>
     <message>
         <source>File not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>points</source>
+        <translation type="unfinished">ចំណុច</translation>
+    </message>
+    <message>
+        <source>map units</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>mm</source>
+        <translation type="unfinished">mm</translation>
+    </message>
+    <message>
+        <source>% of length</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -30197,11 +31870,11 @@ This may be a problem in your network connection or at the WMS server.</source>
     </message>
     <message>
         <source>points</source>
-        <translation>ចំណុច</translation>
+        <translation type="obsolete">ចំណុច</translation>
     </message>
     <message>
         <source>map units</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -30264,7 +31937,7 @@ This may be a problem in your network connection or at the WMS server.</source>
     </message>
     <message>
         <source>mm</source>
-        <translation>mm</translation>
+        <translation type="obsolete">mm</translation>
     </message>
     <message>
         <source>Pen Join style</source>
@@ -30788,10 +32461,6 @@ This may be a problem in your network connection or at the WMS server.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>% of length</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Fixed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -30853,10 +32522,6 @@ This may be a problem in your network connection or at the WMS server.</source>
         <source>Border</source>
         <translation type="obsolete">
             </translation>
-    </message>
-    <message>
-        <source>Edit expression</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Automated placement settings (apply to all layers)</source>
@@ -31067,6 +32732,14 @@ This may be a problem in your network connection or at the WMS server.</source>
         <source>Font is missing.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Repeat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Force point inside polygon</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsLayerPropertiesWidget</name>
@@ -31077,155 +32750,204 @@ This may be a problem in your network connection or at the WMS server.</source>
     </message>
 </context>
 <context>
-    <name>QgsLegend</name>
+    <name>QgsLayerTreeModel</name>
     <message>
-        <source>sub-group</source>
-        <translation type="unfinished">
-            </translation>
+        <source>Double-click to view legend</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>group</source>
-        <translation>ក្រុម</translation>
+        <source>following %1 items
+not displayed</source>
+        <translation type="unfinished"></translation>
     </message>
+</context>
+<context>
+    <name>QgsLayerTreeViewDefaultActions</name>
     <message>
-        <source>Legend context</source>
-        <translation type="unfinished">
-            </translation>
-    </message>
-    <message>
-        <source>&amp;Properties</source>
-        <translation>លក្ខណៈ​សម្បត្តិ</translation>
-    </message>
-    <message>
-        <source>&amp;Make to Toplevel Item</source>
-        <translation type="unfinished">
-            </translation>
-    </message>
-    <message>
-        <source>Zoom to Group</source>
-        <translation type="unfinished">
-            </translation>
+        <source>&amp;Add Group</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&amp;Remove</source>
-        <translation>យក​ចេញ</translation>
+        <translation type="unfinished">យក​ចេញ</translation>
     </message>
     <message>
-        <source>&amp;Set Group CRS</source>
+        <source>&amp;Show in overview</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re&amp;name</source>
+        <translation type="unfinished">ប្ដូរ​ឈ្មោះ</translation>
+    </message>
+    <message>
+        <source>Show Feature Count</source>
         <translation type="unfinished">
             </translation>
     </message>
     <message>
-        <source>Re&amp;name</source>
-        <translation>ប្ដូរ​ឈ្មោះ</translation>
+        <source>&amp;Zoom to Layer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Zoom to Group</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Move to Top-level</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&amp;Group Selected</source>
         <translation type="unfinished">
             </translation>
     </message>
+</context>
+<context>
+    <name>QgsLegend</name>
+    <message>
+        <source>sub-group</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>group</source>
+        <translation type="obsolete">ក្រុម</translation>
+    </message>
+    <message>
+        <source>Legend context</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Properties</source>
+        <translation type="obsolete">លក្ខណៈ​សម្បត្តិ</translation>
+    </message>
+    <message>
+        <source>&amp;Make to Toplevel Item</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>Zoom to Group</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>&amp;Remove</source>
+        <translation type="obsolete">យក​ចេញ</translation>
+    </message>
+    <message>
+        <source>&amp;Set Group CRS</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>Re&amp;name</source>
+        <translation type="obsolete">ប្ដូរ​ឈ្មោះ</translation>
+    </message>
+    <message>
+        <source>&amp;Group Selected</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
     <message>
         <source>Copy Style</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Paste Style</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Add New Group</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Expand All</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Collapse All</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Update Drawing Order</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
-        <source>Not fully defined drawing order set to legend order.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Legend</source>
-        <translation type="unfinished">កំណត់​សម្គាល់</translation>
+        <translation type="obsolete">កំណត់​សម្គាល់</translation>
     </message>
 </context>
 <context>
     <name>QgsLegendLayer</name>
     <message>
         <source>&amp;Zoom to Layer Extent</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Zoom to Best Scale (100%)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Stretch Using Current Extent</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Show in Overview</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Remove</source>
-        <translation>យក​ចេញ</translation>
+        <translation type="obsolete">យក​ចេញ</translation>
     </message>
     <message>
         <source>&amp;Duplicate</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Set Layer CRS</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Set &amp;Project CRS from Layer</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Open Attribute Table</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Save As...</source>
-        <translation>​រក្សាទុកជា...</translation>
+        <translation type="obsolete">​រក្សាទុកជា...</translation>
     </message>
     <message>
         <source>Save Selection As...</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>&amp;Filter...</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Show Feature Count</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31236,11 +32958,6 @@ This may be a problem in your network connection or at the WMS server.</source>
     <message>
         <source>Abort</source>
         <translation type="obsolete">បោះបង់</translation>
-    </message>
-    <message>
-        <source>following %1 items
-not displayed</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -31272,6 +32989,16 @@ not displayed</source>
     <message>
         <source>Color</source>
         <translation type="unfinished">ពណ៌</translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -31429,7 +33156,7 @@ not displayed</source>
     </message>
     <message>
         <source>, sender &apos;%1&apos;</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31448,14 +33175,14 @@ not displayed</source>
     <message>
         <source>Could not draw %1 because:
 %2</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Could not draw %1 because:
 %2</source>
         <comment>COMMENTED OUT</comment>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31513,7 +33240,7 @@ not displayed</source>
     </message>
     <message>
         <source>style not found in database</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31588,6 +33315,10 @@ not displayed</source>
         <translation type="unfinished">
             </translation>
     </message>
+    <message>
+        <source>Style not found in database</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsMapRenderer</name>
@@ -31641,7 +33372,7 @@ not displayed</source>
     </message>
     <message>
         <source>Feature added</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31696,7 +33427,7 @@ not displayed</source>
     </message>
     <message>
         <source>Error. Could not add part.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31706,12 +33437,12 @@ not displayed</source>
     </message>
     <message>
         <source>Coordinate transform error</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Cannot transform the point to the layers coordinate system</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31741,8 +33472,16 @@ not displayed</source>
     </message>
     <message>
         <source>Error, could not add part</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
+    </message>
+    <message>
+        <source>Could not add part. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Coordinate transform error. Cannot transform the point to the layers coordinate system</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -31831,12 +33570,12 @@ not displayed</source>
     <name>QgsMapToolDeletePart</name>
     <message>
         <source>Delete part</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>This isn&apos;t a multipart geometry.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31857,6 +33596,14 @@ not displayed</source>
         <translation type="unfinished">
             </translation>
     </message>
+    <message>
+        <source>Delete ring</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete ring can only be used in a polygon layer.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsMapToolDeleteVertex</name>
@@ -31875,7 +33622,7 @@ not displayed</source>
     </message>
     <message>
         <source>Choose a vector layer in the legend</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -31885,7 +33632,7 @@ not displayed</source>
     </message>
     <message>
         <source>Use &apos;Toggle Editing&apos; to make it editable</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
 </context>
@@ -32063,6 +33810,10 @@ not displayed</source>
         <source>Identify error</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>All (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsMapToolIdentifyAction</name>
@@ -32102,6 +33853,10 @@ not displayed</source>
         <source>Inserted vertex</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>could not snap to a segment on the current layer.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -32262,7 +34017,7 @@ not displayed</source>
     </message>
     <message>
         <source>If there are selected features, the split tool only applies to the selected ones. If you like to split all features under the split line, clear the selection</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -32282,8 +34037,20 @@ not displayed</source>
     </message>
     <message>
         <source>An error occured during feature splitting</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
+    </message>
+    <message>
+        <source>No features were split</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If there are selected features, the split tool only applies to those. If you would like to split all features under the split line, clear the selection.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An error occured during splitting.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -32307,10 +34074,6 @@ not displayed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If there are selected parts, the split tool only applies to the selected ones. If you like to split all parts under the split line, clear the selection</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Cut edges detected. Make sure the line splits parts into multiple parts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -32326,15 +34089,27 @@ not displayed</source>
     </message>
     <message>
         <source>An error occured during feature splitting</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
+    </message>
+    <message>
+        <source>No parts were split</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If there are selected parts, the split tool only applies to those. If you would like to split all parts under the split line, clear the selection.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An error occured during splitting.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>QgsMapToolVertexEdit</name>
     <message>
         <source>Snap tolerance</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -32352,8 +34127,23 @@ not displayed</source>
         <translation type="obsolete">
             </translation>
     </message>
+</context>
+<context>
+    <name>QgsMapUnitScaleDialog</name>
     <message>
-        <source>Could not snap segment. Have you set the tolerance in Settings &gt; Snapping Options?</source>
+        <source>Maximum scale:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Minimum scale:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Adjust scaling range</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale only within the following map unit scale range:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -32593,6 +34383,20 @@ http://my.host.com/cgi-bin/mapserv.exe</source>
         <source>&apos;vertex&apos;|&apos;lastvertex&apos;|&apos;firstvertex&apos;|&apos;centerpoint&apos;</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Offset along line</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsMeasureBase</name>
@@ -32807,7 +34611,7 @@ http://my.host.com/cgi-bin/mapserv.exe</source>
     </message>
     <message>
         <source>feature %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
 </context>
@@ -32945,6 +34749,10 @@ http://my.host.com/cgi-bin/mapserv.exe</source>
         <source>Failed to import some layers!
 
 </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show non-spatial tables</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -33994,7 +35802,7 @@ Extended error information:
     </message>
     <message>
         <source>Save As</source>
-        <translation>រក្សាទុក​ជា</translation>
+        <translation type="obsolete">រក្សាទុក​ជា</translation>
     </message>
     <message>
         <source>Date</source>
@@ -34011,6 +35819,11 @@ Extended error information:
     </message>
     <message>
         <source>Mapinfo File</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Save layer as...</source>
         <translation type="unfinished">
             </translation>
     </message>
@@ -34094,6 +35907,10 @@ Extended error information:
         <source>Specify CRS</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>File encoding</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -35281,17 +37098,17 @@ Always network: always load from network and do not check if the cache has a val
     <name>QgsOptions</name>
     <message>
         <source>Current layer</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Top down, stop at first</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Top down</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -35605,14 +37422,10 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>All</source>
-        <translation type="unfinished">ទាំង​អស់</translation>
+        <translation type="obsolete">ទាំង​អស់</translation>
     </message>
     <message>
         <source>QGIS files</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Layer selection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -35633,6 +37446,18 @@ Always network: always load from network and do not check if the cache has a val
         <source>Crosses</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>Restore UI defaults</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure to reset the UI to default (needs restart)?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Identify highlight color</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -35995,12 +37820,12 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>Better graphics performance at the cost of loosing the possibility to cancel rendering and incremental feature drawing</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Enable back buffer</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -36015,12 +37840,12 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>Number of features to draw before updating the display</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map display will be updated (drawn) after this many features have been read from the data source</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -36040,7 +37865,7 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>Fix problems with incorrectly filled polygons</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -36207,7 +38032,7 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>Add new layers to selected or current group</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -36227,12 +38052,12 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>Open identify results in a dock window (QGIS restart required)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Open feature form, if a single feature is identified</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -36247,7 +38072,7 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>Mode</source>
-        <translation>របៀប</translation>
+        <translation type="obsolete">របៀប</translation>
     </message>
     <message>
         <source>Measure tool</source>
@@ -36661,10 +38486,6 @@ Always network: always load from network and do not check if the cache has a val
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Note:&lt;/b&gt; Set below 1000 to prevent display updates until all features have been rendered</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add predefined scale</source>
         <translation type="unfinished"></translation>
     </message>
@@ -36695,10 +38516,6 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>Custom side bar style</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable feature simplication by default for newly added layers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -36821,6 +38638,63 @@ Always network: always load from network and do not check if the cache has a val
     </message>
     <message>
         <source>Ask for datum transformation when no default is defined</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prompt for confirmation when a layer is to be removed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QSettings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset the User Interface settings, to reset QGIS to it&apos;s default view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Map update interval</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable feature simplification by default for newly added layers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Highlight color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The color used to highlight identified feature. The alpha channel is only used for polygons fill, lines and outlines are fully opaque.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Buffer</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Lines / outlines buffer in millimeters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Minimum width</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Minimum line / outline width in millimeters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Render layers in parallel using many CPU cores</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max cores to use:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -37640,6 +39514,10 @@ Error: %4</source>
              {1.%2.?} {3
 ?} {4?}</translation>
     </message>
+    <message>
+        <source>Could not reload fields.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsOracleRootItem</name>
@@ -38009,7 +39887,7 @@ Error: %4</source>
     <name>QgsPasteTransformations</name>
     <message>
         <source>&amp;Add New Transfer</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
 </context>
@@ -38510,6 +40388,44 @@ Error: %4</source>
     <message>
         <source>Select a primary key</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsPhotoConfigDlgBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Picture size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation type="unfinished">ទទឹង</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation type="unfinished">កម្ពស់</translation>
+    </message>
+    <message>
+        <source>Specify the size of the preview. If you leave it set to 0, an optimal size will be estimated.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The field contains a filename for a picture. The widget will show a preview of this picture.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsPhotoWidget</name>
+    <message>
+        <source>Select a picture</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation type="unfinished">...</translation>
     </message>
 </context>
 <context>
@@ -39661,10 +41577,6 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;br/&gt;%1 rating vote(s)&lt;br/&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Category</source>
         <translation type="unfinished">ប្រភេទ</translation>
     </message>
@@ -39800,6 +41712,18 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>&lt;h3&gt;Not installed plugins&lt;/h3&gt;&lt;p&gt;Here you see the list of all plugins available in the repositories, but which are &lt;b&gt;not yet installed&lt;/b&gt;.&lt;/p&gt;&lt;p&gt;Click on the name to see details.&lt;/p&gt;&lt;p&gt;You can change the sorting via the context menu (right click).&lt;/p&gt;&lt;p&gt;A plugin can be downloaded and installed by clicking on it&apos;s name, and then click the &apos;Install plugin&apos; button.&lt;/p&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 rating vote(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Vote sent successfully</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sending vote to the plugin repository failed.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -40050,6 +41974,10 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;DejaVu Sans&apos;; font-size:9pt; font-weight:600;&quot;&gt;Note:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;DejaVu Sans&apos;; font-size:9pt;&quot;&gt; Deprecated plugins are generally unsuitable for production use. These plugins are unmaintained, and should be considered &apos;obsolete&apos; tools. QGIS does not recommend installing these plugins unless you still need it and there are no other alternatives available.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>about:blank</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsPointDisplacementRendererWidget</name>
@@ -40174,6 +42102,16 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Vertical displacement</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
         <translation type="unfinished">
             </translation>
     </message>
@@ -41432,6 +43370,10 @@ Proceed?</source>
         <source>WCS capabilities</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Quality for JPEG images ( 10 : smaller image - 100 : best quality )</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsProjectionSelector</name>
@@ -41565,6 +43507,10 @@ The data provider said:
             </numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Set provider filter on %1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -41783,6 +43729,63 @@ p, li { white-space: pre-wrap; }
         <source>Please wait while your report is generated</source>
         <comment>COMMENTED OUT</comment>
         <translation type="obsolete">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsRangeConfigDlg</name>
+    <message>
+        <source>Editable</source>
+        <translation type="unfinished">អាច​កែ​សម្រួល​បាន</translation>
+    </message>
+    <message>
+        <source>Slider</source>
+        <translation type="unfinished">គ្រាប់​រំកិល</translation>
+    </message>
+    <message>
+        <source>Dial</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Current minimum for this value is %1 and current maximum is %2.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Attribute has no integer or real type, therefore range is not usable.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsRangeConfigDlgBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Allows setting of numeric values from a specified range. The edit widget can be either a slider or a spin box.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Step</source>
+        <translation type="unfinished">ជំហាន</translation>
+    </message>
+    <message>
+        <source>Maximum</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Minimum</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Local minimum/maximum = 0/0</source>
+        <translation type="unfinished">
             </translation>
     </message>
 </context>
@@ -42287,6 +44290,18 @@ Click on help button to get valid creation options for this format.</source>
         <source>Actions</source>
         <translation type="unfinished">សកម្មភាព</translation>
     </message>
+    <message>
+        <source>Display</source>
+        <translation type="unfinished">បង្ហាញ</translation>
+    </message>
+    <message>
+        <source>Draw as lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Draw as lines (only int layers)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsRasterHistogramWidgetBase</name>
@@ -42391,7 +44406,7 @@ Click on help button to get valid creation options for this format.</source>
     </message>
     <message>
         <source>Could not reproject view extent: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -42401,7 +44416,7 @@ Click on help button to get valid creation options for this format.</source>
     </message>
     <message>
         <source>Could not reproject layer extent: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -43133,7 +45148,7 @@ Click on help button to get valid creation options for this format.</source>
     </message>
     <message>
         <source>Maximum scale, i.e. minimum scale denominator. This limit is inclusive, that means the layer will be displayed on this scale.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -43148,7 +45163,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Minimum scale, i.e. maximum scale denominator. This limit is exclusive, that means the layer will not be displayed on this scale.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -43163,7 +45178,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Current</source>
-        <translation>បច្ចុប្បន្ន</translation>
+        <translation type="obsolete">បច្ចុប្បន្ន</translation>
     </message>
     <message>
         <source>Coordinate reference system</source>
@@ -43287,14 +45302,6 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Layer info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:0.75em;&quot;&gt;Minimum&lt;br&gt;(exclusive)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:0.75em;&quot;&gt;Maximum&lt;br&gt;(inclusive)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -43423,6 +45430,22 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;Cantarell&apos;;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>LegendUrl</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>image/png</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>image/jpeg</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>image/jpg</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsRasterLayerSaveAsDialog</name>
@@ -43475,12 +45498,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>map view</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Extent (current: %1)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -43571,32 +45594,32 @@ datasets with maximum width and height specified below.</source>
     </message>
     <message>
         <source>West</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>East</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>North</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>South</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Layer extent</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map view extent</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -43712,6 +45735,17 @@ datasets with maximum width and height specified below.</source>
         <source>Clear all</source>
         <translation type="unfinished">
             </translation>
+    </message>
+</context>
+<context>
+    <name>QgsRasterMinMaxWidget</name>
+    <message>
+        <source>No option selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please select an option to load min/max values.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -44197,7 +46231,7 @@ standard deviation ×</source>
     <name>QgsRelationAddDlgBase</name>
     <message>
         <source>Dialog</source>
-        <translation type="unfinished">ប្រអប់</translation>
+        <translation type="obsolete">ប្រអប់</translation>
     </message>
     <message>
         <source>Referencing Field</source>
@@ -44222,6 +46256,11 @@ standard deviation ×</source>
     <message>
         <source>Id</source>
         <translation type="unfinished">លេខ​សម្គាល់​</translation>
+    </message>
+    <message>
+        <source>Add relation</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -44308,6 +46347,11 @@ standard deviation ×</source>
         <source>The relation is not valid. Please make sure your relation definitions are ok.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>(no selection)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
 </context>
 <context>
     <name>QgsRendererRulePropsDialog</name>
@@ -44343,17 +46387,17 @@ standard deviation ×</source>
     </message>
     <message>
         <source>Min. scale</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>1 : </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Max. scale</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -44863,7 +46907,7 @@ standard deviation ×</source>
     <name>QgsSVGFillSymbolLayerWidget</name>
     <message>
         <source>Select svg texture file</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -44890,6 +46934,25 @@ standard deviation ×</source>
     </message>
     <message>
         <source>Border width</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Select SVG texture file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All files</source>
         <translation type="unfinished">
             </translation>
     </message>
@@ -44949,6 +47012,40 @@ standard deviation ×</source>
     </message>
     <message>
         <source>Save style</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsScaleRangeWidget</name>
+    <message>
+        <source>Minimum
+(exclusive)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Minimum scale, i.e. maximum scale denominator. This limit is exclusive, that means the layer will not be displayed on this scale.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Maximum
+(inclusive)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Maximum scale, i.e. minimum scale denominator. This limit is inclusive, that means the layer will be displayed on this scale.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>current</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsScaleVisibilityDialog</name>
+    <message>
+        <source>Scale visibility </source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -45183,6 +47280,47 @@ The error was:
     </message>
 </context>
 <context>
+    <name>QgsShapeburstFillSymbolLayerV2Widget</name>
+    <message>
+        <source>Color (start)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Color (end)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Blur radius</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Integer between 0 and 18</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use whole shape</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Maximum distance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore rings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
     <name>QgsSimpleFillSymbolLayerV2Widget</name>
     <message>
         <source>Color</source>
@@ -45199,12 +47337,14 @@ The error was:
             </translation>
     </message>
     <message>
-        <source>Horizontal anchor point</source>
-        <translation type="unfinished"></translation>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
     </message>
     <message>
-        <source>Vertical anchor point</source>
-        <translation type="unfinished"></translation>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -45233,6 +47373,16 @@ The error was:
     </message>
     <message>
         <source>Cap style</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
         <translation type="unfinished">
             </translation>
     </message>
@@ -45277,6 +47427,16 @@ The error was:
     <message>
         <source>Vertical anchor point</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -47681,6 +49841,22 @@ There was a problem with your symbol database.</source>
         <source>Un-group</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>All Symbols</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ungrouped</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Smart Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsStyleV2ManagerDialogBase</name>
@@ -47838,6 +50014,21 @@ There was a problem with your symbol database.</source>
     </message>
 </context>
 <context>
+    <name>QgsSvgExportOptionsDialog</name>
+    <message>
+        <source>SVG export options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export map layers as svg groups (may affect label placement)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Render text as outline</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QgsSvgMarkerSymbolLayerV2Widget</name>
     <message>
         <source>Select SVG file</source>
@@ -47886,6 +50077,16 @@ There was a problem with your symbol database.</source>
     <message>
         <source>Vertical anchor point</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -47960,11 +50161,36 @@ There was a problem with your symbol database.</source>
     <name>QgsSymbolV2SelectorDialog</name>
     <message>
         <source>Invalid Selection!</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Kindly select a symbol to add layer.</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>Symbol name</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Please enter name for the symbol:</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>New symbol</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Save symbol</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Symbol with name &apos;%1&apos; already exists. Overwrite?</source>
         <translation type="unfinished">
             </translation>
     </message>
@@ -47978,7 +50204,7 @@ There was a problem with your symbol database.</source>
     </message>
     <message>
         <source>Symbol layers</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -48003,6 +50229,15 @@ There was a problem with your symbol database.</source>
     <message>
         <source>Move down</source>
         <translation>ផ្លាស់​ទី​ចុះ​ក្រោម​</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished">រក្សាទុក</translation>
+    </message>
+    <message>
+        <source>Save symbol</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -48039,12 +50274,18 @@ There was a problem with your symbol database.</source>
     </message>
     <message>
         <source>Style Manager</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
         <translation type="unfinished">
             </translation>
     </message>
     <message>
-        <source>Save in symbol library...</source>
-        <translation type="unfinished"></translation>
+        <source>Map unit</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -48117,6 +50358,22 @@ There was a problem with your symbol database.</source>
     <message>
         <source>I</source>
         <translation>I</translation>
+    </message>
+</context>
+<context>
+    <name>QgsTextEditConfigDlg</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Multiline</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>HTML</source>
+        <translation type="unfinished">HTML</translation>
     </message>
 </context>
 <context>
@@ -48673,6 +50930,153 @@ Should the existing classes be deleted before classification?</source>
     </message>
 </context>
 <context>
+    <name>QgsUniqueValuesConfigDlgBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>The user can select one of the values already used in the attribute. If editable, a line edit is shown with autocompletion support, otherwise a combo box is used.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Editable</source>
+        <translation type="unfinished">អាច​កែ​សម្រួល​បាន</translation>
+    </message>
+</context>
+<context>
+    <name>QgsUnitSelectionWidget</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Adjust scaling range</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsValueMapConfigDlg</name>
+    <message>
+        <source>Select a file</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">កំហុស</translation>
+    </message>
+    <message>
+        <source>Could not open file %1
+Error was:%2</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsValueMapWidget</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Combo box with predefined items. Value is stored in the attribute, description is shown in the combo box.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Load Data from layer</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Load Data from CSV file</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Value</source>
+        <translation type="unfinished">តម្លៃ</translation>
+    </message>
+    <message>
+        <source>Description</source>
+        <translation type="unfinished">សេចក្ដី​ពិពណ៌នា</translation>
+    </message>
+    <message>
+        <source>Remove Selected</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsValueRelationConfigDlg</name>
+    <message>
+        <source>Edit filter expression</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsValueRelationConfigDlgBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Select layer, key column and value column</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Layer</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Key column</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Value column</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Allow null value</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Order by value</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Allow multiple selections</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Filter expression</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation type="unfinished">...</translation>
+    </message>
+</context>
+<context>
+    <name>QgsValueRelationWidget</name>
+    <message>
+        <source>(no selection)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
     <name>QgsVectorColorBrewerColorRampV2DialogBase</name>
     <message>
         <source>ColorBrewer ramp</source>
@@ -49107,12 +51511,8 @@ Should the existing classes be deleted before classification?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Simplify transform error caught: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>CRS</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
 </context>
@@ -49341,6 +51741,22 @@ Should the existing classes be deleted before classification?</source>
             </numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Provider: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Storage: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>expected field</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>retrieved field</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -49627,7 +52043,7 @@ Should the existing classes be deleted before classification?</source>
     </message>
     <message>
         <source>Minimum scale, i.e. maximum scale denominator. This limit is exclusive, that means the layer will not be displayed on this scale.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -49642,7 +52058,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Maximum scale, i.e. minimum scale denominator. This limit is inclusive, that means the layer will be displayed on this scale.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -49657,7 +52073,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Current</source>
-        <translation>បច្ចុប្បន្ន</translation>
+        <translation type="obsolete">បច្ចុប្បន្ន</translation>
     </message>
     <message>
         <source>Subset</source>
@@ -49810,14 +52226,6 @@ p, li { white-space: pre-wrap; }
             </translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:0.75em;&quot;&gt;Minimum&lt;br&gt;(exclusive)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:0.75em;&quot;&gt;Maximum&lt;br&gt;(inclusive)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Feature subset</source>
         <translation type="unfinished"></translation>
     </message>
@@ -49889,6 +52297,34 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Maximum scale at which the layer should be simplified (1:1 always simplifies): </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Memory cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A widget to define the scale visibility</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A widget to define the scale visibility.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>LegendUrl</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>image/png</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>image/jpeg</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>image/jpg</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -50012,10 +52448,6 @@ p, li { white-space: pre-wrap; }
         <translation>ធ្វើមាត្រដ្ឋាន</translation>
     </message>
     <message>
-        <source>More Options &gt;&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Datasource Options</source>
         <translation type="unfinished"></translation>
     </message>
@@ -50025,6 +52457,10 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <source>Layer Options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save only selected features</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -50143,6 +52579,30 @@ p, li { white-space: pre-wrap; }
         <source>WFS</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>empty response</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WFS service exception:%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>unsuccessful service response: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WFS exception report (code=%1 text=%2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>missing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>unhandled response: %1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -50344,6 +52804,18 @@ Features</source>
         <source>Delete</source>
         <translation>លុប</translation>
     </message>
+    <message>
+        <source>Failed to parse WMS URI</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to download capabilities</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to parse capabilities</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsWMSRootItem</name>
@@ -50396,7 +52868,7 @@ Features</source>
     </message>
     <message>
         <source>Could not open the WMS Provider</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -50517,6 +52989,25 @@ Features</source>
             </numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Failed to parse WMS URI</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to download capabilities:
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The server you are trying to connect to does not seem to be a WMS server. Please check the URL.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Instead of the capabilities string that was expected, the following response has been received:
+
+%1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -50808,6 +53299,74 @@ Response was:
     </message>
 </context>
 <context>
+    <name>QgsWcsDownloadHandler</name>
+    <message>
+        <source>Map request error (Status: %1; Reason phrase: %2; URL:%3)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>WCS</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map request error:&lt;br&gt;Title: %1&lt;br&gt;Error: %2&lt;br&gt;URL: &lt;a href=&apos;%3&apos;&gt;%3&lt;/a&gt;)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map request error (Status: %1; Response: %2; URL:%3)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Cannot parse multipart response: %1</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Expected 2 parts, %1 received</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>More than 2 parts (%1) received</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map request error (Title:%1; Error:%2; URL: %3)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map request error (Response: %1; URL:%2)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Content-Transfer-Encoding %1 not supported</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map request failed [error:%1 url:%2]</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Not logging more than 100 request errors.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>%1 of %2 bytes of map downloaded.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
     <name>QgsWcsProvider</name>
     <message>
         <source>Cannot describe coverage</source>
@@ -50861,47 +53420,47 @@ Response was:
     </message>
     <message>
         <source>Map request error (Status: %1; Reason phrase: %2; URL:%3)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map request error:&lt;br&gt;Title: %1&lt;br&gt;Error: %2&lt;br&gt;URL: &lt;a href=&apos;%3&apos;&gt;%3&lt;/a&gt;)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map request error (Status: %1; Response: %2; URL:%3)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Cannot parse multipart response: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Expected 2 parts, %1 received</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>More than 2 parts (%1) received</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map request error (Title:%1; Error:%2; URL: %3)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map request error (Response: %1; URL:%2)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Content-Transfer-Encoding %1 not supported</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -50916,17 +53475,17 @@ Response was:
     </message>
     <message>
         <source>Map request failed [error:%1 url:%2]</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Not logging more than 100 request errors.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>%1 of %2 bytes of map downloaded.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -51139,14 +53698,6 @@ Response was:
         <translation type="unfinished">
             </translation>
     </message>
-    <message>
-        <source>Could not get WCS Service Exception at %1: %2 at line %3 column %4
-
-Response was:
-
-%5</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message numerus="yes">
         <source>(and %n more)</source>
         <comment>crs</comment>
@@ -51168,12 +53719,129 @@ Response was:
         <source>RasterIO error: </source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Could not get WCS Service Exception at %1 at line %2 column %3
+
+Response was:
+
+%4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Service Exception</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
 </context>
 <context>
     <name>QgsWebView</name>
     <message>
         <source>Print</source>
         <translation type="obsolete">បោះពុម្ព</translation>
+    </message>
+</context>
+<context>
+    <name>QgsWebViewWidget</name>
+    <message>
+        <source>...</source>
+        <translation type="unfinished">...</translation>
+    </message>
+    <message>
+        <source>Select a file</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsWebViewWidgetConfigDlgBase</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation type="unfinished">ទទឹង</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation type="unfinished">កម្ពស់</translation>
+    </message>
+    <message>
+        <source>Field contains a filename or URL for a webpage</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsWmsCapabilitiesDownload</name>
+    <message>
+        <source>%1 of %2 bytes of capabilities downloaded.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Capabilities request redirected.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Redirect loop detected: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WMS</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>empty of capabilities: %1</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Download of capabilities failed: %1</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+</context>
+<context>
+    <name>QgsWmsImageDownloadHandler</name>
+    <message>
+        <source>Map request error (Status: %1; Reason phrase: %2; URL:%3)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>WMS</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Returned image is flawed [Content-Type:%1; URL:%2]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Map request error (Title:%1; Error:%2; URL: %3)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Map request error (Status: %1; Response: %2; Content-Type: %3; URL:%4)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Map request failed [error:%1 url:%2]</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Not logging more than 100 request errors.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>%1 of %2 bytes of map downloaded.</source>
+        <translation type="unfinished">
+            </translation>
     </message>
 </context>
 <context>
@@ -51268,7 +53936,7 @@ Response was:
     </message>
     <message>
         <source>Tile request error</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -51279,12 +53947,12 @@ Reason phrase: %2</source>
     </message>
     <message>
         <source>Tile request error (Title:%1; Error:%2; URL: %3)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Tile request error (Status:%1; Content-Type:%2; Length:%3; URL: %4)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -51299,17 +53967,17 @@ Reason phrase: %2</source>
     </message>
     <message>
         <source>Not logging more than 100 request errors.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map request error (Status: %1; Reason phrase: %2; URL:%3)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map request error (Title:%1; Error:%2; URL: %3)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -51319,43 +53987,43 @@ Reason phrase: %2</source>
     </message>
     <message>
         <source>Map request failed [error:%1 url:%2]</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>empty capabilities document</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>
 Tried URL: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Capabilities request redirected.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>empty of capabilities: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Download of capabilities failed: %1</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>%1 of %2 bytes of capabilities downloaded.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>%1 of %2 bytes of map downloaded.</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -51377,7 +54045,7 @@ This might be due to an incorrect WMS Server URL.
 Tag:%3
 Response was:
 %4</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -51804,35 +54472,7 @@ Response was:
         </translation>
     </message>
     <message>
-        <source>Returned image is flawed [Content-Type:%1; URL: %2]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Returned image is flawed [Content-Type:%1; URL:%2]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Map request error (Status: %1; Response: %2; Content-Type: %3; URL:%4)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Redirect loop detected: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not get WMS capabilities: %1 at line %2 column %3
-This is probably due to an incorrect WMS Server URL.
-Response was:
-
-%4</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Could not get WMS Service Exception at %1: %2 at line %3 column %4
-
-Response was:
-
-%5</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -51846,22 +54486,6 @@ Response was:
     </message>
     <message>
         <source>Format not supported</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tile request max retry error. Failed %1 requests for tile %2 of tileRequest %3 (url: %4)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>repeat tileRequest %1 tile %2(retry %3)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Generated default style</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Style was missing in capabilities</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -51904,12 +54528,192 @@ Response was:
         <source>Result parsing failed. %1 feature types were guessed from gml (%2) but no features were parsed.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Could not get WMS Service Exception: %1 at line %2 column %3
+
+Response was:
+
+%4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Identifier</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tile mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid tile mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Selected tile matrix set </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale</source>
+        <translation type="unfinished">ធ្វើមាត្រដ្ឋាន</translation>
+    </message>
+    <message>
+        <source>Tile size [px]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tile size [mu]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Matrix size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Matrix extent [mu]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bounds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation type="unfinished">ទទឹង</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation type="unfinished">កម្ពស់</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation type="unfinished">កំពូល</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation type="unfinished">ឆ្វេង</translation>
+    </message>
+    <message>
+        <source>Bottom</source>
+        <translation type="unfinished">បាត</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation type="unfinished">ស្ដាំ</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n missing row(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Layer&apos;s upper bound: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n missing column(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Layer&apos;s left bound: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Layer&apos;s lower bound: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Layer&apos;s right bound: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QgsWmsTiledImageDownloadHandler</name>
+    <message>
+        <source>Tile request error</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Status: %1
+Reason phrase: %2</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Tile request error (Title:%1; Error:%2; URL: %3)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>WMS</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Tile request error (Status:%1; Content-Type:%2; Length:%3; URL: %4)</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Returned image is flawed [Content-Type:%1; URL: %2]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n tile requests in background</source>
+        <comment>tile request count</comment>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>, %n cache hits</source>
+        <comment>tile cache hits</comment>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>, %n cache misses.</source>
+        <comment>tile cache missed</comment>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>, %n errors.</source>
+        <comment>errors</comment>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Not logging more than 100 request errors.</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Tile request max retry error. Failed %1 requests for tile %2 of tileRequest %3 (url: %4)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>repeat tileRequest %1 tile %2(retry %3)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QgsWmtsDimensionsBase</name>
     <message>
         <source>Dialog</source>
-        <translation>ប្រអប់</translation>
+        <translation type="obsolete">ប្រអប់</translation>
     </message>
     <message>
         <source>Dimension</source>
@@ -51928,6 +54732,10 @@ Response was:
     <message>
         <source>Default</source>
         <translation>លំនាំដើម</translation>
+    </message>
+    <message>
+        <source>Select dimensions</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -51968,6 +54776,13 @@ Response was:
         <source>Abort...</source>
         <translation type="unfinished">
             </translation>
+    </message>
+</context>
+<context>
+    <name>RecordDialog</name>
+    <message>
+        <source>Record Metadata</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -52700,14 +55515,6 @@ Description: %3</source>
  %s</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Script saving</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Script was correctly saved.</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>SelectGeoRasterBase</name>
@@ -53037,12 +55844,12 @@ more about SEXTANTE!</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53075,7 +55882,7 @@ more about SEXTANTE!</source>
     </message>
     <message>
         <source>Saved styles</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53093,8 +55900,16 @@ more about SEXTANTE!</source>
     </message>
     <message>
         <source>Symbol</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
+    </message>
+    <message>
+        <source>Symbols in group</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Library</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -53280,6 +56095,10 @@ Would you like to add the new layer to the TOC?</source>
         <source>Form</source>
         <translation>សំណុំ​បែបបទ</translation>
     </message>
+    <message>
+        <source>Force point inside polygon</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>WidgetEllipseBase</name>
@@ -53341,12 +56160,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53443,12 +56262,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53575,12 +56394,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53652,12 +56471,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53718,18 +56537,22 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Data defined properties</source>
         <translation type="unfinished">
             </translation>
+    </message>
+    <message>
+        <source>Offset along line</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -53760,12 +56583,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53822,12 +56645,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53841,6 +56664,65 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Border</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Data defined properties...</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>WidgetShapeburstFill</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
+    </message>
+    <message>
+        <source>Gradient colors</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Two color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Color ramp</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Shading style</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shade whole shape</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore rings in polygons while shading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shade to a set distance:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Millimeter</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>Map unit</source>
+        <translation type="obsolete">
+            </translation>
+    </message>
+    <message>
+        <source>Blur strength</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Offset X,Y</source>
         <translation type="unfinished">
             </translation>
     </message>
@@ -53890,12 +56772,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -53913,6 +56795,11 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Border</source>
+        <translation type="unfinished">
+            </translation>
+    </message>
+    <message>
+        <source>Join style</source>
         <translation type="unfinished">
             </translation>
     </message>
@@ -53962,12 +56849,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -54018,12 +56905,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -54139,12 +57026,12 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
@@ -54292,18 +57179,33 @@ Would you like to add the new layer to the TOC?</source>
     </message>
     <message>
         <source>Millimeter</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Map unit</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             </translation>
     </message>
     <message>
         <source>Distance unit</source>
         <translation type="unfinished">
             </translation>
+    </message>
+</context>
+<context>
+    <name>XMLDialog</name>
+    <message>
+        <source>XML Request / Response</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Response</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -54856,7 +57758,7 @@ To edit values, you first have to switch the layer to editing mode. To switch to
 &lt;a name=&quot;FieldCalc&quot;&gt;
 &lt;h4&gt;Field Calculator&lt;/h4&gt;
 &lt;/a&gt;
-The &lt;label&gt;Field Calculator&lt;/label&gt; button in the attribute table allows to perform calculations on basis of existing attribute values or defined functions, e.g. to calculate length or area of geometry features.&lt;br&gt;
+The &lt;label&gt;Field Calculator&lt;/label&gt; button in the attribute table allows performing calculations on basis of existing attribute values or defined functions, e.g. to calculate length or area of geometry features.&lt;br&gt;
 The results can be written to a new attribute column or it can be used to update values in an already existing column.&lt;br&gt;
 The vector layer needs to be in editing mode, before you can click on the &lt;label&gt;Field calculator&lt;/label&gt; icon to open the dialog.
 </source>
@@ -55076,7 +57978,7 @@ The &lt;label&gt;Mode&lt;/label&gt; setting determines which layers will be show
 &lt;h5&gt;Measure tool&lt;/h5&gt;
 Here you can set an ellipsoid for distance calculations, measurement units and preferred color of rubber band.
 &lt;h5&gt;Panning and zooming&lt;/h5&gt;
-Allows to define mouse wheel action and zoom factor.
+Allows defining mouse wheel action and zoom factor.
 &lt;a name=&quot;over&quot;&gt;
 &lt;h4&gt;Overlay&lt;/h4&gt;
 &lt;/a&gt;
@@ -55547,7 +58449,7 @@ QGIS supports a number of symbology renderers to control how vector features are
 Click &lt;label&gt;New symbology&lt;/label&gt; button to use new symbology implementation for the layer.
 
 &lt;h5&gt;Vector transparency&lt;/h5&gt;
-QGIS allows to set a transparency for every vector layer. This can be done with the slider &lt;label&gt;Transparency&lt;/label&gt;. This is very useful for overlaying several vector layers.
+QGIS allows setting a transparency for every vector layer. This can be done with the slider &lt;label&gt;Transparency&lt;/label&gt;. This is very useful for overlaying several vector layers.
 
 &lt;h5&gt;Saving styles&lt;/h5&gt;
 Once you have styled your layer you also could save your layer-style to a separate file (with *.qml ending). To do this, use the button &lt;label&gt;Save Style...&lt;/label&gt;. No need to say that &lt;label&gt;Load Style...&lt;/label&gt; loads your saved layer-style-file.&lt;br/&gt;
@@ -55592,9 +58494,9 @@ Within the &lt;label&gt;Attributes&lt;/label&gt; tab the attributes of the selec
 The &lt;label&gt;Toggle editing mode&lt;/label&gt; button toggles this mode.&lt;p&gt;
 Within the Attributes tab you also find an edit widget column. This column can be used to define values or a range of values that are allowed to be added to the specific attribute table column. If you click on the &lt;label&gt;edit widget&lt;/label&gt; button, a dialog opens, where you can define different widgets. These widgets are:&lt;br/&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;label&gt;Line edit&lt;/label&gt; an edit field which allows to enter simple text (or restrict to numbers for numeric attributes).
+&lt;li&gt;&lt;label&gt;Line edit&lt;/label&gt; an edit field which allows entering simple text (or restrict to numbers for numeric attributes).
 &lt;li&gt;&lt;label&gt;Classification&lt;/label&gt; Displays a combo box with the values used for classification, if you have chosen &lt;label&gt;unique value&lt;/label&gt; as legend type in the symbology tab of the properties dialog.
-&lt;li&gt;&lt;label&gt;Range&lt;/label&gt; Allows to set numeric values from a specific range. The edit widget can be either a slider or a spin box.
+&lt;li&gt;&lt;label&gt;Range&lt;/label&gt; Allows setting of numeric values from a specific range. The edit widget can be either a slider or a spin box.
 &lt;li&gt;&lt;label&gt;Unique value&lt;/label&gt; The user can select one of the values already used in the attribute table. If &lt;label&gt;editable&lt;/label&gt; is activated, a line edit is shown with auto completion support, but additional values are possible, otherwise a combo box is used.
 &lt;li&gt;&lt;label&gt;File name&lt;/label&gt; Simplifies the selection by adding a file chooser dialog.
 &lt;li&gt;&lt;label&gt;Value map&lt;/label&gt; a combo box with predefined items. The value is stored in the attribute, the description is shown in the combo box. You can define values manually or load them from a layer or a csv file.
@@ -55627,7 +58529,7 @@ Actions are useful when you frequently want to run an external application or vi
 
 The new implementation of actions uses the QGIS expression engine to do evaluations. Each expression is evaluated and replaced by its result at runtime.&lt;p&gt;
 An expression must be enclosed between &lt;code&gt;[%&lt;/code&gt; and &lt;code&gt;%]&lt;/code&gt; - the GUI has some buttons which do that for you automatically. 
-The &lt;label&gt;Insert expression...&lt;/label&gt; button launches the &lt;label&gt;Expression builder&lt;/label&gt; which allows to write an expression easily, the &lt;label&gt;Insert field&lt;/label&gt; button inserts into the action a placeholder like &lt;code&gt;[% &quot;fieldname&quot; %]&lt;/code&gt; where fieldname is the name of the field selected in the field dropdown list.&lt;p&gt;
+The &lt;label&gt;Insert expression...&lt;/label&gt; button launches the &lt;label&gt;Expression builder&lt;/label&gt; which allows writing an expression easily, the &lt;label&gt;Insert field&lt;/label&gt; button inserts into the action a placeholder like &lt;code&gt;[% &quot;fieldname&quot; %]&lt;/code&gt; where fieldname is the name of the field selected in the field dropdown list.&lt;p&gt;
 
 See the User Guide for further information.
 
@@ -55878,7 +58780,7 @@ which are described and illustrated on &lt;a href=&quot;http://en.wikipedia.org/
 				No matter if selected text contains the interpreter prompt (&gt;&gt;&gt;, ...). Input area pane is the interactive 
 				python shell for input commands.&lt;br&gt;To access to the python file editor use the 
 				&lt;label&gt;Show editor&lt;/label&gt; button 
-				from the toolbar. The editor allows to edit and save python file and it offers basic functionality 
+				from the toolbar. The editor allows editing and saving python files and it offers basic functionality 
 				for managing your code (comment and 
 				uncomment code, check syntax, share the code via codepad.org and much more).
 			&lt;/p&gt;
@@ -57220,26 +60122,6 @@ Note: This function is only available in some contexts and will be 0 otherwise.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-&lt;h3&gt;color_rgb() function&lt;/h3&gt;
-Returns a string representation of a color based on its red, green, and blue components
-
-&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
-     color_rgb(&lt;i&gt;red, green, blue&lt;/i&gt;)&lt;/p&gt;
-
-&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
-&lt;!-- List args for functions here--&gt;
-&lt;i&gt;  red&lt;/i&gt; &amp;rarr; the red component as an integer value from 0 to 255.&lt;br&gt;
-&lt;i&gt;  green&lt;/i&gt; &amp;rarr; the green component as an integer value from 0 to 255.&lt;br&gt;
-&lt;i&gt;  blue&lt;/i&gt; &amp;rarr; the blue component as an integer value from 0 to 255.&lt;br&gt;
-
-&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
-&lt;!-- Show example of function.--&gt;
-     color_rgb(255,127,0) &amp;rarr; &apos;#ff7f00&apos;&lt;/p&gt;
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;h3&gt;$numpages function&lt;/h3&gt;
 Returns the total number of pages in the composition.
 
@@ -57787,27 +60669,6 @@ Returns the largest value in a set of values.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>
-&lt;h3&gt;color_cmyk() function&lt;/h3&gt;
-Returns a string representation of a color based on its cyan, magenta, yellow and black components
-
-&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
-     color_cmyk(&lt;i&gt;cyan, magenta, yellow, black&lt;/i&gt;)&lt;/p&gt;
-
-&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
-&lt;!-- List args for functions here--&gt;
-&lt;i&gt;  cyan&lt;/i&gt; &amp;rarr; the cyan component of the color, as a percentage integer value from 0 to 100.&lt;br&gt;
-&lt;i&gt;  magenta&lt;/i&gt; &amp;rarr; the magenta component of the color, as a percentage integer value from 0 to 100.&lt;br&gt;
-&lt;i&gt;  yellow&lt;/i&gt; &amp;rarr; the yellow component of the color, as a percentage integer value from 0 to 100.&lt;br&gt;
-&lt;i&gt;  black&lt;/i&gt; &amp;rarr; the black component of the color, as a percentage integer value from 0 to 100.&lt;br&gt;
-
-&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
-&lt;!-- Show example of function.--&gt;
-     color_cmyk(100,50,0,10) &amp;rarr; &apos;#0073e6&apos;&lt;/p&gt;
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;h3&gt;sqrt() function&lt;/h3&gt;
 Returns square root of a value
 
@@ -57820,30 +60681,6 @@ Returns square root of a value
 
 &lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
      sqrt(9) &amp;rarr; 3&lt;/p&gt;
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>
-&lt;h3&gt;ramp_color() function&lt;/h3&gt;
-Returns a string representing a color from a color ramp. 
-
-&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
-     ramp_color(&lt;i&gt;ramp_name,value&lt;/i&gt;)&lt;/p&gt;
-
-&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
-&lt;!-- List args for functions here--&gt;
-&lt;i&gt;  ramp_name&lt;/i&gt; &amp;rarr; the name of the color ramp as a string, for example &apos;Spectral&apos;.&lt;br&gt;
-&lt;i&gt;  value&lt;/i&gt; &amp;rarr; the position on the ramp to select the color from as a real number between 0 and 1.&lt;br&gt;
-
-&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
-&lt;!-- Show example of function.--&gt;
-     ramp_color(&apos;Spectral&apos;,0.3) &amp;rarr; &apos;#fdbe73&apos;&lt;/p&gt;
-
-&lt;p&gt;&lt;h4&gt;Note:&lt;/h4&gt;
-The color ramps available vary between QGIS installations.  This function
-may not give the expected results if you move your Quantum project.
-&lt;/p&gt;
 </source>
         <translation type="unfinished"></translation>
     </message>
@@ -58279,25 +61116,6 @@ None
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;h3&gt;color_hsv() function&lt;/h3&gt;
-Returns a string representation of a color based on its hue, saturation, and value attributes
-
-&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
-     color_hsv(&lt;i&gt;hue, saturation, value&lt;/i&gt;)&lt;/p&gt;
-
-&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
-&lt;!-- List args for functions here--&gt;
-&lt;i&gt;  hue&lt;/i&gt; &amp;rarr; the hue of the color, as an integer value from 0 to 360.&lt;br&gt;
-&lt;i&gt;  saturation&lt;/i&gt; &amp;rarr; the saturation percentage of the color as an integer value from 0 to 100.&lt;br&gt;
-&lt;i&gt;  value&lt;/i&gt; &amp;rarr; the value percentage of the color as an integer from 0 to 100.&lt;br&gt;
-
-&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
-&lt;!-- Show example of function.--&gt;
-     color_hsv(40,100,100) &amp;rarr; &apos;#ffaa00&apos;&lt;/p&gt;
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;h3&gt;Math Group&lt;/h3&gt;
 This group contains math functions e.g square root, sin and cos
 </source>
@@ -58394,25 +61212,6 @@ This function can take any number of arguments.
 &lt;code&gt;coalesce(&quot;fieldA&quot;, &quot;fallbackField&quot;, &apos;ERROR&apos;) &amp;rarr; value of fieldA if it is non-NULL
  else the value of &quot;fallbackField&quot; or the string &apos;ERROR&apos; if both are NULL&lt;/code&gt;&lt;br&gt;
 
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;h3&gt;color_hsl() function&lt;/h3&gt;
-Returns a string representation of a color based on its hue, saturation, and lightness attributes
-
-&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
-     color_hsl(&lt;i&gt;hue, saturation, lightness&lt;/i&gt;)&lt;/p&gt;
-
-&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
-&lt;!-- List args for functions here--&gt;
-&lt;i&gt;  hue&lt;/i&gt; &amp;rarr; the hue of the color, as an integer value from 0 to 360.&lt;br&gt;
-&lt;i&gt;  saturation&lt;/i&gt; &amp;rarr; the saturation percentage of the color as an integer value from 0 to 100.&lt;br&gt;
-&lt;i&gt;  lightness&lt;/i&gt; &amp;rarr; the lightness percentage of the color as an integer value from 0 to 100.&lt;br&gt;
-
-&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
-&lt;!-- Show example of function.--&gt;
-     color_hsl(100,50,70) &amp;rarr; &apos;#a6d98c&apos;&lt;/p&gt;
 </source>
         <translation type="unfinished"></translation>
     </message>
@@ -59072,28 +61871,6 @@ Restricts an input value to a specified range.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;h3&gt;IS expression&lt;/h3&gt;
-Returns 1 if a is the same as b.
-
-&lt;h4&gt;Syntax&lt;/h4&gt;
-&lt;pre&gt;a is b&lt;/pre&gt;
-
-&lt;h4&gt;Arguments&lt;/h4&gt;
-None
-
-&lt;h4&gt;Example&lt;/h4&gt;
-&lt;pre&gt; &apos;A&apos; IS &apos;A&apos;  &amp;rarr; returns 1 &lt;/pre&gt;
-&lt;pre&gt; &apos;A&apos; IS &apos;a&apos;  &amp;rarr; returns 0 &lt;/pre&gt;
-&lt;pre&gt; 4 IS 4      &amp;rarr; returns 1 &lt;/pre&gt;
-&lt;pre&gt; 4 IS 2+2    &amp;rarr; returns 1 &lt;/pre&gt;
-&lt;pre&gt; 4 IS 2      &amp;rarr; returns 0 &lt;/pre&gt;
-&lt;pre&gt; 4 IS 2      &amp;rarr; returns 0 &lt;/pre&gt;
-&lt;pre&gt; $geometry IS NULL  &amp;rarr; returns 0, if your geometry is not NULL&lt;/pre&gt;
-
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;h3&gt;disjoint function&lt;/h3&gt;
 Returns 1 if the geometries do not &quot;spatially intersect&quot; - if they do not share any space together. 
 
@@ -59379,23 +62156,6 @@ geometry &amp;rarr; geometry
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;h3&gt;contains function&lt;/h3&gt;
- Returns true if and only if no points of b lie in the exterior of a, and at least one point of the interior of b lies in the interior of a. 
-
-&lt;h4&gt;Syntax&lt;/h4&gt;
-&lt;pre&gt;contains( geometry a , geometry a)&lt;/pre&gt;
-
-&lt;h4&gt;Arguments&lt;/h4&gt;
-geometry &amp;rarr; geometry
-geometry &amp;rarr; geometry
-
-&lt;h4&gt;Example&lt;/h4&gt;
-&lt;pre&gt; contains( geomFromWKT( &apos;POLYGON((0 0 , 0 1 , 1 1 , 1 0 , 0 0 ))&apos; ) , geomFromWKT( &apos;POINT( 0.5 0.5 )&apos; ))    &amp;rarr; returns 1&lt;/pre&gt;
-&lt;pre&gt; contains( geomFromWKT( &apos;POLYGON((0 0 , 0 1 , 1 1 , 1 0 , 0 0 ))&apos; ) , geomFromWKT( &apos;LINESTRING(3 3 , 4 4 , 5 5)&apos; ))          &amp;rarr; returns 0&lt;/pre&gt;
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;h3&gt;bbox function&lt;/h3&gt;
 Returns 1 if the geometries spatially intersect the bounding box defined and 0 if they don&apos;t.
 
@@ -59409,6 +62169,333 @@ b &amp;rarr; geometry
 &lt;h4&gt;Example&lt;/h4&gt;
 &lt;pre&gt;bbox( geomFromWKT( &apos;POINT(4 5)&apos; ) , geomFromWKT( &apos;LINESTRING(3 3 , 4 4 , 5 5)&apos; )) &amp;rarr; returns 1&lt;/pre&gt;
 &lt;pre&gt;bbox( geomFromWKT( &apos;POINT(6 5)&apos; ) , geomFromWKT( &apos;POLYGON((3 3 , 4 4 , 5 5, 3 3))&apos; )) &amp;rarr; returns 0&lt;/pre&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;wordwrap() function&lt;/h3&gt;
+Returns a string wrapped to a maximum/minimum number of characters.
+
+&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
+     wordwrap(&lt;i&gt;string,wrap_length[,delimiter_string]&lt;/i&gt;)&lt;/p&gt;
+
+&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
+&lt;!-- List args for functions here--&gt;
+&lt;i&gt;  string&lt;/i&gt; &amp;rarr; is string.  The string to be wrapped.&lt;br&gt;
+&lt;i&gt;  wrap_length&lt;/i&gt; &amp;rarr; is number.  If positive, the number represents the ideal maximum number of characters to wrap; if negative, the number represents the minimum number of characters to wrap.&lt;br&gt;
+&lt;i&gt;  delimiter_string&lt;/i&gt; &amp;rarr; is string.  The delimiter string to wrap to a new line (&lt;u&gt;optional&lt;/u&gt;).&lt;br&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
+&lt;!-- Show example of function.--&gt;
+     wordwrap(&apos;UNIVERSITY OF QGIS&apos;,13) &amp;rarr; &apos;UNIVERSITY OF&amp;#92;nQGIS&apos;&lt;br&gt;
+     wordwrap(&apos;UNIVERSITY OF QGIS&apos;,-3) &amp;rarr; &apos;UNIVERSITY&amp;#92;nOF QGIS&apos;&lt;/p&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;$atlasgeometry function&lt;/h3&gt;
+Returns the geometry of the current feature iterated in atlas.
+Can be used for rule based display of geometry when using atlas.
+For example to only show geometries of other layers when their geometry 
+intersects the iterated geometry of features using atlas.
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;$atlasgeometry&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+None
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; intersects(  $atlasgeometry,  $geometry ) &lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;$atlasfeatureid function&lt;/h3&gt;
+Returns the feature id of the current row while using atlas.
+This enables you to use features of atlas in rules 
+and for example show or hide features based on their id.
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;$atlasfeatureid&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+None
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt;$atlasfeatureid = $id&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;color_hsl() function&lt;/h3&gt;
+Returns a string representation of a color based on its hue, saturation, and lightness attributes
+
+&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
+     color_hsl(&lt;i&gt;hue, saturation, lightness&lt;/i&gt;)&lt;/p&gt;
+
+&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
+&lt;!-- List args for functions here--&gt;
+&lt;i&gt;  hue&lt;/i&gt; &amp;rarr; the hue of the color, as an integer value from 0 to 360.&lt;br&gt;
+&lt;i&gt;  saturation&lt;/i&gt; &amp;rarr; the saturation percentage of the color as an integer value from 0 to 100.&lt;br&gt;
+&lt;i&gt;  lightness&lt;/i&gt; &amp;rarr; the lightness percentage of the color as an integer value from 0 to 100.&lt;br&gt;
+
+&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
+&lt;!-- Show example of function.--&gt;
+     color_hsl(100,50,70) &amp;rarr; &apos;166,217,140&apos;&lt;/p&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;xmax function&lt;/h3&gt;
+Returns the maximum x coordinate of a geometry. Calculations are in the Spatial Reference System of this Geometry. 
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;xmax(geom)&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+geom &amp;rarr; a geometry
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; xmax($geometry) &amp;rarr; returns maximum x coordinate of $geometry&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;bounds function&lt;/h3&gt;
+Returns a geometry which represents the bounding box of an input geometry. Calculations are in the Spatial Reference System of this Geometry. 
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;bounds(geom)&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+geom &amp;rarr; a geometry
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; bounds($geometry) &amp;rarr; returns bounding box of $geometry&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;ymax function&lt;/h3&gt;
+Returns the maximum y coordinate of a geometry. Calculations are in the Spatial Reference System of this Geometry. 
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;ymax(geom)&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+geom &amp;rarr; a geometry
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; ymax($geometry) &amp;rarr; returns maximum y coordinate of $geometry&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+&lt;h3&gt;color_rgb() function&lt;/h3&gt;
+Returns a string representation of a color based on its red, green, and blue components
+
+&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
+     color_rgb(&lt;i&gt;red, green, blue&lt;/i&gt;)&lt;/p&gt;
+
+&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
+&lt;!-- List args for functions here--&gt;
+&lt;i&gt;  red&lt;/i&gt; &amp;rarr; the red component as an integer value from 0 to 255.&lt;br&gt;
+&lt;i&gt;  green&lt;/i&gt; &amp;rarr; the green component as an integer value from 0 to 255.&lt;br&gt;
+&lt;i&gt;  blue&lt;/i&gt; &amp;rarr; the blue component as an integer value from 0 to 255.&lt;br&gt;
+
+&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
+&lt;!-- Show example of function.--&gt;
+     color_rgb(255,127,0) &amp;rarr; &apos;255,127,0&apos;&lt;/p&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+&lt;h3&gt;color_cmyk() function&lt;/h3&gt;
+Returns a string representation of a color based on its cyan, magenta, yellow and black components
+
+&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
+     color_cmyk(&lt;i&gt;cyan, magenta, yellow, black&lt;/i&gt;)&lt;/p&gt;
+
+&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
+&lt;!-- List args for functions here--&gt;
+&lt;i&gt;  cyan&lt;/i&gt; &amp;rarr; the cyan component of the color, as a percentage integer value from 0 to 100.&lt;br&gt;
+&lt;i&gt;  magenta&lt;/i&gt; &amp;rarr; the magenta component of the color, as a percentage integer value from 0 to 100.&lt;br&gt;
+&lt;i&gt;  yellow&lt;/i&gt; &amp;rarr; the yellow component of the color, as a percentage integer value from 0 to 100.&lt;br&gt;
+&lt;i&gt;  black&lt;/i&gt; &amp;rarr; the black component of the color, as a percentage integer value from 0 to 100.&lt;br&gt;
+
+&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
+&lt;!-- Show example of function.--&gt;
+     color_cmyk(100,50,0,10) &amp;rarr; &apos;0,115,230&apos;&lt;/p&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>
+&lt;h3&gt;ramp_color() function&lt;/h3&gt;
+Returns a string representing a color from a color ramp. 
+
+&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
+     ramp_color(&lt;i&gt;ramp_name,value&lt;/i&gt;)&lt;/p&gt;
+
+&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
+&lt;!-- List args for functions here--&gt;
+&lt;i&gt;  ramp_name&lt;/i&gt; &amp;rarr; the name of the color ramp as a string, for example &apos;Spectral&apos;.&lt;br&gt;
+&lt;i&gt;  value&lt;/i&gt; &amp;rarr; the position on the ramp to select the color from as a real number between 0 and 1.&lt;br&gt;
+
+&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
+&lt;!-- Show example of function.--&gt;
+     ramp_color(&apos;Spectral&apos;,0.3) &amp;rarr; &apos;253,190,115,255&apos;&lt;/p&gt;
+
+&lt;p&gt;&lt;h4&gt;Note:&lt;/h4&gt;
+The color ramps available vary between QGIS installations.  This function
+may not give the expected results if you move your Quantum project.
+&lt;/p&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;color_hsv() function&lt;/h3&gt;
+Returns a string representation of a color based on its hue, saturation, and value attributes
+
+&lt;p&gt;&lt;h4&gt;Syntax&lt;/h4&gt;
+     color_hsv(&lt;i&gt;hue, saturation, value&lt;/i&gt;)&lt;/p&gt;
+
+&lt;p&gt;&lt;h4&gt;Arguments&lt;/h4&gt;
+&lt;!-- List args for functions here--&gt;
+&lt;i&gt;  hue&lt;/i&gt; &amp;rarr; the hue of the color, as an integer value from 0 to 360.&lt;br&gt;
+&lt;i&gt;  saturation&lt;/i&gt; &amp;rarr; the saturation percentage of the color as an integer value from 0 to 100.&lt;br&gt;
+&lt;i&gt;  value&lt;/i&gt; &amp;rarr; the value percentage of the color as an integer from 0 to 100.&lt;br&gt;
+
+&lt;p&gt;&lt;h4&gt;Example&lt;/h4&gt;
+&lt;!-- Show example of function.--&gt;
+     color_hsv(40,100,100) &amp;rarr; &apos;255,170,0&apos;&lt;/p&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;bounds_width function&lt;/h3&gt;
+Returns the width of the bounding box of a geometry. Calculations are in the Spatial Reference System of this Geometry. 
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;bounds_width(geom)&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+geom &amp;rarr; a geometry
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; bounds_width($geometry) &amp;rarr; returns width of bounding box of $geometry&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;bounds_height function&lt;/h3&gt;
+Returns the height of the bounding box of a geometry. Calculations are in the Spatial Reference System of this Geometry. 
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;bounds_height(geom)&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+geom &amp;rarr; a geometry
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; bounds_height($geometry) &amp;rarr; returns height of bounding box of $geometry&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;xmin function&lt;/h3&gt;
+Returns the minimum x coordinate of a geometry. Calculations are in the Spatial Reference System of this Geometry. 
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;xmin(geom)&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+geom &amp;rarr; a geometry
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; xmin($geometry) &amp;rarr; returns minimum x coordinate of $geometry&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;ymin function&lt;/h3&gt;
+Returns the minimum y coordinate of a geometry. Calculations are in the Spatial Reference System of this Geometry. 
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;ymin(geom)&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+geom &amp;rarr; a geometry
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; ymin($geometry) &amp;rarr; returns minimum y coordinate of $geometry&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;contains function&lt;/h3&gt;
+Returns true if and only if no points of b lie in the exterior of a, and at least one point of the interior of b lies in the interior of a. 
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;contains( geometry a , geometry b)&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+geometry &amp;rarr; geometry
+geometry &amp;rarr; geometry
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; contains( geomFromWKT( &apos;POLYGON((0 0 , 0 1 , 1 1 , 1 0 , 0 0 ))&apos; ) , geomFromWKT( &apos;POINT( 0.5 0.5 )&apos; ))    &amp;rarr; returns 1&lt;/pre&gt;
+&lt;pre&gt; contains( geomFromWKT( &apos;POLYGON((0 0 , 0 1 , 1 1 , 1 0 , 0 0 ))&apos; ) , geomFromWKT( &apos;LINESTRING(3 3 , 4 4 , 5 5)&apos; ))          &amp;rarr; returns 0&lt;/pre&gt;
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;IS expression&lt;/h3&gt;
+Returns 1 if a is the same as b.
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;a IS b&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+None
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt; &apos;A&apos; IS &apos;A&apos;  &amp;rarr; returns 1 &lt;/pre&gt;
+&lt;pre&gt; &apos;A&apos; IS &apos;a&apos;  &amp;rarr; returns 0 &lt;/pre&gt;
+&lt;pre&gt; 4 IS 4      &amp;rarr; returns 1 &lt;/pre&gt;
+&lt;pre&gt; 4 IS 2+2    &amp;rarr; returns 1 &lt;/pre&gt;
+&lt;pre&gt; 4 IS 2      &amp;rarr; returns 0 &lt;/pre&gt;
+&lt;pre&gt; $geometry IS NULL  &amp;rarr; returns 0, if your geometry is not NULL&lt;/pre&gt;
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;$uuid function&lt;/h3&gt;
+Generates a Universally Unique Identifier (UUID) for each row using the Qt
+&lt;a href=&apos;http://qt-project.org/doc/qt-4.8/quuid.html#createUuid&apos;&gt;QUuid::createUuid&lt;/a&gt;
+method.  Each UUID is 38 characters long.
+
+&lt;h4&gt;Syntax&lt;/h4&gt;
+&lt;pre&gt;$uuid&lt;/pre&gt;
+
+&lt;h4&gt;Arguments&lt;/h4&gt;
+None
+
+&lt;h4&gt;Example&lt;/h4&gt;
+&lt;pre&gt;$uuid &amp;rarr; {0bd2f60f-f157-4a6d-96af-d4ba4cb366a1}&lt;/pre&gt;
 </source>
         <translation type="unfinished"></translation>
     </message>
@@ -61658,6 +64745,25 @@ b &amp;rarr; geometry
     </message>
 </context>
 <context>
+    <name>parent</name>
+    <message>
+        <source>Cannot parse XML file: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cannot open file: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid CSW connections XML.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading Connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>rulesDialog</name>
     <message>
         <source>Topology Rule Settings</source>
@@ -61890,6 +64996,17 @@ b &amp;rarr; geometry
     <message>
         <source>Open number input dialog</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation type="unfinished">...</translation>
+    </message>
+</context>
+<context>
+    <name>widgetOutputSelect</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">សំណុំ​បែបបទ</translation>
     </message>
     <message>
         <source>...</source>

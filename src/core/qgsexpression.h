@@ -127,6 +127,7 @@ class CORE_EXPORT QgsExpression
 
     //! Evaluate the feature and return the result
     //! @note this method does not expect that prepare() has been called on this instance
+    //! @note not available in python bindings
     inline QVariant evaluate( const QgsFeature& f, const QgsFields& fields ) { return evaluate( &f, fields ); }
 
     //! Returns true if an error occurred when evaluating last input
@@ -151,11 +152,13 @@ class CORE_EXPORT QgsExpression
     //! @note added in 2.2
     static bool hasSpecialColumn( const QString& name );
 
+    static bool isValid( const QString& text, const QgsFields& fields, QString &errorMessage );
+
     void setScale( double scale ) { mScale = scale; }
 
-    int scale() {return mScale; }
+    double scale() { return mScale; }
 
-    //! Return the expression string that was given when created.
+    //! Alias for dump()
     const QString expression() const { return dump(); }
 
     //! Return the expression string that represents this QgsExpression.
@@ -313,9 +316,9 @@ class CORE_EXPORT QgsExpression
     static QList<Function*> specialColumns();
 
     //! return quoted column reference (in double quotes)
-    static QString quotedColumnRef( QString name ) { return QString( "\"%1\"" ).arg( name.replace( "\"", "\"\"" ) ); }
+    static QString quotedColumnRef( QString name );
     //! return quoted string (in single quotes)
-    static QString quotedString( QString text ) { return QString( "'%1'" ).arg( text.replace( "'", "''" ) ); }
+    static QString quotedString( QString text );
 
     //////
 
@@ -440,6 +443,8 @@ class CORE_EXPORT QgsExpression
         virtual QStringList referencedColumns() const { return mOpLeft->referencedColumns() + mOpRight->referencedColumns(); }
         virtual bool needsGeometry() const { return mOpLeft->needsGeometry() || mOpRight->needsGeometry(); }
         virtual void accept( Visitor& v ) const { v.visit( *this ); }
+
+        int precedence() const;
 
       protected:
         bool compare( double diff );

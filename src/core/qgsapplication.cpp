@@ -29,6 +29,7 @@
 #include <QSettings>
 #include <QIcon>
 #include <QPixmap>
+#include <QThreadPool>
 
 #ifndef Q_WS_WIN
 #include <netinet/in.h>
@@ -61,6 +62,11 @@ QString ABISYM( QgsApplication::mCfgIntDir );
 #endif
 QString ABISYM( QgsApplication::mBuildOutputPath );
 QStringList ABISYM( QgsApplication::mGdalSkipList );
+int ABISYM( QgsApplication::mMaxThreads );
+
+const char* QgsApplication::QGIS_ORGANIZATION_NAME = "QGIS";
+const char* QgsApplication::QGIS_ORGANIZATION_DOMAIN = "qgis.org";
+const char* QgsApplication::QGIS_APPLICATION_NAME = "QGIS2";
 
 /*!
   \class QgsApplication
@@ -179,6 +185,13 @@ void QgsApplication::init( QString customConfigPath )
   }
   ABISYM( mSystemEnvVars ) = systemEnvVarMap;
 
+  // allow Qt to search for Qt plugins (e.g. sqldrivers) in our plugin directory
+  QCoreApplication::addLibraryPath( pluginPath() );
+
+  // set max. thread count to -1
+  // this should be read from QSettings but we don't know where they are at this point
+  // so we read actual value in main.cpp
+  ABISYM( mMaxThreads ) = -1;
 }
 
 QgsApplication::~QgsApplication()
@@ -231,15 +244,21 @@ bool QgsApplication::notify( QObject * receiver, QEvent * event )
   }
   catch ( QgsException & e )
   {
-    QMessageBox::critical( activeWindow(), tr( "Exception" ), e.what() );
+    QgsDebugMsg( "Caught unhandled QgsException: " + e.what() );
+    if ( qApp->thread() == QThread::currentThread() )
+      QMessageBox::critical( activeWindow(), tr( "Exception" ), e.what() );
   }
   catch ( std::exception & e )
   {
-    QMessageBox::critical( activeWindow(), tr( "Exception" ), e.what() );
+    QgsDebugMsg( "Caught unhandled std::exception: " + QString::fromAscii( e.what() ) );
+    if ( qApp->thread() == QThread::currentThread() )
+      QMessageBox::critical( activeWindow(), tr( "Exception" ), e.what() );
   }
   catch ( ... )
   {
-    QMessageBox::critical( activeWindow(), tr( "Exception" ), tr( "unknown exception" ) );
+    QgsDebugMsg( "Caught unhandled unknown exception" );
+    if ( qApp->thread() == QThread::currentThread() )
+      QMessageBox::critical( activeWindow(), tr( "Exception" ), tr( "unknown exception" ) );
   }
 
   return done;
@@ -441,7 +460,7 @@ const QString QgsApplication::translatorsFilePath()
 */
 const QString QgsApplication::licenceFilePath()
 {
-  return ABISYM( mPkgDataPath ) + QString( "/doc/LICENCE" );
+  return ABISYM( mPkgDataPath ) + QString( "/doc/LICENSE" );
 }
 
 /*!
@@ -593,6 +612,8 @@ void QgsApplication::initQgis()
 void QgsApplication::exitQgis()
 {
   delete QgsMapLayerRegistry::instance();
+
+  delete QgsProviderRegistry::instance();
 }
 
 QString QgsApplication::showSettings()
@@ -1012,4 +1033,24 @@ bool QgsApplication::createDB( QString *errorMessage )
   return true;
 }
 
+void QgsApplication::setMaxThreads( int maxThreads )
+{
+  QgsDebugMsg( QString( "maxThreads: %1" ).arg( maxThreads ) );
+
+  // make sure value is between 1 and #cores, if not set to -1 (use #cores)
+  // 0 could be used to disable any parallel processing
+  if ( maxThreads < 1 || maxThreads > QThread::idealThreadCount() )
+    maxThreads = -1;
+
+  // save value
+  ABISYM( mMaxThreads ) = maxThreads;
+
+  // if -1 use #cores
+  if ( maxThreads == -1 )
+    maxThreads = QThread::idealThreadCount();
+
+  // set max thread count in QThreadPool
+  QThreadPool::globalInstance()->setMaxThreadCount( maxThreads );
+  QgsDebugMsg( QString( "set QThreadPool max thread count to %1" ).arg( QThreadPool::globalInstance()->maxThreadCount() ) );
+}
 

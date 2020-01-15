@@ -116,13 +116,13 @@ class TestQgisLocalServer(TestCase):
     # @unittest.skip('')
     def test_getmap(self):
         test_name = 'qgis_local_server'
-        success, img_path = MAPSERV.get_map(self.getmap_params())
+        success, img_path, url = MAPSERV.get_map(self.getmap_params())
         msg = '\nLocal server get_map failed'
         assert success, msg
 
         chk = QgsRenderChecker()
         chk.setControlName('expected_' + test_name)
-        chk.setMapRenderer(None)
+        # chk.setMapRenderer(None)
         res = chk.compareImages(test_name, 0, str(img_path))
         if QGIS_TEST_REPORT and not res:  # don't report ok checks
             TESTREPORTS[test_name] = str(chk.report().toLocal8Bit())
