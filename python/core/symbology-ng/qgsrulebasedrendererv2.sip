@@ -63,6 +63,8 @@ class QgsRuleBasedRendererV2 : QgsFeatureRendererV2
         QgsSymbolV2List symbols();
         //! @note not available in python bindings
         // QgsLegendSymbolList legendSymbolItems();
+        //! @note added in 2.6
+        QgsLegendSymbolListV2 legendSymbolItemsV2( int currentLevel = -1 ) const;
         bool isFilterOK( QgsFeature& f ) const;
         bool isScaleOK( double scale ) const;
 
@@ -74,6 +76,15 @@ class QgsRuleBasedRendererV2 : QgsFeatureRendererV2
         QgsExpression* filter() const;
         QString filterExpression() const;
         QString description() const;
+        //! @note added in 2.6
+        bool checkState() const;
+
+        //! Unique rule identifier (for identification of rule within renderer)
+        //! @note added in 2.6
+        QString ruleKey() const;
+        //! Override the assigned rule key (should be used just internally by rule-based renderer)
+        //! @note added in 2.6
+        void setRuleKey( const QString& key );
 
         //! set a new symbol (or NULL). Deletes old symbol.
         void setSymbol( QgsSymbolV2* sym /Transfer/ );
@@ -82,6 +93,8 @@ class QgsRuleBasedRendererV2 : QgsFeatureRendererV2
         void setScaleMaxDenom( int scaleMaxDenom );
         void setFilterExpression( QString filterExp );
         void setDescription( QString description );
+        //! @note added in 2.6
+        void setCheckState( bool state );
 
         //! clone this rule, return new instance
         QgsRuleBasedRendererV2::Rule* clone() const /Factory/;
@@ -133,6 +146,10 @@ class QgsRuleBasedRendererV2 : QgsFeatureRendererV2
         //! take child rule out, set parent as null
         QgsRuleBasedRendererV2::Rule* takeChildAt( int i ) /TransferBack/;
 
+        //! Try to find a rule given its unique key
+        //! @note added in 2.6
+        QgsRuleBasedRendererV2::Rule* findRuleByKey( QString key );
+
         void updateElseRules();
 
         void setIsElse( bool iselse );
@@ -164,7 +181,7 @@ class QgsRuleBasedRendererV2 : QgsFeatureRendererV2
 
     virtual QList<QString> usedAttributes();
 
-    virtual QgsFeatureRendererV2* clone() /Factory/;
+    virtual QgsFeatureRendererV2* clone() const /Factory/;
 
     virtual void toSld( QDomDocument& doc, QDomElement &element ) const;
 
@@ -178,10 +195,27 @@ class QgsRuleBasedRendererV2 : QgsFeatureRendererV2
     //! return a list of symbology items for the legend
     virtual QgsLegendSymbologyList legendSymbologyItems( QSize iconSize );
 
+    //! items of symbology items in legend should be checkable
+    //! @note added in 2.5
+    virtual bool legendSymbolItemsCheckable() const;
+
+    //! items of symbology items in legend is checked
+    //! @note added in 2.5
+    virtual bool legendSymbolItemChecked( QString key );
+
+    //! item in symbology was checked
+    //! @note added in 2.5
+    virtual void checkLegendSymbolItem( QString key, bool state = true );
+
     //! return a list of item text / symbol
     //! @note: this method was added in version 1.5
     //! @note not available in python bindings
     // virtual QgsLegendSymbolList legendSymbolItems();
+
+    //! Return a list of symbology items for the legend. Better choice than legendSymbolItems().
+    //! Default fallback implementation just uses legendSymbolItems() implementation
+    //! @note added in 2.6
+    virtual QgsLegendSymbolListV2 legendSymbolItemsV2() const;
 
     //! for debugging
     virtual QString dump() const;
@@ -196,6 +230,8 @@ class QgsRuleBasedRendererV2 : QgsFeatureRendererV2
     //! to use symbolForFeature()
     //! @note added in 1.9
     virtual QgsSymbolV2List symbolsForFeature( QgsFeature& feat );
+
+    virtual QgsSymbolV2List originalSymbolsForFeature( QgsFeature& feat );
 
     //! returns bitwise OR-ed capabilities of the renderer
     //! \note added in 2.0
@@ -213,6 +249,14 @@ class QgsRuleBasedRendererV2 : QgsFeatureRendererV2
     static void refineRuleRanges( QgsRuleBasedRendererV2::Rule* initialRule, QgsGraduatedSymbolRendererV2* r );
     //! take a rule and create a list of new rules with intervals of scales given by the passed scale denominators
     static void refineRuleScales( QgsRuleBasedRendererV2::Rule* initialRule, QList<int> scales );
+
+    //! creates a QgsRuleBasedRendererV2 from an existing renderer.
+    //! @note added in 2.5
+    //! @returns a new renderer if the conversion was possible, otherwise 0.
+    static QgsRuleBasedRendererV2* convertFromRenderer( const QgsFeatureRendererV2 *renderer ) /Factory/;
+
+    //! helper function to convert the size scale and rotation fields present in some other renderers to data defined symbology
+    static void convertToDataDefinedSymbology( QgsSymbolV2* symbol, QString sizeScaleField, QString rotationField );
 
   private:
     QgsRuleBasedRendererV2( const QgsRuleBasedRendererV2 & );

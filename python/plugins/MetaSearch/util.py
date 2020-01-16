@@ -18,10 +18,9 @@
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
 #
-# A copy of the GNU General Public License is available on the World Wide Web
-# at <http://www.gnu.org/copyleft/gpl.html>. You can also obtain it by writing
-# to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-# MA 02111-1307, USA.
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 ###############################################################################
 
@@ -38,6 +37,7 @@ from pygments import highlight
 from pygments.lexers import XmlLexer
 from pygments.formatters import HtmlFormatter
 from PyQt4.QtGui import QMessageBox
+from PyQt4.uic import loadUiType
 
 LOGGER = logging.getLogger('MetaSearch')
 
@@ -50,6 +50,13 @@ class StaticContext(object):
         self.ppath = os.path.dirname(os.path.abspath(__file__))
         self.metadata = ConfigParser.ConfigParser()
         self.metadata.readfp(open(os.path.join(self.ppath, 'metadata.txt')))
+
+
+def get_ui_class(ui_file):
+    """return class object of a uifile"""
+    ui_file_full = '%s%sui%s%s' % (os.path.dirname(os.path.abspath(__file__)),
+                                   os.sep, os.sep, ui_file)
+    return loadUiType(ui_file_full)[0]
 
 
 def render_template(language, context, data, template):
@@ -118,3 +125,9 @@ def open_url(url):
     """open URL in web browser"""
 
     webbrowser.open(url)
+
+
+def normalize_text(text):
+    """tidy up string"""
+
+    return text.replace('\n', '')

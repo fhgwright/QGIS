@@ -18,6 +18,7 @@
 #include "qgscomposerattributetable.h"
 #include "qgscomposertablecolumn.h"
 #include "qgscomposermap.h"
+#include "qgscomposerutils.h"
 #include "qgsmaplayerregistry.h"
 #include "qgsvectorlayer.h"
 
@@ -134,6 +135,10 @@ QgsComposerAttributeTable::~QgsComposerAttributeTable()
 void QgsComposerAttributeTable::paint( QPainter* painter, const QStyleOptionGraphicsItem* itemStyle, QWidget* pWidget )
 {
   if ( mComposerMap && mComposerMap->isDrawing() )
+  {
+    return;
+  }
+  if ( !shouldDrawItem() )
   {
     return;
   }
@@ -444,7 +449,7 @@ bool QgsComposerAttributeTable::getFeatureAttributes( QList<QgsAttributeMap> &at
         QgsExpression* expression = new QgsExpression(( *columnIt )->attribute() );
         expression->setCurrentRowNumber( counter + 1 );
         expression->prepare( mVectorLayer->pendingFields() );
-        QVariant value = expression->evaluate( f ) ;
+        QVariant value = expression->evaluate( f );
         attributeMaps.last().insert( i, value.toString() );
       }
 
@@ -462,6 +467,8 @@ bool QgsComposerAttributeTable::getFeatureAttributes( QList<QgsAttributeMap> &at
     c.setAscending( sortColumns.at( i ).second );
     qStableSort( attributeMaps.begin(), attributeMaps.end(), c );
   }
+
+  adjustFrameToSize();
   return true;
 }
 
@@ -481,22 +488,13 @@ void QgsComposerAttributeTable::removeLayer( QString layerId )
 
 void QgsComposerAttributeTable::setSceneRect( const QRectF& rectangle )
 {
-  double titleHeight =  2 * mGridStrokeWidth + 2 * mLineTextDistance + fontAscentMillimeters( mHeaderFont );
-  double attributeHeight = mGridStrokeWidth + 2 * mLineTextDistance + fontAscentMillimeters( mContentFont );
-  if (( rectangle.height() - titleHeight ) > 0 )
-  {
-    mMaximumNumberOfFeatures = ( rectangle.height() - titleHeight ) / attributeHeight;
-  }
-  else
-  {
-    mMaximumNumberOfFeatures = 0;
-  }
-  QgsComposerItem::setSceneRect( rectangle );
+  //update rect for data defined size and position
+  QRectF evaluatedRect = evalItemRect( rectangle );
+
+  QgsComposerItem::setSceneRect( evaluatedRect );
 
   //refresh table attributes, since number of features has likely changed
   refreshAttributes();
-
-  emit maximumNumberOfFeaturesChanged( mMaximumNumberOfFeatures );
 }
 
 void QgsComposerAttributeTable::setSortAttributes( const QList<QPair<int, bool> > att )

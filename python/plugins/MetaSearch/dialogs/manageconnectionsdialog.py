@@ -21,10 +21,9 @@
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
 #
-# A copy of the GNU General Public License is available on the World Wide Web
-# at <http://www.gnu.org/copyleft/gpl.html>. You can also obtain it by writing
-# to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-# MA 02111-1307, USA.
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 ###############################################################################
 
@@ -34,11 +33,13 @@ from PyQt4.QtCore import QSettings
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFileDialog,
                          QListWidgetItem, QMessageBox)
 
-from MetaSearch.ui.manageconnectionsdialog import Ui_ManageConnectionsDialog
-from MetaSearch.util import get_connections_from_file, prettify_xml
+from MetaSearch.util import (get_connections_from_file, get_ui_class,
+                             prettify_xml)
+
+BASE_CLASS = get_ui_class('manageconnectionsdialog.ui')
 
 
-class ManageConnectionsDialog(QDialog, Ui_ManageConnectionsDialog):
+class ManageConnectionsDialog(QDialog, BASE_CLASS):
     """manage connections"""
     def __init__(self, mode):
         """init dialog"""

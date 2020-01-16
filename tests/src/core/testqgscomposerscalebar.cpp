@@ -37,6 +37,7 @@ class TestQgsComposerScaleBar: public QObject
     void init();// will be called before each testfunction is executed.
     void cleanup();// will be called after every testfunction.
     void singleBox();
+    void singleBoxAlpha();
     void doubleBox();
     void numeric();
     void tick();
@@ -126,14 +127,32 @@ void TestQgsComposerScaleBar::singleBox()
 {
   mComposerScaleBar->setStyle( "Single Box" );
   QgsCompositionChecker checker( "composerscalebar_singlebox", mComposition );
-  QVERIFY( checker.testComposition( mReport, 0, 20 ) );
+  QVERIFY( checker.testComposition( mReport, 0, 0 ) );
+};
+
+void TestQgsComposerScaleBar::singleBoxAlpha()
+{
+  mComposerScaleBar->setStyle( "Single Box" );
+  mComposerScaleBar->setBrush( QBrush( QColor( 255, 0, 0, 100 ) ) );
+  mComposerScaleBar->setBrush2( QBrush( QColor( 0, 255, 0, 50 ) ) );
+  QPen prevPen = mComposerScaleBar->pen();
+  QPen newPen = prevPen;
+  newPen.setColor( QColor( 0, 0, 255, 150 ) );
+  mComposerScaleBar->setPen( newPen );
+  mComposerScaleBar->setFontColor( QColor( 255, 0, 255, 100 ) );
+  QgsCompositionChecker checker( "composerscalebar_singlebox_alpha", mComposition );
+  QVERIFY( checker.testComposition( mReport, 0, 0 ) );
+  mComposerScaleBar->setBrush( QBrush( Qt::black ) );
+  mComposerScaleBar->setBrush2( QBrush( Qt::white ) );
+  mComposerScaleBar->setPen( prevPen );
+  mComposerScaleBar->setFontColor( Qt::black );
 };
 
 void TestQgsComposerScaleBar::doubleBox()
 {
   mComposerScaleBar->setStyle( "Double Box" );
   QgsCompositionChecker checker( "composerscalebar_doublebox", mComposition );
-  QVERIFY( checker.testComposition( mReport, 0, 20 ) );
+  QVERIFY( checker.testComposition( mReport, 0, 0 ) );
 };
 
 void TestQgsComposerScaleBar::numeric()
@@ -141,14 +160,14 @@ void TestQgsComposerScaleBar::numeric()
   mComposerScaleBar->setStyle( "Numeric" );
   mComposerScaleBar->setSceneRect( QRectF( 20, 180, 50, 20 ) );
   QgsCompositionChecker checker( "composerscalebar_numeric", mComposition );
-  QVERIFY( checker.testComposition( mReport, 0, 20 ) );
+  QVERIFY( checker.testComposition( mReport, 0, 0 ) );
 };
 
 void TestQgsComposerScaleBar::tick()
 {
   mComposerScaleBar->setStyle( "Line Ticks Up" );
   QgsCompositionChecker checker( "composerscalebar_tick", mComposition );
-  QVERIFY( checker.testComposition( mReport, 0, 20 ) );
+  QVERIFY( checker.testComposition( mReport, 0, 0 ) );
 };
 
 QTEST_MAIN( TestQgsComposerScaleBar )

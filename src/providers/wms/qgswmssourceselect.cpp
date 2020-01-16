@@ -434,7 +434,6 @@ void QgsWMSSourceSelect::on_btnConnect_clicked()
   mConnName = cmbConnections->currentText();
 
   QgsWMSConnection connection( cmbConnections->currentText() );
-  mConnectionInfo = connection.connectionInfo();
   mUri = connection.uri();
 
   QgsWmsSettings wmsSettings;
@@ -983,11 +982,6 @@ QString QgsWMSSourceSelect::connName()
   return mConnName;
 }
 
-QString QgsWMSSourceSelect::connectionInfo()
-{
-  return mConnectionInfo;
-}
-
 void QgsWMSSourceSelect::collectSelectedLayers( QStringList &layers, QStringList &styles, QStringList &titles )
 {
   //go through list in layer order tab
@@ -1067,7 +1061,7 @@ void QgsWMSSourceSelect::showError( QgsWmsProvider * wms )
   }
   else
   {
-    mv->setMessageAsPlainText( tr( "Could not understand the response.  The %1 provider said:\n%2" ).arg( wms->name() ).arg( wms->lastError() ) );
+    mv->setMessageAsPlainText( tr( "Could not understand the response. The %1 provider said:\n%2" ).arg( wms->name() ).arg( wms->lastError() ) );
   }
   mv->showMessage( true ); // Is deleted when closed
 }

@@ -77,13 +77,13 @@ label{  background-color: #FFFFCC;
 <DIV CLASS="header" ID="header">
 <H1>QGIS</H1>
 <H2>Building QGIS from source - step by step</H2>
-<H3>Wednesday June 18, 2014</H3>
+<H3>Thursday October 23, 2014</H3>
 </DIV>
 
 <DIV CLASS="body" ID="body">
 <P>
-Last Updated: Wednesday June 18, 2014
-Last Change : Wednesday June 18, 2014
+Last Updated: Thursday October 23, 2014
+Last Change : Sunday September 28, 2014
 </P>
 <DIV CLASS="toc">
 
@@ -212,6 +212,7 @@ Required build deps:
 <LI>GDAL/OGR &gt;= 1.4.x
 <LI>Qwt &gt;= 5.0 &amp; (&lt; 6.1 with internal QwtPolar)
 <LI>expat &gt;= 1.95
+<LI>QScintilla2
 </UL>
 
 <P>
@@ -293,32 +294,32 @@ sudo apt-get update
 <TH>install command for packages</TH>
 </TR>
 <TR>
-<TD>precise</TD>
-<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt5-qt4-dev libspatialindex-dev libspatialite-dev libsqlite3-dev pkg-config pyqt4-dev-tools python python-dev python-qt4 python-qt4-dev python-sip python-sip-dev txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
-</TR>
-<TR>
-<TD>quantal</TD>
-<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal1-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt-dev libspatialindex-dev libspatialite-dev libsqlite3-dev pkg-config pyqt4-dev-tools python python-dev python-qt4 python-qt4-dev python-sip python-sip-dev txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
-</TR>
-<TR>
-<TD>raring</TD>
-<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libpython2.7-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt5-qt4-dev libspatialindex-dev libspatialite-dev libsqlite3-dev pkg-config pyqt4-dev-tools python python-dev python-qt4 python-qt4-dev python-sip python-sip-dev txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
-</TR>
-<TR>
-<TD>saucy</TD>
-<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libpython2.7-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt5-qt4-dev libspatialindex-dev libspatialite-dev libsqlite3-dev pkg-config pyqt4-dev-tools python python-dev python-qt4 python-qt4-dev python-sip python-sip-dev txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
-</TR>
-<TR>
 <TD>wheezy</TD>
-<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal1-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt-dev libspatialindex-dev libspatialite-dev libsqlite3-dev pkg-config pyqt4-dev-tools python python-dev python-qt4 python-qt4-dev python-sip python-sip-dev txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
+<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal1-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqscintilla2-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt-dev libspatialindex-dev libspatialite-dev libsqlite3-dev lighttpd pkg-config poppler-utils pyqt4-dev-tools python python-dev python-qt4 python-qt4-dev python-sip python-sip-dev spawn-fcgi txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
 </TR>
 <TR>
 <TD>jessie</TD>
-<TD><CODE>apt-get install bison cmake flex grass-dev libexpat1-dev libfcgi-dev libgdal1-dev libgeos-dev libgsl0-dev libpq-dev libproj-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt-dev libspatialindex-dev libspatialite-dev libsqlite3-dev pkg-config pyqt4-dev-tools python python-dev python-qt4 python-qt4-dev python-sip python-sip-dev</CODE></TD>
+<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqscintilla2-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt-dev libspatialindex-dev libspatialite-dev libsqlite3-dev lighttpd pkg-config poppler-utils pyqt4-dev-tools python-all python-all-dev python-qt4 python-qt4-dev python-sip python-sip-dev spawn-fcgi txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
+</TR>
+<TR>
+<TD>precise</TD>
+<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqscintilla2-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt5-qt4-dev libspatialindex-dev libspatialite-dev libsqlite3-dev lighttpd pkg-config poppler-utils pyqt4-dev-tools python python-qt4 python-qt4-dev python-sip python-sip-dev spawn-fcgi txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
+</TR>
+<TR>
+<TD>saucy</TD>
+<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libpython2.7-dev libqscintilla2-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt5-qt4-dev libspatialindex-dev libspatialite-dev libsqlite3-dev lighttpd pkg-config poppler-utils pyqt4-dev-tools python python-dev python-qt4 python-qt4-dev python-sip python-sip-dev spawn-fcgi txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
+</TR>
+<TR>
+<TD>trusty</TD>
+<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqscintilla2-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt5-qt4-dev libspatialindex-dev libspatialite-dev libsqlite3-dev lighttpd pkg-config poppler-utils pyqt4-dev-tools python-all python-all-dev python-qt4 python-qt4-dev python-sip python-sip-dev spawn-fcgi txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
+</TR>
+<TR>
+<TD>utopic</TD>
+<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqscintilla2-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt5-qt4-dev libspatialindex-dev libspatialite-dev libsqlite3-dev lighttpd pkg-config poppler-utils pyqt4-dev-tools python-all python-all-dev python-qt4 python-qt4-dev python-sip python-sip-dev spawn-fcgi txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
 </TR>
 <TR>
 <TD>sid</TD>
-<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt-dev libspatialindex-dev libspatialite-dev libsqlite3-dev pkg-config pyqt4-dev-tools python-all python-all-dev python-qt4 python-qt4-dev python-sip python-sip-dev txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
+<TD><CODE>apt-get install bison cmake doxygen flex git graphviz grass-dev libexpat1-dev libfcgi-dev libgdal-dev libgeos-dev libgsl0-dev libopenscenegraph-dev libosgearth-dev libpq-dev libproj-dev libqscintilla2-dev libqt4-dev libqt4-opengl-dev libqtwebkit-dev libqwt-dev libspatialindex-dev libspatialite-dev libsqlite3-dev lighttpd pkg-config poppler-utils pyqt4-dev-tools python-all python-all-dev python-qt4 python-qt4-dev python-sip python-sip-dev spawn-fcgi txt2tags xauth xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable xvfb</CODE></TD>
 </TR>
 </TABLE>
 
@@ -974,6 +975,12 @@ or the SVN repository.
 <H3>4.1.3. Setting up the Visual Studio project with CMake</H3>
 
 <P>
+/!\ Consider this section as example.  It tends to outdate, when OSGeo4W and
+SDKs move on.  <CODE>ms-windows/osgeo4w/package-nightly.cmd</CODE> is used for the
+nightly builds and constantly updated and hence might contain necessary
+updates that are not yet reflected here.
+</P>
+<P>
 To start a command prompt with an environment that both has the VC++ and the OSGeo4W
 variables create the following batch file (assuming the above packages were
 installed in the default locations):
@@ -981,19 +988,17 @@ installed in the default locations):
 
 <div class="code"><PRE>
 @echo off
-path %SYSTEMROOT%\system32;%SYSTEMROOT%;%SYSTEMROOT%\System32\Wbem;%PROGRAMFILES%\CMake 2.8\bin;%PROGRAMFILES%\subversion\bin;%PROGRAMFILES%\GnuWin32\bin
-set PYTHONPATH=
-
 set VS90COMNTOOLS=%PROGRAMFILES%\Microsoft Visual Studio 9.0\Common7\Tools\
 call "%PROGRAMFILES%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
 
-set INCLUDE=%INCLUDE%;%PROGRAMFILES%\Microsoft Platform SDK for Windows Server 2003 R2\include
-set LIB=%LIB%;%PROGRAMFILES%\Microsoft Platform SDK for Windows Server 2003 R2\lib
+set INCLUDE=%INCLUDE%;%PROGRAMFILES%\Microsoft SDKs\Windows\v7.1\include
+set LIB=%LIB%;%PROGRAMFILES%\Microsoft SDKs\Windows\v7.1\lib
 
 set OSGEO4W_ROOT=C:\OSGeo4W
 call "%OSGEO4W_ROOT%\bin\o4w_env.bat"
+path %PATH%;%PROGRAMFILES%\CMake 2.8\bin;%PROGRAMFILES%\GnuWin32\bin
 
-@set GRASS_PREFIX=c:/OSGeo4W/apps/grass/grass-6.4.0
+@set GRASS_PREFIX=c:/OSGeo4W/apps/grass/grass-6.4.4
 @set INCLUDE=%INCLUDE%;%OSGEO4W_ROOT%\include
 @set LIB=%LIB%;%OSGEO4W_ROOT%\lib;%OSGEO4W_ROOT%\lib
 
@@ -1664,7 +1669,7 @@ from source and rather use frameworks wherever possible.
 some fiddling with the system. It is best to stick with a single, default,
 architecture build and follow these instructions for an initial build.
 Included are notes for building on Mac OS X 10.5 (<U>Leopard</U>), 10.6
-(<U>Snow Leopard</U>), 10.7 (<U>Lion</U>) and 10.8 (<U>Mt. Lion</U>).
+(<U>Snow Leopard</U>), 10.7 (<U>Lion</U>), 10.8 (<U>Mt. Lion</U>) and 10.9 (<U>Mavericks</U>)
 (These names will be used throughout the instructions.)
 Make sure to read each section completely before typing the first command you see.
 </P>
@@ -2033,8 +2038,8 @@ your own risk.
 <H3>5.4.5. Additional dependencies: SIP</H3>
 
 <P>
-<U>Mt Lion note:</U> SIP 4.15.7 appears to not work on Mt Lion.  Install 4.14.6.
-(or a later working version when available)
+<U>Mt Lion note:</U> SIP 4.15.7 appears to not work on Mt Lion.  Install either
+a prior version to 4.14.6 or a later version 4.16.3+
 </P>
 <P>
 Retrieve the python bindings toolkit SIP from
@@ -2123,6 +2128,15 @@ python2.7 configure.py -d /Library/Python/2.7/site-packages -b /usr/local/bin \
 </PRE></div>
 
 <P>
+for Mavericks:
+</P>
+
+<div class="code"><PRE>
+python2.7 configure.py -d /Library/Python/2.7/site-packages -b /usr/local/bin \
+-e /usr/local/include -v /usr/local/share/sip --arch=x86_64 -s MacOSX10.9.sdk
+</PRE></div>
+
+<P>
 <U>continue...</U>
 </P>
 <P>
@@ -2169,16 +2183,22 @@ header.path = $$[QT_INSTALL_HEADERS]  --&gt;  header.path = /usr/local/include
 </PRE></div>
 
 <P>
-Save the qscintilla.pro file and build the QScintilla2 C++ library (adjust the install_name_tool command for the version installed):
+Save the qscintilla.pro file and build the QScintilla2 C++ library:
 </P>
 
 <div class="code"><PRE>
 qmake -spec macx-g++ qscintilla.pro
 make -j [#cpus]
 sudo make install
+</PRE></div>
 
-sudo install_name_tool -id /usr/local/lib/libqscintilla2.9.dylib \
-  /usr/local/lib/libqscintilla2.9.dylib
+<P>
+adjust the install_name_tool command for the version installed of QScintilla installed:
+</P>
+
+<div class="code"><PRE>
+sudo install_name_tool -id /usr/local/lib/libqscintilla2.11.dylib \
+  /usr/local/lib/libqscintilla2.11.dylib
 </PRE></div>
 
 <P>
@@ -2267,7 +2287,7 @@ python2.6 configure.py -d /Library/Python/2.6/site-packages -b /usr/local/bin \
 </PRE></div>
 
 <P>
-<U>Lion and Mt. Lion system Python</U>
+<U>Lion, Mt. Lion, and Mavericks system Python</U>
 </P>
 <P>
 Similar to Snow Leopard, you should install outside the system Python path.

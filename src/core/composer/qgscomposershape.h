@@ -41,7 +41,7 @@ class CORE_EXPORT QgsComposerShape: public QgsComposerItem
     QgsComposerShape( qreal x, qreal y, qreal width, qreal height, QgsComposition* composition );
     ~QgsComposerShape();
 
-    /** return correct graphics item type. Added in v1.7 */
+    /** return correct graphics item type. */
     virtual int type() const { return ComposerShape; }
 
     /** \brief Reimplementation of QCanvasItem::paint - draw on canvas */
@@ -61,7 +61,7 @@ class CORE_EXPORT QgsComposerShape: public QgsComposerItem
 
     //setters and getters
     QgsComposerShape::Shape shapeType() const { return mShape; }
-    void setShapeType( QgsComposerShape::Shape s ) { mShape = s; }
+    void setShapeType( QgsComposerShape::Shape s );
 
     /**Sets radius for rounded rectangle corners. Added in v2.1 */
     void setCornerRadius( double radius );
@@ -88,6 +88,9 @@ class CORE_EXPORT QgsComposerShape: public QgsComposerItem
      * QgsComposerItem as it needs to call updateBoundingRect after the shape's size changes
     */
     void setSceneRect( const QRectF& rectangle );
+
+    //Overriden to return shape type
+    virtual QString displayName() const;
 
   protected:
     /* reimplement drawFrame, since it's not a rect, but a custom shape */

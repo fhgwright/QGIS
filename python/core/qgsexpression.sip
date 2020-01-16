@@ -19,8 +19,13 @@ class QgsExpression
     //! Get the expression ready for evaluation - find out column indexes.
     bool prepare( const QgsFields &fields );
 
-    //! Get list of columns referenced by the expression
+    /**Get list of columns referenced by the expression.
+     * @note if the returned list contains the QgsFeatureRequest::AllAttributes constant then
+     * all attributes from the layer are required for evaluation of the expression.
+     * QgsFeatureRequest::setSubsetOfAttributes automatically handles this case.
+     */
     QStringList referencedColumns();
+
     //! Returns true if the expression uses feature geometry for some computation
     bool needsGeometry();
 
@@ -85,17 +90,26 @@ class QgsExpression
     //! Sets the geometry calculator used in evaluation of expressions,
     // instead of the default.
     void setGeomCalculator( const QgsDistanceArea &calc );
-
+    
     /** This function currently replaces each expression between [% and %]
        in the string with the result of its evaluation on the feature
        passed as argument.
 
        Additional substitutions can be passed through the substitutionMap
        parameter
+       @param action
+       @param feat
+       @param layer
+       @param substitutionMap
+       @param distanceArea optional QgsDistanceArea. If specified, the QgsDistanceArea is used for distance
+       and area conversion
     */
     static QString replaceExpressionText( const QString &action, const QgsFeature *feat,
                                           QgsVectorLayer *layer,
-                                          const QMap<QString, QVariant> *substitutionMap = 0 );
+                                          const QMap<QString, QVariant> *substitutionMap = 0,
+                                          const QgsDistanceArea* distanceArea = 0
+                                        );
+
     enum UnaryOperator
     {
       uoNot,
@@ -155,13 +169,15 @@ class QgsExpression
     class Function
     {
       public:
-        Function( QString fnname, int params, QString group, QString helpText = QString(), bool usesGeometry = false );
+        Function( QString fnname, int params, QString group, QString helpText = QString(), bool usesGeometry = false, QStringList referencedColumns = QStringList() );
         /** The name of the function. */
         QString name();
         /** The number of parameters this function takes. */
         int params();
         /** Does this function use a geometry object. */
         bool usesgeometry();
+
+	virtual QStringList referencedColumns() const;
         /** The group the function belongs to. */
         QString group();
         /** The help text for the function. */
@@ -438,4 +454,8 @@ class QgsExpression
 
   protected:
     void initGeomCalculator();
+
+  private:
+    QgsExpression( const QgsExpression& );
+    QgsExpression & operator=( const QgsExpression& );
 };

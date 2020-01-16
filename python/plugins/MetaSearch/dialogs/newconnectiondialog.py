@@ -21,20 +21,21 @@
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
 #
-# A copy of the GNU General Public License is available on the World Wide Web
-# at <http://www.gnu.org/copyleft/gpl.html>. You can also obtain it by writing
-# to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-# MA 02111-1307, USA.
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 ###############################################################################
 
 from PyQt4.QtCore import QSettings
 from PyQt4.QtGui import QDialog, QMessageBox
 
-from MetaSearch.ui.newconnectiondialog import Ui_NewConnectionDialog
+from MetaSearch.util import get_ui_class
+
+BASE_CLASS = get_ui_class('newconnectiondialog.ui')
 
 
-class NewConnectionDialog(QDialog, Ui_NewConnectionDialog):
+class NewConnectionDialog(QDialog, BASE_CLASS):
     """Dialogue to add a new CSW entry"""
     def __init__(self, conn_name=None):
         """init"""

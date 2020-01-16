@@ -129,16 +129,24 @@ class CORE_EXPORT QgsPoint
     /** Return a string representation as degrees minutes seconds.
      *  Its up to the calling function to ensure that this point can
      *  be meaningfully represented in this form.
-     *  @note added in QGIS 1.4
+     *  @param thePrecision number of decimal points to use for seconds
+     *  @param useSuffix set to true to include a direction suffix (eg 'N'),
+     *  set to false to use a "-" prefix for west and south coordinates
+     *  @param padded set to true to force minutes and seconds to use two decimals,
+     *  eg, '05' instead of '5'.
      */
-    QString toDegreesMinutesSeconds( int thePrecision ) const;
+    QString toDegreesMinutesSeconds( int thePrecision, const bool useSuffix = true, const bool padded = false ) const;
 
     /** Return a string representation as degrees minutes.
      *  Its up to the calling function to ensure that this point can
      *  be meaningfully represented in this form.
-     *  @note added in QGIS 1.9
+     *  @param thePrecision number of decimal points to use for minutes
+     *  @param useSuffix set to true to include a direction suffix (eg 'N'),
+     *  set to false to use a "-" prefix for west and south coordinates
+     *  @param padded set to true to force minutes to use two decimals,
+     *  eg, '05' instead of '5'.
      */
-    QString toDegreesMinutes( int thePrecision ) const;
+    QString toDegreesMinutes( int thePrecision, const bool useSuffix = true, const bool padded = false ) const;
 
 
     /*! Return the well known text representation for the point.
@@ -153,12 +161,10 @@ class CORE_EXPORT QgsPoint
     /**Returns the squared distance between this and other point*/
     double sqrDist( const QgsPoint& other ) const;
 
-    /**Returns the minimum distance between this point and a segment
-    @note added in QGIS 1.5*/
+    /**Returns the minimum distance between this point and a segment */
     double sqrDistToSegment( double x1, double y1, double x2, double y2, QgsPoint& minDistPoint, double epsilon = DEFAULT_SEGMENT_EPSILON ) const;
 
-    /**Calculates azimut between this point and other one (clockwise in degree, starting from north)
-      @note: this function has been added in version 1.7*/
+    /**Calculates azimut between this point and other one (clockwise in degree, starting from north) */
     double azimuth( const QgsPoint& other );
 
     //! equality operator

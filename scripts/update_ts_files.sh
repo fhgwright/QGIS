@@ -75,8 +75,8 @@ else
 	LUPDATE=lupdate
 fi
 
-exclude=
-opts=
+exclude="--exclude i18n/qgis_en.ts"
+opts="-locations none"
 fast=
 while (( $# > 0 )); do
   arg=$1
@@ -103,9 +103,9 @@ done
 trap cleanup EXIT
 
 tar --remove-file -cf i18n/python_ts.tar $(find python -name "*.ts")
-if [ -n "$exclude" -o -n "$add" ]; then
+if [ "$exclude" != "--exclude i18n/qgis_en.ts" -o -n "$add" ]; then
   echo Saving excluded translations
-  tar $fast -cf i18n/qgis_ts.tar i18n/qgis_*.ts$exclude
+  tar $fast -cf i18n/qgis_ts.tar i18n/qgis_*.ts $exclude
 fi
 
 echo Updating python translations
@@ -139,7 +139,7 @@ if [ -n "$add" ]; then
 	done
 fi
 echo Updating translations
-$LUPDATE$opts -verbose qgis_ts.pro
+$LUPDATE $opts -verbose qgis_ts.pro
 
 if [ -z "$fast" ]; then
 	echo Updating TRANSLATORS File

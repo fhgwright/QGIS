@@ -58,7 +58,7 @@ class QgsMapCanvas : QGraphicsView
 
     //! Get access to properties used for map rendering
     //! @note added in 2.4
-    const QgsMapSettings& mapSettings() const;
+    const QgsMapSettings& mapSettings() const /KeepReference/;
 
     //! sets whether to use projections for this layer set
     //! @note added in 2.4
@@ -228,17 +228,18 @@ class QgsMapCanvas : QGraphicsView
     void setWheelAction( WheelAction action, double factor = 2 );
 
     //! Zoom in with fixed factor
-    void zoomIn( );
+    void zoomIn();
 
     //! Zoom out with fixed factor
-    void zoomOut( );
+    void zoomOut();
 
     //! Zoom to a specific scale
     // added in 1.5
     void zoomScale( double scale );
 
     //! Zoom with the factor supplied. Factor > 1 zooms out, interval (0,1) zooms in
-    void zoomByFactor( double scaleFactor );
+    //! If point is given, re-center on it
+    void zoomByFactor( double scaleFactor, const QgsPoint *center = 0 );
 
     //! Zooms in/out with a given center
     void zoomWithCenter( int x, int y, bool zoomIn );

@@ -73,10 +73,28 @@ QgsRubberBand::~QgsRubberBand()
   */
 void QgsRubberBand::setColor( const QColor & color )
 {
-  mPen.setColor( color );
+  setBorderColor( color );
+  setFillColor( color );
+}
+
+/*!
+  Set the fill color.
+  */
+void QgsRubberBand::setFillColor( const QColor & color )
+{
   QColor fillColor( color.red(), color.green(), color.blue(), color.alpha() );
   mBrush.setColor( fillColor );
 }
+
+/*!
+  Set the outline
+  */
+void QgsRubberBand::setBorderColor( const QColor & color )
+{
+  QColor penColor( color.red(), color.green(), color.blue(), color.alpha() );
+  mPen.setColor( penColor );
+}
+
 
 /*!
   Set the outline width.
@@ -274,7 +292,7 @@ void QgsRubberBand::addGeometry( QgsGeometry* geom, QgsVectorLayer* layer )
         pt = geom->asPoint();
       }
       addPoint( pt, false, idx );
-      removeLastPoint( idx , false );
+      removeLastPoint( idx, false );
     }
     break;
 
@@ -288,12 +306,12 @@ void QgsRubberBand::addGeometry( QgsGeometry* geom, QgsVectorLayer* layer )
         if ( layer )
         {
           addPoint( ms.layerToMapCoordinates( layer, pt ), false, idx );
-          removeLastPoint( idx , false );
+          removeLastPoint( idx, false );
         }
         else
         {
           addPoint( pt, false, idx );
-          removeLastPoint( idx , false );
+          removeLastPoint( idx, false );
         }
       }
     }
@@ -426,10 +444,10 @@ void QgsRubberBand::paint( QPainter* p )
     p->setBrush( mBrush );
     p->setPen( mPen );
 
-    Q_FOREACH( const QList<QgsPoint>& line, mPoints )
+    Q_FOREACH ( const QList<QgsPoint>& line, mPoints )
     {
       QVector<QPointF> pts;
-      Q_FOREACH( const QgsPoint& pt, line )
+      Q_FOREACH ( const QgsPoint& pt, line )
       {
         const QPointF cur = toCanvasCoordinates( QgsPoint( pt.x() + mTranslationOffsetX, pt.y() + mTranslationOffsetY ) ) - pos();
         if ( pts.empty() || std::abs( pts.back().x() - cur.x() ) > 1 ||  std::abs( pts.back().y() - cur.y() ) > 1 )
@@ -446,7 +464,7 @@ void QgsRubberBand::paint( QPainter* p )
 
         case QGis::Point:
         {
-          Q_FOREACH( const QPointF& pt, pts )
+          Q_FOREACH ( const QPointF& pt, pts )
           {
             double x = pt.x();
             double y = pt.y();

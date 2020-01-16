@@ -26,7 +26,6 @@ class QgsExpression;
 /** \ingroup core
  * \class QgsDataDefined
  * A container class for data source field mapping or expression.
- * @note added in QGIS 1.9
  */
 
 class CORE_EXPORT QgsDataDefined
@@ -54,7 +53,7 @@ class CORE_EXPORT QgsDataDefined
     void setUseExpression( bool use ) { mUseExpression = use; }
 
     QString expressionString() const { return mExpressionString; }
-    void setExpressionString( const QString& expr ) { mExpressionString = expr; }
+    void setExpressionString( const QString& expr );
 
     // @note not available in python bindings
     QMap<QString, QVariant> expressionParams() const { return mExpressionParams; }

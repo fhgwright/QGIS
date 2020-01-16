@@ -118,6 +118,17 @@ Qt::PenStyle QgsSymbolLayerV2::dxfPenStyle() const
   return Qt::SolidLine;
 }
 
+QColor QgsSymbolLayerV2::dxfBrushColor( const QgsSymbolV2RenderContext& context ) const
+{
+  Q_UNUSED( context );
+  return color();
+}
+
+Qt::BrushStyle QgsSymbolLayerV2::dxfBrushStyle() const
+{
+  return Qt::NoBrush;
+}
+
 void QgsSymbolLayerV2::prepareExpressions( const QgsFields* fields, double scale )
 {
   if ( !fields )
@@ -193,8 +204,11 @@ void QgsSymbolLayerV2::copyDataDefinedProperties( QgsSymbolLayerV2* destLayer ) 
 
 
 QgsMarkerSymbolLayerV2::QgsMarkerSymbolLayerV2( bool locked )
-    : QgsSymbolLayerV2( QgsSymbolV2::Marker, locked ), mSizeUnit( QgsSymbolV2::MM ),  mOffsetUnit( QgsSymbolV2::MM ),
-    mHorizontalAnchorPoint( HCenter ), mVerticalAnchorPoint( VCenter )
+    : QgsSymbolLayerV2( QgsSymbolV2::Marker, locked )
+    , mSizeUnit( QgsSymbolV2::MM )
+    , mOffsetUnit( QgsSymbolV2::MM )
+    , mHorizontalAnchorPoint( HCenter )
+    , mVerticalAnchorPoint( VCenter )
 {
   mOffsetExpression = NULL;
   mHorizontalAnchorExpression = NULL;
@@ -202,12 +216,14 @@ QgsMarkerSymbolLayerV2::QgsMarkerSymbolLayerV2( bool locked )
 }
 
 QgsLineSymbolLayerV2::QgsLineSymbolLayerV2( bool locked )
-    : QgsSymbolLayerV2( QgsSymbolV2::Line, locked ), mWidthUnit( QgsSymbolV2::MM )
+    : QgsSymbolLayerV2( QgsSymbolV2::Line, locked )
+    , mWidthUnit( QgsSymbolV2::MM )
 {
 }
 
 QgsFillSymbolLayerV2::QgsFillSymbolLayerV2( bool locked )
-    : QgsSymbolLayerV2( QgsSymbolV2::Fill, locked ), mAngle( 0.0 )
+    : QgsSymbolLayerV2( QgsSymbolV2::Fill, locked )
+    , mAngle( 0.0 )
 {
 }
 
@@ -427,7 +443,10 @@ void QgsFillSymbolLayerV2::_renderPolygon( QPainter* p, const QPolygonF& points,
   }
 
   // Disable 'Antialiasing' if the geometry was generalized in the current RenderContext (We known that it must have least #5 points).
-  if ( points.size() <= 5 && ( context.renderContext().vectorSimplifyMethod().simplifyHints() & QgsVectorSimplifyMethod::AntialiasingSimplification ) && QgsAbstractGeometrySimplifier::canbeGeneralizedByDeviceBoundingBox( points, context.renderContext().vectorSimplifyMethod().threshold() ) && ( p->renderHints() & QPainter::Antialiasing ) )
+  if ( points.size() <= 5 &&
+       ( context.renderContext().vectorSimplifyMethod().simplifyHints() & QgsVectorSimplifyMethod::AntialiasingSimplification ) &&
+       QgsAbstractGeometrySimplifier::isGeneralizableByDeviceBoundingBox( points, context.renderContext().vectorSimplifyMethod().threshold() ) &&
+       ( p->renderHints() & QPainter::Antialiasing ) )
   {
     p->setRenderHint( QPainter::Antialiasing, false );
     p->drawRect( points.boundingRect() );

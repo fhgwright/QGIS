@@ -5049,7 +5049,7 @@ QGISEXTERN bool createDb( const QString& dbPath, QString& errCause )
   QgsDebugMsg( QString( "making this dir: %1" ).arg( path.absolutePath() ) );
 
   // Must be sure there is destination directory ~/.qgis
-  QDir().mkpath( path.absolutePath( ) );
+  QDir().mkpath( path.absolutePath() );
 
   // creating/opening the new database
   spatialite_init( 0 );
@@ -5174,7 +5174,7 @@ QGISEXTERN bool saveStyle( const QString& uri, const QString& qmlStyle, const QS
   {
     QgsDebugMsg( "Connection to database failed. Save style aborted." );
     errCause = QObject::tr( "Connection to database failed" );
-    return QgsVectorLayerImport::ErrConnectionFailed;
+    return false;
   }
 
   sqliteHandle = handle->handle();

@@ -36,12 +36,11 @@ class QgsMapLayerAction;
  * It supports two different layouts: the table layout, in which the attributes for the features
  * are shown in a table and the editor layout, where the features are shown as a selectable list
  * and the attributes for the currently selected feature are shown in a form.
- *
- * @note Added in 2.0
  */
 class GUI_EXPORT QgsDualView : public QStackedWidget, private Ui::QgsDualViewBase
 {
     Q_OBJECT
+    Q_ENUMS( ViewMode )
 
   public:
 
@@ -231,6 +230,7 @@ class GUI_EXPORT QgsDualView : public QStackedWidget, private Ui::QgsDualViewBas
     QProgressDialog* mProgressDlg;
     QgsIFeatureSelectionManager* mFeatureSelectionManager;
     QgsDistanceArea mDistanceArea;
+    QString mDisplayExpression;
 
     friend class TestQgsDualView;
 };

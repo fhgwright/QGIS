@@ -94,6 +94,13 @@ void QgsAddAttrDialog::accept()
                           tr( "Invalid field name. This field name is reserved and cannot be used." ) );
     return;
   }
+  if ( mNameEdit->text().isEmpty() )
+  {
+    QMessageBox::warning( this, tr( "Warning" ),
+                          tr( "No name specified. Please specify a name to create a new field." ) );
+    return;
+  }
+
   QDialog::accept();
 }
 

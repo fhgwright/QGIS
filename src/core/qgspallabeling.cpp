@@ -75,152 +75,6 @@ static void _fixQPictureDPI( QPainter* p )
 
 using namespace pal;
 
-#if 0
-class QgsPalGeometry : public PalGeometry
-{
-  public:
-    QgsPalGeometry( QgsFeatureId id, QString text, GEOSGeometry* g,
-                    qreal ltrSpacing = 0.0, qreal wordSpacing = 0.0, bool curvedLabeling = false )
-        : mG( g )
-        , mText( text )
-        , mId( id )
-        , mInfo( NULL )
-        , mIsDiagram( false )
-        , mIsPinned( false )
-        , mFontMetrics( NULL )
-        , mLetterSpacing( ltrSpacing )
-        , mWordSpacing( wordSpacing )
-        , mCurvedLabeling( curvedLabeling )
-    {
-      mStrId = FID_TO_STRING( mId ).toAscii();
-      mDefinedFont = QFont();
-    }
-
-    ~QgsPalGeometry()
-    {
-      if ( mG )
-        GEOSGeom_destroy( mG );
-      delete mInfo;
-      delete mFontMetrics;
-    }
-
-    // getGeosGeometry + releaseGeosGeometry is called twice: once when adding, second time when labeling
-
-    const GEOSGeometry* getGeosGeometry()
-    {
-      return mG;
-    }
-    void releaseGeosGeometry( const GEOSGeometry* /*geom*/ )
-    {
-      // nothing here - we'll delete the geometry in destructor
-    }
-
-    const char* strId() { return mStrId.data(); }
-    QString text() { return mText; }
-
-    pal::LabelInfo* info( QFontMetricsF* fm, const QgsMapToPixel* xform, double fontScale, double maxinangle, double maxoutangle )
-    {
-      if ( mInfo )
-        return mInfo;
-
-      mFontMetrics = new QFontMetricsF( *fm ); // duplicate metrics for when drawing label
-
-      // max angle between curved label characters (20.0/-20.0 was default in QGIS <= 1.8)
-      if ( maxinangle < 20.0 )
-        maxinangle = 20.0;
-      if ( 60.0 < maxinangle )
-        maxinangle = 60.0;
-      if ( maxoutangle > -20.0 )
-        maxoutangle = -20.0;
-      if ( -95.0 > maxoutangle )
-        maxoutangle = -95.0;
-
-      // create label info!
-      QgsPoint ptZero = xform->toMapCoordinates( 0, 0 );
-      QgsPoint ptSize = xform->toMapCoordinatesF( 0.0, -fm->height() / fontScale );
-
-      // mLetterSpacing/mWordSpacing = 0.0 is default for non-curved labels
-      // (non-curved spacings handled by Qt in QgsPalLayerSettings/QgsPalLabeling)
-      qreal charWidth;
-      qreal wordSpaceFix;
-      mInfo = new pal::LabelInfo( mText.count(), ptSize.y() - ptZero.y(), maxinangle, maxoutangle );
-      for ( int i = 0; i < mText.count(); i++ )
-      {
-        mInfo->char_info[i].chr = mText[i].unicode();
-
-        // reconstruct how Qt creates word spacing, then adjust per individual stored character
-        // this will allow PAL to create each candidate width = character width + correct spacing
-        charWidth = fm->width( mText[i] );
-        if ( mCurvedLabeling )
-        {
-          wordSpaceFix = qreal( 0.0 );
-          if ( mText[i] == QString( " " )[0] )
-          {
-            // word spacing only gets added once at end of consecutive run of spaces, see QTextEngine::shapeText()
-            int nxt = i + 1;
-            wordSpaceFix = ( nxt < mText.count() && mText[nxt] != QString( " " )[0] ) ? mWordSpacing : qreal( 0.0 );
-          }
-          if ( fm->width( QString( mText[i] ) ) - fm->width( mText[i] ) - mLetterSpacing != qreal( 0.0 ) )
-          {
-            // word spacing applied when it shouldn't be
-            wordSpaceFix -= mWordSpacing;
-          }
-          charWidth = fm->width( QString( mText[i] ) ) + wordSpaceFix;
-        }
-
-        ptSize = xform->toMapCoordinatesF((( double ) charWidth ) / fontScale , 0.0 );
-        mInfo->char_info[i].width = ptSize.x() - ptZero.x();
-      }
-      return mInfo;
-    }
-
-    const QMap< QgsPalLayerSettings::DataDefinedProperties, QVariant >& dataDefinedValues() const { return mDataDefinedValues; }
-    void addDataDefinedValue( QgsPalLayerSettings::DataDefinedProperties p, QVariant v ) { mDataDefinedValues.insert( p, v ); }
-
-    void setIsDiagram( bool d ) { mIsDiagram = d; }
-    bool isDiagram() const { return mIsDiagram; }
-
-    void setIsPinned( bool f ) { mIsPinned = f; }
-    bool isPinned() const { return mIsPinned; }
-
-    void setDefinedFont( QFont f ) { mDefinedFont = QFont( f ); }
-    QFont definedFont() { return mDefinedFont; }
-
-    QFontMetricsF* getLabelFontMetrics() { return mFontMetrics; }
-
-    void setDiagramAttributes( const QgsAttributes& attrs, const QgsFields* fields ) { mDiagramAttributes = attrs; mDiagramFields = fields; }
-    const QgsAttributes& diagramAttributes() { return mDiagramAttributes; }
-
-    void feature( QgsFeature& feature )
-    {
-      feature.setFeatureId( mId );
-      feature.setFields( mDiagramFields, false );
-      feature.setAttributes( mDiagramAttributes );
-      feature.setValid( true );
-    }
-
-  protected:
-    GEOSGeometry* mG;
-    QString mText;
-    QByteArray mStrId;
-    QgsFeatureId mId;
-    LabelInfo* mInfo;
-    bool mIsDiagram;
-    bool mIsPinned;
-    QFont mDefinedFont;
-    QFontMetricsF* mFontMetrics;
-    qreal mLetterSpacing; // for use with curved labels
-    qreal mWordSpacing; // for use with curved labels
-    bool mCurvedLabeling; // whether the geometry is to be used for curved labeling placement
-    /**Stores attribute values for data defined properties*/
-    QMap< QgsPalLayerSettings::DataDefinedProperties, QVariant > mDataDefinedValues;
-
-    /**Stores attribute values for diagram rendering*/
-    QgsAttributes mDiagramAttributes;
-    const QgsFields* mDiagramFields;
-};
-#endif //0
-
 // -------------
 
 QgsPalLayerSettings::QgsPalLayerSettings()
@@ -652,23 +506,6 @@ static QgsPalLayerSettings::SizeUnit _decodeUnits( const QString& str )
        || str.compare( "MapUnits", Qt::CaseInsensitive ) == 0 ) return QgsPalLayerSettings::MapUnits;
   if ( str.compare( "Percent", Qt::CaseInsensitive ) == 0 ) return QgsPalLayerSettings::Percent;
   return QgsPalLayerSettings::MM; // "MM"
-}
-
-static QPainter::CompositionMode _decodeBlendMode( const QString& str )
-{
-  if ( str.compare( "Lighten", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_Lighten;
-  if ( str.compare( "Screen", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_Screen;
-  if ( str.compare( "Dodge", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_ColorDodge;
-  if ( str.compare( "Addition", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_Plus;
-  if ( str.compare( "Darken", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_Darken;
-  if ( str.compare( "Multiply", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_Multiply;
-  if ( str.compare( "Burn", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_ColorBurn;
-  if ( str.compare( "Overlay", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_Overlay;
-  if ( str.compare( "SoftLight", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_SoftLight;
-  if ( str.compare( "HardLight", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_HardLight;
-  if ( str.compare( "Difference", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_Difference;
-  if ( str.compare( "Subtract", Qt::CaseInsensitive ) == 0 ) return QPainter::CompositionMode_Exclusion;
-  return QPainter::CompositionMode_SourceOver; // "Normal"
 }
 
 static Qt::PenJoinStyle _decodePenJoinStyle( const QString& str )
@@ -1584,7 +1421,7 @@ void QgsPalLayerSettings::calculateLabelSize( const QFontMetricsF* fm, QString t
   labelY = qAbs( ptSize.y() - ptZero.y() );
 }
 
-void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext& context )
+void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext& context, QString dxfLayer )
 {
   QVariant exprVal; // value() is repeatedly nulled on data defined evaluation and replaced when successful
   mCurFeat = &f;
@@ -1592,7 +1429,6 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
 
   // store data defined-derived values for later adding to QgsPalGeometry for use during rendering
   dataDefinedValues.clear();
-
 
   // data defined show label? defaults to show label if not 0
   if ( dataDefinedEvaluate( QgsPalLayerSettings::Show, exprVal ) )
@@ -1988,13 +1824,13 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
   }
 
   GEOSGeometry* geos_geom_clone;
-  if ( GEOSGeomTypeId( geos_geom ) == GEOS_POLYGON && repeatDistance > 0 && placement == Line )
+  if ( GEOSGeomTypeId_r( QgsGeometry::getGEOSHandler(), geos_geom ) == GEOS_POLYGON && repeatDistance > 0 && placement == Line )
   {
-    geos_geom_clone = GEOSBoundary( geos_geom );
+    geos_geom_clone = GEOSBoundary_r( QgsGeometry::getGEOSHandler(), geos_geom );
   }
   else
   {
-    geos_geom_clone = GEOSGeom_clone( geos_geom );
+    geos_geom_clone = GEOSGeom_clone_r( QgsGeometry::getGEOSHandler(), geos_geom );
   }
 
   //data defined position / alignment / rotation?
@@ -2257,6 +2093,8 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
     labelFont.wordSpacing(),
     placement == QgsPalLayerSettings::Curved );
 
+  lbl->setDxfLayer( dxfLayer );
+
   // record the created geometry - it will be deleted at the end.
   geometries.append( lbl );
 
@@ -2266,12 +2104,50 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
 #endif
   lbl->setDefinedFont( labelFont );
 
+  // set repeat distance
+  // data defined repeat distance?
+  double repeatDist = repeatDistance;
+  if ( dataDefinedEvaluate( QgsPalLayerSettings::RepeatDistance, exprVal ) )
+  {
+    bool ok;
+    double distD = exprVal.toDouble( &ok );
+    if ( ok )
+    {
+      repeatDist = distD;
+    }
+  }
+
+  // data defined label-repeat distance units?
+  bool repeatdistinmapunit = repeatDistanceUnit == QgsPalLayerSettings::MapUnits;
+  if ( dataDefinedEvaluate( QgsPalLayerSettings::RepeatDistanceUnit, exprVal ) )
+  {
+    QString units = exprVal.toString().trimmed();
+    QgsDebugMsgLevel( QString( "exprVal RepeatDistanceUnits:%1" ).arg( units ), 4 );
+    if ( !units.isEmpty() )
+    {
+      repeatdistinmapunit = ( _decodeUnits( units ) == QgsPalLayerSettings::MapUnits );
+    }
+  }
+
+  if ( repeatDist != 0 )
+  {
+    if ( repeatdistinmapunit ) //convert distance from mm/map units to pixels
+    {
+      repeatDist /= repeatDistanceMapUnitScale.computeMapUnitsPerPixel( context ) * context.scaleFactor();
+    }
+    else //mm
+    {
+      repeatDist *= vectorScaleFactor;
+    }
+    repeatDist *= qAbs( ptOne.x() - ptZero.x() );
+  }
+
   //  feature to the layer
   try
   {
     if ( !palLayer->registerFeature( lbl->strId(), lbl, labelX, labelY, labelText.toUtf8().constData(),
                                      xPos, yPos, dataDefinedPosition, angle, dataDefinedRotation,
-                                     quadOffsetX, quadOffsetY, offsetX, offsetY, alwaysShow ) )
+                                     quadOffsetX, quadOffsetY, offsetX, offsetY, alwaysShow, repeatDist ) )
       return;
   }
   catch ( std::exception &e )
@@ -2483,7 +2359,7 @@ bool QgsPalLayerSettings::dataDefinedValEval( const QString& valType,
 
       if ( !blendstr.isEmpty() )
       {
-        dataDefinedValues.insert( p, QVariant(( int )_decodeBlendMode( blendstr ) ) );
+        dataDefinedValues.insert( p, QVariant(( int )QgsSymbolLayerV2Utils::decodeBlendMode( blendstr ) ) );
         return true;
       }
     }
@@ -3392,45 +3268,6 @@ int QgsPalLabeling::prepareLayer( QgsVectorLayer* layer, QStringList& attrNames,
   // set whether location of centroid must be inside of polygons
   l->setCentroidInside( lyr.centroidInside );
 
-  // set repeat distance
-  // data defined repeat distance?
-  QVariant exprVal;
-  double repeatDist = lyr.repeatDistance;
-  if ( lyr.dataDefinedEvaluate( QgsPalLayerSettings::RepeatDistance, exprVal ) )
-  {
-    bool ok;
-    double distD = exprVal.toDouble( &ok );
-    if ( ok )
-    {
-      repeatDist = distD;
-    }
-  }
-
-  // data defined label-repeat distance units?
-  bool repeatdistinmapunit = lyr.repeatDistanceUnit == QgsPalLayerSettings::MapUnits;
-  if ( lyr.dataDefinedEvaluate( QgsPalLayerSettings::RepeatDistanceUnit, exprVal ) )
-  {
-    QString units = exprVal.toString().trimmed();
-    QgsDebugMsgLevel( QString( "exprVal RepeatDistanceUnits:%1" ).arg( units ), 4 );
-    if ( !units.isEmpty() )
-    {
-      repeatdistinmapunit = ( _decodeUnits( units ) == QgsPalLayerSettings::MapUnits );
-    }
-  }
-
-  if ( repeatDist != 0 )
-  {
-    if ( !repeatdistinmapunit ) //convert distance from mm/map units to pixels
-    {
-      repeatDist *= lyr.repeatDistanceMapUnitScale.computeMapUnitsPerPixel( ctx ) * ctx.scaleFactor();
-    }
-    else //mm
-    {
-      repeatDist *= lyr.vectorScaleFactor;
-    }
-  }
-  l->setRepeatDistance( repeatDist );
-
   // set how to show upside-down labels
   Layer::UpsideDownLabels upsdnlabels;
   switch ( lyr.upsidedownLabels )
@@ -3520,10 +3357,10 @@ int QgsPalLabeling::addDiagramLayer( QgsVectorLayer* layer, const QgsDiagramLaye
   return 1;
 }
 
-void QgsPalLabeling::registerFeature( const QString& layerID, QgsFeature& f, const QgsRenderContext& context )
+void QgsPalLabeling::registerFeature( const QString& layerID, QgsFeature& f, const QgsRenderContext& context, QString dxfLayer )
 {
   QgsPalLayerSettings& lyr = mActiveLayers[layerID];
-  lyr.registerFeature( f, context );
+  lyr.registerFeature( f, context, dxfLayer );
 }
 
 void QgsPalLabeling::registerDiagramFeature( const QString& layerID, QgsFeature& feat, const QgsRenderContext& context )
@@ -3550,7 +3387,7 @@ void QgsPalLabeling::registerDiagramFeature( const QString& layerID, QgsFeature&
   }
 
   //create PALGeometry with diagram = true
-  QgsPalGeometry* lbl = new QgsPalGeometry( feat.id(), "", GEOSGeom_clone( geos_geom ) );
+  QgsPalGeometry* lbl = new QgsPalGeometry( feat.id(), "", GEOSGeom_clone_r( QgsGeometry::getGEOSHandler(), geos_geom ) );
   lbl->setIsDiagram( true );
 
   // record the created geometry - it will be deleted at the end.
@@ -4107,7 +3944,7 @@ void QgsPalLabeling::drawLabeling( QgsRenderContext& context )
         //for diagrams, remove the additional 'd' at the end of the layer id
         QString layerId = layerName;
         layerId.chop( 1 );
-        mResults->mLabelSearchTree->insertLabel( *it,  QString( palGeometry->strId() ).toInt(), QString( "" ), layerId, QFont(), true, false );
+        mResults->mLabelSearchTree->insertLabel( *it, QString( palGeometry->strId() ).toInt(), QString( "" ), layerId, QFont(), true, false );
       }
       continue;
     }
@@ -4183,7 +4020,7 @@ void QgsPalLabeling::drawLabeling( QgsRenderContext& context )
     if ( mResults->mLabelSearchTree )
     {
       QString labeltext = (( QgsPalGeometry* )( *it )->getFeaturePart()->getUserGeometry() )->text();
-      mResults->mLabelSearchTree->insertLabel( *it,  QString( palGeometry->strId() ).toInt(), layerName, labeltext, dFont, false, palGeometry->isPinned() );
+      mResults->mLabelSearchTree->insertLabel( *it, QString( palGeometry->strId() ).toInt(), layerName, labeltext, dFont, false, palGeometry->isPinned() );
     }
   }
 
@@ -4882,7 +4719,7 @@ void QgsPalLabeling::drawLabelShadow( QgsRenderContext& context,
 
   // generate pixmap representation of label component drawing
   bool mapUnits = ( tmpLyr.shadowRadiusUnits == QgsPalLayerSettings::MapUnits );
-  double radius = tmpLyr.scaleToPixelContext( tmpLyr.shadowRadius , context, tmpLyr.shadowRadiusUnits, !mapUnits, tmpLyr.shadowRadiusMapUnitScale );
+  double radius = tmpLyr.scaleToPixelContext( tmpLyr.shadowRadius, context, tmpLyr.shadowRadiusUnits, !mapUnits, tmpLyr.shadowRadiusMapUnitScale );
   radius /= ( mapUnits ? tmpLyr.vectorScaleFactor / component.dpiRatio() : 1 );
   radius = ( int )( radius + 0.5 );
 

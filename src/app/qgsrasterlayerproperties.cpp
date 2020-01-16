@@ -262,6 +262,9 @@ QgsRasterLayerProperties::QgsRasterLayerProperties( QgsMapLayer* lyr, QgsMapCanv
     mMaximumOversamplingSpinBox->setValue( resampleFilter->maxOversampling() );
   }
 
+  btnColorizeColor->setColorDialogTitle( tr( "Select color" ) );
+  btnColorizeColor->setContext( "symbology" );
+
   // Hue and saturation color control
   const QgsHueSaturationFilter* hueSaturationFilter = mRasterLayer->hueSaturationFilter();
   //set hue and saturation controls to current values
@@ -509,7 +512,7 @@ void QgsRasterLayerProperties::setRendererWidget( const QString& rendererName )
       QgsDebugMsg( "renderer has widgetCreateFunction" );
       // Current canvas extent (used to calc min/max) in layer CRS
       QgsRectangle myExtent = mMapCanvas->mapSettings().outputExtentToLayerExtent( mRasterLayer, mMapCanvas->extent() );
-      mRendererWidget = ( *rendererEntry.widgetCreateFunction )( mRasterLayer, myExtent );
+      mRendererWidget = rendererEntry.widgetCreateFunction( mRasterLayer, myExtent );
       mRendererStackedWidget->addWidget( mRendererWidget );
       if ( oldWidget )
       {
@@ -1460,7 +1463,7 @@ void QgsRasterLayerProperties::pixelSelected( const QgsPoint& canvasPoint )
     int myWidth = mMapCanvas->extent().width() / mapUnitsPerPixel;
     int myHeight = mMapCanvas->extent().height() / mapUnitsPerPixel;
 
-    QMap<int, QVariant> myPixelMap = mRasterLayer->dataProvider()->identify( myPoint,  QgsRaster::IdentifyFormatValue, myExtent, myWidth, myHeight ).results();
+    QMap<int, QVariant> myPixelMap = mRasterLayer->dataProvider()->identify( myPoint, QgsRaster::IdentifyFormatValue, myExtent, myWidth, myHeight ).results();
 
     QList<int> bands = renderer->usesBands();
 

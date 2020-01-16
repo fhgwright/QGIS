@@ -30,8 +30,9 @@
 #include <QStringList>
 #include <QUrl>
 
-QgsServerProjectParser::QgsServerProjectParser( QDomDocument* xmlDoc, const QString& filePath ):
-    mXMLDoc( xmlDoc ), mProjectPath( filePath )
+QgsServerProjectParser::QgsServerProjectParser( QDomDocument* xmlDoc, const QString& filePath )
+    : mXMLDoc( xmlDoc )
+    , mProjectPath( filePath )
 {
   //accelerate the search for layers, groups and the creation of annotation items
   if ( mXMLDoc )
@@ -58,12 +59,14 @@ QgsServerProjectParser::QgsServerProjectParser( QDomDocument* xmlDoc, const QStr
     }
 
     mRestrictedLayers = findRestrictedLayers();
+    mUseLayerIDs = findUseLayerIDs();
   }
 }
 
-QgsServerProjectParser::QgsServerProjectParser(): mXMLDoc( 0 )
+QgsServerProjectParser::QgsServerProjectParser()
+    : mXMLDoc( 0 )
+    , mUseLayerIDs( false )
 {
-
 }
 
 QgsServerProjectParser::~QgsServerProjectParser()
@@ -103,14 +106,14 @@ QString QgsServerProjectParser::convertToAbsolutePath( const QString& file ) con
   bool uncPath = projPath.startsWith( "//" );
 #endif
 
-  QStringList srcElems = file.split( "/", QString::SkipEmptyParts );
-  QStringList projElems = mProjectPath.split( "/", QString::SkipEmptyParts );
+  QStringList srcElems = srcPath.split( "/", QString::SkipEmptyParts );
+  QStringList projElems = projPath.split( "/", QString::SkipEmptyParts );
 
 #if defined(Q_OS_WIN)
   if ( uncPath )
   {
-    projElems.insert( 0, "" );
-    projElems.insert( 0, "" );
+    projElems.prepend( "" );
+    projElems.prepend( "" );
   }
 #endif
 
@@ -222,24 +225,15 @@ QgsMapLayer* QgsServerProjectParser::createLayerFromElement( const QDomElement& 
   }
   else if ( elem.attribute( "embedded" ) == "1" ) //layer is embedded from another project file
   {
-    //todo: fixme
-    /*
     QString project = convertToAbsolutePath( elem.attribute( "project" ) );
     QgsDebugMsg( QString( "Project path: %1" ).arg( project ) );
-
-    QgsProjectParser* otherConfig = dynamic_cast<QgsProjectParser*>( QgsConfigCache::instance()->searchConfiguration( project ) );
+    
+    QgsServerProjectParser* otherConfig = QgsConfigCache::instance()->serverConfiguration( project );
     if ( !otherConfig )
     {
       return 0;
     }
-
-    QHash< QString, QDomElement >::const_iterator layerIt = otherConfig->mProjectLayerElementsById.find( elem.attribute( "id" ) );
-    if ( layerIt == otherConfig->mProjectLayerElementsById.constEnd() )
-    {
-      return 0;
-    }
-    return otherConfig->createLayerFromElement( layerIt.value() );
-    */
+    return otherConfig->mapLayerFromLayerId( elem.attribute( "id" ), useCache );
   }
 
   if ( layer )
@@ -537,7 +531,7 @@ QString QgsServerProjectParser::layerName( const QDomElement& layerElem ) const
   {
     return QString();
   }
-  return nameElem.text().replace( "," , "%60" ); //commas are not allowed in layer names
+  return nameElem.text().replace( ",", "%60" ); //commas are not allowed in layer names
 }
 
 QString QgsServerProjectParser::serviceUrl() const
@@ -1026,6 +1020,22 @@ QSet<QString> QgsServerProjectParser::findRestrictedLayers() const
   return restrictedLayerSet;
 }
 
+bool QgsServerProjectParser::findUseLayerIDs() const
+{
+  if ( !mXMLDoc )
+    return false;
+
+  QDomElement propertiesElem = mXMLDoc->documentElement().firstChildElement( "properties" );
+  if ( propertiesElem.isNull() )
+    return false;
+
+  QDomElement wktElem = propertiesElem.firstChildElement( "WMSUseLayerIDs" );
+  if ( wktElem.isNull() )
+    return false;
+
+  return wktElem.text().compare( "true", Qt::CaseInsensitive ) == 0;
+}
+
 void QgsServerProjectParser::layerFromLegendLayer( const QDomElement& legendLayerElem, QMap< int, QgsMapLayer*>& layers, bool useCache ) const
 {
   QString id = legendLayerElem.firstChild().firstChild().toElement().attribute( "layerid" );
@@ -1107,7 +1117,7 @@ QStringList QgsServerProjectParser::wfsLayerNames() const
       currentLayer = layerMapIt.value();
       if ( currentLayer )
       {
-        layerNameList.append( currentLayer->name() );
+        layerNameList.append( mUseLayerIDs ? currentLayer->id() : currentLayer->name() );
       }
     }
   }
@@ -1284,9 +1294,11 @@ void QgsServerProjectParser::addValueRelationLayersForElement( const QDomElement
     if ( type == QgsVectorLayer::ValueRelation )
     {
       QString layerId = editTypeElem.attribute( "layer" );
-      /*QString keyAttribute = editTypeEleml.attribute( "id" ); //relation attribute in other layer
+#if 0
+      QString keyAttribute = editTypeEleml.attribute( "id" ); //relation attribute in other layer
       QString valueAttribute = editTypeElem.attribute( "value" ); //value attribute in other layer
-      QString relationAttribute = editTypeElem.attribute( "name" );*/
+      QString relationAttribute = editTypeElem.attribute( "name" );
+#endif
 
       QgsMapLayer* layer = mapLayerFromLayerId( layerId, useCache );
       if ( layer )

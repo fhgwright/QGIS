@@ -246,6 +246,8 @@ QgsMapCanvas::QgsMapCanvas( QWidget * parent, const char *name )
   mPreviewEffect = new QgsPreviewEffect( this );
   viewport()->setGraphicsEffect( mPreviewEffect );
 
+  setInteractive( false );
+
   refresh();
 
 } // QgsMapCanvas ctor
@@ -836,7 +838,7 @@ void QgsMapCanvas::setExtent( QgsRectangle const & r )
     mLastExtent.removeAt( i );
   }
 
-  mLastExtent.append( extent() ) ;
+  mLastExtent.append( extent() );
 
   // adjust history to no more than 20
   if ( mLastExtent.size() > 20 )
@@ -1082,6 +1084,7 @@ void QgsMapCanvas::keyPressEvent( QKeyEvent * e )
         zoomOut();
         break;
 
+#if 0
       case Qt::Key_P:
         mUseParallelRendering = !mUseParallelRendering;
         refresh();
@@ -1091,6 +1094,7 @@ void QgsMapCanvas::keyPressEvent( QKeyEvent * e )
         mDrawRenderingStats = !mDrawRenderingStats;
         refresh();
         break;
+#endif
 
       default:
         // Pass it on
@@ -1811,10 +1815,10 @@ void QgsMapCanvas::getDatumTransformInfo( const QgsMapLayer* ml, const QString& 
   }
 }
 
-void QgsMapCanvas::zoomByFactor( double scaleFactor )
+void QgsMapCanvas::zoomByFactor( double scaleFactor, const QgsPoint* center )
 {
   QgsRectangle r = mapSettings().visibleExtent();
-  r.scale( scaleFactor );
+  r.scale( scaleFactor, center );
   setExtent( r );
   refresh();
 }

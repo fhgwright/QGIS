@@ -14,6 +14,8 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#ifndef QGSCOMPOSERITEMGROUP_H
+#define QGSCOMPOSERITEMGROUP_H
 
 #include "qgscomposeritem.h"
 #include <QSet>
@@ -28,7 +30,7 @@ class CORE_EXPORT QgsComposerItemGroup: public QgsComposerItem
     QgsComposerItemGroup( QgsComposition* c );
     ~QgsComposerItemGroup();
 
-    /** return correct graphics item type. Added in v1.7 */
+    /** return correct graphics item type. */
     virtual int type() const { return ComposerItemGroup; }
 
     /**Adds an item to the group. All the group members are deleted
@@ -41,6 +43,9 @@ class CORE_EXPORT QgsComposerItemGroup: public QgsComposerItem
     /**Sets this items bound in scene coordinates such that 1 item size units
        corresponds to 1 scene size unit*/
     void setSceneRect( const QRectF& rectangle );
+
+    //overridden to also hide grouped items
+    virtual void setVisibility( const bool visible );
 
     /** stores state in Dom node
        * @param elem is Dom element corresponding to 'Composer' tag
@@ -69,3 +74,5 @@ class CORE_EXPORT QgsComposerItemGroup: public QgsComposerItem
     QSet<QgsComposerItem*> mItems;
     QRectF mBoundingRectangle;
 };
+
+#endif

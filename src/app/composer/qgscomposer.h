@@ -34,6 +34,7 @@ class QgsComposerRuler;
 class QgsComposerScaleBar;
 class QgsComposerShape;
 class QgsComposerAttributeTable;
+class QgsComposerAttributeTableV2;
 class QgsComposerView;
 class QgsComposition;
 class QgsMapCanvas;
@@ -50,6 +51,7 @@ class QSizeGrip;
 class QUndoView;
 class QComboBox;
 class QLabel;
+class QTreeView;
 
 /** \ingroup MapComposer
  * \brief A gui for composing a printable map.
@@ -98,9 +100,8 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
     void setTitle( const QString& title );
 
     //! Load template into current or blank composer
-    //! @param newCompser whether to create a new composer first
-    //! @note added in 1.9
-    void loadTemplate( bool newCompser );
+    //! @param newComposer whether to create a new composer first
+    void loadTemplate( const bool newComposer );
 
   protected:
     //! Move event
@@ -130,6 +131,7 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
     void atlasPreviewFeatureChanged();
 
   public slots:
+
     //! Zoom to full extent of the paper
     void on_mActionZoomAll_triggered();
 
@@ -190,30 +192,26 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
     //! Add attribute table
     void on_mActionAddTable_triggered();
 
+    //! Add attribute table
+    void on_mActionAddAttributeTable_triggered();
+
     void on_mActionAddHtml_triggered();
 
     //! Save parent project
-    //! @note added in 1.9
     void on_mActionSaveProject_triggered();
 
     //! Create new composer
-    //! @note added in 1.9
     void on_mActionNewComposer_triggered();
 
     //! Duplicate current composer
-    //! @note added in 1.9
     void on_mActionDuplicateComposer_triggered();
 
     //! Show composer manager
-    //! @note added in 1.9
+
     void on_mActionComposerManager_triggered();
 
     //! Save composer as template
     void on_mActionSaveAsTemplate_triggered();
-
-    //! Load template into blank composer
-    //! @note added in 1.9
-    void on_mActionNewFromTemplate_triggered();
 
     void on_mActionLoadFromTemplate_triggered();
 
@@ -384,6 +382,9 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
 
     /**Adds a composer table to the item/widget map and creates a configuration widget*/
     void addComposerTable( QgsComposerAttributeTable* table );
+
+    /**Adds a composer table v2 to the item/widget map and creates a configuration widget*/
+    void addComposerTableV2( QgsComposerAttributeTableV2* table, QgsComposerFrame* frame );
 
     /**Adds composer html and creates a configuration widget*/
     void addComposerHtmlFrame( QgsComposerHtml* html, QgsComposerFrame* frame );
@@ -566,20 +567,20 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
     QDockWidget* mUndoDock;
     QDockWidget* mGeneralDock;
     QDockWidget* mAtlasDock;
+    QDockWidget* mItemsDock;
+
+    QTreeView* mItemsTreeView;
 
     QMenu* mPanelMenu;
     QMenu* mToolbarMenu;
 
     //! Print Composers menu as mirror of main app's
-    //! @note added in 1.9
     QMenu* mPrintComposersMenu;
 
     //! Window menu as mirror of main app's (on Mac)
-    //! @note added in 1.9
     QMenu* mWindowMenu;
 
     //! Help menu as mirror of main app's (on Mac)
-    //! @note added in 1.9
     QMenu* mHelpMenu;
 
     QgsMapLayerAction* mAtlasFeatureAction;
@@ -590,23 +591,18 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
   private slots:
 
     //! Populate Print Composers menu from main app's
-    //! @note added in 1.9
     void populatePrintComposersMenu();
 
     //! Populate Window menu from main app's (on Mac)
-    //! @note added in 1.9
     void populateWindowMenu();
 
     //! Populate Help menu from main app's (on Mac)
-    //! @note added in 1.9
     void populateHelpMenu();
 
     //! Populate one menu from another menu (for Mac)
-    //! @note added in 1.9
     void populateWithOtherMenu( QMenu* thisMenu, QMenu* otherMenu );
 
     //! Create a duplicate of a menu (for Mac)
-    //! @note added in 1.9
     QMenu* mirrorOtherMenu( QMenu* otherMenu );
 
     //! Toggles the state of the atlas preview and navigation controls
@@ -615,7 +611,7 @@ class QgsComposer: public QMainWindow, private Ui::QgsComposerBase
 
     //! Sets the specified feature as the current atlas feature
     //! @note added in 2.1
-    void setAtlasFeature( QgsMapLayer* layer, QgsFeature * feat );
+    void setAtlasFeature( QgsMapLayer* layer, const QgsFeature &feat );
 
     //! Updates the "set as atlas feature" map layer action when atlas coverage layer changes
     void updateAtlasMapLayerAction( QgsVectorLayer* coverageLayer );

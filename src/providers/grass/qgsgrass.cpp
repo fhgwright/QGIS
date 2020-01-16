@@ -160,7 +160,7 @@ void GRASS_LIB_EXPORT QgsGrass::init( void )
     QgsDebugMsg( QString( "GRASS gisBase = %1" ).arg( gisBase ) );
 #elif defined(Q_OS_MACX)
     // check for bundled GRASS, fall back to configured path
-    gisBase = QCoreApplication::applicationDirPath().append( "/grass" ) ;
+    gisBase = QCoreApplication::applicationDirPath().append( "/grass" );
     if ( !isValidGrassBaseDir( gisBase ) )
     {
       gisBase = GRASS_BASE;
@@ -364,22 +364,7 @@ QString QgsGrass::getDefaultMapset( void )
 void QgsGrass::setLocation( QString gisdbase, QString location )
 {
   QgsDebugMsg( QString( "gisdbase = %1 location = %2" ).arg( gisdbase ).arg( location ) );
-  init();
-
-  // Set principal GRASS variables (in memory)
-#ifdef Q_OS_WIN
-  G__setenv( "GISDBASE", shortPath( gisdbase ).toLocal8Bit().data() );
-#else
-  // This does not work for GISBASE with non ascii chars on Windows XP,
-  // gives error 'LOCATION ... not available':
-  G__setenv( "GISDBASE", gisdbase.toUtf8().constData() );
-#endif
-  G__setenv( "LOCATION_NAME", location.toUtf8().constData() );
-  G__setenv( "MAPSET", "PERMANENT" ); // PERMANENT must always exist
-
-  // Add all available mapsets to search path
-  char **ms = G_available_mapsets();
-  for ( int i = 0; ms[i]; i++ )  G_add_mapset_to_search_path( ms[i] );
+  setMapset( gisdbase, location, "PERMANENT" );
 }
 
 void QgsGrass::setMapset( QString gisdbase, QString location, QString mapset )
@@ -397,8 +382,20 @@ void QgsGrass::setMapset( QString gisdbase, QString location, QString mapset )
   G__setenv( "MAPSET", mapset.toUtf8().data() );
 
   // Add all available mapsets to search path
-  char **ms = G_available_mapsets();
-  for ( int i = 0; ms[i]; i++ )  G_add_mapset_to_search_path( ms[i] );
+  char **ms = 0;
+  G_TRY
+  {
+    ms = G_available_mapsets();
+  }
+  G_CATCH( QgsGrass::Exception &e )
+  {
+    Q_UNUSED( e );
+    QgsDebugMsg( QString( "No available mapsets found: %1" ).arg( e.what() ) );
+    return;
+  }
+
+  for ( int i = 0; ms[i]; i++ )
+    G_add_mapset_to_search_path( ms[i] );
 }
 
 jmp_buf QgsGrass::jumper;
@@ -635,7 +632,7 @@ QString GRASS_LIB_EXPORT QgsGrass::openMapset( QString gisdbase, QString locatio
   return NULL;
 }
 
-QString QgsGrass::closeMapset( )
+QString QgsGrass::closeMapset()
 {
   QgsDebugMsg( "entered." );
 
@@ -1030,29 +1027,29 @@ QString GRASS_LIB_EXPORT QgsGrass::regionString( struct Cell_head *window )
 
   // TODO 3D
 
-  reg = "proj:" + QString::number( window->proj ) + ";" ;
-  reg += "zone:" + QString::number( window->zone ) + ";" ;
+  reg = "proj:" + QString::number( window->proj ) + ";";
+  reg += "zone:" + QString::number( window->zone ) + ";";
 
   G_format_northing( window->north, buf, fmt );
-  reg += "north:" + QString( buf ) + ";" ;
+  reg += "north:" + QString( buf ) + ";";
 
   G_format_northing( window->south, buf, fmt );
-  reg += "south:" + QString( buf ) + ";" ;
+  reg += "south:" + QString( buf ) + ";";
 
   G_format_easting( window->east, buf, fmt );
-  reg += "east:" + QString( buf ) + ";" ;
+  reg += "east:" + QString( buf ) + ";";
 
   G_format_easting( window->west, buf, fmt );
-  reg += "west:" + QString( buf ) + ";" ;
+  reg += "west:" + QString( buf ) + ";";
 
-  reg += "cols:" + QString::number( window->cols ) + ";" ;
-  reg += "rows:" + QString::number( window->rows ) + ";" ;
+  reg += "cols:" + QString::number( window->cols ) + ";";
+  reg += "rows:" + QString::number( window->rows ) + ";";
 
   G_format_resolution( window->ew_res, buf, fmt );
-  reg += "e-w resol:" + QString( buf ) + ";" ;
+  reg += "e-w resol:" + QString( buf ) + ";";
 
   G_format_resolution( window->ns_res, buf, fmt );
-  reg += "n-s resol:" + QString( buf ) + ";" ;
+  reg += "n-s resol:" + QString( buf ) + ";";
 
   return reg;
 }
@@ -1415,7 +1412,7 @@ QgsCoordinateReferenceSystem GRASS_LIB_EXPORT QgsGrass::crsDirect( QString gisdb
   {
     struct Key_Value *projinfo = G_get_projinfo();
     struct Key_Value *projunits = G_get_projunits();
-    char *wkt = GPJ_grass_to_wkt( projinfo, projunits,  0, 0 );
+    char *wkt = GPJ_grass_to_wkt( projinfo, projunits, 0, 0 );
     Wkt = QString( wkt );
     G_free( wkt );
   }
@@ -1440,7 +1437,7 @@ QgsRectangle GRASS_LIB_EXPORT QgsGrass::extent( QString gisdbase, QString locati
     {
       throw QgsGrass::Exception( "Cannot parse GRASS map extent: " + str );
     }
-    return QgsRectangle( list[0].toDouble(), list[1].toDouble(), list[2].toDouble(), list[3].toDouble() ) ;
+    return QgsRectangle( list[0].toDouble(), list[1].toDouble(), list[2].toDouble(), list[3].toDouble() );
   }
   catch ( QgsGrass::Exception &e )
   {

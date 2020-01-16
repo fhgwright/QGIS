@@ -17,10 +17,9 @@
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
 #
-# A copy of the GNU General Public License is available on the World Wide Web
-# at <http://www.gnu.org/copyleft/gpl.html>. You can also obtain it by writing
-# to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-# MA 02111-1307, USA.
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 ###############################################################################
 
@@ -88,7 +87,7 @@ class MetaSearchPlugin(object):
 
         self.action_run.triggered.connect(self.run)
 
-        self.iface.addToolBarIcon(self.action_run)
+        self.iface.addWebToolBarIcon(self.action_run)
         self.iface.addPluginToWebMenu(self.web_menu, self.action_run)
 
         # help
@@ -111,8 +110,7 @@ class MetaSearchPlugin(object):
         # remove the plugin menu item and icon
         self.iface.removePluginWebMenu(self.web_menu, self.action_run)
         self.iface.removePluginWebMenu(self.web_menu, self.action_help)
-        self.iface.removeToolBarIcon(self.action_run)
-        self.iface.removeToolBarIcon(self.action_help)
+        self.iface.removeWebToolBarIcon(self.action_run)
 
     def run(self):
         """open MetaSearch"""

@@ -20,6 +20,7 @@ SET(QGIS_CORE_SRCS
   symbology-ng/qgssymbollayerv2.cpp
   symbology-ng/qgssymbollayerv2registry.cpp
   symbology-ng/qgssymbollayerv2utils.cpp
+  symbology-ng/qgslegendsymbolitemv2.cpp
   symbology-ng/qgslinesymbollayerv2.cpp
   symbology-ng/qgsmarkersymbollayerv2.cpp
   symbology-ng/qgsfillsymbollayerv2.cpp
@@ -47,6 +48,8 @@ SET(QGIS_CORE_SRCS
 
   layertree/qgslayertreegroup.cpp
   layertree/qgslayertreelayer.cpp
+  layertree/qgslayertreemodel.cpp
+  layertree/qgslayertreemodellegendnode.cpp
   layertree/qgslayertreenode.cpp
   layertree/qgslayertreeregistrybridge.cpp
   layertree/qgslayertreeutils.cpp
@@ -59,6 +62,8 @@ SET(QGIS_CORE_SRCS
   qgscacheindex.cpp
   qgscacheindexfeatureid.cpp
   qgsclipper.cpp
+  qgscolorscheme.cpp
+  qgscolorschemeregistry.cpp
   qgscontexthelp.cpp
   qgscontexthelp_texts.cpp
   qgscoordinatereferencesystem.cpp
@@ -75,6 +80,7 @@ SET(QGIS_CORE_SRCS
   qgserror.cpp
   qgsexpression.cpp
   qgsexpression_texts.cpp
+  qgsexpressionfieldbuffer.cpp
   qgsfeature.cpp
   qgsfeatureiterator.cpp
   qgsfeaturerequest.cpp
@@ -92,8 +98,12 @@ SET(QGIS_CORE_SRCS
   qgslabelattributes.cpp
   qgslabelsearchtree.cpp
   qgslegacyhelpers.cpp
+  qgslegendrenderer.cpp
+  qgslegendsettings.cpp
   qgslogger.cpp
+  qgsmaphittest.cpp
   qgsmaplayer.cpp
+  qgsmaplayerlegend.cpp
   qgsmaplayerregistry.cpp
   qgsmaprenderer.cpp
   qgsmaprenderercache.cpp
@@ -109,6 +119,7 @@ SET(QGIS_CORE_SRCS
   qgsmessagelog.cpp
   qgsnetworkaccessmanager.cpp
   qgsnetworkreplyparser.cpp
+  qgsnetworkcontentfetcher.cpp
   qgsobjectcustomproperties.cpp
   qgsofflineediting.cpp
   qgsogcutils.cpp
@@ -159,6 +170,8 @@ SET(QGIS_CORE_SRCS
   composer/qgscomposerarrow.cpp
   composer/qgscomposerframe.cpp
   composer/qgscomposermousehandles.cpp
+  composer/qgscomposerobject.cpp
+  composer/qgscomposerutils.cpp
   composer/qgscomposeritem.cpp
   composer/qgscomposeritemcommand.cpp
   composer/qgscomposeritemgroup.cpp
@@ -166,10 +179,16 @@ SET(QGIS_CORE_SRCS
   composer/qgscomposerlegenditem.cpp
   composer/qgscomposerpicture.cpp
   composer/qgscomposermap.cpp
+  composer/qgscomposermapitem.cpp
+  composer/qgscomposermapgrid.cpp
+  composer/qgscomposermapoverview.cpp
   composer/qgscomposertable.cpp
+  composer/qgscomposertablev2.cpp
   composer/qgscomposertablecolumn.cpp  
   composer/qgscomposerattributetable.cpp
+  composer/qgscomposerattributetablev2.cpp
   composer/qgscomposerattributetablemodel.cpp
+  composer/qgscomposerattributetablemodelv2.cpp
   composer/qgscomposertexttable.cpp
   composer/qgscomposerscalebar.cpp
   composer/qgscomposershape.cpp
@@ -186,6 +205,7 @@ SET(QGIS_CORE_SRCS
   composer/qgsticksscalebarstyle.cpp
   composer/qgscomposerhtml.cpp
   composer/qgscomposermultiframe.cpp
+  composer/qgscomposermodel.cpp
   composer/qgscomposition.cpp
   
   dxf/qgsdxfexport.cpp
@@ -331,6 +351,7 @@ SET(QGIS_CORE_MOC_HDRS
   qgsgmlschema.h
   qgshttptransaction.h
   qgsmaplayer.h
+  qgsmaplayerlegend.h
   qgsmaplayerregistry.h
   qgsmaprenderer.h
   qgsmaprenderercache.h
@@ -341,6 +362,7 @@ SET(QGIS_CORE_MOC_HDRS
   qgsmessageoutput.h
   qgsmessagelog.h
   qgsnetworkreplyparser.h
+  qgsnetworkcontentfetcher.h
   qgsofflineediting.h
   qgscredentials.h
   qgspluginlayer.h
@@ -352,26 +374,35 @@ SET(QGIS_CORE_MOC_HDRS
   qgsnetworkaccessmanager.h
   qgsvectordataprovider.h
   qgsvectorlayercache.h
+  qgsvectorlayerjoinbuffer.h
   qgsgeometryvalidator.h
 
   composer/qgsaddremoveitemcommand.h
   composer/qgscomposerlegend.h
   composer/qgscomposermap.h
+  composer/qgscomposermapitem.h
+  composer/qgscomposermapgrid.h
+  composer/qgscomposermapoverview.h
   composer/qgscomposerpicture.h
   composer/qgscomposerscalebar.h
+  composer/qgscomposerobject.h
   composer/qgscomposeritem.h
   composer/qgscomposeritemgroup.h
   composer/qgscomposermousehandles.h  
   composer/qgscomposerlabel.h
   composer/qgscomposershape.h
   composer/qgscomposerattributetable.h
-  composer/qgscomposerattributetablemodel.h  
+  composer/qgscomposerattributetablev2.h
+  composer/qgscomposerattributetablemodel.h
+  composer/qgscomposerattributetablemodelv2.h    
   composer/qgscomposertable.h  
+  composer/qgscomposertablev2.h
   composer/qgscomposertablecolumn.h
   composer/qgscomposerhtml.h
   composer/qgscomposermultiframe.h
   composer/qgscomposereffect.h
   composer/qgsatlascomposition.h
+  composer/qgscomposermodel.h
   composer/qgscomposition.h
 
   composer/qgslegendmodel.h
@@ -389,6 +420,8 @@ SET(QGIS_CORE_MOC_HDRS
 
   layertree/qgslayertreegroup.h
   layertree/qgslayertreelayer.h
+  layertree/qgslayertreemodel.h
+  layertree/qgslayertreemodellegendnode.h
   layertree/qgslayertreenode.h
   layertree/qgslayertreeregistrybridge.h
 )
@@ -428,6 +461,8 @@ SET(QGIS_CORE_HDRS
   qgscacheindex.h
   qgscacheindexfeatureid.h
   qgsclipper.h
+  qgscolorscheme.h
+  qgscolorschemeregistry.h
   qgscontexthelp.h
   qgscoordinatereferencesystem.h
   qgscoordinatetransform.h
@@ -444,6 +479,7 @@ SET(QGIS_CORE_HDRS
   qgserror.h
   qgsexception.h
   qgsexpression.h
+  qgsexpressionfieldbuffer.h
   qgsfeature.h
   qgsfeatureiterator.h
   qgsfeaturerequest.h
@@ -459,8 +495,12 @@ SET(QGIS_CORE_HDRS
   qgslabelattributes.h
   qgslabelsearchtree.h
   qgslegacyhelpers.h
+  qgslegendrenderer.h
+  qgslegendsettings.h
   qgslogger.h
+  qgsmaphittest.h
   qgsmaplayer.h
+  qgsmaplayerlegend.h
   qgsmaplayerregistry.h
   qgsmaprenderer.h
   qgsmaprenderercache.h
@@ -474,6 +514,7 @@ SET(QGIS_CORE_HDRS
   qgsmessageoutput.h
   qgsmimedatautils.h
   qgsnetworkreplyparser.h
+  qgsnetworkcontentfetcher.h
   qgsobjectcustomproperties.h
   qgsofflineediting.h
   qgsogcutils.h
@@ -531,6 +572,7 @@ SET(QGIS_CORE_HDRS
   composer/qgsaddremovemultiframecommand.h
   composer/qgsdoubleboxscalebarstyle.h
   composer/qgscomposertable.h
+  composer/qgscomposertablev2.h
   composer/qgscomposertablecolumn.h
   composer/qgspaperitem.h
   composer/qgsticksscalebarstyle.h
@@ -588,6 +630,7 @@ SET(QGIS_CORE_HDRS
   symbology-ng/qgsellipsesymbollayerv2.h
   symbology-ng/qgsfillsymbollayerv2.h
   symbology-ng/qgsgraduatedsymbolrendererv2.h
+  symbology-ng/qgslegendsymbolitemv2.h
   symbology-ng/qgslinesymbollayerv2.h
   symbology-ng/qgsmarkersymbollayerv2.h
   symbology-ng/qgspointdisplacementrenderer.h
@@ -610,6 +653,8 @@ SET(QGIS_CORE_HDRS
   layertree/qgslayertree.h
   layertree/qgslayertreegroup.h
   layertree/qgslayertreelayer.h
+  layertree/qgslayertreemodel.h
+  layertree/qgslayertreemodellegendnode.h
   layertree/qgslayertreenode.h
   layertree/qgslayertreeregistrybridge.h
   layertree/qgslayertreeutils.h
@@ -720,6 +765,7 @@ TARGET_LINK_LIBRARIES(qgis_core
   ${QT_QTNETWORK_LIBRARY}
   ${QT_QTSVG_LIBRARY}
   ${QT_QTWEBKIT_LIBRARY}
+  ${QSCINTILLA_LIBRARY}
 
   ${PROJ_LIBRARY}
   ${GEOS_LIBRARY}

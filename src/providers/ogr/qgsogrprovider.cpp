@@ -126,13 +126,13 @@ bool QgsOgrProvider::convertField( QgsField &field, const QTextCodec &encoding )
 
 void QgsOgrProvider::repack()
 {
-  if ( ogrDriverName != "ESRI Shapefile" )
+  if ( ogrDriverName != "ESRI Shapefile" || ogrOrigLayer == 0 )
     return;
 
   QByteArray layerName = OGR_FD_GetName( OGR_L_GetLayerDefn( ogrOrigLayer ) );
 
   // run REPACK on shape files
-  if ( mDeletedFeatures )
+  if ( mDataModified )
   {
     QByteArray sql = QByteArray( "REPACK " ) + layerName;   // don't quote the layer name as it works with spaces in the name and won't work if the name is quoted
     QgsDebugMsg( QString( "SQL: %1" ).arg( FROM8( sql ) ) );
@@ -176,7 +176,7 @@ void QgsOgrProvider::repack()
       }
     }
 
-    mDeletedFeatures = false;
+    mDataModified = false;
   }
 }
 
@@ -267,7 +267,7 @@ QgsOgrProvider::QgsOgrProvider( QString const & uri )
     , ogrDriver( 0 )
     , valid( false )
     , featuresCounted( -1 )
-    , mDeletedFeatures( false )
+    , mDataModified( false )
 {
   QgsCPLErrorHandler handler;
 
@@ -447,7 +447,10 @@ QgsOgrProvider::~QgsOgrProvider()
 
   repack();
 
-  OGR_DS_Destroy( ogrDataSource );
+  if ( ogrDataSource )
+  {
+    OGR_DS_Destroy( ogrDataSource );
+  }
   ogrDataSource = 0;
 
   if ( extent_ )
@@ -548,7 +551,7 @@ QString QgsOgrProvider::subsetString()
 QString QgsOgrProvider::ogrWkbGeometryTypeName( OGRwkbGeometryType type ) const
 {
   QString geom;
-  switch ( type )
+  switch (( int )type )
   {
     case wkbUnknown:            geom = "Unknown"; break;
     case wkbPoint:              geom = "Point"; break;
@@ -559,12 +562,14 @@ QString QgsOgrProvider::ogrWkbGeometryTypeName( OGRwkbGeometryType type ) const
     case wkbMultiPolygon:       geom = "MultiPolygon"; break;
     case wkbGeometryCollection: geom = "GeometryCollection"; break;
     case wkbNone:               geom = "None"; break;
+    case wkbUnknown | wkb25DBit:geom = "Unknown25D"; break;
     case wkbPoint25D:           geom = "Point25D"; break;
     case wkbLineString25D:      geom = "LineString25D"; break;
     case wkbPolygon25D:         geom = "Polygon25D"; break;
     case wkbMultiPoint25D:      geom = "MultiPoint25D"; break;
     case wkbMultiLineString25D: geom = "MultiLineString25D"; break;
     case wkbMultiPolygon25D:    geom = "MultiPolygon25D"; break;
+    case wkbGeometryCollection25D: geom = "GeometryCollection25D"; break;
     default:                    geom = QString( "Unknown WKB: %1" ).arg( type );
   }
   return geom;
@@ -619,7 +624,7 @@ QStringList QgsOgrProvider::subLayers() const
 
     QgsDebugMsg( QString( "id = %1 name = %2 layerGeomType = %3" ).arg( i ).arg( theLayerName ).arg( layerGeomType ) );
 
-    if ( layerGeomType != wkbUnknown )
+    if ( wkbFlatten( layerGeomType ) != wkbUnknown )
     {
       int theLayerFeatureCount = OGR_L_GetFeatureCount( layer, 0 );
 
@@ -655,9 +660,10 @@ QStringList QgsOgrProvider::subLayers() const
       {
         fCount[wkbUnknown] = 0;
       }
+      bool bIs25D = (( layerGeomType & wkb25DBit ) != 0 );
       foreach ( OGRwkbGeometryType gType, fCount.keys() )
       {
-        QString geom = ogrWkbGeometryTypeName( gType );
+        QString geom = ogrWkbGeometryTypeName(( bIs25D ) ? ( OGRwkbGeometryType )( gType | wkb25DBit ) : gType );
 
         QString sl = QString( "%1:%2:%3:%4" ).arg( i ).arg( theLayerName ).arg( fCount.value( gType ) ).arg( geom );
         QgsDebugMsg( "sub layer: " + sl );
@@ -804,7 +810,7 @@ void QgsOgrProvider::setRelevantFields( OGRLayerH ogrLayer, bool fetchGeometry, 
 }
 
 
-void QgsOgrUtils::setRelevantFields( OGRLayerH ogrLayer, int fieldCount,  bool fetchGeometry, const QgsAttributeList &fetchAttributes )
+void QgsOgrUtils::setRelevantFields( OGRLayerH ogrLayer, int fieldCount, bool fetchGeometry, const QgsAttributeList &fetchAttributes )
 {
 #if defined(GDAL_VERSION_NUM) && GDAL_VERSION_NUM >= 1800
   if ( OGR_L_TestCapability( ogrLayer, OLCIgnoreFields ) )
@@ -1372,11 +1378,7 @@ bool QgsOgrProvider::deleteFeatures( const QgsFeatureIds & id )
   bool returnvalue = true;
   for ( QgsFeatureIds::const_iterator it = id.begin(); it != id.end(); ++it )
   {
-    if ( deleteFeature( *it ) )
-    {
-      mDeletedFeatures = true;
-    }
-    else
+    if ( !deleteFeature( *it ) )
     {
       returnvalue = false;
     }
@@ -2457,6 +2459,8 @@ bool QgsOgrProvider::syncToDisc()
       }
     }
   }
+
+  mDataModified = true;
 
   return true;
 }

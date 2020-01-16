@@ -21,14 +21,19 @@
 
 #include <QMouseEvent>
 #include <QRect>
+#include <QColor>
 #include <QCursor>
 #include <QPixmap>
 #include "qgslogger.h"
 
 
 QgsMapToolZoom::QgsMapToolZoom( QgsMapCanvas* canvas, bool zoomOut )
-    : QgsMapTool( canvas ), mZoomOut( zoomOut ), mDragging( false ), mRubberBand( 0 )
+    : QgsMapTool( canvas )
+    , mZoomOut( zoomOut )
+    , mDragging( false )
+    , mRubberBand( 0 )
 {
+  mToolName = tr( "Zoom" );
   // set the cursor
   QPixmap myZoomQPixmap = QPixmap(( const char ** )( zoomOut ? zoom_out : zoom_in ) );
   mCursor = QCursor( myZoomQPixmap, 7, 7 );
@@ -50,6 +55,9 @@ void QgsMapToolZoom::canvasMoveEvent( QMouseEvent * e )
     mDragging = true;
     delete mRubberBand;
     mRubberBand = new QgsRubberBand( mCanvas, QGis::Polygon );
+    QColor color( Qt::blue );
+    color.setAlpha( 63 );
+    mRubberBand->setColor( color );
     mZoomRect.setTopLeft( e->pos() );
   }
   mZoomRect.setBottomRight( e->pos() );

@@ -16,10 +16,13 @@
 #include <QObject>
 #include <QString>
 #include <QObject>
+#include <QtConcurrentMap>
+
 #include <qgsapplication.h>
 //header for class being tested
 #include <qgsexpression.h>
 #include <qgsfeature.h>
+#include <qgsfeaturerequest.h>
 #include <qgsgeometry.h>
 #include <qgsrenderchecker.h>
 
@@ -27,6 +30,16 @@
 // See http://hub.qgis.org/issues/4284
 Q_DECLARE_METATYPE( QVariant )
 #endif
+
+static void _parseAndEvalExpr( int arg )
+{
+  Q_UNUSED( arg );
+  for ( int i = 0; i < 100; ++i )
+  {
+    QgsExpression exp( "1 + 2 * 2" );
+    exp.evaluate();
+  }
+}
 
 class TestQgsExpression: public QObject
 {
@@ -135,6 +148,9 @@ class TestQgsExpression: public QObject
       QTest::newRow( "literal int" ) << "123" << false << QVariant( 123 );
       QTest::newRow( "literal double" ) << "1.2" << false << QVariant( 1.2 );
       QTest::newRow( "literal text" ) << "'hello'" << false << QVariant( "hello" );
+      QTest::newRow( "literal double" ) << ".000001" << false << QVariant( 0.000001 );
+      QTest::newRow( "literal double" ) << "1.0e-6" << false << QVariant( 0.000001 );
+      QTest::newRow( "literal double" ) << "1e-6" << false << QVariant( 0.000001 );
 
       // unary minus
       QTest::newRow( "unary minus double" ) << "-1.3" << false << QVariant( -1.3 );
@@ -222,6 +238,7 @@ class TestQgsExpression: public QObject
       QTest::newRow( "regexp 3" ) << "'hello' ~ 'llo$'" << false << QVariant( 1 );
 
       // concatenation
+      QTest::newRow( "concat with plus" ) << "'a' + 'b'" << false << QVariant( "ab" );
       QTest::newRow( "concat" ) << "'a' || 'b'" << false << QVariant( "ab" );
       QTest::newRow( "concat with int" ) << "'a' || 1" << false << QVariant( "a1" );
       QTest::newRow( "concat with int" ) << "2 || 'b'" << false << QVariant( "2b" );
@@ -250,8 +267,8 @@ class TestQgsExpression: public QObject
       QTest::newRow( "log10(100)" ) << "log10(100)" << false << QVariant( 2. );
       QTest::newRow( "log(2,32)" ) << "log(2,32)" << false << QVariant( 5. );
       QTest::newRow( "log(10,1000)" ) << "log(10,1000)" << false << QVariant( 3. );
-      QTest::newRow( "log(-2,32)" ) << "log(-2,32)" << false << QVariant( );
-      QTest::newRow( "log(2,-32)" ) << "log(2,-32)" << false << QVariant( );
+      QTest::newRow( "log(-2,32)" ) << "log(-2,32)" << false << QVariant();
+      QTest::newRow( "log(2,-32)" ) << "log(2,-32)" << false << QVariant();
       QTest::newRow( "log(0.5,32)" ) << "log(0.5,32)" << false << QVariant( -5. );
       QTest::newRow( "round(1234.557,2) - round up" ) << "round(1234.557,2)" << false << QVariant( 1234.56 );
       QTest::newRow( "round(1234.554,2) - round down" ) << "round(1234.554,2)" << false << QVariant( 1234.55 );
@@ -336,7 +353,7 @@ class TestQgsExpression: public QObject
       QTest::newRow( "condition else" ) << "case when 1=0 then 'bad' else 678 end" << false << QVariant( 678 );
       QTest::newRow( "condition null" ) << "case when length(123)=0 then 111 end" << false << QVariant();
       QTest::newRow( "condition 2 when" ) << "case when 2>3 then 23 when 3>2 then 32 else 0 end" << false << QVariant( 32 );
-      QTest::newRow( "coalesce null" ) << "coalesce(NULL)" << false << QVariant( );
+      QTest::newRow( "coalesce null" ) << "coalesce(NULL)" << false << QVariant();
       QTest::newRow( "coalesce mid-null" ) << "coalesce(1, NULL, 3)" << false << QVariant( 1 );
       QTest::newRow( "coalesce exp" ) << "coalesce(NULL, 1+1)" << false << QVariant( 2 );
       QTest::newRow( "regexp match" ) << "regexp_match('abc','.b.')" << false << QVariant( 1 );
@@ -503,6 +520,32 @@ class TestQgsExpression: public QObject
       QCOMPARE( v.toInt(), 200 );
     }
 
+    void eval_current_feature()
+    {
+      QgsFeature f( 100 );
+      QgsExpression exp( "$currentfeature" );
+      QVariant v = exp.evaluate( &f );
+      QgsFeature evalFeature = v.value<QgsFeature>();
+      QCOMPARE( evalFeature.id(), f.id() );
+    }
+
+    void eval_feature_attribute()
+    {
+      QgsFeature f( 100 );
+      QgsFields fields;
+      fields.append( QgsField( "col1" ) );
+      fields.append( QgsField( "second_column", QVariant::Int ) );
+      f.setFields( &fields, true );
+      f.setAttribute( QString( "col1" ), QString( "test value" ) );
+      f.setAttribute( QString( "second_column" ), 5 );
+      QgsExpression exp( "attribute($currentfeature,'col1')" );
+      QVariant v = exp.evaluate( &f );
+      QCOMPARE( v.toString(), QString( "test value" ) );
+      QgsExpression exp2( "attribute($currentfeature,'second'||'_column')" );
+      v = exp2.evaluate( &f );
+      QCOMPARE( v.toInt(), 5 );
+    }
+
     void eval_rand()
     {
       QgsExpression exp1( "rand(1,10)" );
@@ -550,6 +593,16 @@ class TestQgsExpression: public QObject
         refColsSet.insert( col.toLower() );
 
       QCOMPARE( refColsSet, expectedCols );
+    }
+
+    void referenced_columns_all_attributes()
+    {
+      QgsExpression exp( "attribute($currentfeature,'test')" );
+      QCOMPARE( exp.hasParserError(), false );
+      QStringList refCols = exp.referencedColumns();
+      // make sure we get the all attributes flag
+      bool allAttributesFlag = refCols.contains( QgsFeatureRequest::AllAttributes );
+      QCOMPARE( allAttributesFlag, true );
     }
 
     void needs_geometry_data()
@@ -908,6 +961,15 @@ class TestQgsExpression: public QObject
       QCOMPARE( QgsExpression::quotedString( "hello\\world" ), QString( "'hello\\\\world'" ) );
     }
 
+    void reentrant()
+    {
+      // this simply should not crash
+
+      QList<int> lst;
+      for ( int i = 0; i < 10; ++i )
+        lst << i;
+      QtConcurrent::blockingMap( lst, _parseAndEvalExpr );
+    }
 };
 
 QTEST_MAIN( TestQgsExpression )

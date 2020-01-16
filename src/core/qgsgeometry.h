@@ -24,11 +24,6 @@ email                : morb at ozemail dot com dot au
 
 #include <geos_c.h>
 
-#if defined(GEOS_VERSION_MAJOR) && (GEOS_VERSION_MAJOR<3)
-#define GEOSGeometry struct GEOSGeom_t
-#define GEOSCoordSequence struct GEOSCoordSeq_t
-#endif
-
 #include "qgspoint.h"
 #include "qgscoordinatetransform.h"
 #include "qgsfeature.h"
@@ -88,6 +83,12 @@ class CORE_EXPORT QgsGeometry
     //! Destructor
     ~QgsGeometry();
 
+    /** return GEOS context handle
+     * @note added in 2.6
+     * @note not available in Python
+     */
+    static GEOSContextHandle_t getGEOSHandler();
+
     /** static method that creates geometry from Wkt */
     static QgsGeometry* fromWkt( QString wkt );
 
@@ -129,7 +130,6 @@ class CORE_EXPORT QgsGeometry
     size_t wkbSize() const;
 
     /**Returns a geos geomtry. QgsGeometry keeps ownership, don't delete the returned object!
-        @note this method was added in version 1.1
         @note not available in python bindings
       */
     const GEOSGeometry* asGeos() const;
@@ -143,29 +143,19 @@ class CORE_EXPORT QgsGeometry
     /** Returns true if wkb of the geometry is of WKBMulti* type */
     bool isMultipart();
 
-    /** compare geometries using GEOS
-      @note added in 1.5
-     */
+    /** compare geometries using GEOS  */
     bool isGeosEqual( QgsGeometry & );
 
-    /** check validity using GEOS
-      @note added in 1.5
-     */
+    /** check validity using GEOS */
     bool isGeosValid();
 
-    /** check if geometry is empty using GEOS
-      @note added in 1.5
-     */
+    /** check if geometry is empty using GEOS  */
     bool isGeosEmpty();
 
-    /** get area of geometry using GEOS
-      @note added in 1.5
-     */
+    /** get area of geometry using GEOS */
     double area();
 
-    /** get length of geometry using GEOS
-      @note added in 1.5
-     */
+    /** get length of geometry using GEOS */
     double length();
 
     double distance( QgsGeometry& geom );
@@ -252,7 +242,7 @@ class CORE_EXPORT QgsGeometry
      * @param afterVertex Receives index of the vertex after the closest segment. The vertex
      * before the closest segment is always afterVertex - 1
      * @param leftOf Out: Returns if the point lies on the left of right side of the segment ( < 0 means left, > 0 means right )
-     * @param epsilon epsilon for segment snapping (added in 1.8)
+     * @param epsilon epsilon for segment snapping
      * @return The squared cartesian distance is also returned in sqrDist, negative number on error
      */
     double closestSegmentWithContext( const QgsPoint& point, QgsPoint& minDistPoint, int& afterVertex, double* leftOf = 0, double epsilon = DEFAULT_SEGMENT_EPSILON );
@@ -302,8 +292,7 @@ class CORE_EXPORT QgsGeometry
                        QList<QgsPoint> &topologyTestPoints );
 
     /**Replaces a part of this geometry with another line
-      @return 0 in case of success
-      @note: this function was added in version 1.3*/
+      @return 0 in case of success */
     int reshapeGeometry( const QList<QgsPoint>& reshapeWithLine );
 
     /**Changes this geometry such that it does not intersect the other geometry
@@ -323,32 +312,25 @@ class CORE_EXPORT QgsGeometry
     /** Test for containment of a point (uses GEOS) */
     bool contains( const QgsPoint* p ) const;
 
-    /** Test for if geometry is contained in another (uses GEOS)
-     *  @note added in 1.5 */
+    /** Test for if geometry is contained in another (uses GEOS) */
     bool contains( const QgsGeometry* geometry ) const;
 
-    /** Test for if geometry is disjoint of another (uses GEOS)
-     *  @note added in 1.5 */
+    /** Test for if geometry is disjoint of another (uses GEOS) */
     bool disjoint( const QgsGeometry* geometry ) const;
 
-    /** Test for if geometry equals another (uses GEOS)
-     *  @note added in 1.5 */
+    /** Test for if geometry equals another (uses GEOS) */
     bool equals( const QgsGeometry* geometry ) const;
 
-    /** Test for if geometry touch another (uses GEOS)
-     *  @note added in 1.5 */
+    /** Test for if geometry touch another (uses GEOS) */
     bool touches( const QgsGeometry* geometry ) const;
 
-    /** Test for if geometry overlaps another (uses GEOS)
-     *  @note added in 1.5 */
+    /** Test for if geometry overlaps another (uses GEOS) */
     bool overlaps( const QgsGeometry* geometry ) const;
 
-    /** Test for if geometry is within another (uses GEOS)
-     *  @note added in 1.5 */
+    /** Test for if geometry is within another (uses GEOS) */
     bool within( const QgsGeometry* geometry ) const;
 
-    /** Test for if geometry crosses another (uses GEOS)
-     *  @note added in 1.5 */
+    /** Test for if geometry crosses another (uses GEOS) */
     bool crosses( const QgsGeometry* geometry ) const;
 
     /** Returns a buffer region around this geometry having the given width and with a specified number
@@ -387,9 +369,7 @@ class CORE_EXPORT QgsGeometry
     /** Returns the smallest convex polygon that contains all the points in the geometry. */
     QgsGeometry* convexHull();
 
-    /* Return interpolated point on line at distance
-     * @note added in 1.9
-     */
+    /* Return interpolated point on line at distance */
     QgsGeometry* interpolate( double distance );
 
     /** Returns a geometry representing the points shared by this geometry and other. */
@@ -406,17 +386,17 @@ class CORE_EXPORT QgsGeometry
     /** Returns a Geometry representing the points making up this Geometry that do not make up other. */
     QgsGeometry* symDifference( QgsGeometry* geometry );
 
-    /** Exports the geometry to mWkt
+    /** Exports the geometry to WKT
+     *  @note precision parameter added in 2.4
      *  @return true in case of success and false else
      */
-    QString exportToWkt() const;
+    QString exportToWkt( const int &precision = 17 ) const;
 
-    /** Exports the geometry to mGeoJSON
-     *  @return true in case of success and false else
-     *  @note added in 1.8
-     *  @note python binding added in 1.9
+    /** Exports the geometry to GeoJSON
+     *  @return a QString representing the geometry as GeoJSON
+     *  @note precision parameter added in 2.4
      */
-    QString exportToGeoJSON() const;
+    QString exportToGeoJSON( const int &precision = 17 ) const;
 
     /** try to convert the geometry to the requested type
      * @param destType the geometry type to be converted to
@@ -453,19 +433,18 @@ class CORE_EXPORT QgsGeometry
         if wkbType is WKBMultiPolygon, otherwise an empty list */
     QgsMultiPolygon asMultiPolygon() const;
 
-    /** return contents of the geometry as a list of geometries
-     @note added in version 1.1 */
+    /** return contents of the geometry as a list of geometries */
     QList<QgsGeometry*> asGeometryCollection() const;
 
     /** delete a ring in polygon or multipolygon.
       Ring 0 is outer ring and can't be deleted.
       @return true on success
-      @note added in version 1.2 */
+       */
     bool deleteRing( int ringNum, int partNum = 0 );
 
     /** delete part identified by the part number
       @return true on success
-      @note added in version 1.2 */
+       */
     bool deletePart( int partNum );
 
     /**Converts single type geometry into multitype geometry
@@ -479,7 +458,6 @@ class CORE_EXPORT QgsGeometry
      *          2 if avoid intersection would change the geometry type,
      *          3 other error during intersection removal
      *  @param ignoreFeatures possibility to give a list of features where intersections should be ignored (not available in python bindings)
-     *  @note added in 1.5
      */
     int avoidIntersections( QMap<QgsVectorLayer*, QSet<QgsFeatureId> > ignoreFeatures = ( QMap<QgsVectorLayer*, QSet<QgsFeatureId> >() ) );
 
@@ -498,10 +476,7 @@ class CORE_EXPORT QgsGeometry
         bool hasWhere() { return hasLocation; }
     };
 
-    /** Validate geometry and produce a list of geometry errors
-     * @note added in 1.5
-     * @note python binding added in 1.6
-     **/
+    /** Validate geometry and produce a list of geometry errors */
     void validateGeometry( QList<Error> &errors );
 
     /** compute the unary union on a list of geometries. May be faster than an iterative union on a set of geometries.
@@ -641,7 +616,7 @@ class CORE_EXPORT QgsGeometry
     /** return polygon from wkb */
     QgsPolygon asPolygon( QgsConstWkbPtr &wkbPtr, bool hasZValue ) const;
 
-    static bool geosRelOp( char( *op )( const GEOSGeometry*, const GEOSGeometry * ),
+    static bool geosRelOp( char( *op )( GEOSContextHandle_t handle, const GEOSGeometry*, const GEOSGeometry * ),
                            const QgsGeometry* a, const QgsGeometry* b );
 
     /**Returns < 0 if point(x/y) is left of the line x1,y1 -> x1,y2*/

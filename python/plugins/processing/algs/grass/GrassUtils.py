@@ -28,7 +28,6 @@ __revision__ = '$Format:%H$'
 import stat
 import shutil
 import codecs
-import traceback
 import subprocess
 from qgis.core import QgsApplication
 from PyQt4.QtCore import *
@@ -271,7 +270,7 @@ class GrassUtils:
             command,
             shell=True,
             stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
+            stdin=open(os.devnull),
             stderr=subprocess.STDOUT,
             universal_newlines=True,
             ).stdout
@@ -300,7 +299,7 @@ class GrassUtils:
                 command,
                 shell=True,
                 stdout=subprocess.PIPE,
-                stdin=subprocess.PIPE,
+                stdin=open(os.devnull),
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 ).stdout
@@ -385,8 +384,7 @@ class GrassUtils:
                     configured in your system.\nPlease install it before \
                     running GRASS algorithms.'
         except:
-            s = traceback.format_exc()
             return 'Error while checking GRASS installation. GRASS might not \
-                be correctly configured.\n' + s
+                be correctly configured.\n'
 
         GrassUtils.isGrassInstalled = True

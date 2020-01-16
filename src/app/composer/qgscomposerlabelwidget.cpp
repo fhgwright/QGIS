@@ -25,7 +25,7 @@
 #include <QFontDialog>
 #include <QWidget>
 
-QgsComposerLabelWidget::QgsComposerLabelWidget( QgsComposerLabel* label ): QWidget(), mComposerLabel( label )
+QgsComposerLabelWidget::QgsComposerLabelWidget( QgsComposerLabel* label ): QgsComposerItemBaseWidget( 0, label ), mComposerLabel( label )
 {
   setupUi( this );
 
@@ -33,6 +33,8 @@ QgsComposerLabelWidget::QgsComposerLabelWidget( QgsComposerLabel* label ): QWidg
   QgsComposerItemWidget* itemPropertiesWidget = new QgsComposerItemWidget( this, label );
   mainLayout->addWidget( itemPropertiesWidget );
 
+  mFontColorButton->setColorDialogTitle( tr( "Select font color" ) );
+  mFontColorButton->setContext( "composer" );
 
   if ( mComposerLabel )
   {
@@ -49,13 +51,13 @@ void QgsComposerLabelWidget::on_mHtmlCheckBox_stateChanged( int state )
     {
       mFontButton->setEnabled( false );
       mFontColorButton->setEnabled( false );
-      mAlignementGroup->setEnabled( false );
+      mAppearanceGroup->setEnabled( false );
     }
     else
     {
       mFontButton->setEnabled( true );
       mFontColorButton->setEnabled( true );
-      mAlignementGroup->setEnabled( true );
+      mAppearanceGroup->setEnabled( true );
     }
 
     mComposerLabel->beginCommand( tr( "Label text HTML state changed" ), QgsComposerMergeCommand::ComposerLabelSetText );
@@ -122,6 +124,7 @@ void QgsComposerLabelWidget::on_mFontColorButton_colorChanged( const QColor &new
 
   mComposerLabel->beginCommand( tr( "Label color changed" ) );
   mComposerLabel->setFontColor( newLabelColor );
+  mComposerLabel->update();
   mComposerLabel->endCommand();
 }
 
@@ -138,12 +141,8 @@ void QgsComposerLabelWidget::on_mInsertExpressionButton_clicked()
   if ( selText.startsWith( "[%" ) && selText.endsWith( "%]" ) )
     selText = selText.mid( 2, selText.size() - 4 );
 
-  QgsVectorLayer* coverageLayer = 0;
   // use the atlas coverage layer, if any
-  if ( mComposerLabel->composition()->atlasComposition().enabled() )
-  {
-    coverageLayer = mComposerLabel->composition()->atlasComposition().coverageLayer();
-  }
+  QgsVectorLayer* coverageLayer = atlasCoverageLayer();
   QgsExpressionBuilderDialog exprDlg( coverageLayer, selText, this );
   exprDlg.setWindowTitle( tr( "Insert expression" ) );
   if ( exprDlg.exec() == QDialog::Accepted )

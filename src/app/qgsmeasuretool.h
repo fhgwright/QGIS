@@ -41,7 +41,6 @@ class APP_EXPORT QgsMeasureTool : public QgsMapTool
     bool measureArea() { return mMeasureArea; }
 
     //! When we have added our last point, and not following
-    // Added in 2.0
     bool done() { return mDone; }
 
     //! Reset and start new
@@ -69,6 +68,8 @@ class APP_EXPORT QgsMeasureTool : public QgsMapTool
 
     //! called when map tool is being deactivated
     virtual void deactivate();
+
+    virtual void keyPressEvent( QKeyEvent* e );
 
   public slots:
     //! updates the projections we're using
@@ -102,6 +103,8 @@ class APP_EXPORT QgsMeasureTool : public QgsMapTool
     //@param p (pixel) coordinate
     QgsPoint snapPoint( const QPoint& p );
 
+    /**Removes the last vertex from mRubberBand*/
+    void undo();
 };
 
 #endif

@@ -28,7 +28,6 @@ class QgsVectorLayer;
 /** \ingroup gui
  * \class QgsDataDefinedButton
  * A button for defining data source field mappings or expressions.
- * @note added in QGIS 1.9
  */
 
 class GUI_EXPORT QgsDataDefinedButton: public QToolButton
@@ -39,10 +38,10 @@ class GUI_EXPORT QgsDataDefinedButton: public QToolButton
   public:
     enum DataType
     {
-      AnyType  = 0,
       String  = 1,
       Int     = 2,
-      Double  = 4
+      Double  = 4,
+      AnyType = String | Int | Double
     };
     Q_DECLARE_FLAGS( DataTypes, DataType )
 
@@ -191,6 +190,8 @@ class GUI_EXPORT QgsDataDefinedButton: public QToolButton
     static QString penJoinStyleDesc();
     static QString blendModesDesc();
     static QString svgPathDesc();
+    static QString paperSizeDesc();
+    static QString paperOrientationDesc();
 
   public slots:
     /**

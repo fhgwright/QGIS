@@ -77,7 +77,7 @@ set CMAKE_OPT=^
 
 :devenv
 set PYTHONPATH=
-path %PF86%\CMake 2.8\bin;%PATH%;c:\cygwin\bin
+path %PF86%\CMake\bin;%PATH%;c:\cygwin\bin
 
 PROMPT qgis%VERSION%$g 
 
@@ -158,6 +158,12 @@ cmake %CMAKE_OPT% ^
 	-D CMAKE_INSTALL_PREFIX=%O4W_ROOT%/apps/%PACKAGENAME% ^
 	-D FCGI_INCLUDE_DIR=%O4W_ROOT%/include ^
 	-D FCGI_LIBRARY=%O4W_ROOT%/lib/libfcgi.lib ^
+	-D WITH_INTERNAL_JINJA2=FALSE ^
+	-D WITH_INTERNAL_MARKUPSAFE=FALSE ^
+	-D WITH_INTERNAL_PYGMENTS=FALSE ^
+	-D WITH_INTERNAL_DATEUTIL=FALSE ^
+	-D WITH_INTERNAL_PYTZ=FALSE ^
+	-D WITH_INTERNAL_SIX=FALSE ^
 	%SRCDIR%
 if errorlevel 1 (echo cmake failed & goto error)
 
@@ -194,20 +200,29 @@ if errorlevel 1 (echo INSTALL failed & goto error)
 echo PACKAGE: %DATE% %TIME%
 
 cd ..
-sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' postinstall-common.bat >%OSGEO4W_ROOT%\etc\postinstall\\%PACKAGENAME%-common.bat
-
+sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' postinstall-common.bat >%OSGEO4W_ROOT%\etc\postinstall\%PACKAGENAME%-common.bat
+if errorlevel 1 (echo creation of common postinstall failed & goto error)
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' postinstall-desktop.bat >%OSGEO4W_ROOT%\etc\postinstall\%PACKAGENAME%.bat
+if errorlevel 1 (echo creation of desktop postinstall failed & goto error)
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' preremove-desktop.bat >%OSGEO4W_ROOT%\etc\preremove\%PACKAGENAME%.bat
+if errorlevel 1 (echo creation of desktop preremove failed & goto error)
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' qgis.bat.tmpl >%OSGEO4W_ROOT%\bin\%PACKAGENAME%.bat.tmpl
+if errorlevel 1 (echo creation of desktop template failed & goto error)
+sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' designer-qgis.bat.tmpl >%OSGEO4W_ROOT%\bin\designer-%PACKAGENAME%.bat.tmpl
+if errorlevel 1 (echo creation of designer template failed & goto error)
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' browser.bat.tmpl >%OSGEO4W_ROOT%\bin\%PACKAGENAME%-browser.bat.tmpl
-sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' qgis.reg.tmpl >%OSGEO4W_ROOT%\apps\%PACKAGENAME%\bin\qgis.reg.tmpl
-
+if errorlevel 1 (echo creation of browser template & goto error)
+sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' qgis.reg.tmpl >%PKGDIR%\bin\qgis.reg.tmpl
+if errorlevel 1 (echo creation of registry template & goto error)
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' postinstall-server.bat >%OSGEO4W_ROOT%\etc\postinstall\%PACKAGENAME%-server.bat
+if errorlevel 1 (echo creation of server postinstall failed & goto error)
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' preremove-server.bat >%OSGEO4W_ROOT%\etc\preremove\%PACKAGENAME%-server.bat
+if errorlevel 1 (echo creation of server preremove failed & goto error)
 if not exist %OSGEO4W_ROOT%\httpd.d mkdir %OSGEO4W_ROOT%\httpd.d
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversion@/%GRASS_VERSION%/g' httpd.conf.tmpl >%OSGEO4W_ROOT%\httpd.d\httpd_%PACKAGENAME%.conf.tmpl
+if errorlevel 1 (echo creation of httpd.conf template failed & goto error)
 
-REM sed -e 's/%OSGEO4W_ROOT:\=\\\\\\\\%/@osgeo4w@/' %OSGEO4W_ROOT%\apps\%PACKAGENAME%\python\qgis\qgisconfig.py >%OSGEO4W_ROOT%\apps\%PACKAGENAME%\python\qgis\qgisconfig.py.tmpl
+REM sed -e 's/%OSGEO4W_ROOT:\=\\\\\\\\%/@osgeo4w@/' %PKGDIR%\python\qgis\qgisconfig.py >%PKGDIR%\python\qgis\qgisconfig.py.tmpl
 REM if errorlevel 1 (echo creation of qgisconfig.py.tmpl failed & goto error)
 
 REM del %PKGDIR%\python\qgis\qgisconfig.py
@@ -235,9 +250,7 @@ tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-common/%PACKAGENAME
 	"apps/%PACKAGENAME%/plugins/ogrprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/owsprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/postgresprovider.dll" ^
-	"apps/%PACKAGENAME%/plugins/qgissqlanyconnection.dll" ^
 	"apps/%PACKAGENAME%/plugins/spatialiteprovider.dll" ^
-	"apps/%PACKAGENAME%/plugins/sqlanywhereprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/wcsprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/wfsprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/wmsprovider.dll" ^
@@ -263,7 +276,23 @@ tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-server/%PACKAGENAME
 if errorlevel 1 (echo tar server failed & goto error)
 
 move %PKGDIR%\bin\qgis.exe %OSGEO4W_ROOT%\bin\%PACKAGENAME%-bin.exe
+if errorlevel 1 (echo move of desktop executable failed & goto error)
 move %PKGDIR%\bin\qbrowser.exe %OSGEO4W_ROOT%\bin\%PACKAGENAME%-browser-bin.exe
+if errorlevel 1 (echo move of browser executable failed & goto error)
+
+if not exist %PKGDIR%\qtplugins\sqldrivers mkdir %PKGDIR%\qtplugins\sqldrivers
+move %OSGEO4W_ROOT%\apps\qt4\plugins\sqldrivers\qsqlocispatial.dll %PKGDIR%\qtplugins\sqldrivers
+if errorlevel 1 (echo move of oci sqldriver failed & goto error)
+move %OSGEO4W_ROOT%\apps\qt4\plugins\sqldrivers\qsqlspatialite.dll %PKGDIR%\qtplugins\sqldrivers
+if errorlevel 1 (echo move of spatialite sqldriver failed & goto error)
+
+if not exist %PKGDIR%\qtplugins\designer mkdir %PKGDIR%\qtplugins\designer
+move %OSGEO4W_ROOT%\apps\qt4\plugins\designer\qgis_customwidgets.dll %PKGDIR%\qtplugins\designer
+if errorlevel 1 (echo move of customwidgets failed & goto error)
+
+if not exist %PKGDIR%\python\PyQt4\uic\widget-plugins mkdir %PKGDIR%\python\PyQt4\uic\widget-plugins
+move %OSGEO4W_ROOT%\apps\Python27\Lib\site-packages\PyQt4\uic\widget-plugins\qgis_customwidgets.py %PKGDIR%\python\PyQt4\uic\widget-plugins
+if errorlevel 1 (echo move of customwidgets binding failed & goto error)
 
 if not exist %ARCH%\release\qgis\%PACKAGENAME% mkdir %ARCH%\release\qgis\%PACKAGENAME%
 tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%/%PACKAGENAME%-%VERSION%-%PACKAGE%.tar.bz2 ^
@@ -288,11 +317,11 @@ tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%/%PACKAGENAME%-%VERS
 	"apps/%PACKAGENAME%/plugins/roadgraphplugin.dll" ^
 	"apps/%PACKAGENAME%/plugins/spatialqueryplugin.dll" ^
 	"apps/%PACKAGENAME%/plugins/spitplugin.dll" ^
-	"apps/%PACKAGENAME%/plugins/sqlanywhereplugin.dll" ^
 	"apps/%PACKAGENAME%/plugins/topolplugin.dll" ^
 	"apps/%PACKAGENAME%/plugins/zonalstatisticsplugin.dll" ^
 	"apps/%PACKAGENAME%/qgis_help.exe" ^
-        "apps/qt4/plugins/sqldrivers/qsqlspatialite.dll" ^
+	"apps/%PACKAGENAME%/qtplugins/sqldrivers/qsqlspatialite.dll" ^
+	"apps/%PACKAGENAME%/qtplugins/designer/" ^
 	"apps/%PACKAGENAME%/python/" ^
 	"apps/%PACKAGENAME%/resources/customization.xml" ^
 	"bin/%PACKAGENAME%.bat.tmpl" ^
@@ -308,9 +337,11 @@ tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-grass-plugin/%PACKA
 	"apps/%PACKAGENAME%/bin/qgisgrass.dll" ^
 	"apps/%PACKAGENAME%/plugins/grassrasterprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/grassplugin.dll" ^
-	"apps/%PACKAGENAME%/plugins/grassprovider.dll" ^
-	"apps/%PACKAGENAME%/plugins/libgrass_gis.%GRASS_VERSION%.dll"
+	"apps/%PACKAGENAME%/plugins/grassprovider.dll"
 if errorlevel 1 (echo tar grass-plugin failed & goto error)
+
+REM grass direct library disabled
+REM     "apps/%PACKAGENAME%/plugins/libgrass_gis.%GRASS_VERSION%.dll"
 
 tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-globe-plugin/%PACKAGENAME%-globe-plugin-%VERSION%-%PACKAGE%.tar.bz2 ^
 	--exclude-from exclude ^
@@ -321,7 +352,7 @@ if errorlevel 1 (echo tar globe-plugin failed & goto error)
 
 tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-oracle-provider/%PACKAGENAME%-oracle-provider-%VERSION%-%PACKAGE%.tar.bz2 ^
 	"apps/%PACKAGENAME%/plugins/oracleprovider.dll" ^
-        apps/qt4/plugins/sqldrivers/qsqlocispatial.dll
+	"apps/%PACKAGENAME%/qtplugins/sqldrivers/qsqlocispatial.dll"
 if errorlevel 1 (echo tar oracle-provider failed & goto error)
 
 tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-devel/%PACKAGENAME%-devel-%VERSION%-%PACKAGE%.tar.bz2 ^
