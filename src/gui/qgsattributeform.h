@@ -256,7 +256,7 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
     void onAttributeDeleted( int idx );
     void onUpdatedFields();
     void onConstraintStatusChanged( const QString& constraint,
-                                    const QString &description, const QString& err, bool ok );
+                                    const QString& description, const QString& err, bool ok );
     void preventFeatureRefresh();
     void synchronizeEnabledState();
     void layerSelectionChanged();
@@ -321,13 +321,13 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
 
     //! constraints management
     void updateAllConstaints();
-    void updateConstraints( QgsEditorWidgetWrapper *w );
-    bool currentFormFeature( QgsFeature &feature );
-    bool currentFormValidConstraints( QStringList &invalidFields, QStringList &descriptions );
-    void constraintDependencies( QgsEditorWidgetWrapper *w, QList<QgsEditorWidgetWrapper*> &wDeps );
+    void updateConstraints( QgsEditorWidgetWrapper* w );
+    bool currentFormFeature( QgsFeature& feature );
+    bool currentFormValidConstraints( QStringList& invalidFields, QStringList& descriptions );
+    void constraintDependencies( QgsEditorWidgetWrapper* w, QList<QgsEditorWidgetWrapper*>& wDeps );
     void clearInvalidConstraintsMessage();
-    void displayInvalidConstraintMessage( const QStringList &invalidFields,
-                                          const QStringList &description );
+    void displayInvalidConstraintMessage( const QStringList& invalidFields,
+                                          const QStringList& description );
 
     QgsVectorLayer* mLayer;
     QgsFeature mFeature;

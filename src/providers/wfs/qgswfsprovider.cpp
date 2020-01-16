@@ -1101,7 +1101,7 @@ bool QgsWFSProvider::describeFeatureType( QString& geometryAttribute, QgsFields&
 {
   fields.clear();
 
-  QgsWFSDescribeFeatureType describeFeatureType( mShared->mURI.uri() );
+  QgsWFSDescribeFeatureType describeFeatureType( mShared->mURI.uri( false ) );
   if ( !describeFeatureType.requestFeatureType( mShared->mWFSVersion,
        mShared->mURI.typeName() ) )
   {
@@ -1162,17 +1162,23 @@ bool QgsWFSProvider::readAttributesFromSchema( QDomDocument& schemaDoc,
   // collect the correspond type.
   QDomElement elementElement = schemaElement.firstChildElement( "element" );
   QString elementTypeString;
+  QDomElement complexTypeElement;
   while ( !elementElement.isNull() )
   {
     QString name = elementElement.attribute( "name" );
     if ( name == unprefixedTypename )
     {
       elementTypeString = elementElement.attribute( "type" );
+      if ( elementTypeString.isEmpty() )
+      {
+        // e.g http://afnemers.ruimtelijkeplannen.nl/afnemers2012/services?SERVICE=WFS&REQUEST=DescribeFeatureType&VERSION=2.0.0&TYPENAME=app:Bouwvlak
+        complexTypeElement = elementElement.firstChildElement( "complexType" );
+      }
       break;
     }
     elementElement = elementElement.nextSiblingElement( "element" );
   }
-  if ( elementTypeString.isEmpty() )
+  if ( elementTypeString.isEmpty() && complexTypeElement.isNull() )
   {
     // "http://demo.deegree.org/inspire-workspace/services/wfs?SERVICE=WFS&REQUEST=DescribeFeatureType&VERSION=2.0.0&TYPENAME=ad:Address"
     QDomElement iter = schemaElement.firstChildElement();
@@ -1207,21 +1213,24 @@ bool QgsWFSProvider::readAttributesFromSchema( QDomDocument& schemaDoc,
     elementTypeString = elementTypeString.section( ':', 1 );
   }
 
-  //the <complexType> element corresponding to the feature type
-  QDomElement complexTypeElement = schemaElement.firstChildElement( "complexType" );
-  while ( !complexTypeElement.isNull() )
-  {
-    QString name = complexTypeElement.attribute( "name" );
-    if ( name == elementTypeString )
-    {
-      break;
-    }
-    complexTypeElement = complexTypeElement.nextSiblingElement( "complexType" );
-  }
   if ( complexTypeElement.isNull() )
   {
-    errorMsg = tr( "Cannot find ComplexType element '%1'" ).arg( elementTypeString );
-    return false;
+    //the <complexType> element corresponding to the feature type
+    complexTypeElement = schemaElement.firstChildElement( "complexType" );
+    while ( !complexTypeElement.isNull() )
+    {
+      QString name = complexTypeElement.attribute( "name" );
+      if ( name == elementTypeString )
+      {
+        break;
+      }
+      complexTypeElement = complexTypeElement.nextSiblingElement( "complexType" );
+    }
+    if ( complexTypeElement.isNull() )
+    {
+      errorMsg = tr( "Cannot find ComplexType element '%1'" ).arg( elementTypeString );
+      return false;
+    }
   }
 
   //we have the relevant <complexType> element. Now find out the geometry and the thematic attributes
@@ -1321,7 +1330,7 @@ bool QgsWFSProvider::sendTransactionDocument( const QDomDocument& doc, QDomDocum
     return false;
   }
 
-  QgsWFSTransactionRequest request( mShared->mURI.uri() );
+  QgsWFSTransactionRequest request( mShared->mURI.uri( false ) );
   return request.send( doc, serverResponse );
 }
 
@@ -1424,7 +1433,7 @@ bool QgsWFSProvider::getCapabilities()
 
   if ( mShared->mCaps.version.isEmpty() )
   {
-    QgsWFSCapabilities getCapabilities( mShared->mURI.uri() );
+    QgsWFSCapabilities getCapabilities( mShared->mURI.uri( false ) );
     if ( !getCapabilities.requestCapabilities( true ) )
     {
       QgsMessageLog::logMessage( tr( "GetCapabilities failed for url %1: %2" ).

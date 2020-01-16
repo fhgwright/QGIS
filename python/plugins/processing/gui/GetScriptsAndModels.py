@@ -40,12 +40,13 @@ from qgis.utils import iface, show_message_log
 from qgis.core import QgsNetworkAccessManager, QgsMessageLog
 from qgis.gui import QgsMessageBar
 
+from processing.core.alglist import algList
 from processing.gui.ToolboxAction import ToolboxAction
+from processing.gui import Help2Html
+from processing.gui.Help2Html import getDescription, ALG_DESC, ALG_VERSION, ALG_CREATOR
 from processing.script.ScriptUtils import ScriptUtils
 from processing.algs.r.RUtils import RUtils
 from processing.modeler.ModelerUtils import ModelerUtils
-from processing.gui import Help2Html
-from processing.gui.Help2Html import getDescription, ALG_DESC, ALG_VERSION, ALG_CREATOR
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 WIDGET, BASE = uic.loadUiType(
@@ -128,15 +129,15 @@ class GetScriptsAndModelsDialog(BASE, WIDGET):
 
         self.resourceType = resourceType
         if self.resourceType == self.MODELS:
-            self.folder = ModelerUtils.defaultModelsFolder()
+            self.folder = ModelerUtils.modelsFolders()[0]
             self.urlBase = 'https://raw.githubusercontent.com/qgis/QGIS-Processing/master/models/'
             self.icon = QIcon(os.path.join(pluginPath, 'images', 'model.png'))
         elif self.resourceType == self.SCRIPTS:
-            self.folder = ScriptUtils.defaultScriptsFolder()
+            self.folder = ScriptUtils.scriptsFolders()[0]
             self.urlBase = 'https://raw.githubusercontent.com/qgis/QGIS-Processing/master/scripts/'
             self.icon = QIcon(os.path.join(pluginPath, 'images', 'script.png'))
         else:
-            self.folder = RUtils.defaultRScriptsFolder()
+            self.folder = RUtils.RScriptsFolders()[0]
             self.urlBase = 'https://raw.githubusercontent.com/qgis/QGIS-Processing/master/rscripts/'
             self.icon = QIcon(os.path.join(pluginPath, 'images', 'r.svg'))
 

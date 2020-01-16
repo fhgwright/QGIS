@@ -780,12 +780,13 @@ bool QgsAttributeForm::currentFormFeature( QgsFeature &feature )
 
 void QgsAttributeForm::clearInvalidConstraintsMessage()
 {
+  mInvalidConstraintMessage->hide();
   mInvalidConstraintMessage->clear();
   mInvalidConstraintMessage->setStyleSheet( QString() );
 }
 
-void QgsAttributeForm::displayInvalidConstraintMessage( const QStringList &f,
-    const QStringList &d )
+void QgsAttributeForm::displayInvalidConstraintMessage( const QStringList& f,
+    const QStringList& d )
 {
   clearInvalidConstraintsMessage();
 
@@ -801,6 +802,7 @@ void QgsAttributeForm::displayInvalidConstraintMessage( const QStringList &f,
   QString title = QString( "<img src=\"%1\">     <b>%2:" ).arg( icPath ).arg( tr( "Invalid fields" ) );
   QString msg = QString( "%1</b><ul>%2</ul>" ).arg( title ).arg( descriptions ) ;
 
+  mInvalidConstraintMessage->show();
   mInvalidConstraintMessage->setText( msg );
   mInvalidConstraintMessage->setStyleSheet( "QLabel { background-color : #ffc800; }" );
 }
@@ -888,7 +890,7 @@ void QgsAttributeForm::onUpdatedFields()
 }
 
 void QgsAttributeForm::onConstraintStatusChanged( const QString& constraint,
-    const QString &description, const QString& err, bool ok )
+    const QString& description, const QString& err, bool ok )
 {
   QgsEditorWidgetWrapper* eww = qobject_cast<QgsEditorWidgetWrapper*>( sender() );
   Q_ASSERT( eww );
@@ -919,8 +921,8 @@ void QgsAttributeForm::onConstraintStatusChanged( const QString& constraint,
   }
 }
 
-void QgsAttributeForm::constraintDependencies( QgsEditorWidgetWrapper *w,
-    QList<QgsEditorWidgetWrapper*> &wDeps )
+void QgsAttributeForm::constraintDependencies( QgsEditorWidgetWrapper* w,
+    QList<QgsEditorWidgetWrapper*>& wDeps )
 {
   QString name =  w->field().name();
 
@@ -1048,6 +1050,7 @@ void QgsAttributeForm::init()
   vl->addWidget( mMessageBar );
 
   mInvalidConstraintMessage = new QLabel( this );
+  mInvalidConstraintMessage->hide();
   vl->addWidget( mInvalidConstraintMessage );
 
   setLayout( vl );
@@ -1548,15 +1551,22 @@ QgsAttributeForm::WidgetInfo QgsAttributeForm::createWidgetFromDef( const QgsAtt
       }
       else
       {
-        QScrollArea *scrollArea = new QScrollArea( parent );
+        myContainer = new QWidget();
 
-        myContainer = new QWidget( scrollArea );
+        if ( context.formMode() != QgsAttributeEditorContext::Embed )
+        {
+          QScrollArea *scrollArea = new QScrollArea( parent );
 
-        scrollArea->setWidget( myContainer );
-        scrollArea->setWidgetResizable( true );
-        scrollArea->setFrameShape( QFrame::NoFrame );
+          scrollArea->setWidget( myContainer );
+          scrollArea->setWidgetResizable( true );
+          scrollArea->setFrameShape( QFrame::NoFrame );
 
-        newWidgetInfo.widget = scrollArea;
+          newWidgetInfo.widget = scrollArea;
+        }
+        else
+        {
+          newWidgetInfo.widget = myContainer;
+        }
       }
 
       QGridLayout* gbLayout = new QGridLayout();

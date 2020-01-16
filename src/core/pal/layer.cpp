@@ -49,7 +49,6 @@ Layer::Layer( QgsAbstractLabelProvider* provider, const QString& name, QgsPalLay
     , mLabelLayer( toLabel )
     , mDisplayAll( displayAll )
     , mCentroidInside( false )
-    , mFitInPolygon( false )
     , mArrangement( arrangement )
     , mArrangementFlags( nullptr )
     , mMode( LabelPerFeature )
@@ -427,6 +426,7 @@ void Layer::chopFeaturesAtRepeatDistance()
     double chopInterval = fpart->repeatDistance();
     if ( chopInterval != 0. && GEOSGeomTypeId_r( geosctxt, geom ) == GEOS_LINESTRING )
     {
+      chopInterval *= ceil( fpart->getLabelWidth() / fpart->repeatDistance() );
 
       double bmin[2], bmax[2];
       fpart->getBoundingBox( bmin, bmax );
