@@ -43,7 +43,7 @@
 #define DXF_HANDMAX 9999999
 #define DXF_HANDPLOTSTYLE 0xf
 
-//dxf color palette
+// dxf color palette
 int QgsDxfExport::mDxfColors[][3] =
 {
   { 255, 255, 255 },
@@ -304,6 +304,54 @@ int QgsDxfExport::mDxfColors[][3] =
   { 255, 255, 255 },
 };
 
+const char *QgsDxfExport::mDxfEncodings[][2] =
+{
+  { "ASCII", "" },
+  { "8859_1", "ISO-8859-1" },
+  { "8859_2", "ISO-8859-2" },
+  { "8859_3", "ISO-8859-3" },
+  { "8859_4", "ISO-8859-4" },
+  { "8859_5", "ISO-8859-5" },
+  { "8859_6", "ISO-8859-6" },
+  { "8859_7", "ISO-8859-7" },
+  { "8859_8", "ISO-8859-8" },
+  { "8859_9", "ISO-8859-9" },
+//  { "DOS437", "" },
+  { "DOS850", "CP850" },
+//  { "DOS852", "" },
+//  { "DOS855", "" },
+//  { "DOS857", "" },
+//  { "DOS860", "" },
+//  { "DOS861", "" },
+//  { "DOS863", "" },
+//  { "DOS864", "" },
+//  { "DOS865", "" },
+//  { "DOS869", "" },
+//  { "DOS932", "" },
+  { "MACINTOSH", "MacRoman" },
+  { "BIG5", "Big5" },
+  { "KSC5601", "ksc5601.1987-0" },
+//   { "JOHAB", "" },
+  { "DOS866", "CP866" },
+  { "ANSI_1250", "CP1250" },
+  { "ANSI_1251", "CP1251" },
+  { "ANSI_1252", "CP1252" },
+  { "GB2312", "GB2312" },
+  { "ANSI_1253", "CP1253" },
+  { "ANSI_1254", "CP1254" },
+  { "ANSI_1255", "CP1255" },
+  { "ANSI_1256", "CP1256" },
+  { "ANSI_1257", "CP1257" },
+  { "ANSI_874", "CP874" },
+  { "ANSI_932", "Shift_JIS" },
+  { "ANSI_936", "CP936" },
+  { "ANSI_949", "cp949" },
+  { "ANSI_950", "CP950" },
+//  { "ANSI_1361", "" },
+//  { "ANSI_1200", "" },
+  { "ANSI_1258", "CP1258" },
+};
+
 QgsDxfExport::QgsDxfExport()
     : mSymbologyScaleDenominator( 1.0 )
     , mSymbologyExport( NoSymbology )
@@ -311,10 +359,12 @@ QgsDxfExport::QgsDxfExport()
     , mSymbolLayerCounter( 0 )
     , mNextHandleId( DXF_HANDSEED )
     , mBlockCounter( 0 )
+    , mModelSpaceBR( 0 )
 {
 }
 
 QgsDxfExport::QgsDxfExport( const QgsDxfExport& dxfExport )
+    : mModelSpaceBR( 0 )
 {
   *this = dxfExport;
 }
@@ -325,7 +375,7 @@ QgsDxfExport& QgsDxfExport::operator=( const QgsDxfExport & dxfExport )
   mSymbologyScaleDenominator = dxfExport.mSymbologyScaleDenominator;
   mSymbologyExport = dxfExport.mSymbologyExport;
   mMapUnits = dxfExport.mMapUnits;
-  mSymbolLayerCounter = 0; //internal counter
+  mSymbolLayerCounter = 0; // internal counter
   mNextHandleId = 0;
   mBlockCounter = 0;
   return *this;
@@ -371,23 +421,23 @@ void QgsDxfExport::writeGroup( QColor color, int exactMatchCode, int rgbCode, in
   int minDistAt = -1;
   int minDist = INT_MAX;
 
-  for ( int i = 1; i < ( int )( sizeof( mDxfColors ) / sizeof( *mDxfColors ) ); ++i )
+  for ( int i = 1; i < ( int )( sizeof( mDxfColors ) / sizeof( *mDxfColors ) ) && minDist > 0; ++i )
   {
     int dist = color_distance( color.rgba(), i );
-    if ( dist == 0 )
-    {
-      writeGroup( exactMatchCode, i );
-      return;
-    }
+    if ( dist >= minDist )
+      continue;
 
-    if ( dist < minDist )
-    {
-      minDistAt = i;
-      minDist = dist;
-    }
+    minDistAt = i;
+    minDist = dist;
   }
 
   writeGroup( exactMatchCode, minDistAt );
+  if ( minDist == 0 && color.alpha() == 255 )
+  {
+    // exact full opaque match
+    return;
+  }
+
   int c = ( color.red() & 0xff ) * 0x10000 + ( color.green() & 0xff ) * 0x100 + ( color.blue() & 0xff );
   writeGroup( rgbCode, c );
   if ( transparencyCode != -1 && color.alpha() < 255 )
@@ -417,7 +467,7 @@ void QgsDxfExport::writeString( const QString& s )
   mTextStream << s << "\n";
 }
 
-int QgsDxfExport::writeToFile( QIODevice* d )
+int QgsDxfExport::writeToFile( QIODevice* d, QString encoding )
 {
   if ( !d )
   {
@@ -430,9 +480,11 @@ int QgsDxfExport::writeToFile( QIODevice* d )
   }
 
   mTextStream.setDevice( d );
-  mTextStream.setCodec( "Windows-1252" );
+  QgsDebugMsg( "encoding:" + encoding );
+  mTextStream.setCodec( encoding.toLocal8Bit() );
 
-  writeHeader();
+  QgsDebugMsg( "dxfEncoding:" + dxfEncoding( encoding ) );
+  writeHeader( dxfEncoding( encoding ) );
   writeTables();
   writeBlocks();
   writeEntities();
@@ -441,25 +493,25 @@ int QgsDxfExport::writeToFile( QIODevice* d )
   return 0;
 }
 
-void QgsDxfExport::writeHeader()
+void QgsDxfExport::writeHeader( QString codepage )
 {
   writeGroup( 999, "DXF created from QGIS" );
 
   startSection();
   writeGroup( 2, "HEADER" );
 
-  //ACADVER
+  // ACADVER
   writeGroup( 9, "$ACADVER" );
   writeGroup( 1, "AC1015" );
 
   QgsRectangle ext = dxfExtent();
   if ( !ext.isEmpty() )
   {
-    //EXTMIN
+    // EXTMIN
     writeGroup( 9, "$EXTMIN" );
     writeGroup( 0, QgsPoint( ext.xMinimum(), ext.yMinimum() ) );
 
-    //EXTMAX
+    // EXTMAX
     writeGroup( 9, "$EXTMAX" );
     writeGroup( 0, QgsPoint( ext.xMaximum(), ext.yMaximum() ) );
   }
@@ -482,6 +534,9 @@ void QgsDxfExport::writeHeader()
 
   writeGroup( 9, "$HANDSEED" );
   writeGroup( 5, DXF_HANDMAX );
+
+  writeGroup( 9, "$DWGCODEPAGE" );
+  writeGroup( 3, codepage );
 
   endSection();
 }
@@ -608,6 +663,47 @@ void QgsDxfExport::writeTables()
   writeGroup( 2, "VPORT" );
   writeHandle();
   writeGroup( 100, "AcDbSymbolTable" );
+
+#if 0
+  QgsRectangle ext( dxfExtent() );
+
+  writeGroup( 0, "VPORT" );
+  writeHandle();
+  writeGroup( 100, "AcDbSymbolTableRecord" );
+  writeGroup( 100, "AcDbViewportTableRecord" );
+  writeGroup( 2, "*ACTIVE" );
+  writeGroup( 70, 0 );  // flags
+  writeGroup( 0, QgsPoint( ext.xMinimum(), ext.yMinimum() ) ); // lower-left corner
+  writeGroup( 1, QgsPoint( ext.xMaximum(), ext.yMaximum() ) ); // upper right corner
+  writeGroup( 2, ext.center() );                       // view center point
+  writeGroup( 3, QgsPoint( 0.0, 0.0 ) );               // snap base point
+  writeGroup( 4, QgsPoint( 0.5, 0.5 ) );               // snap spacing x/y
+  writeGroup( 5, QgsPoint( 0.5, 0.5 ) );               // grid spacing x/y
+  writeGroup( 6, QgsPoint( 0.0, 0.0 ), 1.0, false );   // view direction from target point
+  writeGroup( 7, QgsPoint( 0.0, 0.0 ), 0.0, false );   // view target point
+  writeGroup( 40, 10.0 );                          // ?
+  writeGroup( 42, 50.0 );                              // lens length
+  writeGroup( 43, 0.0 );                               // front clipping plan
+  writeGroup( 44, 0.0 );                               // back clipping plan
+  writeGroup( 50, 0.0 );                               // snap rotation angle
+  writeGroup( 51, 0.0 );                               // view twist angle
+  writeGroup( 71, 0 );                                 // view mode
+  writeGroup( 72, 1000 );                              // circle sides
+  writeGroup( 73, 1 );                                 // ?
+  writeGroup( 74, 3 );                                 // UCSICON setting
+  writeGroup( 75, 0 );                                 // ?
+  writeGroup( 76, 0 );                                 // ?
+  writeGroup( 77, 0 );                                 // ?
+  writeGroup( 78, 0 );                                 // ?
+  writeGroup( 281, 0 );                                // Render mode (2D)
+  writeGroup( 100, QgsPoint( 0.0, 0.0 ), 0.0, false ); // UCS origin
+  writeGroup( 101, QgsPoint( 1.0, 0.0 ), 0.0, false ); // UCS x axis
+  writeGroup( 102, QgsPoint( 0.0, 1.0 ), 0.0, false ); // UCS y axis
+  writeGroup( 79, 0 );                                 // Orthographic type of UCS (not orthographic)
+  writeGroup( 146, 0.0 );                              // elevation
+  writeGroup( 60, 3 );                                 // ?
+  writeGroup( 61, 5 );                                 // major grid line
+#endif
 
   writeGroup( 70, 0 );
   writeGroup( 0, "ENDTAB" );
@@ -777,7 +873,7 @@ void QgsDxfExport::writeBlocks()
     QgsSymbolV2RenderContext ctx( ct, QgsSymbolV2::MapUnit, slIt->second->alpha(), false, slIt->second->renderHints(), 0 );
     ml->startRender( ctx );
 
-    //markers with data defined properties are inserted inline
+    // markers with data defined properties are inserted inline
     if ( hasDataDefinedProperties( ml, slIt->second ) )
     {
       continue;
@@ -802,7 +898,7 @@ void QgsDxfExport::writeBlocks()
     writeGroup( 0, QgsPoint( 0.0, 0.0 ) );
     writeGroup( 3, blockName );
 
-    ml->writeDxf( *this, mapUnitScaleFactor( mSymbologyScaleDenominator, ml->sizeUnit(), mMapUnits ), "0", &ctx, 0 ); //maplayer 0 -> block receives layer from INSERT statement
+    ml->writeDxf( *this, mapUnitScaleFactor( mSymbologyScaleDenominator, ml->sizeUnit(), mMapUnits ), "0", &ctx, 0 ); // maplayer 0 -> block receives layer from INSERT statement
 
     writeGroup( 0, "ENDBLK" );
     writeHandle();
@@ -837,6 +933,10 @@ void QgsDxfExport::writeEntities()
 
     QgsSymbolV2RenderContext sctx( ctx, QgsSymbolV2::MM, 1.0, false, 0, 0 );
     QgsFeatureRendererV2* renderer = vl->rendererV2();
+    if ( !renderer )
+    {
+      continue;
+    }
     renderer->startRender( ctx, vl->pendingFields() );
 
     QStringList attributes = renderer->usedAttributes();
@@ -873,21 +973,17 @@ void QgsDxfExport::writeEntities()
       sctx.setFeature( &fet );
       if ( mSymbologyExport == NoSymbology )
       {
-        addFeature( sctx, layerName, 0, 0 ); //no symbology at all
+        addFeature( sctx, layerName, 0, 0 ); // no symbology at all
       }
       else
       {
-        if ( !renderer )
-        {
-          continue;
-        }
         QgsSymbolV2List symbolList = renderer->symbolsForFeature( fet );
         if ( symbolList.size() < 1 )
         {
           continue;
         }
 
-        if ( mSymbologyExport == QgsDxfExport::SymbolLayerSymbology ) //symbol layer symbology, but layer does not use symbol levels
+        if ( mSymbologyExport == QgsDxfExport::SymbolLayerSymbology ) // symbol layer symbology, but layer does not use symbol levels
         {
           QgsSymbolV2List::iterator symbolIt = symbolList.begin();
           for ( ; symbolIt != symbolList.end(); ++symbolIt )
@@ -901,7 +997,7 @@ void QgsDxfExport::writeEntities()
         }
         else
         {
-          //take first symbollayer from first symbol
+          // take first symbollayer from first symbol
           QgsSymbolV2* s = symbolList.first();
           if ( !s || s->symbolLayerCount() < 1 )
           {
@@ -934,7 +1030,8 @@ void QgsDxfExport::writeEntitiesSymbolLevels( QgsVectorLayer* layer )
   QgsFeatureRendererV2* renderer = layer->rendererV2();
   if ( !renderer )
   {
-    //return error
+    // TODO return error
+    return;
   }
   QHash< QgsSymbolV2*, QList<QgsFeature> > features;
 
@@ -942,7 +1039,7 @@ void QgsDxfExport::writeEntitiesSymbolLevels( QgsVectorLayer* layer )
   QgsSymbolV2RenderContext sctx( ctx, QgsSymbolV2::MM, 1.0, false, 0, 0 );
   renderer->startRender( ctx, layer->pendingFields() );
 
-  //get iterator
+  // get iterator
   QgsFeatureRequest req;
   if ( layer->wkbType() == QGis::WKBNoGeometry )
   {
@@ -955,7 +1052,7 @@ void QgsDxfExport::writeEntitiesSymbolLevels( QgsVectorLayer* layer )
   }
   QgsFeatureIterator fit = layer->getFeatures( req );
 
-  //fetch features
+  // fetch features
   QgsFeature fet;
   QgsSymbolV2* featureSymbol = 0;
   while ( fit.nextFeature( fet ) )
@@ -974,7 +1071,7 @@ void QgsDxfExport::writeEntitiesSymbolLevels( QgsVectorLayer* layer )
     it.value().append( fet );
   }
 
-  //find out order
+  // find out order
   QgsSymbolV2LevelOrder levels;
   QgsSymbolV2List symbols = renderer->symbols();
   for ( int i = 0; i < symbols.count(); i++ )
@@ -992,7 +1089,7 @@ void QgsDxfExport::writeEntitiesSymbolLevels( QgsVectorLayer* layer )
     }
   }
 
-  //export symbol layers and symbology
+  // export symbol layers and symbology
   for ( int l = 0; l < levels.count(); l++ )
   {
     QgsSymbolV2Level& level = levels[l];
@@ -1023,8 +1120,6 @@ void QgsDxfExport::writeEndFile()
 {
   // From GDAL trailer.dxf
   mTextStream << "\
-  0\n\
-ENDSEC\n\
   0\n\
 SECTION\n\
   2\n\
@@ -3201,7 +3296,7 @@ void QgsDxfExport::endSection()
 void QgsDxfExport::writePoint( const QgsPoint& pt, const QString& layer, QColor color, const QgsFeature* f, const QgsSymbolLayerV2* symbolLayer, const QgsSymbolV2* symbol )
 {
 #if 0
-  //debug: draw rectangle for debugging
+  // debug: draw rectangle for debugging
   const QgsMarkerSymbolLayerV2* msl = dynamic_cast< const QgsMarkerSymbolLayerV2* >( symbolLayer );
   if ( msl )
   {
@@ -3215,15 +3310,15 @@ void QgsDxfExport::writePoint( const QgsPoint& pt, const QString& layer, QColor 
     writeGroup( 2, pt + QgsVector( -halfSize, halfSize ) );
     writeGroup( 3, pt + QgsVector( halfSize,  halfSize ) );
   }
-#endif //0
+#endif // 0
 
-  //insert block or write point directly?
+  // insert block or write point directly?
   QHash< const QgsSymbolLayerV2*, QString >::const_iterator blockIt = mPointSymbolBlocks.find( symbolLayer );
   if ( !symbolLayer || blockIt == mPointSymbolBlocks.constEnd() )
   {
-    //write symbol directly here
+    // write symbol directly here
     const QgsMarkerSymbolLayerV2* msl = dynamic_cast< const QgsMarkerSymbolLayerV2* >( symbolLayer );
-    if ( symbolLayer && symbol )
+    if ( msl && symbol )
     {
       QgsRenderContext ct;
       QgsSymbolV2RenderContext ctx( ct, QgsSymbolV2::MapUnit, symbol->alpha(), false, symbol->renderHints(), f );
@@ -3232,11 +3327,11 @@ void QgsDxfExport::writePoint( const QgsPoint& pt, const QString& layer, QColor 
         return;
       }
     }
-    writePoint( layer, color, pt ); //write default point symbol
+    writePoint( layer, color, pt ); // write default point symbol
   }
   else
   {
-    //insert block reference
+    // insert block reference
     writeGroup( 0, "INSERT" );
     writeHandle();
     writeGroup( 100, "AcDbEntity" );
@@ -3329,45 +3424,66 @@ void QgsDxfExport::writePoint( const QString& layer, QColor color, const QgsPoin
   writeGroup( 0, pt );
 }
 
-void QgsDxfExport::writeCircle( const QString& layer, QColor color, const QgsPoint& pt, double radius )
+void QgsDxfExport::writeFilledCircle( const QString &layer, QColor color, const QgsPoint &pt, double radius )
 {
-  writeGroup( 0, "CIRCLE" );
-  writeHandle();
-  writeGroup( 100, "AcDbEntity" );
-  writeGroup( 100, "AcDbCircle" );
-  writeGroup( 8, layer );
-  writeGroup( color );
-  writeGroup( 0, pt );
-  writeGroup( 40, radius );
-
-#if 0
-  writeGroup( 0, "HATCH" );
+  writeGroup( 0, "HATCH" );                     // Entity type
   writeHandle();
   writeGroup( 330, mModelSpaceBR );
   writeGroup( 100, "AcDbEntity" );
   writeGroup( 100, "AcDbHatch" );
+
+  writeGroup( 8, layer );   // Layer name
+  writeGroup( 0, QgsPoint( 0, 0 ), 0.0 );  // Elevation point (in OCS)
+  writeGroup( 200, QgsPoint( 0, 0 ), 1.0 );
+
+  writeGroup( 2, "SOLID" );  // Hatch pattern name
+  writeGroup( 70, 1 );       // Solid fill flag (solid fill = 1; pattern fill = 0)
+  writeGroup( 71, 0 );       // Associativity flag (associative = 1; non-associative = 0)
+
+  writeGroup( color );       // Color (0 by block, 256 by layer)
+
+  writeGroup( 91, 1 );       // Number of boundary paths (loops)
+
+  writeGroup( 92, 7 );       // Boundary path type flag (bit coded): 0 = Default; 1 = External; 2 = Polyline 4 = Derived; 8 = Textbox; 16 = Outermost
+  writeGroup( 72, 2 );
+  writeGroup( 73, 1 );       // Is closed flag
+  writeGroup( 93, 2 );       // Number of polyline vertices
+
+  writeGroup( 0, QgsPoint( pt.x() - radius, pt.y() ) );
+  writeGroup( 42, 1.0 );
+
+  writeGroup( 0, QgsPoint( pt.x() + radius, pt.y() ) );
+  writeGroup( 42, 1.0 );
+
+  writeGroup( 97, 0 );       // Number of source boundary objects
+
+  writeGroup( 75, 1 );       // Hatch style: 0 = Hatch "odd parity" area (Normal style), 1 = Hatch outermost area only (Outer style), 2 = Hatch through entire area (Ignore style)
+  writeGroup( 76, 1 );       // Hatch pattern type: 0 = User-defined; 1 = Predefined; 2 = Custom
+  writeGroup( 47, 0.0059696789328105 ); // Pixel size
+
+  writeGroup( 98, 0 );       // Number of seed points
+}
+
+void QgsDxfExport::writeCircle( const QString& layer, QColor color, const QgsPoint& pt, double radius, const QString &lineStyleName, double width )
+{
+  writeGroup( 0, "LWPOLYLINE" );
+  writeHandle();
+  writeGroup( 330, mModelSpaceBR );
   writeGroup( 8, layer );
+  writeGroup( 100, "AcDbEntity" );
+  writeGroup( 100, "AcDbPolyline" );
+  writeGroup( 6, lineStyleName );
   writeGroup( color );
-  writeGroup( 0, QgsPoint( 0.0, 0.0 ) ); // elevation point
-  writeGroup( 200, QgsPoint( 0, 0 ), 1.0 );  // Extrusion direction
-  writeGroup( 2, "SOLID" );              // hatch pattern
-  writeGroup( 70, 1 ); // solid fill flag
-  writeGroup( 71, 0 );  // non-associative
-  writeGroup( 91, 1 );  // 1 loop
-  writeGroup( 92, 0 );  // Default edge type
-  writeGroup( 72, 2 );  // Edge type Arc
-  writeGroup( 93, 1 );  // Is closed
 
-  writeGroup( 0, QgsPoint( pt.x(), pt.y() ), 0.0, false );  // center point
-  writeGroup( 40, radius ); // radius
-  writeGroup( 50, 0.0 ); // start angle
-  writeGroup( 51, 2*M_PI ); // end angle
+  writeGroup( 90, 2 );
 
-  writeGroup( 97, 0 );  // # of source boundary objects
-  writeGroup( 75, 1 );  // odd parity hatch style
-  writeGroup( 76, 1 );  // predefined hatch pattern
-  writeGroup( 98, 0 );  // # of seed points
-#endif
+  writeGroup( 70, 1 );
+  writeGroup( 43, width );
+
+  writeGroup( 0, QgsPoint( pt.x() - radius, pt.y() ) );
+  writeGroup( 42, 1.0 );
+  writeGroup( 0, QgsPoint( pt.x() + radius, pt.y() ) );
+  writeGroup( 42, 1.0 );
 }
 
 void QgsDxfExport::writeText( const QString& layer, const QString& text, const QgsPoint& pt, double size, double angle, QColor color )
@@ -3382,11 +3498,17 @@ void QgsDxfExport::writeText( const QString& layer, const QString& text, const Q
   writeGroup( 40, size );
   writeGroup( 1, text );
   writeGroup( 50, angle );
-  writeGroup( 7, "STANDARD" ); //so far only support for standard font
+  writeGroup( 7, "STANDARD" ); // so far only support for standard font
 }
 
 void QgsDxfExport::writeMText( const QString& layer, const QString& text, const QgsPoint& pt, double width, double angle, QColor color )
 {
+  if ( !mTextStream.codec()->canEncode( text ) )
+  {
+    // TODO return error
+    return;
+  }
+
   writeGroup( 0, "MTEXT" );
   writeHandle();
   writeGroup( 100, "AcDbEntity" );
@@ -3395,6 +3517,10 @@ void QgsDxfExport::writeMText( const QString& layer, const QString& text, const 
   writeGroup( color );
 
   writeGroup( 0, pt );
+
+  QgsDebugMsg( QString( "text:%1" ).arg( text ) );
+  QgsDebugMsg( QString( "canEncode:%1" ).arg( mTextStream.codec()->canEncode( text ) ? "yes" : "no" ) );
+  QgsDebugMsg( QString( "fromUnicode:%1" ).arg( mTextStream.codec()->fromUnicode( text ).constData() ) );
 
   QString t( text );
   while ( t.length() > 250 )
@@ -3405,7 +3531,7 @@ void QgsDxfExport::writeMText( const QString& layer, const QString& text, const 
   writeGroup( 1, text );
 
   writeGroup( 50, angle );  // Rotation angle in radians
-  writeGroup( 41, width );  // Reference rectangle width
+  writeGroup( 41, width * 1.1 );  // Reference rectangle width
 
   // Attachment point:
   // 1 2 3
@@ -3413,7 +3539,7 @@ void QgsDxfExport::writeMText( const QString& layer, const QString& text, const 
   // 7 8 9
   writeGroup( 71, 7 );
 
-  writeGroup( 7, "STANDARD" ); //so far only support for standard font
+  writeGroup( 7, "STANDARD" ); // so far only support for standard font
 }
 
 void QgsDxfExport::writeSolid( const QString& layer, QColor color, const QgsPoint& pt1, const QgsPoint& pt2, const QgsPoint& pt3, const QgsPoint& pt4 )
@@ -3486,11 +3612,16 @@ void QgsDxfExport::addFeature( const QgsSymbolV2RenderContext& ctx, const QStrin
   Qt::PenStyle penStyle( Qt::SolidLine );
   Qt::BrushStyle brushStyle( Qt::NoBrush );
   double width = -1;
+  double offset = 0.0;
   if ( mSymbologyExport != NoSymbology && symbolLayer )
   {
     width = symbolLayer->dxfWidth( *this, ctx );
+    offset = symbolLayer->dxfOffset( *this, ctx );
     penStyle = symbolLayer->dxfPenStyle();
     brushStyle = symbolLayer->dxfBrushStyle();
+
+    if ( qgsDoubleNear( offset, 0.0 ) )
+      offset = 0.0;
   }
 
   QString lineStyleName = "CONTINUOUS";
@@ -3499,14 +3630,14 @@ void QgsDxfExport::addFeature( const QgsSymbolV2RenderContext& ctx, const QStrin
     lineStyleName = lineStyleFromSymbolLayer( symbolLayer );
   }
 
-  //single point
+  // single point
   if ( geometryType == QGis::WKBPoint || geometryType == QGis::WKBPoint25D )
   {
     writePoint( geom->asPoint(), layer, penColor, fet, symbolLayer, symbol );
     return;
   }
 
-  //multipoint
+  // multipoint
   if ( geometryType == QGis::WKBMultiPoint || geometryType == QGis::WKBMultiPoint25D )
   {
     QgsMultiPoint multiPoint = geom->asMultiPoint();
@@ -3521,38 +3652,63 @@ void QgsDxfExport::addFeature( const QgsSymbolV2RenderContext& ctx, const QStrin
 
   if ( penStyle != Qt::NoPen )
   {
-    //single line
+    // single line
     if ( geometryType == QGis::WKBLineString || geometryType == QGis::WKBLineString25D )
     {
-      writePolyline( geom->asPolyline(), layer, lineStyleName, penColor, width, false );
+      QgsGeometry *offsetLine = offset == 0.0 ? geom : geom->offsetCurve( offset, 0, GEOSBUF_JOIN_MITRE, 2.0 );
+      if ( !offsetLine )
+        offsetLine = geom;
+
+      writePolyline( offsetLine->asPolyline(), layer, lineStyleName, penColor, width, false );
+
+      if ( offsetLine != geom )
+        delete offsetLine;
     }
 
-    //multiline
+    // multiline
     if ( geometryType == QGis::WKBMultiLineString || geometryType == QGis::WKBMultiLineString25D )
     {
-      QgsMultiPolyline multiLine = geom->asMultiPolyline();
+      QgsGeometry *offsetLine = offset == 0.0 ? geom : geom->offsetCurve( offset, 0, GEOSBUF_JOIN_MITRE, 2.0 );
+      if ( !offsetLine )
+        offsetLine = geom;
+
+      QgsMultiPolyline multiLine = offsetLine->asMultiPolyline();
       QgsMultiPolyline::const_iterator lIt = multiLine.constBegin();
       for ( ; lIt != multiLine.constEnd(); ++lIt )
       {
         writePolyline( *lIt, layer, lineStyleName, penColor, width, false );
       }
+
+      if ( offsetLine != geom )
+        delete offsetLine;
     }
 
-    //polygon
+    // polygon
     if ( geometryType == QGis::WKBPolygon || geometryType == QGis::WKBPolygon25D )
     {
-      QgsPolygon polygon = geom->asPolygon();
+      QgsGeometry *offsetPolygon = offset == 0.0 ? geom : geom->buffer( -offset, 0, GEOSBUF_CAP_FLAT, GEOSBUF_JOIN_MITRE, 2.0 );
+      if ( !offsetPolygon )
+        offsetPolygon = geom;
+
+      QgsPolygon polygon = offsetPolygon->asPolygon();
       QgsPolygon::const_iterator polyIt = polygon.constBegin();
-      for ( ; polyIt != polygon.constEnd(); ++polyIt ) //iterate over rings
+      for ( ; polyIt != polygon.constEnd(); ++polyIt ) // iterate over rings
       {
-        writePolyline( *polyIt, layer, lineStyleName, penColor, width, true );
+        writePolyline( geom->asPolyline(), layer, lineStyleName, penColor, width, false );
       }
+
+      if ( offsetPolygon != geom )
+        delete offsetPolygon;
     }
 
-    //multipolygon or polygon
+    // multipolygon or polygon
     if ( geometryType == QGis::WKBMultiPolygon || geometryType == QGis::WKBMultiPolygon25D )
     {
-      QgsMultiPolygon mp = geom->asMultiPolygon();
+      QgsGeometry *offsetPolygon = offset == 0.0 ? geom : geom->buffer( -offset, 0, GEOSBUF_CAP_FLAT, GEOSBUF_JOIN_MITRE, 2.0 );
+      if ( !offsetPolygon )
+        offsetPolygon = geom;
+
+      QgsMultiPolygon mp = offsetPolygon->asMultiPolygon();
       QgsMultiPolygon::const_iterator mpIt = mp.constBegin();
       for ( ; mpIt != mp.constEnd(); ++mpIt )
       {
@@ -3562,19 +3718,22 @@ void QgsDxfExport::addFeature( const QgsSymbolV2RenderContext& ctx, const QStrin
           writePolyline( *polyIt, layer, lineStyleName, penColor, width, true );
         }
       }
+
+      if ( offsetPolygon != geom )
+        delete offsetPolygon;
     }
   }
 
   if ( brushStyle != Qt::NoBrush )
   {
-    //polygon
+    // polygon
     if ( geometryType == QGis::WKBPolygon || geometryType == QGis::WKBPolygon25D )
     {
       QgsPolygon polygon = geom->asPolygon();
       writePolygon( polygon, layer, "SOLID", brushColor );
     }
 
-    //multipolygon or polygon
+    // multipolygon or polygon
     if ( geometryType == QGis::WKBMultiPolygon || geometryType == QGis::WKBMultiPolygon25D )
     {
       QgsMultiPolygon mp = geom->asMultiPolygon();
@@ -3673,7 +3832,7 @@ double QgsDxfExport::mapUnitScaleFactor( double scaleDenominator, QgsSymbolV2::O
   {
     return 1.0;
   }
-  //MM symbol unit
+  // MM symbol unit
   return scaleDenominator * QGis::fromUnitToUnitFactor( QGis::Meters, mapUnits ) / 1000.0;
 }
 
@@ -3684,21 +3843,21 @@ QList< QPair< QgsSymbolLayerV2*, QgsSymbolV2* > > QgsDxfExport::symbolLayers()
   QList< QPair< QgsVectorLayer*, int> >::iterator lIt = mLayers.begin();
   for ( ; lIt != mLayers.end(); ++lIt )
   {
-    //cast to vector layer
+    // cast to vector layer
     QgsVectorLayer* vl = lIt->first;
     if ( !vl )
     {
       continue;
     }
 
-    //get rendererv2
+    // get rendererv2
     QgsFeatureRendererV2* r = vl->rendererV2();
     if ( !r )
     {
       continue;
     }
 
-    //get all symbols
+    // get all symbols
     QgsSymbolV2List symbols = r->symbols();
     QgsSymbolV2List::iterator symbolIt = symbols.begin();
     for ( ; symbolIt != symbols.end(); ++symbolIt )
@@ -3826,7 +3985,7 @@ void QgsDxfExport::writeLinetype( const QString& styleName, const QVector<qreal>
   bool isGap = false;
   for ( ; dashIt != pattern.constEnd(); ++dashIt )
   {
-    //map units or mm?
+    // map units or mm?
     double segmentLength = ( isGap ? -*dashIt : *dashIt );
     segmentLength *= mapUnitScaleFactor( mSymbologyScaleDenominator, u, mMapUnits );
     writeGroup( 49, segmentLength );
@@ -3898,7 +4057,7 @@ QString QgsDxfExport::dxfLayerName( const QString& name )
   if ( name.isEmpty() )
     return "0";
 
-  //dxf layers can be max 255 characters long
+  // dxf layers can be max 255 characters long
   QString layerName = name.left( 255 );
 
   // replaced restricted characters with underscore
@@ -3942,4 +4101,39 @@ QString QgsDxfExport::layerName( const QString &id, const QgsFeature &f ) const
   }
 
   return "0";
+}
+
+QString QgsDxfExport::dxfEncoding( const QString &name )
+{
+  foreach ( QByteArray codec, QTextCodec::availableCodecs() )
+  {
+    if ( name != codec )
+      continue;
+
+    int i;
+    for ( i = 0; i < ( int )( sizeof( mDxfEncodings ) / sizeof( *mDxfEncodings ) ) && name != mDxfEncodings[i][1]; ++i )
+      ;
+
+    if ( i == ( int )( sizeof( mDxfEncodings ) / sizeof( *mDxfEncodings ) ) )
+      continue;
+
+    return mDxfEncodings[i][0];
+  }
+
+  return QString::null;
+}
+
+QStringList QgsDxfExport::encodings()
+{
+  QStringList encodings;
+  foreach ( QByteArray codec, QTextCodec::availableCodecs() )
+  {
+    int i;
+    for ( i = 0; i < ( int )( sizeof( mDxfEncodings ) / sizeof( *mDxfEncodings ) ) && strcmp( codec.data(), mDxfEncodings[i][1] ) != 0; ++i )
+      ;
+
+    if ( i < ( int )( sizeof( mDxfEncodings ) / sizeof( *mDxfEncodings ) ) )
+      encodings << codec.data();
+  }
+  return encodings;
 }

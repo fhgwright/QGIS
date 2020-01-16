@@ -44,10 +44,6 @@ from qgis.gui import QgsRubberBand
 from owslib.csw import CatalogueServiceWeb
 from owslib.fes import BBox, PropertyIsLike
 from owslib.ows import ExceptionReport
-from owslib.wcs import WebCoverageService
-from owslib.wfs import WebFeatureService
-from owslib.wms import WebMapService
-from owslib.wmts import WebMapTileService
 
 from MetaSearch import link_types
 from MetaSearch.dialogs.manageconnectionsdialog import ManageConnectionsDialog
@@ -83,6 +79,7 @@ class MetaSearchDialog(QDialog, BASE_CLASS):
         # form inputs
         self.startfrom = 0
         self.maxrecords = 10
+        self.timeout = 10
         self.constraints = []
 
         # Servers tab
@@ -416,6 +413,9 @@ class MetaSearchDialog(QDialog, BASE_CLASS):
         self.startfrom = 0
         self.maxrecords = self.spnRecords.value()
 
+        # set timeout
+        self.timeout = self.spnTimeout.value()
+
         # bbox
         minx = self.leWest.text()
         miny = self.leSouth.text()
@@ -726,7 +726,7 @@ class MetaSearchDialog(QDialog, BASE_CLASS):
 
         try:
             QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-            cat = CatalogueServiceWeb(self.catalog_url)
+            cat = CatalogueServiceWeb(self.catalog_url, timeout=self.timeout)
             cat.getrecordbyid(
                 [self.catalog.records[identifier].identifier])
         except ExceptionReport, err:
@@ -798,7 +798,8 @@ class MetaSearchDialog(QDialog, BASE_CLASS):
         # connect to the server
         try:
             QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-            self.catalog = CatalogueServiceWeb(self.catalog_url)
+            self.catalog = CatalogueServiceWeb(self.catalog_url,
+                                               timeout=self.timeout)
             return True
         except ExceptionReport, err:
             msg = self.tr('Error connecting to service: %s') % err

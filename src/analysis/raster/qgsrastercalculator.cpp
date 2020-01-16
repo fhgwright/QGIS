@@ -19,11 +19,12 @@
 #include "qgsrastercalcnode.h"
 #include "qgsrasterlayer.h"
 #include "qgsrastermatrix.h"
-#include "cpl_string.h"
+
 #include <QProgressDialog>
 #include <QFile>
 
-#include "gdalwarper.h"
+#include <cpl_string.h>
+#include <gdalwarper.h>
 #include <ogr_srs_api.h>
 
 #if defined(GDAL_VERSION_NUM) && GDAL_VERSION_NUM >= 1800
@@ -35,8 +36,14 @@
 #endif
 
 QgsRasterCalculator::QgsRasterCalculator( const QString& formulaString, const QString& outputFile, const QString& outputFormat,
-    const QgsRectangle& outputExtent, int nOutputColumns, int nOutputRows, const QVector<QgsRasterCalculatorEntry>& rasterEntries ): mFormulaString( formulaString ), mOutputFile( outputFile ), mOutputFormat( outputFormat ),
-    mOutputRectangle( outputExtent ), mNumOutputColumns( nOutputColumns ), mNumOutputRows( nOutputRows ), mRasterEntries( rasterEntries )
+    const QgsRectangle& outputExtent, int nOutputColumns, int nOutputRows, const QVector<QgsRasterCalculatorEntry>& rasterEntries )
+    : mFormulaString( formulaString )
+    , mOutputFile( outputFile )
+    , mOutputFormat( outputFormat )
+    , mOutputRectangle( outputExtent )
+    , mNumOutputColumns( nOutputColumns )
+    , mNumOutputRows( nOutputRows )
+    , mRasterEntries( rasterEntries )
 {
 }
 
@@ -71,7 +78,7 @@ int QgsRasterCalculator::processCalculation( QProgressDialog* p )
       return 2;
     }
     GDALDatasetH inputDataset = GDALOpen( TO8F( it->raster->source() ), GA_ReadOnly );
-    if ( inputDataset == NULL )
+    if ( !inputDataset )
     {
       return 2;
     }
@@ -93,7 +100,6 @@ int QgsRasterCalculator::processCalculation( QProgressDialog* p )
     {
       mInputDatasets.push_back( inputDataset );
     }
-
 
     GDALRasterBandH inputRasterBand = GDALGetRasterBand( inputDataset, it->bandNumber );
     if ( inputRasterBand == NULL )
@@ -154,6 +160,7 @@ int QgsRasterCalculator::processCalculation( QProgressDialog* p )
   QgsRasterMatrix resultMatrix;
 
   //read / write line by line
+  bool encounteredError = false;
   for ( int i = 0; i < mNumOutputRows; ++i )
   {
     if ( p )
@@ -172,7 +179,11 @@ int QgsRasterCalculator::processCalculation( QProgressDialog* p )
     {
       double sourceTransformation[6];
       GDALRasterBandH sourceRasterBand = mInputRasterBands[bufferIt.key()];
-      GDALGetGeoTransform( GDALGetBandDataset( sourceRasterBand ), sourceTransformation );
+      if ( !GDALGetGeoTransform( GDALGetBandDataset( sourceRasterBand ), sourceTransformation ) )
+      {
+        encounteredError = true;
+        break;
+      }
       //the function readRasterPart calls GDALRasterIO (and ev. does some conversion if raster transformations are not the same)
       readRasterPart( targetGeoTransform, 0, i, mNumOutputColumns, 1, sourceTransformation, sourceRasterBand, bufferIt.value()->data() );
     }
@@ -238,11 +249,11 @@ int QgsRasterCalculator::processCalculation( QProgressDialog* p )
     GDALClose( *datasetIt );
   }
 
-  if ( p && p->wasCanceled() )
+  if (( p && p->wasCanceled() ) || encounteredError )
   {
     //delete the dataset without closing (because it is faster)
     GDALDeleteDataset( outputDriver, TO8F( mOutputFile ) );
-    return 3;
+    return encounteredError ? 1 : 3;
   }
   GDALClose( outputDataset );
   CPLFree( resultScanLine );
@@ -250,6 +261,8 @@ int QgsRasterCalculator::processCalculation( QProgressDialog* p )
 }
 
 QgsRasterCalculator::QgsRasterCalculator()
+    : mNumOutputColumns( 0 )
+    , mNumOutputRows( 0 )
 {
 }
 
@@ -410,5 +423,3 @@ void QgsRasterCalculator::outputGeoTransform( double* transform ) const
   transform[4] = 0;
   transform[5] = -mOutputRectangle.height() / mNumOutputRows;
 }
-
-

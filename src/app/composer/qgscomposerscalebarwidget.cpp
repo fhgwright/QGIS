@@ -104,12 +104,12 @@ void QgsComposerScaleBarWidget::refreshMapComboBox()
         mMapComboBox->addItem( tr( "Map %1" ).arg(( *mapItemIt )->id() ) );
       }
     }
-  }
 
-  if ( saveCurrentComboText.isEmpty() && mComposerScaleBar->composerMap() )
-  {
-    //combo box was not initialised before
-    mMapComboBox->setCurrentIndex( mMapComboBox->findText( tr( "Map %1" ).arg( mComposerScaleBar->composerMap()->id() ) ) );
+    if ( saveCurrentComboText.isEmpty() && mComposerScaleBar->composerMap() )
+    {
+      //combo box was not initialised before
+      mMapComboBox->setCurrentIndex( mMapComboBox->findText( tr( "Map %1" ).arg( mComposerScaleBar->composerMap()->id() ) ) );
+    }
   }
   if ( mMapComboBox->findText( saveCurrentComboText ) == -1 )
   {
@@ -311,11 +311,11 @@ void QgsComposerScaleBarWidget::on_mFontButton_clicked()
 
   bool dialogAccepted;
   QFont oldFont = mComposerScaleBar->font();
-#if defined(Q_WS_MAC) && defined(QT_MAC_USE_COCOA)
+#if defined(Q_OS_MAC) && defined(QT_MAC_USE_COCOA)
   // Native Mac dialog works only for Qt Carbon
-  QFont newFont = QFontDialog::getFont( &dialogAccepted, oldFont, 0, QString(), QFontDialog::DontUseNativeDialog );
+  QFont newFont = QFontDialog::getFont( &dialogAccepted, oldFont, this, QString(), QFontDialog::DontUseNativeDialog );
 #else
-  QFont newFont = QFontDialog::getFont( &dialogAccepted, oldFont, 0 );
+  QFont newFont = QFontDialog::getFont( &dialogAccepted, oldFont, this );
 #endif
   if ( dialogAccepted )
   {

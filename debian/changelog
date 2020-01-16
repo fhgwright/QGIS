@@ -1,8 +1,25 @@
-qgis (2.6.1) unstable; urgency=medium
+qgis (2.8.0) UNRELEASED; urgency=medium
 
-  * Release of 2.6.1
+  * Release of 2.8
 
- -- Jürgen E. Fischer <jef@norbit.de>  Fri, 28 Nov 2014 12:58:31 +0100
+ -- Jürgen E. Fischer <jef@norbit.de>  Fri, 20 Feb 2015 13:05:35 +0100
+
+qgis (2.7.0) unstable; urgency=medium
+
+  * New development version 2.7 after branch of 2.6
+  * run tests in en_US.UTF-8 locale
+  * add build dependency to python-qscintilla2 for tests
+  * rename libqgis-customwidgets{QGIS_ABI} to libqgis-customwidgets
+  * merge some downstream debian changes
+  * drop support for ubuntu saucy and add vivid
+
+ -- Jürgen E. Fischer <jef@norbit.de>  Fri, 20 Feb 2015 13:05:35 +0100
+
+qgis (2.6.0) unstable; urgency=medium
+
+  * Release of 2.6
+
+ -- Jürgen E. Fischer <jef@norbit.de>  Fri, 31 Oct 2014 13:00:45 +0100
 
 qgis (2.5.0) unstable; urgency=medium
 

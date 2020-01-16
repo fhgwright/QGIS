@@ -69,7 +69,7 @@ my $translators= {
 	mr => '',
 	nb => 'James Stott, Maléne Peterson',
 	nl => 'Richard Duivenvoorde, Raymond Nijssen, Carlo van Rijswijk, Diethard Jansen, Willem Hoffmans, Dick Groskamp',
-	pl => 'Robert Szczepanek, Milena Nowotarska, Borys Jurgiel, Mateusz Łoskot, Tomasz Paul, Andrzej Świąder ',
+	pl => 'Robert Szczepanek, Milena Nowotarska, Borys Jurgiel, Mateusz Łoskot, Tomasz Paul, Andrzej Świąder, Radosław Pasiok',
 	pt_BR => 'Sidney Schaberle Goveia, Arthur Nanni, Marcelo Soares Souza, Narcélio de Sá Pereira Filho, Leônidas Descovi Filho, Felipe Sodré Barros ',
 	pt_PT => 'Giovanni Manghi, Joana Simões, Duarte Carreira, Alexandre Neto, Pedro Pereira, Pedro Palheiro, Nelson Silva, Ricardo Sena, Leandro Infantini, João Gaspar',
 	ro => 'Sorin Călinică, Lonut Losifescu-Enescu, Bogdan Pacurar',
@@ -77,8 +77,8 @@ my $translators= {
 	sk => 'Lubos Balazovic, Jana Kormanikova, Ivan Mincik',
 	sl => 'Jože Detečnik, Dejan Gregor, Jaka Kranjc',
 	sq => '',
-	sr_Latn => 'Goran Ivanković',
-	sr_Cyrl => 'Goran Ivanković',
+	'sr@latin' => 'Goran Ivanković',
+	sr => 'Goran Ivanković',
 	sv => 'Lars Luthman, Magnus Homann, Victor Axbom',
 	sw => '',
 	ta => '',
@@ -102,14 +102,10 @@ for my $i (<i18n/qgis_*.ts>) {
 
 	my $charset = "";
 	my $lc = $langcode;
-	if( $langcode =~ /(.*)_Latn/ ) {
+	if( $langcode =~ /(.*)\@latin/ ) {
 		$charset = " (latin)";
 		$langcode = $1;
-	} elsif( $langcode =~ /(.*)_Cyrl/ ) {
-		$charset = " (cyrillic)";
-		$langcode = $1;
 	}
-
 	my $name;
 	if($langcode =~ /(.*)_(.*)/) {
 		my $lang = code2language(lc $1);

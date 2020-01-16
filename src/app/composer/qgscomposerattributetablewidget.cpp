@@ -182,7 +182,7 @@ void QgsComposerAttributeTableWidget::on_mAttributesPushButton_clicked()
   //temporarily block updates for the window, to stop table trying to repaint under windows (#11462)
   window()->setUpdatesEnabled( false );
 
-  QgsAttributeSelectionDialog d( mComposerTable, mComposerTable->sourceLayer(), 0 );
+  QgsAttributeSelectionDialog d( mComposerTable, mComposerTable->sourceLayer(), this );
   if ( d.exec() == QDialog::Accepted )
   {
     mComposerTable->refreshAttributes();
@@ -288,11 +288,11 @@ void QgsComposerAttributeTableWidget::on_mHeaderFontPushButton_clicked()
   }
 
   bool ok;
-#if defined(Q_WS_MAC) && defined(QT_MAC_USE_COCOA)
+#if defined(Q_OS_MAC) && defined(QT_MAC_USE_COCOA)
   // Native Mac dialog works only for Qt Carbon
-  QFont newFont = QFontDialog::getFont( &ok, mComposerTable->headerFont(), 0, tr( "Select Font" ), QFontDialog::DontUseNativeDialog );
+  QFont newFont = QFontDialog::getFont( &ok, mComposerTable->headerFont(), this, tr( "Select Font" ), QFontDialog::DontUseNativeDialog );
 #else
-  QFont newFont = QFontDialog::getFont( &ok, mComposerTable->headerFont(), 0, tr( "Select Font" ) );
+  QFont newFont = QFontDialog::getFont( &ok, mComposerTable->headerFont(), this, tr( "Select Font" ) );
 #endif
   if ( ok )
   {
@@ -336,11 +336,11 @@ void QgsComposerAttributeTableWidget::on_mContentFontPushButton_clicked()
   }
 
   bool ok;
-#if defined(Q_WS_MAC) && defined(QT_MAC_USE_COCOA)
+#if defined(Q_OS_MAC) && defined(QT_MAC_USE_COCOA)
   // Native Mac dialog works only for Qt Carbon
-  QFont newFont = QFontDialog::getFont( &ok, mComposerTable->contentFont(), 0, tr( "Select Font" ), QFontDialog::DontUseNativeDialog );
+  QFont newFont = QFontDialog::getFont( &ok, mComposerTable->contentFont(), this, tr( "Select Font" ), QFontDialog::DontUseNativeDialog );
 #else
-  QFont newFont = QFontDialog::getFont( &ok, mComposerTable->contentFont(), 0, tr( "Select Font" ) );
+  QFont newFont = QFontDialog::getFont( &ok, mComposerTable->contentFont(), this, tr( "Select Font" ) );
 #endif
   if ( ok )
   {
@@ -553,11 +553,14 @@ void QgsComposerAttributeTableWidget::atlasToggled()
   bool atlasEnabled = atlasComposition() && atlasComposition()->enabled();
   toggleAtlasSpecificControls( atlasEnabled );
 
+  if ( !mComposerTable )
+    return;
+
   mSourceComboBox->blockSignals( true );
   mSourceComboBox->setCurrentIndex( mSourceComboBox->findData( mComposerTable->source() ) );
   mSourceComboBox->blockSignals( false );
 
-  if ( !atlasEnabled && mComposerTable && mComposerTable->filterToAtlasFeature() )
+  if ( !atlasEnabled && mComposerTable->filterToAtlasFeature() )
   {
     mComposerTable->setFilterToAtlasFeature( false );
   }

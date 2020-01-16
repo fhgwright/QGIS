@@ -28,15 +28,12 @@
 #include <QDoubleValidator>
 
 
-const int PIXMAP_WIDTH = 200;
-const int PIXMAP_HEIGHT = 20;
-
 QgsLabelDialog::QgsLabelDialog( QgsLabel *label, QWidget *parent )
-    : QWidget( parent ),
-    mLabel( label ),
-    mFontColor( Qt::black ),
-    mBufferColor( Qt::black ),
-    mFont( "Helvetica" )
+    : QWidget( parent )
+    , mLabel( label )
+    , mFontColor( Qt::black )
+    , mBufferColor( Qt::black )
+    , mFont( "Helvetica" )
 {
   setupUi( this );
   QgsDebugMsg( "entering." );
@@ -280,7 +277,7 @@ void QgsLabelDialog::changeFont( void )
 
   qreal fontSize = mFont.pointSizeF();
   bool resultFlag;
-#if defined(Q_WS_MAC) && defined(QT_MAC_USE_COCOA)
+#if defined(Q_OS_MAC) && defined(QT_MAC_USE_COCOA)
   // Native Mac dialog works only for Qt Carbon
   mFont = QFontDialog::getFont( &resultFlag, mFont, 0, QString(), QFontDialog::DontUseNativeDialog );
 #else

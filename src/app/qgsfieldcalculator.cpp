@@ -137,6 +137,9 @@ void QgsFieldCalculator::accept()
 {
   builder->saveToRecent( "fieldcalc" );
 
+  if ( !mVectorLayer )
+    return;
+
   // Set up QgsDistanceArea each time we (re-)calculate
   QgsDistanceArea myDa;
 
@@ -149,16 +152,13 @@ void QgsFieldCalculator::accept()
   QgsExpression exp( calcString );
   exp.setGeomCalculator( myDa );
 
-  if ( !mVectorLayer )
-    return;
-
   if ( ! exp.prepare( mVectorLayer->pendingFields() ) )
   {
     QMessageBox::critical( 0, tr( "Evaluation error" ), exp.evalErrorString() );
     return;
   }
 
-  if ( mNewFieldGroupBox->isEnabled() && mCreateVirtualFieldCheckbox->isChecked() )
+  if ( mNewFieldGroupBox->isChecked() && mCreateVirtualFieldCheckbox->isChecked() )
   {
     mVectorLayer->addExpressionField( calcString, fieldDefinition() );
   }
