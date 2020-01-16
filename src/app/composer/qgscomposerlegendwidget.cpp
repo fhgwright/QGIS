@@ -68,7 +68,7 @@ class QgsComposerLegendMenuProvider : public QObject, public QgsLayerTreeViewMen
 
       QList<QgsComposerLegendStyle::Style> lst;
       lst << QgsComposerLegendStyle::Hidden << QgsComposerLegendStyle::Group << QgsComposerLegendStyle::Subgroup;
-      foreach ( QgsComposerLegendStyle::Style style, lst )
+      Q_FOREACH ( QgsComposerLegendStyle::Style style, lst )
       {
         QAction* action = menu->addAction( QgsComposerLegendStyle::styleLabel( style ), mWidget, SLOT( setCurrentNodeStyleFromAction() ) );
         action->setCheckable( true );
@@ -102,6 +102,10 @@ QgsComposerLegendWidget::QgsComposerLegendWidget( QgsComposerLegend* legend )
 
   mFontColorButton->setColorDialogTitle( tr( "Select font color" ) );
   mFontColorButton->setContext( "composer" );
+
+  mRasterBorderColorButton->setColorDialogTitle( tr( "Select border color" ) );
+  mRasterBorderColorButton->setAllowAlpha( true );
+  mRasterBorderColorButton->setContext( "composer " );
 
   //add widget for item properties
   QgsComposerItemWidget* itemPropertiesWidget = new QgsComposerItemWidget( this, legend );
@@ -161,6 +165,11 @@ void QgsComposerLegendWidget::setGuiElements()
   mIconLabelSpaceSpinBox->setValue( mLegend->style( QgsComposerLegendStyle::SymbolLabel ).margin( QgsComposerLegendStyle::Left ) );
   mBoxSpaceSpinBox->setValue( mLegend->boxSpace() );
   mColumnSpaceSpinBox->setValue( mLegend->columnSpace() );
+
+  mRasterBorderGroupBox->setChecked( mLegend->drawRasterBorder() );
+  mRasterBorderWidthSpinBox->setValue( mLegend->rasterBorderWidth() );
+  mRasterBorderColorButton->setColor( mLegend->rasterBorderColor() );
+
   mCheckBoxAutoUpdate->setChecked( mLegend->autoUpdateModel() );
   refreshMapComboBox();
 
@@ -572,7 +581,7 @@ void QgsComposerLegendWidget::on_mCheckBoxAutoUpdate_stateChanged( int state )
   QList<QWidget*> widgets;
   widgets << mMoveDownToolButton << mMoveUpToolButton << mRemoveToolButton << mAddToolButton
   << mEditPushButton << mCountToolButton << mUpdateAllPushButton << mAddGroupToolButton;
-  foreach ( QWidget* w, widgets )
+  Q_FOREACH ( QWidget* w, widgets )
     w->setEnabled( state != Qt::Checked );
 }
 
@@ -611,6 +620,47 @@ void QgsComposerLegendWidget::on_mMapComboBox_currentIndexChanged( int index )
       mLegend->endCommand();
     }
   }
+}
+
+void QgsComposerLegendWidget::on_mRasterBorderGroupBox_toggled( bool state )
+{
+  if ( !mLegend )
+  {
+    return;
+  }
+
+  mLegend->beginCommand( tr( "Legend raster borders" ) );
+  mLegend->setDrawRasterBorder( state );
+  mLegend->adjustBoxSize();
+  mLegend->update();
+  mLegend->endCommand();
+}
+
+void QgsComposerLegendWidget::on_mRasterBorderWidthSpinBox_valueChanged( double d )
+{
+  if ( !mLegend )
+  {
+    return;
+  }
+
+  mLegend->beginCommand( tr( "Legend raster border width" ), QgsComposerMergeCommand::LegendRasterBorderWidth );
+  mLegend->setRasterBorderWidth( d );
+  mLegend->adjustBoxSize();
+  mLegend->update();
+  mLegend->endCommand();
+}
+
+void QgsComposerLegendWidget::on_mRasterBorderColorButton_colorChanged( const QColor& newColor )
+{
+  if ( !mLegend )
+  {
+    return;
+  }
+
+  mLegend->beginCommand( tr( "Legend raster border color" ) );
+  mLegend->setRasterBorderColor( newColor );
+  mLegend->update();
+  mLegend->endCommand();
 }
 
 void QgsComposerLegendWidget::on_mAddToolButton_clicked()
@@ -661,12 +711,12 @@ void QgsComposerLegendWidget::on_mRemoveToolButton_clicked()
   mLegend->beginCommand( "Legend item removed" );
 
   QList<QPersistentModelIndex> indexes;
-  foreach ( const QModelIndex &index, selectionModel->selectedIndexes() )
+  Q_FOREACH ( const QModelIndex &index, selectionModel->selectedIndexes() )
     indexes << index;
 
   // first try to remove legend nodes
   QHash<QgsLayerTreeLayer*, QList<int> > nodesWithRemoval;
-  foreach ( const QPersistentModelIndex index, indexes )
+  Q_FOREACH ( const QPersistentModelIndex& index, indexes )
   {
     if ( QgsLayerTreeModelLegendNode* legendNode = mItemTreeView->layerTreeModel()->index2legendNode( index ) )
     {
@@ -674,13 +724,13 @@ void QgsComposerLegendWidget::on_mRemoveToolButton_clicked()
       nodesWithRemoval[nodeLayer].append( index.row() );
     }
   }
-  foreach ( QgsLayerTreeLayer* nodeLayer, nodesWithRemoval.keys() )
+  Q_FOREACH ( QgsLayerTreeLayer* nodeLayer, nodesWithRemoval.keys() )
   {
     QList<int> toDelete = nodesWithRemoval[nodeLayer];
     qSort( toDelete.begin(), toDelete.end(), qGreater<int>() );
     QList<int> order = QgsMapLayerLegendUtils::legendNodeOrder( nodeLayer );
 
-    foreach ( int i, toDelete )
+    Q_FOREACH ( int i, toDelete )
     {
       if ( i >= 0 && i < order.count() )
         order.removeAt( i );
@@ -691,7 +741,7 @@ void QgsComposerLegendWidget::on_mRemoveToolButton_clicked()
   }
 
   // then remove layer tree nodes
-  foreach ( const QPersistentModelIndex index, indexes )
+  Q_FOREACH ( const QPersistentModelIndex& index, indexes )
   {
     if ( index.isValid() && mItemTreeView->layerTreeModel()->index2node( index ) )
       mLegend->modelV2()->removeRow( index.row(), index.parent() );
@@ -795,7 +845,7 @@ void QgsComposerLegendWidget::resetLayerNodeToDefaults()
 
   mLegend->beginCommand( tr( "Legend updated" ) );
 
-  foreach ( QString key, nodeLayer->customProperties() )
+  Q_FOREACH ( const QString& key, nodeLayer->customProperties() )
   {
     if ( key.startsWith( "legend/" ) )
       nodeLayer->removeCustomProperty( key );
@@ -894,6 +944,9 @@ void QgsComposerLegendWidget::blockAllSignals( bool b )
   mBoxSpaceSpinBox->blockSignals( b );
   mColumnSpaceSpinBox->blockSignals( b );
   mFontColorButton->blockSignals( b );
+  mRasterBorderGroupBox->blockSignals( b );
+  mRasterBorderColorButton->blockSignals( b );
+  mRasterBorderWidthSpinBox->blockSignals( b );
 }
 
 void QgsComposerLegendWidget::refreshMapComboBox()

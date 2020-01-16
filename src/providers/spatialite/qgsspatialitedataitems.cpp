@@ -124,7 +124,7 @@ QVector<QgsDataItem*> QgsSLConnectionItem::createChildren()
     }
     QString msgDetails = connection.errorMessage();
     if ( !msgDetails.isEmpty() )
-      msg = QString( "%1 (%2)" ).arg( msg ).arg( msgDetails );
+      msg = QString( "%1 (%2)" ).arg( msg, msgDetails );
     children.append( new QgsErrorItem( this, msg, mPath + "/error" ) );
     return children;
   }
@@ -132,7 +132,7 @@ QVector<QgsDataItem*> QgsSLConnectionItem::createChildren()
   QString connectionInfo = QString( "dbname='%1'" ).arg( QString( connection.path() ).replace( "'", "\\'" ) );
   QgsDataSourceURI uri( connectionInfo );
 
-  foreach ( const QgsSpatiaLiteConnection::TableEntry& entry, connection.tables() )
+  Q_FOREACH ( const QgsSpatiaLiteConnection::TableEntry& entry, connection.tables() )
   {
     uri.setDataSource( QString(), entry.tableName, entry.column, QString(), QString() );
     QgsSLLayerItem * layer = new QgsSLLayerItem( this, entry.tableName, mPath + "/" + entry.tableName, uri.uri(), _layerTypeFromDb( entry.type ) );
@@ -197,7 +197,7 @@ bool QgsSLConnectionItem::handleDrop( const QMimeData * data, Qt::DropAction )
   QStringList importResults;
   bool hasError = false;
   QgsMimeDataUtils::UriList lst = QgsMimeDataUtils::decodeUriList( data );
-  foreach ( const QgsMimeDataUtils::Uri& u, lst )
+  Q_FOREACH ( const QgsMimeDataUtils::Uri& u, lst )
   {
     if ( u.layerType != "vector" )
     {
@@ -220,7 +220,7 @@ bool QgsSLConnectionItem::handleDrop( const QMimeData * data, Qt::DropAction )
         importResults.append( tr( "%1: OK!" ).arg( u.name ) );
       else
       {
-        importResults.append( QString( "%1: %2" ).arg( u.name ).arg( importError ) );
+        importResults.append( QString( "%1: %2" ).arg( u.name, importError ) );
         hasError = true;
       }
     }
@@ -269,7 +269,7 @@ QgsSLRootItem::~QgsSLRootItem()
 QVector<QgsDataItem*> QgsSLRootItem::createChildren()
 {
   QVector<QgsDataItem*> connections;
-  foreach ( QString connName, QgsSpatiaLiteConnection::connectionList() )
+  Q_FOREACH ( const QString& connName, QgsSpatiaLiteConnection::connectionList() )
   {
     QgsDataItem * conn = new QgsSLConnectionItem( this, connName, mPath + "/" + connName );
     connections.push_back( conn );

@@ -16,9 +16,12 @@
 
 #include "qgsfield.h"
 #include "qgsfield_p.h"
+#include "qgis.h"
 
 #include <QSettings>
+#include <QDataStream>
 #include <QtCore/qmath.h>
+
 
 #if 0
 QgsField::QgsField( QString nam, QString typ, int len, int prec, bool num,
@@ -33,8 +36,8 @@ QgsField::QgsField( QString nam, QString typ, int len, int prec, bool num,
   // names how they are now.
 }
 #endif
-
-QgsField::QgsField( QString name, QVariant::Type type, QString typeName, int len, int prec, QString comment )
+QgsField::QgsField( const QString& name, QVariant::Type type,
+                    const QString& typeName, int len, int prec, const QString& comment )
 {
   d = new QgsFieldPrivate( name, type, typeName, len, prec, comment );
 }
@@ -153,6 +156,30 @@ bool QgsField::convertCompatible( QVariant& v ) const
     return false;
   }
 
+  //String representations of doubles in QVariant will return false to convert( QVariant::Int )
+  //work around this by first converting to double, and then checking whether the double is convertible to int
+  if ( d->type == QVariant::Int && v.canConvert( QVariant::Double ) )
+  {
+    bool ok = false;
+    double dbl = v.toDouble( &ok );
+    if ( !ok )
+    {
+      //couldn't convert to number
+      v = QVariant( d->type );
+      return false;
+    }
+
+    double round = qgsRound( dbl );
+    if ( round  > INT_MAX || round < -INT_MAX )
+    {
+      //double too large to fit in int
+      v = QVariant( d->type );
+      return false;
+    }
+    v = QVariant( qRound( dbl ) );
+    return true;
+  }
+
   if ( !v.convert( d->type ) )
   {
     v = QVariant( d->type );
@@ -175,6 +202,7 @@ bool QgsField::convertCompatible( QVariant& v ) const
 
   return true;
 }
+
 
 QDataStream& operator<<( QDataStream& out, const QgsField& field )
 {
@@ -355,11 +383,16 @@ int QgsFields::fieldNameIndex( const QString& fieldName ) const
 {
   for ( int idx = 0; idx < count(); ++idx )
   {
-    if ( QString::compare( d->fields[idx].field.name(), fieldName, Qt::CaseInsensitive ) == 0 )
-    {
+    if ( d->fields[idx].field.name() == fieldName )
       return idx;
-    }
   }
+
+  for ( int idx = 0; idx < count(); ++idx )
+  {
+    if ( QString::compare( d->fields[idx].field.name(), fieldName, Qt::CaseInsensitive ) == 0 )
+      return idx;
+  }
+
   return -1;
 }
 

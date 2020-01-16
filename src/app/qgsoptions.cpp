@@ -39,6 +39,7 @@
 #include "qgscolorschemeregistry.h"
 #include "qgssymbollayerv2utils.h"
 #include "qgscolordialog.h"
+#include "qgsexpressioncontext.h"
 
 #include <QInputDialog>
 #include <QFileDialog>
@@ -93,10 +94,12 @@ QgsOptions::QgsOptions( QWidget *parent, Qt::WindowFlags fl ) :
   connect( this, SIGNAL( rejected() ), this, SLOT( rejectOptions() ) );
 
   QStringList styles = QStyleFactory::keys();
-  foreach ( QString style, styles )
-  {
-    cmbStyle->addItem( style );
-  }
+  cmbStyle->addItems( styles );
+
+  QStringList themes = QgsApplication::uiThemes().keys();
+  cmbUITheme->addItems( themes );
+
+  connect( cmbUITheme, SIGNAL( currentIndexChanged( const QString& ) ), this, SLOT( uiThemeChanged( const QString& ) ) );
 
   mIdentifyHighlightColorButton->setColorDialogTitle( tr( "Identify highlight color" ) );
   mIdentifyHighlightColorButton->setAllowAlpha( true );
@@ -130,7 +133,7 @@ QgsOptions::QgsOptions( QWidget *parent, Qt::WindowFlags fl ) :
     mCustomVariablesTable->setEnabled( false );
   }
   QStringList customVarsList = settings.value( "qgis/customEnvVars", "" ).toStringList();
-  foreach ( const QString &varStr, customVarsList )
+  Q_FOREACH ( const QString &varStr, customVarsList )
   {
     int pos = varStr.indexOf( QLatin1Char( '|' ) );
     if ( pos == -1 )
@@ -164,7 +167,7 @@ QgsOptions::QgsOptions( QWidget *parent, Qt::WindowFlags fl ) :
   QMap<QString, QString> sysVarsMap = QgsApplication::systemEnvVars();
   QStringList currentVarsList = QProcess::systemEnvironment();
 
-  foreach ( const QString &varStr, currentVarsList )
+  Q_FOREACH ( const QString &varStr, currentVarsList )
   {
     int pos = varStr.indexOf( QLatin1Char( '=' ) );
     if ( pos == -1 )
@@ -175,7 +178,7 @@ QgsOptions::QgsOptions( QWidget *parent, Qt::WindowFlags fl ) :
     varStrItms << varStrName << varStrValue;
 
     // check if different than system variable
-    QString sysVarVal = QString( "" );
+    QString sysVarVal;
     bool sysVarMissing = !sysVarsMap.contains( varStrName );
     if ( sysVarMissing )
       sysVarVal = tr( "not present" );
@@ -271,9 +274,9 @@ QgsOptions::QgsOptions( QWidget *parent, Qt::WindowFlags fl ) :
   QString proxyExcludedURLs = settings.value( "proxy/proxyExcludedUrls", "" ).toString();
   if ( !proxyExcludedURLs.isEmpty() )
   {
-    QStringList splittedUrls = proxyExcludedURLs.split( "|" );
-    QStringList::const_iterator urlIt = splittedUrls.constBegin();
-    for ( ; urlIt != splittedUrls.constEnd(); ++urlIt )
+    QStringList splitUrls = proxyExcludedURLs.split( "|" );
+    QStringList::const_iterator urlIt = splitUrls.constBegin();
+    for ( ; urlIt != splitUrls.constEnd(); ++urlIt )
     {
       QListWidgetItem* newItem = new QListWidgetItem( mExcludeUrlListWidget );
       newItem->setText( *urlIt );
@@ -516,8 +519,11 @@ QgsOptions::QgsOptions( QWidget *parent, Qt::WindowFlags fl ) :
 
   mMessageTimeoutSpnBx->setValue( settings.value( "/qgis/messageTimeout", 5 ).toInt() );
 
-  QString name = QApplication::style()->objectName();
+  QString name = settings.value( "/qgis/style" ).toString();
   cmbStyle->setCurrentIndex( cmbStyle->findText( name, Qt::MatchFixedString ) );
+
+  QString theme = QgsApplication::themeName();
+  cmbUITheme->setCurrentIndex( cmbUITheme->findText( theme, Qt::MatchFixedString ) );
 
   mNativeColorDialogsChkBx->setChecked( settings.value( "/qgis/native_color_dialogs", false ).toBool() );
   mLiveColorDialogsChkBx->setChecked( settings.value( "/qgis/live_color_dialogs", false ).toBool() );
@@ -744,7 +750,7 @@ QgsOptions::QgsOptions( QWidget *parent, Qt::WindowFlags fl ) :
   lblSystemLocale->setText( tr( "Detected active locale on your system: %1" ).arg( mySystemLocale ) );
   QString myUserLocale = settings.value( "locale/userLocale", "" ).toString();
   QStringList myI18nList = i18nList();
-  foreach ( QString l, myI18nList )
+  Q_FOREACH ( const QString& l, myI18nList )
   {
     cboLocale->addItem( QIcon( QString( ":/images/flags/%1.png" ).arg( l ) ), QLocale( l ).nativeLanguageName(), l );
   }
@@ -838,6 +844,12 @@ QgsOptions::QgsOptions( QWidget *parent, Qt::WindowFlags fl ) :
   // load gdal driver list only when gdal tab is first opened
   mLoadedGdalDriverList = false;
 
+  mVariableEditor->context()->appendScope( QgsExpressionContextUtils::globalScope() );
+  mVariableEditor->reloadContext();
+  mVariableEditor->setEditableScopeIndex( 0 );
+
+  mAdvancedSettingsEditor->setSettingsObject( &settings );
+
   // restore window and widget geometry/state
   restoreOptionsBaseUi();
 }
@@ -847,12 +859,12 @@ QgsOptions::~QgsOptions()
 {
 }
 
-void QgsOptions::setCurrentPage( QString pageWidgetName )
+void QgsOptions::setCurrentPage( const QString& pageWidgetName )
 {
   //find the page with a matching widget name
   for ( int idx = 0; idx < mOptionsStackedWidget->count(); ++idx )
   {
-    QWidget * currentPage = mOptionsStackedWidget->widget( idx );
+    QWidget* currentPage = mOptionsStackedWidget->widget( idx );
     if ( currentPage->objectName() == pageWidgetName )
     {
       //found the page, set it as current
@@ -871,7 +883,7 @@ void QgsOptions::on_cbxProjectDefaultNew_toggled( bool checked )
 {
   if ( checked )
   {
-    QString fileName = QgsApplication::qgisSettingsDirPath() + QString( "project_default.qgs" );
+    QString fileName = QgsApplication::qgisSettingsDirPath() + QLatin1String( "project_default.qgs" );
     if ( ! QFile::exists( fileName ) )
     {
       QMessageBox::information( 0, tr( "Save default project" ), tr( "You must set a default project" ) );
@@ -882,7 +894,7 @@ void QgsOptions::on_cbxProjectDefaultNew_toggled( bool checked )
 
 void QgsOptions::on_pbnProjectDefaultSetCurrent_clicked()
 {
-  QString fileName = QgsApplication::qgisSettingsDirPath() + QString( "project_default.qgs" );
+  QString fileName = QgsApplication::qgisSettingsDirPath() + QLatin1String( "project_default.qgs" );
   if ( QgsProject::instance()->write( QFileInfo( fileName ) ) )
   {
     QMessageBox::information( 0, tr( "Save default project" ), tr( "Current project saved as default" ) );
@@ -895,7 +907,7 @@ void QgsOptions::on_pbnProjectDefaultSetCurrent_clicked()
 
 void QgsOptions::on_pbnProjectDefaultReset_clicked()
 {
-  QString fileName = QgsApplication::qgisSettingsDirPath() + QString( "project_default.qgs" );
+  QString fileName = QgsApplication::qgisSettingsDirPath() + QLatin1String( "project_default.qgs" );
   if ( QFile::exists( fileName ) )
   {
     QFile::remove( fileName );
@@ -915,12 +927,20 @@ void QgsOptions::on_pbnTemplateFolderBrowse_pressed()
 
 void QgsOptions::on_pbnTemplateFolderReset_pressed()
 {
-  leTemplateFolder->setText( QgsApplication::qgisSettingsDirPath() + QString( "project_templates" ) );
+  leTemplateFolder->setText( QgsApplication::qgisSettingsDirPath() + QLatin1String( "project_templates" ) );
 }
 
 void QgsOptions::iconSizeChanged( const QString &iconSize )
 {
   QgisApp::instance()->setIconSizes( iconSize.toInt() );
+}
+
+void QgsOptions::uiThemeChanged( const QString &theme )
+{
+  if ( theme == QgsApplication::themeName() )
+    return;
+
+  QgsApplication::setUITheme( theme );
 }
 
 void QgsOptions::on_mProjectOnLaunchCmbBx_currentIndexChanged( int indx )
@@ -948,6 +968,8 @@ void QgsOptions::on_mProjectOnLaunchPushBtn_pressed()
 void QgsOptions::saveOptions()
 {
   QSettings settings;
+
+  settings.setValue( "UI/UITheme", cmbUITheme->currentText() );
 
   // custom environment variables
   settings.setValue( "qgis/customEnvVarsUse", QVariant( mCustomVariablesChkBx->isChecked() ) );
@@ -1333,6 +1355,9 @@ void QgsOptions::saveOptions()
     // TODO[MD] QgisApp::instance()->legend()->updateLegendItemSymbologies();
   }
 
+  //save variables
+  QgsExpressionContextUtils::setGlobalVariables( mVariableEditor->variablesInActiveScope() );
+
   // save app stylesheet last (in case reset becomes necessary)
   if ( mStyleSheetNewOpts != mStyleSheetOldOpts )
   {
@@ -1391,12 +1416,12 @@ void QgsOptions::on_mCustomGroupBoxChkBx_clicked( bool chkd )
   mStyleSheetBuilder->buildStyleSheet( mStyleSheetNewOpts );
 }
 
-void QgsOptions::on_leProjectGlobalCrs_crsChanged( QgsCoordinateReferenceSystem crs )
+void QgsOptions::on_leProjectGlobalCrs_crsChanged( const QgsCoordinateReferenceSystem& crs )
 {
   mDefaultCrs = crs;
 }
 
-void QgsOptions::on_leLayerGlobalCrs_crsChanged( QgsCoordinateReferenceSystem crs )
+void QgsOptions::on_leLayerGlobalCrs_crsChanged( const QgsCoordinateReferenceSystem& crs )
 {
   mLayerDefaultCrs = crs;
 }
@@ -1432,10 +1457,6 @@ void QgsOptions::editGdalDriver( const QString& driverName )
   if ( driverName == "_pyramids" )
     title = tr( "Create Options - pyramids" );
   dlg.setWindowTitle( title );
-  QLabel *label = new QLabel( title, &dlg );
-  label->setAlignment( Qt::AlignHCenter );
-  layout->addWidget( label );
-
   if ( driverName == "_pyramids" )
   {
     QgsRasterPyramidsOptionsWidget* optionsWidget =
@@ -1500,7 +1521,7 @@ void QgsOptions::on_mCustomVariablesChkBx_toggled( bool chkd )
   mCustomVariablesTable->setEnabled( chkd );
 }
 
-void QgsOptions::addCustomEnvVarRow( QString varName, QString varVal, QString varApply )
+void QgsOptions::addCustomEnvVarRow( const QString& varName, const QString& varVal, const QString& varApply )
 {
   int rowCnt = mCustomVariablesTable->rowCount();
   mCustomVariablesTable->insertRow( rowCnt );
@@ -1535,7 +1556,7 @@ void QgsOptions::addCustomEnvVarRow( QString varName, QString varVal, QString va
 
 void QgsOptions::on_mAddCustomVarBtn_clicked()
 {
-  addCustomEnvVarRow( QString( "" ), QString( "" ) );
+  addCustomEnvVarRow( QString(), QString() );
   mCustomVariablesTable->setFocus();
   mCustomVariablesTable->setCurrentCell( mCustomVariablesTable->rowCount() - 1, 1 );
   mCustomVariablesTable->edit( mCustomVariablesTable->currentIndex() );
@@ -1661,7 +1682,7 @@ void QgsOptions::on_mOptionsStackedWidget_currentChanged( int theIndx )
 {
   Q_UNUSED( theIndx );
   // load gdal driver list when gdal tab is first opened
-  if ( mOptionsStackedWidget->currentWidget()->objectName() == QString( "mOptionsPageGDAL" )
+  if ( mOptionsStackedWidget->currentWidget()->objectName() == "mOptionsPageGDAL"
        && ! mLoadedGdalDriverList )
   {
     loadGdalDriverList();
@@ -1727,7 +1748,7 @@ void QgsOptions::loadGdalDriverList()
       pszVirtualIO = "v";
     else
       pszVirtualIO = "";
-    myDriversFlags[myGdalDriverDescription] = QString( "%1%2" ).arg( pszRWFlag ).arg( pszVirtualIO );
+    myDriversFlags[myGdalDriverDescription] = QString( "%1%2" ).arg( pszRWFlag, pszVirtualIO );
 
     // get driver extensions and long name
     // the gdal provider can override/add extensions but there is no interface to query this
@@ -1743,11 +1764,11 @@ void QgsOptions::loadGdalDriverList()
   // myDrivers.sort();
   // sort list case insensitive - no existing function for this!
   QMap<QString, QString> strMap;
-  foreach ( QString str, myDrivers )
+  Q_FOREACH ( const QString& str, myDrivers )
     strMap.insert( str.toLower(), str );
   myDrivers = strMap.values();
 
-  foreach ( QString myName, myDrivers )
+  Q_FOREACH ( const QString& myName, myDrivers )
   {
     QTreeWidgetItem * mypItem = new QTreeWidgetItem( QStringList( myName ) );
     if ( mySkippedDrivers.contains( myName ) )
@@ -1775,13 +1796,13 @@ void QgsOptions::loadGdalDriverList()
 
   // populate cmbEditCreateOptions with gdal write drivers - sorted, GTiff first
   strMap.clear();
-  foreach ( QString str, myGdalWriteDrivers )
+  Q_FOREACH ( const QString& str, myGdalWriteDrivers )
     strMap.insert( str.toLower(), str );
   myGdalWriteDrivers = strMap.values();
   myGdalWriteDrivers.removeAll( "Gtiff" );
   myGdalWriteDrivers.prepend( "GTiff" );
   cmbEditCreateOptions->clear();
-  foreach ( QString myName, myGdalWriteDrivers )
+  Q_FOREACH ( const QString& myName, myGdalWriteDrivers )
   {
     cmbEditCreateOptions->addItem( myName );
   }
@@ -1890,6 +1911,7 @@ void QgsOptions::on_pbnExportScales_clicked()
   }
 
   QStringList myScales;
+  myScales.reserve( mListGlobalScales->count() );
   for ( int i = 0; i < mListGlobalScales->count(); ++i )
   {
     myScales.append( mListGlobalScales->item( i )->text() );
@@ -1902,7 +1924,7 @@ void QgsOptions::on_pbnExportScales_clicked()
   }
 }
 
-void QgsOptions::initContrastEnhancement( QComboBox *cbox, QString name, QString defaultVal )
+void QgsOptions::initContrastEnhancement( QComboBox *cbox, const QString& name, const QString& defaultVal )
 {
   QSettings settings;
 
@@ -1916,7 +1938,7 @@ void QgsOptions::initContrastEnhancement( QComboBox *cbox, QString name, QString
   cbox->setCurrentIndex( cbox->findData( contrastEnchacement ) );
 }
 
-void QgsOptions::saveContrastEnhancement( QComboBox *cbox, QString name )
+void QgsOptions::saveContrastEnhancement( QComboBox *cbox, const QString& name )
 {
   QSettings settings;
   QString value = cbox->itemData( cbox->currentIndex() ).toString();

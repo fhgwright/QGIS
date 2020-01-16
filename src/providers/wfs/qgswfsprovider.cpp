@@ -99,6 +99,7 @@ QgsWFSProvider::QgsWFSProvider( const QString& uri )
 
   mAuth.mUserName = parameterFromUrl( "username" );
   mAuth.mPassword = parameterFromUrl( "password" );
+  mAuth.mAuthCfg = parameterFromUrl( "authcfg" );
 
   //fetch attributes of layer and type of its geometry attribute
   //WBC 111221: extracting geometry type here instead of getFeature allows successful
@@ -706,8 +707,14 @@ int QgsWFSProvider::getFeatureGET( const QString& uri, const QString& geometryAt
   QUrl getFeatureUrl( uri );
   getFeatureUrl.removeQueryItem( "username" );
   getFeatureUrl.removeQueryItem( "password" );
+  getFeatureUrl.removeQueryItem( "authcfg" );
   QgsRectangle extent;
-  if ( dataReader.getFeatures( getFeatureUrl.toString(), &mWKBType, mCached ? &mExtent : &extent, mAuth.mUserName, mAuth.mPassword ) != 0 )
+  if ( dataReader.getFeatures( getFeatureUrl.toString(),
+                               &mWKBType,
+                               mCached ? &mExtent : &extent,
+                               mAuth.mUserName,
+                               mAuth.mPassword,
+                               mAuth.mAuthCfg ) != 0 )
   {
     QgsDebugMsg( "getWFSData returned with error" );
     return 1;
@@ -778,11 +785,17 @@ int QgsWFSProvider::describeFeatureTypeGET( const QString& uri, QString& geometr
   QUrl describeFeatureUrl( uri );
   describeFeatureUrl.removeQueryItem( "username" );
   describeFeatureUrl.removeQueryItem( "password" );
+  describeFeatureUrl.removeQueryItem( "authcfg" );
   describeFeatureUrl.removeQueryItem( "SRSNAME" );
   describeFeatureUrl.removeQueryItem( "REQUEST" );
   describeFeatureUrl.addQueryItem( "REQUEST", "DescribeFeatureType" );
   QNetworkRequest request( describeFeatureUrl.toString() );
-  mAuth.setAuthorization( request );
+  if ( !mAuth.setAuthorization( request ) )
+  {
+    QgsMessageLog::logMessage( tr( "Network request update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return 1;
+  }
   QNetworkReply* reply = QgsNetworkAccessManager::instance()->get( request );
 
   connect( reply, SIGNAL( finished() ), this, SLOT( networkRequestFinished() ) );
@@ -900,7 +913,7 @@ int QgsWFSProvider::readAttributesFromSchema( QDomDocument& schemaDoc, QString& 
 
     //find <complexType name=complexTypeType
     QDomNodeList complexTypeNodeList = schemaElement.elementsByTagNameNS( "http://www.w3.org/2001/XMLSchema", "complexType" );
-    for ( uint i = 0; i < complexTypeNodeList.length(); ++i )
+    for ( int i = 0; i < complexTypeNodeList.size(); ++i )
     {
       if ( complexTypeNodeList.at( i ).toElement().attribute( "name" ) == complexTypeType )
       {
@@ -924,7 +937,7 @@ int QgsWFSProvider::readAttributesFromSchema( QDomDocument& schemaDoc, QString& 
 
   bool foundGeometryAttribute = false;
 
-  for ( uint i = 0; i < attributeNodeList.length(); ++i )
+  for ( int i = 0; i < attributeNodeList.size(); ++i )
   {
     QDomElement attributeElement = attributeNodeList.at( i ).toElement();
     //attribute name
@@ -982,7 +995,6 @@ int QgsWFSProvider::guessAttributesFromFile( const QString& uri, QString& geomet
     return 2; //xml file not readable or not valid
   }
 
-
   //find gmlCollection element
   QDomElement featureCollectionElement = gmlDoc.documentElement();
 
@@ -1002,7 +1014,6 @@ int QgsWFSProvider::guessAttributesFromFile( const QString& uri, QString& geomet
   QString attributeText;
   QDomElement attributeChildElement;
   QString attributeChildLocalName;
-  bool foundGeometryAttribute = false;
 
   while ( !attributeNode.isNull() )//loop over attributes
   {
@@ -1030,10 +1041,7 @@ int QgsWFSProvider::guessAttributesFromFile( const QString& uri, QString& geomet
     attributeNode = attributeNode.nextSibling();
   }
 
-  if ( !foundGeometryAttribute )
-  {
-    geomType = QGis::WKBNoGeometry;
-  }
+  geomType = QGis::WKBNoGeometry;
 
   return 0;
 }
@@ -1211,8 +1219,8 @@ int QgsWFSProvider::getFeaturesFromGML2( const QDomElement& wfsCollectionElement
             continue;
           }
 
-          const QgsField &fld = mFields[attr];
-          QgsDebugMsg( QString( "set attribute %1: type=%2 value=%3" ).arg( attr ).arg( QVariant::typeToName( fld.type() ) ).arg( currentAttributeElement.text() ) );
+          const QgsField &fld = mFields.at( attr );
+          QgsDebugMsg( QString( "set attribute %1: type=%2 value=%3" ).arg( attr ).arg( QVariant::typeToName( fld.type() ), currentAttributeElement.text() ) );
           f->setAttribute( attr, convertValue( fld.type(), currentAttributeElement.text() ) );
         }
         else //a geometry attribute
@@ -1366,6 +1374,7 @@ bool QgsWFSProvider::sendTransactionDocument( const QDomDocument& doc, QDomDocum
   QUrl typeDetectionUri( dataSourceUri() );
   typeDetectionUri.removeQueryItem( "username" );
   typeDetectionUri.removeQueryItem( "password" );
+  typeDetectionUri.removeQueryItem( "authcfg" );
   typeDetectionUri.removeQueryItem( "REQUEST" );
   typeDetectionUri.removeQueryItem( "TYPENAME" );
   typeDetectionUri.removeQueryItem( "BBOX" );
@@ -1377,7 +1386,13 @@ bool QgsWFSProvider::sendTransactionDocument( const QDomDocument& doc, QDomDocum
   QString serverUrl = typeDetectionUri.toString();
 
   QNetworkRequest request( serverUrl );
-  mAuth.setAuthorization( request );
+  if ( !mAuth.setAuthorization( request ) )
+  {
+    QgsMessageLog::logMessage( tr( "Network request update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return false;
+  }
+
   request.setHeader( QNetworkRequest::ContentTypeHeader, "text/xml" );
   QNetworkReply* reply = QgsNetworkAccessManager::instance()->post( request, doc.toByteArray( -1 ) );
 
@@ -1401,7 +1416,7 @@ QDomElement QgsWFSProvider::createTransactionElement( QDomDocument& doc ) const
   transactionElem.setAttribute( "service", "WFS" );
   transactionElem.setAttribute( "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance" );
   transactionElem.setAttribute( "xsi:schemaLocation", mWfsNamespace + " "
-                                + dataSourceUri().replace( QString( "GetFeature" ), QString( "DescribeFeatureType" ) ) );
+                                + dataSourceUri().replace( QLatin1String( "GetFeature" ), QLatin1String( "DescribeFeatureType" ) ) );
 
   QString namespacePrefix = nameSpacePrefix( parameterFromUrl( "typename" ) );
   if ( !namespacePrefix.isEmpty() )
@@ -1503,12 +1518,19 @@ void QgsWFSProvider::getLayerCapabilities()
   mNetworkRequestFinished = false;
 
   QString uri = dataSourceUri();
-  uri.replace( QString( "GetFeature" ), QString( "GetCapabilities" ) );
+  uri.replace( QLatin1String( "GetFeature" ), QLatin1String( "GetCapabilities" ) );
   QUrl getCapabilitiesUrl( uri );
   getCapabilitiesUrl.removeQueryItem( "username" );
   getCapabilitiesUrl.removeQueryItem( "password" );
+  getCapabilitiesUrl.removeQueryItem( "authcfg" );
   QNetworkRequest request( getCapabilitiesUrl.toString() );
-  mAuth.setAuthorization( request );
+  if ( !mAuth.setAuthorization( request ) )
+  {
+    mCapabilities = 0;
+    QgsMessageLog::logMessage( tr( "Network request update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return;
+  }
   QNetworkReply* reply = QgsNetworkAccessManager::instance()->get( request );
 
   connect( reply, SIGNAL( finished() ), this, SLOT( networkRequestFinished() ) );
@@ -1682,8 +1704,8 @@ void QgsWFSProvider::handleException( const QDomDocument& serverResponse )
   {
     QDomElement exception = exceptionElem.firstChildElement( "Exception" );
     pushError( tr( "WFS exception report (code=%1 text=%2)" )
-               .arg( exception.attribute( "exceptionCode", tr( "missing" ) ) )
-               .arg( exception.firstChildElement( "ExceptionText" ).text() )
+               .arg( exception.attribute( "exceptionCode", tr( "missing" ) ),
+                     exception.firstChildElement( "ExceptionText" ).text() )
              );
     return;
   }
@@ -1719,10 +1741,10 @@ void QgsWFSProvider::extendExtent( const QgsRectangle &extent )
 
   setDataSourceUri( dataSourceUri().replace( QRegExp( "BBOX=[^&]*" ),
                     QString( "BBOX=%1,%2,%3,%4" )
-                    .arg( qgsDoubleToString( mGetExtent.xMinimum() ) )
-                    .arg( qgsDoubleToString( mGetExtent.yMinimum() ) )
-                    .arg( qgsDoubleToString( mGetExtent.xMaximum() ) )
-                    .arg( qgsDoubleToString( mGetExtent.yMaximum() ) ) ) );
+                    .arg( qgsDoubleToString( mGetExtent.xMinimum() ),
+                          qgsDoubleToString( mGetExtent.yMinimum() ),
+                          qgsDoubleToString( mGetExtent.xMaximum() ),
+                          qgsDoubleToString( mGetExtent.yMaximum() ) ) ) );
 
   if ( !mPendingRetrieval )
   {

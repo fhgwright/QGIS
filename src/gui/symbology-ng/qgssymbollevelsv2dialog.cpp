@@ -27,7 +27,7 @@
 class SpinBoxDelegate : public QItemDelegate
 {
   public:
-    SpinBoxDelegate( QObject *parent = 0 ) : QItemDelegate( parent ) {}
+    explicit SpinBoxDelegate( QObject *parent = 0 ) : QItemDelegate( parent ) {}
 
     QWidget *createEditor( QWidget *parent, const QStyleOptionViewItem & /*option*/, const QModelIndex &/*index*/ ) const override
     {
@@ -62,7 +62,7 @@ class SpinBoxDelegate : public QItemDelegate
 
 ////////////////
 
-QgsSymbolLevelsV2Dialog::QgsSymbolLevelsV2Dialog( QgsLegendSymbolList list, bool usingSymbolLevels, QWidget* parent )
+QgsSymbolLevelsV2Dialog::QgsSymbolLevelsV2Dialog( const QgsLegendSymbolList& list, bool usingSymbolLevels, QWidget* parent )
     : QDialog( parent ), mList( list ), mForceOrderingEnabled( false )
 {
   setupUi( this );

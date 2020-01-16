@@ -92,7 +92,10 @@ QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeRaster( const QgsRast
     QgsDebugMsg( "iface->srcInput() == 0" );
     return SourceProviderError;
   }
-  QgsDebugMsg( QString( "srcInput = %1" ).arg( typeid( *( iface->srcInput() ) ).name() ) );
+#ifdef QGISDEBUG
+  const QgsRasterInterface &srcInput = *iface->srcInput();
+  QgsDebugMsg( QString( "srcInput = %1" ).arg( typeid( srcInput ).name() ) );
+#endif
 
   mProgressDialog = progressDialog;
 
@@ -311,8 +314,8 @@ QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeDataRaster(
   const QgsRectangle& outputExtent,
   const QgsCoordinateReferenceSystem& crs,
   QGis::DataType destDataType,
-  QList<bool> destHasNoDataValueList,
-  QList<double> destNoDataValueList,
+  const QList<bool>& destHasNoDataValueList,
+  const QList<double>& destNoDataValueList,
   QgsRasterDataProvider* destProvider,
   QProgressDialog* progressDialog )
 {
@@ -332,6 +335,7 @@ QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeDataRaster(
   int iterRows = 0;
 
   QList<QgsRasterBlock*> blockList;
+  blockList.reserve( nBands );
   for ( int i = 1; i <= nBands; ++i )
   {
     iter->startRasterRead( i, nCols, nRows, outputExtent );
@@ -780,7 +784,7 @@ int QgsRasterFileWriter::pyramidsProgress( double dfComplete, const char *pszMes
 }
 #endif
 
-void QgsRasterFileWriter::createVRT( int xSize, int ySize, const QgsCoordinateReferenceSystem& crs, double* geoTransform, QGis::DataType type, QList<bool> destHasNoDataValueList, QList<double> destNoDataValueList )
+void QgsRasterFileWriter::createVRT( int xSize, int ySize, const QgsCoordinateReferenceSystem& crs, double* geoTransform, QGis::DataType type, const QList<bool>& destHasNoDataValueList, const QList<double>& destNoDataValueList )
 {
   mVRTDocument.clear();
   QDomElement VRTDatasetElem = mVRTDocument.createElement( "VRTDataset" );
@@ -904,7 +908,7 @@ QgsRasterDataProvider* QgsRasterFileWriter::createPartProvider( const QgsRectang
 
 QgsRasterDataProvider* QgsRasterFileWriter::initOutput( int nCols, int nRows, const QgsCoordinateReferenceSystem& crs,
     double* geoTransform, int nBands, QGis::DataType type,
-    QList<bool> destHasNoDataValueList, QList<double> destNoDataValueList )
+    const QList<bool>& destHasNoDataValueList, const QList<double>& destNoDataValueList )
 {
   if ( mTiledMode )
   {

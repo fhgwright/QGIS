@@ -27,6 +27,8 @@ class QgsExpression;
 class QgsFieldPrivate;
 class QgsFieldsPrivate;
 
+
+
 /** \class QgsField
   * \ingroup core
   * Encapsulate a field in an attribute table or data source.
@@ -50,12 +52,12 @@ class CORE_EXPORT QgsField
      * @param comment Comment for the field
      */
 
-    QgsField( QString name = QString(),
+    QgsField( const QString& name = QString(),
               QVariant::Type type = QVariant::Invalid,
-              QString typeName = QString(),
+              const QString& typeName = QString(),
               int len = 0,
               int prec = 0,
-              QString comment = QString() );
+              const QString& comment = QString() );
 
     /** Copy constructor
      */
@@ -148,9 +150,11 @@ class CORE_EXPORT QgsField
      */
     bool convertCompatible( QVariant& v ) const;
 
+
   private:
 
     QSharedDataPointer<QgsFieldPrivate> d;
+
 
 }; // class QgsField
 
@@ -253,8 +257,8 @@ class CORE_EXPORT QgsFields
     //! Look up field's index from name. Returns -1 on error
     int indexFromName( const QString& name ) const;
 
-    //! Look up field's index from name - case insensitive
-    //! TODO: sort out case sensitive (indexFromName()) vs insensitive (fieldNameIndex()) calls
+    //! Look up field's index from name
+    //! also looks up case-insensitive if there is no match otherwise
     //! @note added in 2.4
     int fieldNameIndex( const QString& fieldName ) const;
 

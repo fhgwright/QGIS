@@ -34,6 +34,7 @@
 #include "qgscoordinatereferencesystem.h"
 #include "qgsdatasourceuri.h"
 #include "qgslogger.h"
+#include "qgsauthmanager.h"
 #include "qgsmaplayer.h"
 #include "qgsmaplayerlegend.h"
 #include "qgsmaplayerstylemanager.h"
@@ -48,8 +49,8 @@
 
 
 QgsMapLayer::QgsMapLayer( QgsMapLayer::LayerType type,
-                          QString lyrname,
-                          QString source )
+                          const QString& lyrname,
+                          const QString& source )
     : mValid( false ) // assume the layer is invalid
     , mDataSource( source )
     , mLayerOrigName( lyrname ) // store the original name
@@ -182,7 +183,16 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
   mne = mnl.toElement();
   mDataSource = mne.text();
 
+  // if the layer needs authentication, ensure the master password is set
+  QRegExp rx( "authcfg=([a-z]|[A-Z]|[0-9]){7}" );
+  if (( rx.indexIn( mDataSource ) != -1 )
+      && !QgsAuthManager::instance()->setMasterPassword( true ) )
+  {
+    return false;
+  }
+
   // TODO: this should go to providers
+  // see also QgsProject::createEmbeddedLayer
   if ( provider == "spatialite" )
   {
     QgsDataSourceURI uri( mDataSource );
@@ -502,7 +512,7 @@ bool QgsMapLayer::readXml( const QDomNode& layer_node )
 
 
 
-bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& document, QString relativeBasePath )
+bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& document, const QString& relativeBasePath )
 {
   // use scale dependent visibility flag
   layerElement.setAttribute( "hasScaleBasedVisibilityFlag", hasScaleBasedVisibility() ? 1 : 0 );
@@ -740,13 +750,13 @@ bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& docume
 
 } // bool QgsMapLayer::writeXML
 
-QDomDocument QgsMapLayer::asLayerDefinition( QList<QgsMapLayer *> layers, QString relativeBasePath )
+QDomDocument QgsMapLayer::asLayerDefinition( const QList<QgsMapLayer *>& layers, const QString& relativeBasePath )
 {
   QDomDocument doc( "qgis-layer-definition" );
   QDomElement qgiselm = doc.createElement( "qlr" );
   doc.appendChild( qgiselm );
   QDomElement layerselm = doc.createElement( "maplayers" );
-  foreach ( QgsMapLayer* layer, layers )
+  Q_FOREACH ( QgsMapLayer* layer, layers )
   {
     QDomElement layerelm = doc.createElement( "maplayer" );
     layer->writeLayerXML( layerelm, doc, relativeBasePath );
@@ -936,7 +946,7 @@ void QgsMapLayer::setLayerOrder( const QStringList &layers )
   // NOOP
 }
 
-void QgsMapLayer::setSubLayerVisibility( QString name, bool vis )
+void QgsMapLayer::setSubLayerVisibility( const QString& name, bool vis )
 {
   Q_UNUSED( name );
   Q_UNUSED( vis );
@@ -1036,7 +1046,7 @@ QString QgsMapLayer::loadDefaultStyle( bool & theResultFlag )
 
 bool QgsMapLayer::loadNamedStyleFromDb( const QString &db, const QString &theURI, QString &qml )
 {
-  QgsDebugMsg( QString( "db = %1 uri = %2" ).arg( db ).arg( theURI ) );
+  QgsDebugMsg( QString( "db = %1 uri = %2" ).arg( db, theURI ) );
 
   bool theResultFlag = false;
 
@@ -1046,7 +1056,7 @@ bool QgsMapLayer::loadNamedStyleFromDb( const QString &db, const QString &theURI
   const char *myTail;
   int myResult;
 
-  QgsDebugMsg( QString( "Trying to load style for \"%1\" from \"%2\"" ).arg( theURI ).arg( db ) );
+  QgsDebugMsg( QString( "Trying to load style for \"%1\" from \"%2\"" ).arg( theURI, db ) );
 
   if ( db.isEmpty() || !QFile( db ).exists() )
     return false;
@@ -1081,7 +1091,7 @@ bool QgsMapLayer::loadNamedStyleFromDb( const QString &db, const QString &theURI
 
 QString QgsMapLayer::loadNamedStyle( const QString &theURI, bool &theResultFlag )
 {
-  QgsDebugMsg( QString( "uri = %1 myURI = %2" ).arg( theURI ).arg( publicSource() ) );
+  QgsDebugMsg( QString( "uri = %1 myURI = %2" ).arg( theURI, publicSource() ) );
 
   theResultFlag = false;
 
@@ -1129,7 +1139,7 @@ QString QgsMapLayer::loadNamedStyle( const QString &theURI, bool &theResultFlag 
 
   theResultFlag = importNamedStyle( myDocument, myErrorMessage );
   if ( !theResultFlag )
-    myErrorMessage = tr( "Loading style file %1 failed because:\n%2" ).arg( theURI ).arg( myErrorMessage );
+    myErrorMessage = tr( "Loading style file %1 failed because:\n%2" ).arg( theURI, myErrorMessage );
 
   return myErrorMessage;
 }
@@ -1505,7 +1515,7 @@ QString QgsMapLayer::loadSldStyle( const QString &theURI, bool &theResultFlag )
   QDomElement namedLayerElem = myRoot.firstChildElement( "NamedLayer" );
   if ( namedLayerElem.isNull() )
   {
-    myErrorMessage = QString( "Info: NamedLayer element not found." );
+    myErrorMessage = QLatin1String( "Info: NamedLayer element not found." );
     theResultFlag = false;
     return myErrorMessage;
   }
@@ -1514,7 +1524,7 @@ QString QgsMapLayer::loadSldStyle( const QString &theURI, bool &theResultFlag )
   theResultFlag = readSld( namedLayerElem, errorMsg );
   if ( !theResultFlag )
   {
-    myErrorMessage = tr( "Loading style file %1 failed because:\n%2" ).arg( theURI ).arg( errorMsg );
+    myErrorMessage = tr( "Loading style file %1 failed because:\n%2" ).arg( theURI, errorMsg );
     return myErrorMessage;
   }
 

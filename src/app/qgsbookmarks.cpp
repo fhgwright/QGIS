@@ -44,7 +44,7 @@ QgsBookmarks::QgsBookmarks( QWidget *parent ) : QDockWidget( parent )
   btnImpExp->setIcon( QgsApplication::getThemeIcon( "/mActionSharing.svg" ) );
   btnImpExp->setPopupMode( QToolButton::InstantPopup );
 
-  QMenu *share = new QMenu();
+  QMenu *share = new QMenu( this );
   QAction *btnExport = share->addAction( tr( "&Export" ) );
   QAction *btnImport = share->addAction( tr( "&Import" ) );
   btnExport->setIcon( QgsApplication::getThemeIcon( "/mActionSharingExport.svg" ) );
@@ -67,9 +67,9 @@ QgsBookmarks::QgsBookmarks( QWidget *parent ) : QDockWidget( parent )
   {
     QMessageBox::warning( this, tr( "Error" ),
                           tr( "Unable to open bookmarks database.\nDatabase: %1\nDriver: %2\nDatabase: %3" )
-                          .arg( QgsApplication::qgisUserDbFilePath() )
-                          .arg( db.lastError().driverText() )
-                          .arg( db.lastError().databaseText() )
+                          .arg( QgsApplication::qgisUserDbFilePath(),
+                                db.lastError().driverText(),
+                                db.lastError().databaseText() )
                         );
     deleteLater();
     return;
@@ -163,15 +163,15 @@ void QgsBookmarks::addClicked()
   else
   {
     QMessageBox::warning( this, tr( "Error" ), tr( "Unable to create the bookmark.\nDriver:%1\nDatabase:%2" )
-                          .arg( query.lastError().driverText() )
-                          .arg( query.lastError().databaseText() ) );
+                          .arg( query.lastError().driverText(),
+                                query.lastError().databaseText() ) );
   }
 }
 
 void QgsBookmarks::deleteClicked()
 {
   QList<int> rows;
-  foreach ( const QModelIndex &idx, lstBookmarks->selectionModel()->selectedIndexes() )
+  Q_FOREACH ( const QModelIndex &idx, lstBookmarks->selectionModel()->selectedIndexes() )
   {
     if ( idx.column() == 1 )
     {
@@ -189,7 +189,7 @@ void QgsBookmarks::deleteClicked()
     return;
 
   int i = 0;
-  foreach ( int row, rows )
+  Q_FOREACH ( int row, rows )
   {
     lstBookmarks->model()->removeRow( row - i );
     i++;
@@ -293,7 +293,7 @@ void QgsBookmarks::importFromXML()
   QStringList queriesList = queries.split( ";" );
   QSqlQuery query( model->database() );
 
-  foreach ( QString queryTxt, queriesList )
+  Q_FOREACH ( const QString& queryTxt, queriesList )
   {
     if ( queryTxt.trimmed().isEmpty() )
     {
@@ -302,8 +302,8 @@ void QgsBookmarks::importFromXML()
     if ( !query.exec( queryTxt ) )
     {
       QMessageBox::warning( this, tr( "Error" ), tr( "Unable to create the bookmark.\nDriver: %1\nDatabase: %2" )
-                            .arg( query.lastError().driverText() )
-                            .arg( query.lastError().databaseText() ) );
+                            .arg( query.lastError().driverText(),
+                                  query.lastError().databaseText() ) );
     }
     query.finish();
   }

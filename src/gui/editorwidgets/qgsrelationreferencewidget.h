@@ -3,7 +3,7 @@
      --------------------------------------
     Date                 : 20.4.2013
     Copyright            : (C) 2013 Matthias Kuhn
-    Email                : matthias dot kuhn at gmx dot ch
+    Email                : matthias at opengis dot ch
  ***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -54,7 +54,7 @@ class GUI_EXPORT QgsRelationReferenceWidget : public QWidget
 
     ~QgsRelationReferenceWidget();
 
-    void setRelation( QgsRelation relation, bool allowNullValue );
+    void setRelation( const QgsRelation& relation, bool allowNullValue );
 
     void setRelationEditable( bool editable );
 
@@ -83,7 +83,7 @@ class GUI_EXPORT QgsRelationReferenceWidget : public QWidget
     //! Set if the widget will order the combobox entries by value
     void setOrderByValue( bool orderByValue );
     //! Set the fields for which filter comboboxes will be created
-    void setFilterFields( QStringList filterFields );
+    void setFilterFields( const QStringList& filterFields );
 
     //! determines the open form button is visible in the widget
     bool openFormButtonVisible() {return mOpenFormButtonVisible;}
@@ -138,7 +138,7 @@ class GUI_EXPORT QgsRelationReferenceWidget : public QWidget
 
   private:
     void highlightFeature( QgsFeature f = QgsFeature(), CanvasExtent canvasExtent = Fixed );
-    void updateAttributeEditorFrame( const QgsFeature feature );
+    void updateAttributeEditorFrame( const QgsFeature& feature );
 
     // initialized
     QgsAttributeEditorContext mEditorContext;
@@ -184,7 +184,7 @@ class GUI_EXPORT QgsRelationReferenceWidget : public QWidget
     QAction* mScaleHighlightFeatureAction;
     QAction* mPanHighlightFeatureAction;
     QComboBox* mComboBox;
-    QGroupBox* mChooserGroupBox;
+    QWidget* mChooserContainer;
     QWidget* mFilterContainer;
     QHBoxLayout* mFilterLayout;
     QgsCollapsibleGroupBox* mAttributeEditorFrame;

@@ -14,22 +14,22 @@ class QgsProjectVersion
 
     QgsProjectVersion();
     ~QgsProjectVersion();
-    QgsProjectVersion( int major, int minor, int sub, QString name = "" );
-    QgsProjectVersion( QString string );
+    QgsProjectVersion( int major, int minor, int sub, const QString& name = "" );
+    QgsProjectVersion( const QString& string );
     int majorVersion();
     int minorVersion();
     int subVersion();
     QString text();
 
-    /*! Boolean equal operator
+    /** Boolean equal operator
     */
     bool operator==( const QgsProjectVersion &other );
 
-    /*! Boolean >= operator
+    /** Boolean >= operator
     */
     bool operator>=( const QgsProjectVersion &other );
 
-    /*! Boolean > operator
+    /** Boolean > operator
     */
     bool operator>( const QgsProjectVersion &other );
 

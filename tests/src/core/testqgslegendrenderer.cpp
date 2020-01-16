@@ -22,7 +22,7 @@
 
 
 
-static QString _fileNameForTest( QString testName )
+static QString _fileNameForTest( const QString& testName )
 {
   return QDir::tempPath() + "/" + testName + ".png";
 }
@@ -34,7 +34,7 @@ static void _setStandardTestFont( QgsLegendSettings& settings )
   << QgsComposerLegendStyle::Group
   << QgsComposerLegendStyle::Subgroup
   << QgsComposerLegendStyle::SymbolLabel;
-  foreach ( QgsComposerLegendStyle::Style st, styles )
+  Q_FOREACH ( QgsComposerLegendStyle::Style st, styles )
   {
     QFont font( QgsFontUtils::getStandardTestFont() );
     font.setPointSizeF( settings.style( st ).font().pointSizeF() );
@@ -65,6 +65,7 @@ static void _renderLegend( const QString& testName, QgsLayerTreeModel* legendMod
 static bool _verifyImage( const QString& testName, QString &report )
 {
   QgsRenderChecker checker;
+  checker.setControlPathPrefix( "legend" );
   checker.setControlName( "expected_" + testName );
   checker.setRenderedImage( _fileNameForTest( testName ) );
   checker.setSizeTolerance( 3, 3 );
@@ -97,6 +98,7 @@ class TestQgsLegendRenderer : public QObject
     void testLongSymbolText();
     void testThreeColumns();
     void testFilterByMap();
+    void testRasterBorder();
 
   private:
     QgsLayerTreeGroup* mRoot;
@@ -211,9 +213,9 @@ void TestQgsLegendRenderer::testModel()
 {
   QgsLayerTreeModel legendModel( mRoot );
 
-  QgsLayerTreeNode* nodeGroup0 = mRoot->children()[0];
+  QgsLayerTreeNode* nodeGroup0 = mRoot->children().at( 0 );
   QVERIFY( nodeGroup0 );
-  QgsLayerTreeNode* nodeLayer0 = nodeGroup0->children()[0];
+  QgsLayerTreeNode* nodeLayer0 = nodeGroup0->children().at( 0 );
   QVERIFY( QgsLayerTree::isLayer( nodeLayer0 ) );
   QModelIndex idx = legendModel.node2index( nodeLayer0 );
   QVERIFY( idx.isValid() );
@@ -312,7 +314,7 @@ void TestQgsLegendRenderer::testFilterByMap()
   mapSettings.setOutputSize( QSize( 400, 100 ) );
   mapSettings.setOutputDpi( 96 );
   QStringList ll;
-  foreach ( QgsMapLayer *l, QgsMapLayerRegistry::instance()->mapLayers() )
+  Q_FOREACH ( QgsMapLayer *l, QgsMapLayerRegistry::instance()->mapLayers() )
   {
     ll << l->id();
   }
@@ -322,6 +324,23 @@ void TestQgsLegendRenderer::testFilterByMap()
 
   QgsLegendSettings settings;
   _setStandardTestFont( settings );
+  _renderLegend( testName, &legendModel, settings );
+  QVERIFY( _verifyImage( testName, mReport ) );
+}
+
+void TestQgsLegendRenderer::testRasterBorder()
+{
+  QString testName = "legend_raster_border";
+
+  QgsLayerTreeGroup* root = new QgsLayerTreeGroup();
+  root->addLayer( mRL );
+
+  QgsLayerTreeModel legendModel( root );
+
+  QgsLegendSettings settings;
+  _setStandardTestFont( settings );
+  settings.setRasterBorderWidth( 2 );
+  settings.setRasterBorderColor( Qt::green );
   _renderLegend( testName, &legendModel, settings );
   QVERIFY( _verifyImage( testName, mReport ) );
 }

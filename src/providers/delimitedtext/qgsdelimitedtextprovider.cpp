@@ -364,7 +364,7 @@ void QgsDelimitedTextProvider::scanFile( bool buildIndexes )
     mWktFieldIndex = mFile->fieldIndex( mWktFieldName );
     if ( mWktFieldIndex < 0 )
     {
-      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "Wkt" ).arg( mWktFieldName ) );
+      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "Wkt", mWktFieldName ) );
     }
   }
   else if ( mGeomRep == GeomAsXy )
@@ -373,11 +373,11 @@ void QgsDelimitedTextProvider::scanFile( bool buildIndexes )
     mYFieldIndex = mFile->fieldIndex( mYFieldName );
     if ( mXFieldIndex < 0 )
     {
-      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "X" ).arg( mWktFieldName ) );
+      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "X", mWktFieldName ) );
     }
     if ( mYFieldIndex < 0 )
     {
-      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "Y" ).arg( mWktFieldName ) );
+      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "Y", mWktFieldName ) );
     }
   }
   if ( messages.size() > 0 )
@@ -739,7 +739,7 @@ void QgsDelimitedTextProvider::rescanFile()
     mWktFieldIndex = mFile->fieldIndex( mWktFieldName );
     if ( mWktFieldIndex < 0 )
     {
-      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "Wkt" ).arg( mWktFieldName ) );
+      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "Wkt", mWktFieldName ) );
     }
   }
   else if ( mGeomRep == GeomAsXy )
@@ -748,11 +748,11 @@ void QgsDelimitedTextProvider::rescanFile()
     mYFieldIndex = mFile->fieldIndex( mYFieldName );
     if ( mXFieldIndex < 0 )
     {
-      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "X" ).arg( mWktFieldName ) );
+      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "X", mWktFieldName ) );
     }
     if ( mYFieldIndex < 0 )
     {
-      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "Y" ).arg( mWktFieldName ) );
+      messages.append( tr( "%0 field %1 is not defined in delimited text file" ).arg( "Y", mWktFieldName ) );
     }
   }
   if ( messages.size() > 0 )
@@ -767,7 +767,7 @@ void QgsDelimitedTextProvider::rescanFile()
 
   for ( int i = 0; i < attributeFields.size(); i++ )
   {
-    attributeColumns[i] = mFile->fieldIndex( attributeFields[i].name() );
+    attributeColumns[i] = mFile->fieldIndex( attributeFields.at( i ).name() );
   }
 
   // Scan through the features in the file
@@ -838,9 +838,9 @@ double QgsDelimitedTextProvider::dmsStringToDouble( const QString &sX, bool *xOk
 
   *xOk = re.indexIn( sX ) == 0;
   if ( ! *xOk ) return 0.0;
-  QString dms1 = re.capturedTexts()[2];
-  QString dms2 = re.capturedTexts()[3];
-  QString dms3 = re.capturedTexts()[4];
+  QString dms1 = re.capturedTexts().at( 2 );
+  QString dms2 = re.capturedTexts().at( 3 );
+  QString dms3 = re.capturedTexts().at( 4 );
   x = dms3.toDouble( xOk );
   // Allow for Degrees/minutes format as well as DMS
   if ( ! dms2.isEmpty() )
@@ -848,8 +848,8 @@ double QgsDelimitedTextProvider::dmsStringToDouble( const QString &sX, bool *xOk
     x = dms2.toInt( xOk ) + x / 60.0;
   }
   x = dms1.toInt( xOk ) + x / 60.0;
-  QString sign1 = re.capturedTexts()[1];
-  QString sign2 = re.capturedTexts()[5];
+  QString sign1 = re.capturedTexts().at( 1 );
+  QString sign2 = re.capturedTexts().at( 5 );
 
   if ( sign1.isEmpty() )
   {
@@ -919,7 +919,7 @@ void QgsDelimitedTextProvider::clearInvalidLines()
 
 bool QgsDelimitedTextProvider::recordIsEmpty( QStringList &record )
 {
-  foreach ( QString s, record )
+  Q_FOREACH ( const QString& s, record )
   {
     if ( ! s.isEmpty() ) return false;
   }
@@ -944,7 +944,7 @@ void QgsDelimitedTextProvider::reportErrors( QStringList messages, bool showDial
   {
     QString tag( "DelimitedText" );
     QgsMessageLog::logMessage( tr( "Errors in file %1" ).arg( mFile->fileName() ), tag );
-    foreach ( QString message, messages )
+    Q_FOREACH ( const QString& message, messages )
     {
       QgsMessageLog::logMessage( message, tag );
     }
@@ -963,7 +963,7 @@ void QgsDelimitedTextProvider::reportErrors( QStringList messages, bool showDial
       QgsMessageOutput* output = QgsMessageOutput::createMessageOutput();
       output->setTitle( tr( "Delimited text file errors" ) );
       output->setMessage( tr( "Errors in file %1" ).arg( mFile->fileName() ), QgsMessageOutput::MessageText );
-      foreach ( QString message, messages )
+      Q_FOREACH ( const QString& message, messages )
       {
         output->appendMessage( message );
       }
@@ -1006,7 +1006,8 @@ bool QgsDelimitedTextProvider::setSubsetString( QString subset, bool updateFeatu
     }
     else
     {
-      expression->prepare( fields() );
+      QgsExpressionContext context = QgsExpressionContextUtils::createFeatureBasedContext( QgsFeature(), fields() );
+      expression->prepare( &context );
       if ( expression->hasEvalError() )
       {
         error = expression->evalErrorString();
@@ -1018,7 +1019,7 @@ bool QgsDelimitedTextProvider::setSubsetString( QString subset, bool updateFeatu
       delete expression;
       expression = 0;
       QString tag( "DelimitedText" );
-      QgsMessageLog::logMessage( tr( "Invalid subset string %1 for %2" ).arg( subset ).arg( mFile->fileName() ), tag );
+      QgsMessageLog::logMessage( tr( "Invalid subset string %1 for %2" ).arg( subset, mFile->fileName() ), tag );
     }
   }
 

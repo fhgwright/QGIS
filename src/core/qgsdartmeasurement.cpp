@@ -3,7 +3,7 @@
      --------------------------------------
     Date                 : 8.11.2014
     Copyright            : (C) 2014 Matthias Kuhn
-    Email                : matthias dot kuhn at gmx dot ch
+    Email                : matthias at opengis dot ch
  ***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -33,10 +33,10 @@ const QString QgsDartMeasurement::toString() const
   }
 
   QString dashMessage = QString( "<%1 name=\"%2\" type=\"%3\">%4</%1>" )
-                        .arg( elementName )
-                        .arg( mName )
-                        .arg( typeToString( mType ) )
-                        .arg( mValue );
+                        .arg( elementName,
+                              mName,
+                              typeToString( mType ),
+                              mValue );
   return dashMessage;
 }
 

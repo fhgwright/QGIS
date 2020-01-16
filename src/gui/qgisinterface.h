@@ -25,9 +25,11 @@ class QDockWidget;
 class QMainWindow;
 class QWidget;
 
+class QgsAdvancedDigitizingDockWidget;
 class QgsAttributeDialog;
 class QgsComposerView;
 class QgsFeature;
+class QgsLayerTreeMapCanvasBridge;
 class QgsLayerTreeView;
 class QgsLegendInterface;
 class QgsMapCanvas;
@@ -205,11 +207,21 @@ class GUI_EXPORT QgisInterface : public QObject
     /** Return a pointer to the map canvas */
     virtual QgsMapCanvas * mapCanvas() = 0;
 
+    /**
+     * Returns a pointer to the layer tree canvas bridge
+     *
+     * @note added in 2.12
+     */
+    virtual QgsLayerTreeMapCanvasBridge* layerTreeCanvasBridge() = 0;
+
     /** Return a pointer to the main window (instance of QgisApp in case of QGIS) */
     virtual QWidget * mainWindow() = 0;
 
     /** Return the message bar of the main app */
     virtual QgsMessageBar * messageBar() = 0;
+
+    /** Open the message log dock widget **/
+    virtual void openMessageLog() = 0;
 
     /** Adds a widget to the user input tool bar.*/
     virtual void addUserInputWidget( QWidget* widget ) = 0;
@@ -222,7 +234,7 @@ class GUI_EXPORT QgisInterface : public QObject
      * @return pointer to composer's view
      * @note new composer window will be shown and activated
      */
-    virtual QgsComposerView* createNewComposer( QString title = QString( "" ) ) = 0;
+    virtual QgsComposerView* createNewComposer( QString title = QString() ) = 0;
 
     /** Duplicate an existing parent composer from composer view
      * @param composerView pointer to existing composer view
@@ -230,7 +242,7 @@ class GUI_EXPORT QgisInterface : public QObject
      * @return pointer to duplicate composer's view
      * @note dupicate composer window will be hidden until loaded, then shown and activated
      */
-    virtual QgsComposerView* duplicateComposer( QgsComposerView* composerView, QString title = QString( "" ) ) = 0;
+    virtual QgsComposerView* duplicateComposer( QgsComposerView* composerView, QString title = QString() ) = 0;
 
     /** Deletes parent composer of composer view, after closing composer window */
     virtual void deleteComposer( QgsComposerView* composerView ) = 0;
@@ -291,11 +303,16 @@ class GUI_EXPORT QgisInterface : public QObject
     /** Remove specified dock widget from main window (doesn't delete it). */
     virtual void removeDockWidget( QDockWidget * dockwidget ) = 0;
 
-    /** open layer properties dialog */
+    /** Advanced digitizing dock widget
+     *  @note Added in 2.12
+     */
+    virtual QgsAdvancedDigitizingDockWidget* cadDockWidget() = 0;
+
+    /** Open layer properties dialog */
     virtual void showLayerProperties( QgsMapLayer *l ) = 0;
 
-    /** open attribute table dialog */
-    virtual void showAttributeTable( QgsVectorLayer *l ) = 0;
+    /** Open attribute table dialog */
+    virtual QDialog* showAttributeTable( QgsVectorLayer *l, const QString& filterExpression = QString() ) = 0;
 
     /** Add window to Window menu. The action title is the window title
      * and the action should raise, unminimize and activate the window. */
@@ -432,7 +449,7 @@ class GUI_EXPORT QgisInterface : public QObject
     virtual QAction *actionZoomLast() = 0;
     //! Get access to the native zoom next action. Call trigger() on it to zoom to next.
     virtual QAction *actionZoomNext() = 0;
-    //! Get access to the native zoom actual size action. Call trigger() on it to zoom to actual size.
+    //! Get access to the native zoom resolution (100%) action. Call trigger() on it to zoom to actual size.
     virtual QAction *actionZoomActualSize() = 0;
     //! Get access to the native map tips action. Call trigger() on it to toggle map tips.
     virtual QAction *actionMapTips() = 0;
@@ -568,14 +585,14 @@ class GUI_EXPORT QgisInterface : public QObject
      * This signal is emitted when the initialization is complete
      */
     void initializationCompleted();
-    /** emitted when a project file is successfully read
+    /** Emitted when a project file is successfully read
         @note
         This is useful for plug-ins that store properties with project files.  A
         plug-in can connect to this signal.  When it is emitted, the plug-in
         knows to then check the project properties for any relevant state.
      */
     void projectRead();
-    /** emitted when starting an entirely new project
+    /** Emitted when starting an entirely new project
         @note
         This is similar to projectRead(); plug-ins might want to be notified
         that they're in a new project.  Yes, projectRead() could have been
@@ -585,7 +602,7 @@ class GUI_EXPORT QgisInterface : public QObject
       */
     void newProjectCreated();
 
-    /**This signal is emitted when a layer has been saved using save as
+    /** This signal is emitted when a layer has been saved using save as
        @note
        added in version 2.7
     */

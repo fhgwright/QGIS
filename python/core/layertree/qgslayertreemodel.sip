@@ -51,9 +51,11 @@ class QgsLayerTreeModel : QAbstractItemModel
     enum Flag
     {
       // display flags
-      ShowLegend,              //!< Add legend nodes for layer nodes
-      ShowSymbology,           //!< deprecated - use ShowLegend
-      ShowLegendAsTree,        //!< For legends that support it, will show them in a tree instead of a list (needs also ShowLegend). Added in 2.8
+      ShowLegend,                 //!< Add legend nodes for layer nodes
+      ShowSymbology,              //!< deprecated - use ShowLegend
+      ShowRasterPreviewIcon,      //!< Will use real preview of raster layer as icon (may be slow)
+      ShowLegendAsTree,           //!< For legends that support it, will show them in a tree instead of a list (needs also ShowLegend). Added in 2.8
+      DeferredLegendInvalidation, //!< defer legend model invalidation
 
       // behavioral flags
       AllowNodeReorder,           //!< Allow reordering with drag'n'drop
@@ -65,7 +67,7 @@ class QgsLayerTreeModel : QAbstractItemModel
     typedef QFlags<QgsLayerTreeModel::Flag> Flags;
 
     //! Set OR-ed combination of model flags
-    void setFlags( Flags f );
+    void setFlags( const Flags& f );
     //! Enable or disable a model flag
     void setFlag( Flag f, bool on = true );
     //! Return OR-ed combination of model flags

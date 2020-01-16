@@ -67,7 +67,7 @@ QgsStyleV2ExportImportDialog::QgsStyleV2ExportImportDialog( QgsStyleV2* style, Q
 
     QStringList groups = mQgisStyle->groupNames();
     groupCombo->addItem( "imported", QVariant( "new" ) );
-    foreach ( QString gName, groups )
+    Q_FOREACH ( const QString& gName, groups )
     {
       groupCombo->addItem( gName );
     }
@@ -434,7 +434,7 @@ void QgsStyleV2ExportImportDialog::browse()
   }
 }
 
-void QgsStyleV2ExportImportDialog::downloadStyleXML( QUrl url )
+void QgsStyleV2ExportImportDialog::downloadStyleXML( const QUrl& url )
 {
   // XXX Try to move this code to some core Network interface,
   // HTTP downloading is a generic functionality that might be used elsewhere

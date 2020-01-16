@@ -29,6 +29,11 @@ QgsPointV2::QgsPointV2( double x, double y ): QgsAbstractGeometryV2(), mX( x ), 
   mWkbType = QgsWKBTypes::Point;
 }
 
+QgsPointV2::QgsPointV2( const QgsPoint& p ): QgsAbstractGeometryV2(), mX( p.x() ), mY( p.y() ), mZ( 0.0 ), mM( 0.0 )
+{
+  mWkbType = QgsWKBTypes::Point;
+}
+
 QgsPointV2::QgsPointV2( QgsWKBTypes::Type type, double x, double y, double z, double m ): mX( x ), mY( y ), mZ( z ), mM( m )
 {
   mWkbType = type;
@@ -48,7 +53,7 @@ bool QgsPointV2::operator!=( const QgsPointV2& pt ) const
   return !operator==( pt );
 }
 
-QgsAbstractGeometryV2* QgsPointV2::clone() const
+QgsPointV2 *QgsPointV2::clone() const
 {
   return new QgsPointV2( *this );
 }
@@ -88,6 +93,19 @@ bool QgsPointV2::fromWkt( const QString& wkt )
   {
     clear();
     return false;
+  }
+  else if ( coordinates.size() == 3 && !is3D() && !isMeasure() )
+  {
+    // 3 dimensional coordinates, but not specifically marked as such. We allow this
+    // anyway and upgrade geometry to have Z dimension
+    mWkbType = QgsWKBTypes::addZ( mWkbType );
+  }
+  else if ( coordinates.size() >= 4 && ( !is3D() || !isMeasure() ) )
+  {
+    // 4 (or more) dimensional coordinates, but not specifically marked as such. We allow this
+    // anyway and upgrade geometry to have Z&M dimensions
+    mWkbType = QgsWKBTypes::addZ( mWkbType );
+    mWkbType = QgsWKBTypes::addM( mWkbType );
   }
 
   int idx = 0;
@@ -181,9 +199,9 @@ void QgsPointV2::clear()
   mX = mY = mZ = mM = 0.;
 }
 
-void QgsPointV2::transform( const QgsCoordinateTransform& ct )
+void QgsPointV2::transform( const QgsCoordinateTransform& ct, QgsCoordinateTransform::TransformDirection d )
 {
-  ct.transformInPlace( mX, mY, mZ );
+  ct.transformInPlace( mX, mY, mZ, d );
 }
 
 void QgsPointV2::coordinateSequence( QList< QList< QList< QgsPointV2 > > >& coord ) const
@@ -239,13 +257,29 @@ bool QgsPointV2::nextVertex( QgsVertexId& id, QgsPointV2& vertex ) const
   }
 }
 
+bool QgsPointV2::addZValue( double zValue )
+{
+  if ( QgsWKBTypes::hasZ( mWkbType ) )
+    return false;
+
+  mWkbType = QgsWKBTypes::addZ( mWkbType );
+  mZ = zValue;
+  return true;
+}
+
+bool QgsPointV2::addMValue( double mValue )
+{
+  if ( QgsWKBTypes::hasM( mWkbType ) )
+    return false;
+
+  mWkbType = QgsWKBTypes::addM( mWkbType );
+  mM = mValue;
+  return true;
+}
+
 void QgsPointV2::transform( const QTransform& t )
 {
-#ifdef QT_ARCH_ARM
   qreal x, y;
   t.map( mX, mY, &x, &y );
   mX = x; mY = y;
-#else
-  t.map( mX, mY, &mX, &mY );
-#endif
 }

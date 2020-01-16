@@ -174,7 +174,7 @@ def setCanvasCrs(theEpsgId, theOtfpFlag=False):
 
     # Create CRS Instance
     myCrs = QgsCoordinateReferenceSystem()
-    myCrs.createFromId(theEpsgId, QgsCoordinateReferenceSystem.EpsgCrsId)
+    myCrs.createFromId(theEpsgId, QgsCoordinateReferenceSystem.E)
 
     # Reproject all layers to WGS84 geographic CRS
     CANVAS.mapRenderer().setDestinationCrs(myCrs)
@@ -205,24 +205,52 @@ def writeShape(theMemoryLayer, theFileName):
     assert myResult == QgsVectorFileWriter.NoError
 
 
+def doubleNear(a, b, tol=0.0000000001):
+    """
+    Tests whether two floats are near, within a specified tolerance
+    """
+    return abs(float(a) - float(b)) < tol
+
+
 def compareWkt(a, b, tol=0.000001):
-    r0 = re.compile( "-?\d+(?:\.\d+)?(?:[eE]\d+)?" )
-    r1 = re.compile( "\s*,\s*" )
+    """
+    Compares two WKT strings, ignoring allowed differences between strings
+    and allowing a tolerance for coordinates
+    """
+    #ignore case
+    a0 = a.lower()
+    b0 = b.lower()
+
+    #remove optional spaces before z/m
+    r = re.compile("\s+([zm])")
+    a0 = r.sub(r'\1', a0)
+    b0 = r.sub(r'\1', b0)
+
+    #spaces before brackets are optional
+    r = re.compile("\s*\(\s*")
+    a0 = r.sub('(', a0)
+    b0 = r.sub('(', b0)
+    #spaces after brackets are optional
+    r = re.compile("\s*\)\s*")
+    a0 = r.sub(')', a0)
+    b0 = r.sub(')', b0)
 
     # compare the structure
-    a0 = r1.sub( ",", r0.sub( "#", a ) )
-    b0 = r1.sub( ",", r0.sub( "#", b ) )
+    r0 = re.compile("-?\d+(?:\.\d+)?(?:[eE]\d+)?")
+    r1 = re.compile("\s*,\s*")
+    a0 = r1.sub(",", r0.sub("#", a0))
+    b0 = r1.sub(",", r0.sub("#", b0))
     if a0 != b0:
         return False
 
     # compare the numbers with given tolerance
-    a0 = r0.findall( a )
-    b0 = r0.findall( b )
+    a0 = r0.findall(a)
+    b0 = r0.findall(b)
     if len(a0) != len(b0):
         return False
 
-    for (a1,b1) in izip(a0,b0):
-        if abs(float(a1)-float(b1))>tol:
+    for (a1, b1) in izip(a0, b0):
+        if not doubleNear(a1, b1, tol):
             return False
 
     return True
@@ -361,3 +389,15 @@ def openInBrowserTab(url):
         subprocess.Popen([sys.executable, "-c", cmd],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
+
+
+def printImportant(info):
+    """
+    Prints important information to stdout and to a file which in the end
+    should be printed on test result pages.
+    :param info: A string to print
+    """
+
+    print(info)
+    with open(os.path.join(tempfile.gettempdir(), 'ctest-important.log'), 'a+') as f:
+        f.write(u'{}\n'.format(info))

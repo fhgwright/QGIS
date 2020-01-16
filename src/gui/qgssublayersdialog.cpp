@@ -22,8 +22,8 @@
 #include <QPushButton>
 
 
-QgsSublayersDialog::QgsSublayersDialog( ProviderType providerType, QString name,
-                                        QWidget* parent, Qt::WindowFlags fl )
+QgsSublayersDialog::QgsSublayersDialog( ProviderType providerType, const QString& name,
+                                        QWidget* parent, const Qt::WindowFlags& fl )
     : QDialog( parent, fl ), mName( name )
 {
   setupUi( this );
@@ -106,9 +106,9 @@ QList<int> QgsSublayersDialog::selectionIndexes()
   return list;
 }
 
-void QgsSublayersDialog::populateLayerTable( QStringList theList, QString delim )
+void QgsSublayersDialog::populateLayerTable( const QStringList& theList, const QString& delim )
 {
-  foreach ( QString item, theList )
+  Q_FOREACH ( const QString& item, theList )
   {
     QStringList elements = item.split( delim );
     while ( elements.size() > 4 )

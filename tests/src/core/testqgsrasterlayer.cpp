@@ -81,12 +81,12 @@ class TestQgsRasterLayer : public QObject
     void transparency();
     void setRenderer();
   private:
-    bool render( QString theFileName );
-    bool setQml( QString theType );
+    bool render( const QString& theFileName );
+    bool setQml( const QString& theType );
     void populateColorRampShader( QgsColorRampShader* colorRampShader,
                                   QgsVectorColorRampV2* colorRamp,
                                   int numberOfEntries );
-    bool testColorRamp( QString name, QgsVectorColorRampV2* colorRamp,
+    bool testColorRamp( const QString& name, QgsVectorColorRampV2* colorRamp,
                         QgsColorRampShader::ColorRamp_TYPE type, int numberOfEntries );
     QString mTestDataDir;
     QgsRasterLayer * mpRasterLayer;
@@ -262,7 +262,7 @@ void TestQgsRasterLayer::populateColorRampShader( QgsColorRampShader* colorRampS
   colorRampShader->setColorRampItemList( colorRampItems );
 }
 
-bool TestQgsRasterLayer::testColorRamp( QString name, QgsVectorColorRampV2* colorRamp,
+bool TestQgsRasterLayer::testColorRamp( const QString& name, QgsVectorColorRampV2* colorRamp,
                                         QgsColorRampShader::ColorRamp_TYPE type, int numberOfEntries )
 {
   QgsRasterShader* rasterShader = new QgsRasterShader();
@@ -288,13 +288,15 @@ void TestQgsRasterLayer::colorRamp1()
 
   // QVERIFY( testColorRamp( "raster_colorRamp1", colorRamp, QgsColorRampShader::INTERPOLATED, 5 ) );
   QVERIFY( testColorRamp( "raster_colorRamp1", colorRamp, QgsColorRampShader::DISCRETE, 10 ) );
+  delete colorRamp;
 }
 
 void TestQgsRasterLayer::colorRamp2()
 {
+  QgsVectorColorBrewerColorRampV2 ramp( "BrBG", 10 );
   // ColorBrewer ramp
   QVERIFY( testColorRamp( "raster_colorRamp2",
-                          new QgsVectorColorBrewerColorRampV2( "BrBG", 10 ),
+                          &ramp,
                           QgsColorRampShader::DISCRETE, 10 ) );
 }
 
@@ -302,16 +304,19 @@ void TestQgsRasterLayer::colorRamp3()
 {
   // cpt-city ramp, discrete
   QgsCptCityArchive::initArchives();
+  QgsCptCityColorRampV2 ramp( "cb/div/BrBG", "_10" );
   QVERIFY( testColorRamp( "raster_colorRamp3",
-                          new QgsCptCityColorRampV2( "cb/div/BrBG", "_10" ),
+                          &ramp,
                           QgsColorRampShader::DISCRETE, 10 ) );
+  QgsCptCityArchive::clearArchives();
 }
 
 void TestQgsRasterLayer::colorRamp4()
 {
   // cpt-city ramp, continuous
+  QgsCptCityColorRampV2 ramp( "grass/elevation", "" );
   QVERIFY( testColorRamp( "raster_colorRamp4",
-                          new QgsCptCityColorRampV2( "grass/elevation", "" ),
+                          &ramp,
                           QgsColorRampShader::DISCRETE, 10 ) );
 }
 
@@ -414,13 +419,13 @@ void TestQgsRasterLayer::checkScaleOffset()
   if ( identifyResult.isValid() )
   {
     QMap<int, QVariant> values = identifyResult.results();
-    foreach ( int bandNo, values.keys() )
+    Q_FOREACH ( int bandNo, values.keys() )
     {
       QString valueString;
       if ( values.value( bandNo ).isNull() )
       {
         valueString = tr( "no data" );
-        mReport += QString( " %1 = %2 <br>\n" ).arg( myProvider->generateBandName( bandNo ) ).arg( valueString );
+        mReport += QString( " %1 = %2 <br>\n" ).arg( myProvider->generateBandName( bandNo ), valueString );
         delete myRasterLayer;
         QVERIFY( false );
         return;
@@ -430,7 +435,7 @@ void TestQgsRasterLayer::checkScaleOffset()
         double expected = 0.99995432;
         double value = values.value( bandNo ).toDouble();
         valueString = QgsRasterBlock::printValue( value );
-        mReport += QString( " %1 = %2 <br>\n" ).arg( myProvider->generateBandName( bandNo ) ).arg( valueString );
+        mReport += QString( " %1 = %2 <br>\n" ).arg( myProvider->generateBandName( bandNo ), valueString );
         mReport += QString( " value = %1 expected = %2 diff = %3 <br>\n" ).arg( value ).arg( expected ).arg( fabs( value - expected ) );
         QVERIFY( fabs( value - expected ) < 0.0000001 );
       }
@@ -519,7 +524,7 @@ void TestQgsRasterLayer::registry()
 //
 
 
-bool TestQgsRasterLayer::render( QString theTestType )
+bool TestQgsRasterLayer::render( const QString& theTestType )
 {
   mReport += "<h2>" + theTestType + "</h2>\n";
   QgsRenderChecker myChecker;
@@ -530,7 +535,7 @@ bool TestQgsRasterLayer::render( QString theTestType )
   return myResultFlag;
 }
 
-bool TestQgsRasterLayer::setQml( QString theType )
+bool TestQgsRasterLayer::setQml( const QString& theType )
 {
   //load a qml style and apply to our layer
   // huh? this is failing but shouldnt!

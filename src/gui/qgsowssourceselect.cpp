@@ -54,7 +54,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 
-QgsOWSSourceSelect::QgsOWSSourceSelect( QString service, QWidget * parent, Qt::WindowFlags fl, bool managerMode, bool embeddedMode )
+QgsOWSSourceSelect::QgsOWSSourceSelect( const QString& service, QWidget * parent, const Qt::WindowFlags& fl, bool managerMode, bool embeddedMode )
     : QDialog( parent, fl )
     , mService( service )
     , mManagerMode( managerMode )
@@ -376,7 +376,7 @@ void QgsOWSSourceSelect::enableLayersForCrs( QTreeWidgetItem * )
 void QgsOWSSourceSelect::on_mChangeCRSButton_clicked()
 {
   QStringList layers;
-  foreach ( QTreeWidgetItem *item, mLayersTreeWidget->selectedItems() )
+  Q_FOREACH ( QTreeWidgetItem *item, mLayersTreeWidget->selectedItems() )
   {
     QString layer = item->data( 0, Qt::UserRole + 0 ).toString();
     if ( !layer.isEmpty() )
@@ -589,7 +589,7 @@ void QgsOWSSourceSelect::on_mAddDefaultButton_clicked()
   addDefaultServers();
 }
 
-QString QgsOWSSourceSelect::descriptionForAuthId( QString authId )
+QString QgsOWSSourceSelect::descriptionForAuthId( const QString& authId )
 {
   if ( mCrsNames.contains( authId ) )
     return mCrsNames[ authId ];

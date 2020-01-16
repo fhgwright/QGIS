@@ -76,8 +76,10 @@ INCLUDE_DIRECTORIES(
   ${QWT_INCLUDE_DIR}
   ${QEXTSERIALPORT_INCLUDE_DIR}
   ${QSCINTILLA_INCLUDE_DIR}
+  ${QCA_INCLUDE_DIR}
 
   ../src/core
+  ../src/core/auth
   ../src/core/pal
   ../src/core/composer
   ../src/core/diagram
@@ -91,6 +93,7 @@ INCLUDE_DIRECTORIES(
 
   ../src/gui/raster
   ../src/gui/attributetable
+  ../src/gui/auth
   ../src/gui/editorwidgets
   ../src/gui/editorwidgets/core
   ../src/gui/effects
@@ -182,7 +185,7 @@ IF (WITH_SERVER AND WITH_SERVER_PLUGINS)
   SET(PY_MODULES ${PY_MODULES} server)
 
   FILE(GLOB sip_files_server
-    server/*.sip
+    server/server.sip
   )
   SET(SIP_EXTRA_FILES_DEPEND ${sip_files_core} ${sip_files_server})
   SET(SIP_EXTRA_OPTIONS ${PYQT4_SIP_FLAGS} -o -a ${CMAKE_BINARY_DIR}/python/qgis.server.api)

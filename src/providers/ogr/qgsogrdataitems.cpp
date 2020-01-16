@@ -198,7 +198,8 @@ QVector<QgsDataItem*> QgsOgrDataCollectionItem::createChildren()
     return children;
   int numLayers = OGR_DS_GetLayerCount( hDataSource );
 
-  for ( int i = 0; i < numLayers; i++ )
+  children.reserve( numLayers );
+  for ( int i = 0; i < numLayers; ++i )
   {
     QgsOgrLayerItem* item = dataItemForLayer( this, QString(), mPath, hDataSource, i );
     children.append( item );
@@ -284,7 +285,7 @@ QGISEXTERN QgsDataItem * dataItem( QString thePath, QgsDataItem* parentItem )
   if ( myExtensions.indexOf( suffix ) < 0 )
   {
     bool matches = false;
-    foreach ( QString wildcard, wildcards() )
+    Q_FOREACH ( const QString& wildcard, wildcards() )
     {
       QRegExp rx( wildcard, Qt::CaseInsensitive, QRegExp::Wildcard );
       if ( rx.exactMatch( info.fileName() ) )

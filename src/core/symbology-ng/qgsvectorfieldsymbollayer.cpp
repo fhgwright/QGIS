@@ -177,17 +177,17 @@ void QgsVectorFieldSymbolLayer::renderPoint( const QPointF& point, QgsSymbolV2Re
   switch ( mVectorFieldType )
   {
     case Cartesian:
-      xComponent = xVal * QgsSymbolLayerV2Utils::lineWidthScaleFactor( ctx, mDistanceUnit, mDistanceMapUnitScale );
-      yComponent = yVal * QgsSymbolLayerV2Utils::lineWidthScaleFactor( ctx, mDistanceUnit, mDistanceMapUnitScale );
+      xComponent = QgsSymbolLayerV2Utils::convertToPainterUnits( ctx, xVal, mDistanceUnit, mDistanceMapUnitScale );
+      yComponent = QgsSymbolLayerV2Utils::convertToPainterUnits( ctx, yVal, mDistanceUnit, mDistanceMapUnitScale );
       break;
     case Polar:
       convertPolarToCartesian( xVal, yVal, xComponent, yComponent );
-      xComponent = xComponent * QgsSymbolLayerV2Utils::lineWidthScaleFactor( ctx, mDistanceUnit, mDistanceMapUnitScale );
-      yComponent = yComponent * QgsSymbolLayerV2Utils::lineWidthScaleFactor( ctx, mDistanceUnit, mDistanceMapUnitScale );
+      xComponent = QgsSymbolLayerV2Utils::convertToPainterUnits( ctx, xComponent, mDistanceUnit, mDistanceMapUnitScale );
+      yComponent = QgsSymbolLayerV2Utils::convertToPainterUnits( ctx, yComponent, mDistanceUnit, mDistanceMapUnitScale );
       break;
     case Height:
       xComponent = 0;
-      yComponent = yVal * QgsSymbolLayerV2Utils::lineWidthScaleFactor( ctx, mDistanceUnit, mDistanceMapUnitScale );
+      yComponent = QgsSymbolLayerV2Utils::convertToPainterUnits( ctx, yVal, mDistanceUnit, mDistanceMapUnitScale );
       break;
     default:
       break;
@@ -260,7 +260,7 @@ QgsStringMap QgsVectorFieldSymbolLayer::properties() const
   return properties;
 }
 
-void QgsVectorFieldSymbolLayer::toSld( QDomDocument& doc, QDomElement &element, QgsStringMap props ) const
+void QgsVectorFieldSymbolLayer::toSld( QDomDocument& doc, QDomElement &element, const QgsStringMap& props ) const
 {
   element.appendChild( doc.createComment( "VectorField not implemented yet..." ) );
   mLineSymbol->toSld( doc, element, props );

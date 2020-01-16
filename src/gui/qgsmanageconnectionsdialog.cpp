@@ -24,7 +24,7 @@
 
 #include "qgsmanageconnectionsdialog.h"
 
-QgsManageConnectionsDialog::QgsManageConnectionsDialog( QWidget *parent, Mode mode, Type type, QString fileName )
+QgsManageConnectionsDialog::QgsManageConnectionsDialog( QWidget *parent, Mode mode, Type type, const QString& fileName )
     : QDialog( parent )
     , mFileName( fileName )
     , mDialogMode( mode )
@@ -83,6 +83,7 @@ void QgsManageConnectionsDialog::doExportImport()
   }
 
   QStringList items;
+  items.reserve( selection.size() );
   for ( int i = 0; i < selection.size(); ++i )
   {
     items.append( selection.at( i )->text() );
@@ -133,8 +134,8 @@ void QgsManageConnectionsDialog::doExportImport()
     {
       QMessageBox::warning( this, tr( "Saving connections" ),
                             tr( "Cannot write file %1:\n%2." )
-                            .arg( mFileName )
-                            .arg( file.errorString() ) );
+                            .arg( mFileName,
+                                  file.errorString() ) );
       return;
     }
 
@@ -148,8 +149,8 @@ void QgsManageConnectionsDialog::doExportImport()
     {
       QMessageBox::warning( this, tr( "Loading connections" ),
                             tr( "Cannot read file %1:\n%2." )
-                            .arg( mFileName )
-                            .arg( file.errorString() ) );
+                            .arg( mFileName,
+                                  file.errorString() ) );
       return;
     }
 
@@ -243,8 +244,8 @@ bool QgsManageConnectionsDialog::populateConnections()
     {
       QMessageBox::warning( this, tr( "Loading connections" ),
                             tr( "Cannot read file %1:\n%2." )
-                            .arg( mFileName )
-                            .arg( file.errorString() ) );
+                            .arg( mFileName,
+                                  file.errorString() ) );
       return false;
     }
 

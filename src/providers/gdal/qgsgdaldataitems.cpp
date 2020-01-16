@@ -215,7 +215,7 @@ QGISEXTERN QgsDataItem * dataItem( QString thePath, QgsDataItem* parentItem )
   if ( !extensions.contains( suffix ) )
   {
     bool matches = false;
-    foreach ( QString wildcard, wildcards )
+    Q_FOREACH ( const QString& wildcard, wildcards )
     {
       QRegExp rx( wildcard, Qt::CaseInsensitive, QRegExp::Wildcard );
       if ( rx.exactMatch( info.fileName() ) )
@@ -267,7 +267,7 @@ QGISEXTERN QgsDataItem * dataItem( QString thePath, QgsDataItem* parentItem )
     }
     // add the item
     QStringList sublayers;
-    QgsDebugMsgLevel( QString( "adding item name=%1 thePath=%2" ).arg( name ).arg( thePath ), 2 );
+    QgsDebugMsgLevel( QString( "adding item name=%1 thePath=%2" ).arg( name, thePath ), 2 );
     QgsLayerItem * item = new QgsGdalLayerItem( parentItem, name, thePath, thePath, &sublayers );
     if ( item )
       return item;

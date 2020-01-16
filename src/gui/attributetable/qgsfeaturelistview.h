@@ -3,7 +3,7 @@
      --------------------------------------
     Date                 : Jan 2012
     Copyright            : (C) 2013 Matthias Kuhn
-    Email                : matthias dot kuhn at gmx dot ch
+    Email                : matthias at opengis dot ch
  ***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -13,8 +13,8 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef QGSATTRIBUTELISTVIEW_H
-#define QGSATTRIBUTELISTVIEW_H
+#ifndef QGSFEATURELISTVIEW_H
+#define QGSFEATURELISTVIEW_H
 
 #include <QListView>
 #include <qdebug.h>
@@ -82,7 +82,7 @@ class GUI_EXPORT QgsFeatureListView : public QListView
      *
      * @see QgsExpression
      */
-    bool setDisplayExpression( const QString displayExpression );
+    bool setDisplayExpression( const QString& displayExpression );
 
     /**
      * Returns the expression which is currently used to render the features.
@@ -151,14 +151,14 @@ class GUI_EXPORT QgsFeatureListView : public QListView
      * @param index The selection to set
      * @param command selection update mode
      */
-    void setEditSelection( const QModelIndex& index, QItemSelectionModel::SelectionFlags command );
+    void setEditSelection( const QModelIndex& index, const QItemSelectionModel::SelectionFlags& command );
 
     /**
      * Select all currently visible features
      */
     virtual void selectAll() override;
 
-    void repaintRequested( QModelIndexList indexes );
+    void repaintRequested( const QModelIndexList& indexes );
     void repaintRequested();
 
   private slots:

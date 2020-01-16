@@ -11,9 +11,16 @@ struct QgsVertexId
     };
 
   QgsVertexId();
-  QgsVertexId( int _part, int _ring, int _vertex, VertexType _type );
+  QgsVertexId( int _part, int _ring, int _vertex, VertexType _type);
 
   bool isValid() const;
+  bool operator==( const QgsVertexId& other ) const;
+  bool operator!=( const QgsVertexId& other ) const;
+  bool partEqual( const QgsVertexId& o ) const;
+  bool ringEqual( const QgsVertexId& o ) const;
+  bool vertexEqual( const QgsVertexId& o ) const;
+  bool isValid(const QgsAbstractGeometryV2* geom) const;
+
   int part;
   int ring;
   int vertex;
@@ -42,14 +49,16 @@ class QgsAbstractGeometryV2
         sipClass = sipClass_QgsCurvePolygonV2;
       else if (dynamic_cast<QgsMultiPointV2*>(sipCpp) != NULL )
         sipClass = sipClass_QgsMultiPointV2;
-      else if (dynamic_cast<QgsLineStringV2*>(sipCpp) != NULL )
-        sipClass = sipClass_QgsLineStringV2;
+      else if (dynamic_cast<QgsMultiLineStringV2*>(sipCpp) != NULL )
+        sipClass = sipClass_QgsMultiLineStringV2;
       else if (dynamic_cast<QgsMultiPolygonV2*>(sipCpp) != NULL )
         sipClass = sipClass_QgsMultiPolygonV2;
       else if (dynamic_cast<QgsMultiSurfaceV2*>(sipCpp) != NULL )
         sipClass = sipClass_QgsMultiSurfaceV2;
       else if (dynamic_cast<QgsMultiCurveV2*>(sipCpp) != NULL )
         sipClass = sipClass_QgsMultiCurveV2;
+      else if (dynamic_cast<QgsGeometryCollectionV2*>(sipCpp) != NULL )
+        sipClass = sipClass_QgsGeometryCollectionV2;
       else
         sipClass = 0;
 %End
@@ -90,18 +99,18 @@ class QgsAbstractGeometryV2
     virtual QgsRectangle calculateBoundingBox() const;
 
     //render pipeline
-    virtual void transform( const QgsCoordinateTransform& ct ) = 0;
+    virtual void transform( const QgsCoordinateTransform& ct, QgsCoordinateTransform::TransformDirection d = QgsCoordinateTransform::ForwardTransform ) = 0;
     virtual void transform( const QTransform& t ) = 0;
     //virtual void clip( const QgsRectangle& rect );
     virtual void draw( QPainter& p ) const = 0;
 
-    /**Returns next vertex id and coordinates
+    /** Returns next vertex id and coordinates
     @return false if at end*/
     virtual bool nextVertex( QgsVertexId& id, QgsPointV2& vertex ) const = 0;
 
     virtual void coordinateSequence( QList< QList< QList< QgsPointV2 > > >& coord /Out/ ) const = 0;
     int nCoordinates() const;
-    QgsPointV2 vertexAt( const QgsVertexId& id ) const;
+    virtual QgsPointV2 vertexAt( const QgsVertexId& id ) const = 0;
     virtual double closestSegment( const QgsPointV2& pt, QgsPointV2& segmentPt,  QgsVertexId& vertexAfter, bool* leftOf, double epsilon ) const = 0;
 
     //low-level editing
@@ -109,11 +118,52 @@ class QgsAbstractGeometryV2
     virtual bool moveVertex( const QgsVertexId& position, const QgsPointV2& newPos ) = 0;
     virtual bool deleteVertex( const QgsVertexId& position ) = 0;
 
-    /**Length for linear geometries,perimeter for area geometries*/
+    /** Returns the length of the geometry.
+     * @see area()
+     * @see perimeter()
+     */
     virtual double length() const;
+
+    /** Returns the perimeter of the geometry.
+     * @see area()
+     * @see length()
+     */
+    virtual double perimeter() const;
+
+    /** Returns the area of the geometry.
+     * @see length()
+     * @see perimeter()
+     */
     virtual double area() const;
 
+    /** Returns the centroid of the geometry*/
+    virtual QgsPointV2 centroid() const;
+
     virtual bool hasCurvedSegments() const;
-    /**Returns a geometry without curves. Caller takes ownership*/
+    /** Returns a geometry without curves. Caller takes ownership*/
     virtual QgsAbstractGeometryV2* segmentize() const /Factory/;
+
+    /** Returns approximate rotation angle for a vertex. Usually average angle between adjacent segments.
+        @return rotation in radians, clockwise from north*/
+    virtual double vertexAngle( const QgsVertexId& vertex ) const = 0;
+
+    virtual int vertexCount(int part = 0, int ring = 0) const = 0;
+    virtual int ringCount(int part = 0) const = 0;
+    virtual int partCount() const = 0;
+
+    /** Adds a z-dimension to the geometry, initialized to a preset value.
+     * @param zValue initial z-value for all nodes
+     * @returns true on success
+     * @note added in QGIS 2.12
+     * @see addMValue
+     */
+    virtual bool addZValue( double zValue = 0 ) = 0;
+
+    /** Adds a measure to the geometry, initialized to a preset value.
+     * @param mValue initial m-value for all nodes
+     * @returns true on success
+     * @note added in QGIS 2.12
+     * @see addZValue
+     */
+    virtual bool addMValue( double mValue = 0 ) = 0;
 };

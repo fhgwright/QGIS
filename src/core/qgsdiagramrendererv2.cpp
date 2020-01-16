@@ -31,7 +31,6 @@ QgsDiagramLayerSettings::QgsDiagramLayerSettings()
     , obstacle( false )
     , dist( 0.0 )
     , renderer( 0 )
-    , palLayer( 0 )
     , ct( 0 )
     , xform( 0 )
     , xPosColumn( -1 )
@@ -165,7 +164,7 @@ void QgsDiagramSettings::readXML( const QDomElement& elem, const QgsVectorLayer*
 
   if ( attributes.length() > 0 )
   {
-    for ( uint i = 0; i < attributes.length(); i++ )
+    for ( int i = 0; i < attributes.size(); i++ )
     {
       QDomElement attrElem = attributes.at( i ).toElement();
       QColor newColor( attrElem.attribute( "color" ) );
@@ -549,6 +548,7 @@ void QgsLinearlyInterpolatedDiagramRenderer::writeXML( QDomElement& layerElem, Q
 QList< QgsLayerTreeModelLegendNode* > QgsDiagramSettings::legendItems( QgsLayerTreeLayer* nodeLayer ) const
 {
   QList< QgsLayerTreeModelLegendNode * > list;
+  list.reserve( categoryLabels.size() );
   for ( int i = 0 ; i < categoryLabels.size(); ++i )
   {
     QPixmap pix( 16, 16 );

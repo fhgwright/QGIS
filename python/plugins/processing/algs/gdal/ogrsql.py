@@ -41,8 +41,8 @@ class OgrSql(OgrAlgorithm):
     SQL = 'SQL'
 
     def defineCharacteristics(self):
-        self.name = 'Execute SQL'
-        self.group = '[OGR] Miscellaneous'
+        self.name, self.i18n_name = self.trAlgorithm('Execute SQL')
+        self.group, self.i18n_group = self.trAlgorithm('[OGR] Miscellaneous')
 
         self.addParameter(ParameterVector(self.INPUT, self.tr('Input layer'),
                           [ParameterVector.VECTOR_TYPE_ANY], False))
@@ -65,7 +65,7 @@ class OgrSql(OgrAlgorithm):
         arguments.append(outFile)
 
         layer = self.getParameterValue(self.INPUT)
-        conn = self.ogrConnectionString(layer)
+        conn = self.ogrConnectionString(layer)[1:-1]
         arguments.append(conn)
 
         return ['ogr2ogr', GdalUtils.escapeAndJoin(arguments)]

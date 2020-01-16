@@ -34,6 +34,7 @@
 #include <QImage>
 #include <QPainter>
 #include <QSize>
+#include <QSvgGenerator>
 
 #include <cmath>
 
@@ -41,9 +42,9 @@ inline
 QgsDataDefined* rotateWholeSymbol( double additionalRotation, const QgsDataDefined& dd )
 {
   QgsDataDefined* rotatedDD = new QgsDataDefined( dd );
-  rotatedDD->setUseExpression( true );
   QString exprString = dd.useExpression() ? dd.expressionString() : dd.field();
   rotatedDD->setExpressionString( QString::number( additionalRotation ) + " + (" + exprString + ")" );
+  rotatedDD->setUseExpression( true );
   return rotatedDD;
 }
 
@@ -51,9 +52,9 @@ inline
 QgsDataDefined* scaleWholeSymbol( double scaleFactor, const QgsDataDefined& dd )
 {
   QgsDataDefined* scaledDD = new QgsDataDefined( dd );
-  scaledDD->setUseExpression( true );
   QString exprString = dd.useExpression() ? dd.expressionString() : dd.field();
   scaledDD->setExpressionString( QString::number( scaleFactor ) + "*(" + exprString + ")" );
+  scaledDD->setUseExpression( true );
   return scaledDD;
 }
 
@@ -61,19 +62,19 @@ inline
 QgsDataDefined* scaleWholeSymbol( double scaleFactorX, double scaleFactorY, const QgsDataDefined& dd )
 {
   QgsDataDefined* scaledDD = new QgsDataDefined( dd );
-  scaledDD->setUseExpression( true );
   QString exprString = dd.useExpression() ? dd.expressionString() : dd.field();
   scaledDD->setExpressionString(
     ( scaleFactorX ? "tostring(" + QString::number( scaleFactorX ) + "*(" + exprString + "))" : "'0'" ) +
     "|| ',' || " +
     ( scaleFactorY ? "tostring(" + QString::number( scaleFactorY ) + "*(" + exprString + "))" : "'0'" ) );
+  scaledDD->setUseExpression( true );
   return scaledDD;
 }
 
 
 ////////////////////
 
-QgsSymbolV2::QgsSymbolV2( SymbolType type, QgsSymbolLayerV2List layers )
+QgsSymbolV2::QgsSymbolV2( SymbolType type, const QgsSymbolLayerV2List& layers )
     : mType( type )
     , mLayers( layers )
     , mAlpha( 1.0 )
@@ -352,6 +353,26 @@ void QgsSymbolV2::drawPreviewIcon( QPainter* painter, QSize size, QgsRenderConte
   }
 }
 
+void QgsSymbolV2::exportImage( const QString& path, const QString& format, const QSize& size )
+{
+  if ( format.toLower() == "svg" )
+  {
+    QSvgGenerator generator;
+    generator.setFileName( path );
+    generator.setSize( size );
+    generator.setViewBox( QRect( 0, 0, size.height(), size.height() ) );
+
+    QPainter painter( &generator );
+    drawPreviewIcon( &painter, size );
+    painter.end();
+  }
+  else
+  {
+    QImage image = asImage( size );
+    image.save( path );
+  }
+}
+
 QImage QgsSymbolV2::asImage( QSize size, QgsRenderContext* customContext )
 {
   QImage image( size, QImage::Format_ARGB32_Premultiplied );
@@ -366,7 +387,7 @@ QImage QgsSymbolV2::asImage( QSize size, QgsRenderContext* customContext )
 }
 
 
-QImage QgsSymbolV2::bigSymbolPreviewImage()
+QImage QgsSymbolV2::bigSymbolPreviewImage( QgsExpressionContext* expressionContext )
 {
   QImage preview( QSize( 100, 100 ), QImage::Format_ARGB32_Premultiplied );
   preview.fill( 0 );
@@ -383,6 +404,9 @@ QImage QgsSymbolV2::bigSymbolPreviewImage()
   }
 
   QgsRenderContext context = QgsSymbolLayerV2Utils::createRenderContext( &p );
+  if ( expressionContext )
+    context.setExpressionContext( *expressionContext );
+
   startRender( context );
 
   if ( mType == QgsSymbolV2::Line )
@@ -480,10 +504,14 @@ QgsSymbolV2RenderContext::~QgsSymbolV2RenderContext()
 
 }
 
+void QgsSymbolV2RenderContext::setOriginalValueVariable( const QVariant& value )
+{
+  mRenderContext.expressionContext().setOriginalValueVariable( value );
+}
 
 double QgsSymbolV2RenderContext::outputLineWidth( double width ) const
 {
-  return width * QgsSymbolLayerV2Utils::lineWidthScaleFactor( mRenderContext, mOutputUnit, mMapUnitScale );
+  return QgsSymbolLayerV2Utils::convertToPainterUnits( mRenderContext, width, mOutputUnit, mMapUnitScale );
 }
 
 double QgsSymbolV2RenderContext::outputPixelSize( double size ) const
@@ -538,7 +566,7 @@ QgsFillSymbolV2* QgsFillSymbolV2::createSimple( const QgsStringMap& properties )
 
 ///////////////////
 
-QgsMarkerSymbolV2::QgsMarkerSymbolV2( QgsSymbolLayerV2List layers )
+QgsMarkerSymbolV2::QgsMarkerSymbolV2( const QgsSymbolLayerV2List& layers )
     : QgsSymbolV2( Marker, layers )
 {
   if ( mLayers.count() == 0 )
@@ -841,7 +869,7 @@ QgsSymbolV2* QgsMarkerSymbolV2::clone() const
 ///////////////////
 // LINE
 
-QgsLineSymbolV2::QgsLineSymbolV2( QgsSymbolLayerV2List layers )
+QgsLineSymbolV2::QgsLineSymbolV2( const QgsSymbolLayerV2List& layers )
     : QgsSymbolV2( Line, layers )
 {
   if ( mLayers.count() == 0 )
@@ -1023,7 +1051,7 @@ QgsSymbolV2* QgsLineSymbolV2::clone() const
 ///////////////////
 // FILL
 
-QgsFillSymbolV2::QgsFillSymbolV2( QgsSymbolLayerV2List layers )
+QgsFillSymbolV2::QgsFillSymbolV2( const QgsSymbolLayerV2List& layers )
     : QgsSymbolV2( Fill, layers )
 {
   if ( mLayers.count() == 0 )

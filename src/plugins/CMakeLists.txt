@@ -1,4 +1,4 @@
-IF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+IF (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 ENDIF()
 # override default path where built files are put to allow running qgis without installing
@@ -19,6 +19,8 @@ ADD_SUBDIRECTORY(gps_importer)
 ADD_SUBDIRECTORY(topology)
 ADD_SUBDIRECTORY(offline_editing)
 ADD_SUBDIRECTORY(heatmap)
+ADD_SUBDIRECTORY(geometry_checker)
+ADD_SUBDIRECTORY(geometry_snapper)
 
 IF (POSTGRES_FOUND)
   ADD_SUBDIRECTORY(spit)

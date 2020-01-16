@@ -464,6 +464,15 @@ QString QgsOracleUtils::whereClause( QgsFeatureIds featureIds, const QgsFields &
   return whereClauses.isEmpty() ? "" : whereClauses.join( " OR " ).prepend( "(" ).append( ")" );
 }
 
+QString QgsOracleUtils::andWhereClauses( const QString& c1, const QString& c2 )
+{
+  if ( c1.isEmpty() )
+    return c2;
+  if ( c2.isEmpty() )
+    return c1;
+
+  return QString( "(%1) AND (%2)" ).arg( c1 ).arg( c2 );
+}
 
 QString QgsOracleProvider::whereClause( QgsFeatureId featureId ) const
 {
@@ -694,7 +703,7 @@ bool QgsOracleProvider::loadFields()
 
       if ( !mHasSpatialIndex )
       {
-        mHasSpatialIndex = qry.exec( QString( "SELECT %2 FROM %1 WHERE sdo_filter(%2,mdsys.sdo_geometry(2003,%3,NULL,mdsys.sdo_elem_info_array(1,1003,3),mdsys.sdo_ordinate_array(1,1,-1,-1)))='TRUE'" )
+        mHasSpatialIndex = qry.exec( QString( "SELECT %2 FROM %1 WHERE sdo_filter(%2,mdsys.sdo_geometry(2003,%3,NULL,mdsys.sdo_elem_info_array(1,1003,3),mdsys.sdo_ordinate_array(-1,-1,1,1)))='TRUE'" )
                                      .arg( mQuery )
                                      .arg( quotedIdentifier( mGeometryColumn ) )
                                      .arg( mSrid < 1 ? "NULL" : QString::number( mSrid ) ) );

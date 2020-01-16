@@ -71,8 +71,8 @@ class TestQgsGradients : public QObject
     void gradientSymbolFromQml();
   private:
     bool mTestHasError;
-    bool setQml( QString theType );
-    bool imageCheck( QString theType );
+    bool setQml( const QString& theType );
+    bool imageCheck( const QString& theType );
     QgsMapSettings mMapSettings;
     QgsVectorLayer * mpPolysLayer;
     QgsGradientFillSymbolLayerV2* mGradientFill;
@@ -268,7 +268,7 @@ void TestQgsGradients::gradientSymbolFromQml()
 // Private helper functions not called directly by CTest
 //
 
-bool TestQgsGradients::setQml( QString theType )
+bool TestQgsGradients::setQml( const QString& theType )
 {
   //load a qml style and apply to our layer
   //the style will correspond to the renderer
@@ -283,12 +283,13 @@ bool TestQgsGradients::setQml( QString theType )
   return myStyleFlag;
 }
 
-bool TestQgsGradients::imageCheck( QString theTestType )
+bool TestQgsGradients::imageCheck( const QString& theTestType )
 {
   //use the QgsRenderChecker test utility class to
   //ensure the rendered output matches our control image
   mMapSettings.setExtent( mpPolysLayer->extent() );
   QgsRenderChecker myChecker;
+  myChecker.setControlPathPrefix( "symbol_gradient" );
   myChecker.setControlName( "expected_" + theTestType );
   myChecker.setMapSettings( mMapSettings );
   bool myResultFlag = myChecker.runTest( theTestType );

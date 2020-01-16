@@ -243,7 +243,7 @@ void QgsSpatiaLiteSourceSelect::setLayerType( QString table, QString column, QSt
 void QgsSpatiaLiteSourceSelect::populateConnectionList()
 {
   cmbConnections->clear();
-  foreach ( QString name, QgsSpatiaLiteConnection::connectionList() )
+  Q_FOREACH ( const QString& name, QgsSpatiaLiteConnection::connectionList() )
   {
     // retrieving the SQLite DB name and full path
     QString text = name + tr( "@" ) + QgsSpatiaLiteConnection::connectionPath( name );
@@ -448,15 +448,15 @@ void QgsSpatiaLiteSourceSelect::on_btnConnect_clicked()
         break;
       case QgsSpatiaLiteConnection::FailedToOpen:
         QMessageBox::critical( this, tr( "SpatiaLite DB Open Error" ),
-                               tr( "Failure while connecting to: %1\n\n%2" ).arg( mSqlitePath ).arg( errCause ) );
+                               tr( "Failure while connecting to: %1\n\n%2" ).arg( mSqlitePath, errCause ) );
         break;
       case QgsSpatiaLiteConnection::FailedToGetTables:
         QMessageBox::critical( this, tr( "SpatiaLite getTableInfo Error" ),
-                               tr( "Failure exploring tables from: %1\n\n%2" ).arg( mSqlitePath ).arg( errCause ) );
+                               tr( "Failure exploring tables from: %1\n\n%2" ).arg( mSqlitePath, errCause ) );
         break;
       default:
         QMessageBox::critical( this, tr( "SpatiaLite Error" ),
-                               tr( "Unexpected error when working with: %1\n\n%2" ).arg( mSqlitePath ).arg( errCause ) );
+                               tr( "Unexpected error when working with: %1\n\n%2" ).arg( mSqlitePath, errCause ) );
     }
     mSqlitePath = QString();
     return;
@@ -471,7 +471,7 @@ void QgsSpatiaLiteSourceSelect::on_btnConnect_clicked()
   mTableModel.setSqliteDb( subKey );
 
   QList<QgsSpatiaLiteConnection::TableEntry> tables = conn.tables();
-  foreach ( const QgsSpatiaLiteConnection::TableEntry& table, tables )
+  Q_FOREACH ( const QgsSpatiaLiteConnection::TableEntry& table, tables )
   {
     mTableModel.addTableEntry( table.type, table.tableName, table.column, "" );
   }

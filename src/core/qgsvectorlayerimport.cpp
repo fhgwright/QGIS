@@ -72,7 +72,7 @@ QgsVectorLayerImport::QgsVectorLayerImport( const QString &uri,
   {
     delete myLib;
     mError = ErrProviderUnsupportedFeature;
-    mErrorMessage = QObject::tr( "Provider %1 has no %2 method" ).arg( providerKey ).arg( "createEmptyLayer" );
+    mErrorMessage = QObject::tr( "Provider %1 has no %2 method" ).arg( providerKey, "createEmptyLayer" );
     return;
   }
 
@@ -87,7 +87,7 @@ QgsVectorLayerImport::QgsVectorLayerImport( const QString &uri,
     return;
   }
 
-  foreach ( int idx, mOldToNewAttrIdx.values() )
+  Q_FOREACH ( int idx, mOldToNewAttrIdx.values() )
   {
     if ( idx > mAttributeCount )
       mAttributeCount = idx;
@@ -150,7 +150,7 @@ bool QgsVectorLayerImport::addFeature( QgsFeature& feat )
       continue;
 
     QgsDebugMsgLevel( QString( "moving field from pos %1 to %2" ).arg( i ).arg( dstIdx ), 3 );
-    newFeat.setAttribute( dstIdx, attrs[i] );
+    newFeat.setAttribute( dstIdx, attrs.at( i ) );
   }
 
   mFeatureBuffer.append( newFeat );
@@ -215,7 +215,7 @@ QgsVectorLayerImport::importLayer( QgsVectorLayer* layer,
 {
   const QgsCoordinateReferenceSystem* outputCRS;
   QgsCoordinateTransform* ct = 0;
-  int shallTransform = false;
+  bool shallTransform = false;
 
   if ( layer == NULL )
   {
@@ -243,7 +243,7 @@ QgsVectorLayerImport::importLayer( QgsVectorLayer* layer,
     forceSinglePartGeom = options->take( "forceSinglePartGeometryType" ).toBool();
   }
 
-  QgsFields fields = skipAttributeCreation ? QgsFields() : layer->pendingFields();
+  QgsFields fields = skipAttributeCreation ? QgsFields() : layer->fields();
   QGis::WkbType wkbType = layer->wkbType();
 
   // Special handling for Shapefiles
@@ -252,7 +252,7 @@ QgsVectorLayerImport::importLayer( QgsVectorLayer* layer,
     // convert field names to lowercase
     for ( int fldIdx = 0; fldIdx < fields.count(); ++fldIdx )
     {
-      fields[fldIdx].setName( fields[fldIdx].name().toLower() );
+      fields[fldIdx].setName( fields.at( fldIdx ).name().toLower() );
     }
 
     if ( !forceSinglePartGeom )
@@ -302,7 +302,7 @@ QgsVectorLayerImport::importLayer( QgsVectorLayer* layer,
     errorMessage->clear();
   }
 
-  QgsAttributeList allAttr = skipAttributeCreation ? QgsAttributeList() : layer->pendingAllAttributesList();
+  QgsAttributeList allAttr = skipAttributeCreation ? QgsAttributeList() : layer->attributeList();
   QgsFeature fet;
 
   QgsFeatureRequest req;

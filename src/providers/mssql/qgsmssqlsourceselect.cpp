@@ -52,15 +52,15 @@ QWidget *QgsMssqlSourceSelectDelegate::createEditor( QWidget *parent, const QSty
   if ( index.column() == QgsMssqlTableModel::dbtmType && index.data( Qt::UserRole + 1 ).toBool() )
   {
     QComboBox *cb = new QComboBox( parent );
-    foreach ( QGis::WkbType type,
-              QList<QGis::WkbType>()
-              << QGis::WKBPoint
-              << QGis::WKBLineString
-              << QGis::WKBPolygon
-              << QGis::WKBMultiPoint
-              << QGis::WKBMultiLineString
-              << QGis::WKBMultiPolygon
-              << QGis::WKBNoGeometry )
+    Q_FOREACH ( QGis::WkbType type,
+                QList<QGis::WkbType>()
+                << QGis::WKBPoint
+                << QGis::WKBLineString
+                << QGis::WKBPolygon
+                << QGis::WKBMultiPoint
+                << QGis::WKBMultiLineString
+                << QGis::WKBMultiPolygon
+                << QGis::WKBNoGeometry )
     {
       cb->addItem( QgsMssqlTableModel::iconForWkbType( type ), QgsMssqlTableModel::displayStringForWkbType( type ), type );
     }
@@ -433,7 +433,7 @@ void QgsMssqlSourceSelect::addTables()
   QgsDebugMsg( QString( "mConnInfo:%1" ).arg( mConnInfo ) );
   mSelectedTables.clear();
 
-  foreach ( QModelIndex idx, mTablesTreeView->selectionModel()->selection().indexes() )
+  Q_FOREACH ( const QModelIndex& idx, mTablesTreeView->selectionModel()->selection().indexes() )
   {
     if ( idx.column() != QgsMssqlTableModel::dbtmTable )
       continue;
@@ -526,11 +526,7 @@ void QgsMssqlSourceSelect::on_btnConnect_clicked()
   if ( useGeometryColumns )
   {
     QString testquery( "SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'geometry_columns'" );
-    q.exec( testquery );
-    q.first();
-    int count = q.value( 0 ).toInt();
-    bool geometryColumnsFound = count != 0;
-    if ( !geometryColumnsFound )
+    if ( !q.exec( testquery ) || !q.first() || q.value( 0 ).toInt() == 0 )
     {
       QMessageBox::StandardButtons reply;
       reply = QMessageBox::question( this, "Scan full database?",
@@ -775,8 +771,8 @@ void QgsMssqlGeomColumnTypeThread::run()
     {
       QString table;
       table = QString( "%1[%2]" )
-              .arg( layerProperty.schemaName.isEmpty() ? "" : QString( "[%1]." ).arg( layerProperty.schemaName ) )
-              .arg( layerProperty.tableName );
+              .arg( layerProperty.schemaName.isEmpty() ? "" : QString( "[%1]." ).arg( layerProperty.schemaName ),
+                    layerProperty.tableName );
 
       QString query = QString( "SELECT %3"
                                " UPPER([%1].STGeometryType()),"
@@ -784,10 +780,10 @@ void QgsMssqlGeomColumnTypeThread::run()
                                " FROM %2"
                                " WHERE [%1] IS NOT NULL %4"
                                " GROUP BY [%1].STGeometryType(), [%1].STSrid" )
-                      .arg( layerProperty.geometryColName )
-                      .arg( table )
-                      .arg( mUseEstimatedMetadata ? "TOP 1" : "" )
-                      .arg( layerProperty.sql.isEmpty() ? "" : QString( " AND %1" ).arg( layerProperty.sql ) );
+                      .arg( layerProperty.geometryColName,
+                            table,
+                            mUseEstimatedMetadata ? "TOP 1" : "",
+                            layerProperty.sql.isEmpty() ? "" : QString( " AND %1" ).arg( layerProperty.sql ) );
 
       // issue the sql query
       QSqlDatabase db = QSqlDatabase::database( mConnectionName );

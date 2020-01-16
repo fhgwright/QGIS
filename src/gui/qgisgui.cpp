@@ -42,7 +42,7 @@ namespace QgisGui
     }
     else //we have to use non-native dialog to add cancel all button
     {
-      QgsEncodingFileDialog* openFileDialog = new QgsEncodingFileDialog( 0, title, lastUsedDir, filters, QString( "" ) );
+      QgsEncodingFileDialog* openFileDialog = new QgsEncodingFileDialog( 0, title, lastUsedDir, filters, QString() );
 
       // allow for selection of more than one file
       openFileDialog->setFileMode( QFileDialog::ExistingFiles );
@@ -83,11 +83,11 @@ namespace QgisGui
     return false;
   }
 
-  QPair<QString, QString> GUI_EXPORT getSaveAsImageName( QWidget *theParent, QString theMessage, QString defaultFilename )
+  QPair<QString, QString> GUI_EXPORT getSaveAsImageName( QWidget *theParent, const QString& theMessage, const QString& defaultFilename )
   {
     // get a list of supported output image types
     QMap<QString, QString> filterMap;
-    foreach ( QByteArray format, QImageWriter::supportedImageFormats() )
+    Q_FOREACH ( const QByteArray& format, QImageWriter::supportedImageFormats() )
     {
       //svg doesnt work so skip it
       if ( format ==  "svg" )
@@ -178,7 +178,7 @@ namespace QgisGui
 
   QString createFileFilter_( QString const &longName, QString const &glob )
   {
-    return QString( "%1 (%2 %3)" ).arg( longName ).arg( glob.toLower() ).arg( glob.toUpper() );
+    return QString( "%1 (%2 %3)" ).arg( longName, glob.toLower(), glob.toUpper() );
   }
 
   QString createFileFilter_( QString const &format )

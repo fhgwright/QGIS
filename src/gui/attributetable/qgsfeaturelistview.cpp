@@ -77,7 +77,7 @@ void QgsFeatureListView::setModel( QgsFeatureListModel* featureListModel )
   connect( mCurrentEditSelectionModel, SIGNAL( selectionChanged( QItemSelection, QItemSelection ) ), SLOT( editSelectionChanged( QItemSelection, QItemSelection ) ) );
 }
 
-bool QgsFeatureListView::setDisplayExpression( const QString expression )
+bool QgsFeatureListView::setDisplayExpression( const QString& expression )
 {
   if ( mModel->setDisplayExpression( expression ) )
   {
@@ -103,7 +103,7 @@ QString QgsFeatureListView::parserErrorString()
 QgsFeatureIds QgsFeatureListView::currentEditSelection()
 {
   QgsFeatureIds selection;
-  Q_FOREACH ( QModelIndex idx, mCurrentEditSelectionModel->selectedIndexes() )
+  Q_FOREACH ( const QModelIndex& idx, mCurrentEditSelectionModel->selectedIndexes() )
   {
     selection << idx.data( QgsAttributeTableModel::FeatureIdRole ).value<QgsFeatureId>();
   }
@@ -177,7 +177,7 @@ void QgsFeatureListView::setEditSelection( const QgsFeatureIds &fids )
 {
   QItemSelection selection;
 
-  foreach ( QgsFeatureId fid, fids )
+  Q_FOREACH ( QgsFeatureId fid, fids )
   {
     selection.append( QItemSelectionRange( mModel->mapToMaster( mModel->fidToIdx( fid ) ) ) );
   }
@@ -189,7 +189,7 @@ void QgsFeatureListView::setEditSelection( const QgsFeatureIds &fids )
     mCurrentEditSelectionModel->select( selection, QItemSelectionModel::ClearAndSelect );
 }
 
-void QgsFeatureListView::setEditSelection( const QModelIndex& index, QItemSelectionModel::SelectionFlags command )
+void QgsFeatureListView::setEditSelection( const QModelIndex& index, const QItemSelectionModel::SelectionFlags& command )
 {
   bool ok = true;
   emit aboutToChangeEditSelection( ok );
@@ -198,9 +198,9 @@ void QgsFeatureListView::setEditSelection( const QModelIndex& index, QItemSelect
     mCurrentEditSelectionModel->select( index, command );
 }
 
-void QgsFeatureListView::repaintRequested( QModelIndexList indexes )
+void QgsFeatureListView::repaintRequested( const QModelIndexList& indexes )
 {
-  foreach ( const QModelIndex index, indexes )
+  Q_FOREACH ( const QModelIndex& index, indexes )
   {
     update( index );
   }
