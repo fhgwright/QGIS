@@ -375,10 +375,11 @@ class ModelerAlgorithm(GeoAlgorithm):
                 if param.name in alg.params:
                     value = self.resolveValue(alg.params[param.name])
                 else:
-                    iface.messageBar().pushMessage(self.tr("Warning"),
-                                                   self.tr("Parameter %s in algorithm %s in the model is run with default value! Edit the model to make sure that this is correct." % (param.name, alg.name)),
-                                                   QgsMessageBar.WARNING, 4)
-                    value = None
+                    if iface is not None:
+                        iface.messageBar().pushMessage(self.tr("Warning"),
+                                                       self.tr("Parameter %s in algorithm %s in the model is run with default value! Edit the model to make sure that this is correct.") % (param.name, alg.name),
+                                                       QgsMessageBar.WARNING, 4)
+                    value = param.default
                 if value is None and isinstance(param, ParameterExtent):
                     value = self.getMinCoveringExtent()
                 # We allow unexistent filepaths, since that allows
