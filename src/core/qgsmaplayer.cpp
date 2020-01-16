@@ -86,6 +86,8 @@ QgsMapLayer::QgsMapLayer( QgsMapLayer::LayerType type,
   mScaleBasedVisibility = false;
 
   connect( this, SIGNAL( nameChanged() ), this, SIGNAL( layerNameChanged() ) );
+
+  connect( mStyleManager, SIGNAL( currentStyleChanged( QString ) ), this, SIGNAL( styleChanged() ) );
 }
 
 QgsMapLayer::~QgsMapLayer()
