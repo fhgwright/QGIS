@@ -5,7 +5,7 @@ class QgsMultiPolygonV2: public QgsMultiSurfaceV2
 %End
   public:
     virtual QString geometryType() const;
-    virtual QgsMultiPolygonV2* clone() const;
+    virtual QgsMultiPolygonV2* clone() const /Factory/;
 
     bool fromWkt( const QString& wkt );
 
@@ -18,7 +18,7 @@ class QgsMultiPolygonV2: public QgsMultiSurfaceV2
 
 
     /** Adds a geometry and takes ownership. Returns true in case of success*/
-    virtual bool addGeometry( QgsAbstractGeometryV2* g );
+    virtual bool addGeometry( QgsAbstractGeometryV2* g /Transfer/ );
 
     /** Returns the geometry converted to the more generic curve type QgsMultiSurfaceV2
     @return the converted geometry. Caller takes ownership*/

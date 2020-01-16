@@ -6,7 +6,7 @@ PyQgsMapUnitScale
 PyQgsPalLabelingServer
 PyQgsRelationEditWidget
 PyQgsServer
-PyQgsAuthManagerEndpointTest
+PyQgsAuthManagerPasswordOWSTest
 PyQgsServerAccessControl
 PyQgsSipCoverage
 PyQgsSpatialiteProvider
@@ -16,3 +16,4 @@ qgis_composermapgridtest
 qgis_composerutils
 ProcessingGrass7AlgorithmsImageryTest
 ProcessingGrass7AlgorithmsRasterTest
+PyQgsDBManagerGpkg

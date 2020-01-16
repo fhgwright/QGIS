@@ -209,6 +209,35 @@ QgsOracleProvider::~QgsOracleProvider()
   disconnectDb();
 }
 
+QString QgsOracleProvider::getWorkspace() const
+{
+  return mUri.param( "dbworkspace" );
+}
+
+void QgsOracleProvider::setWorkspace( const QString &workspace )
+{
+  QgsDataSourceURI prevUri( mUri );
+
+  disconnectDb();
+
+  if ( workspace.isEmpty() )
+    mUri.removeParam( "dbworkspace" );
+  else
+    mUri.setParam( "dbworkspace", workspace );
+
+  mConnection = QgsOracleConn::connectDb( mUri );
+  if ( !mConnection )
+  {
+    mUri = prevUri;
+    QgsDebugMsg( QString( "restoring previous uri:%1" ).arg( mUri.uri() ) );
+    mConnection = QgsOracleConn::connectDb( mUri );
+  }
+  else
+  {
+    setDataSourceUri( mUri.uri() );
+  }
+}
+
 QgsAbstractFeatureSource *QgsOracleProvider::featureSource() const
 {
   return new QgsOracleFeatureSource( this );
@@ -584,13 +613,14 @@ bool QgsOracleProvider::loadFields()
 
     qry.finish();
 
-    if ( exec( qry, QString( "SELECT column_name,comments FROM all_col_comments t WHERE t.owner=%1 AND t.table_name=%2 AND t.column_name<>%3" )
+    if ( exec( qry, QString( "SELECT column_name,comments FROM all_col_comments t WHERE t.owner=%1 AND t.table_name=%2" )
                .arg( quotedValue( mOwnerName ) )
-               .arg( quotedValue( mTableName ) )
-               .arg( quotedValue( mGeometryColumn ) ) ) )
+               .arg( quotedValue( mTableName ) ) ) )
     {
       while ( qry.next() )
       {
+        if ( qry.value( 0 ).toString() == mGeometryColumn )
+          continue;
         comments.insert( qry.value( 0 ).toString(), qry.value( 1 ).toString() );
       }
     }
@@ -719,7 +749,9 @@ bool QgsOracleProvider::loadFields()
 
     if ( !mHasSpatialIndex )
     {
-      QgsMessageLog::logMessage( tr( "No spatial index on column %1 found - expect poor performance." )
+      QgsMessageLog::logMessage( tr( "No spatial index on column %1.%2.%3 found - expect poor performance." )
+                                 .arg( mOwnerName )
+                                 .arg( mTableName )
                                  .arg( mGeometryColumn ),
                                  tr( "Oracle" ) );
     }
@@ -2111,7 +2143,7 @@ bool QgsOracleProvider::setSubsetString( const QString& theSQL, bool updateFeatu
   }
   qry.finish();
 
-  if ( mPrimaryKeyType == pktInt && !uniqueData( mQuery, mAttributeFields[ mPrimaryKeyAttrs[0] ].name() ) )
+  if ( mPrimaryKeyType == pktInt && !mUseEstimatedMetadata && !uniqueData( mQuery, mAttributeFields[ mPrimaryKeyAttrs[0] ].name() ) )
   {
     mSqlWhereClause = prevWhere;
     return false;
@@ -2321,9 +2353,14 @@ bool QgsOracleProvider::getGeometryDetails()
                                  .arg( qry.lastQuery() ), tr( "Oracle" ) );
     }
 
-    if ( exec( qry, QString( mUseEstimatedMetadata
-                             ?  "SELECT DISTINCT gtype FROM (SELECT t.%1.sdo_gtype AS gtype FROM %2 t WHERE t.%1 IS NOT NULL AND rownum<1000) WHERE rownum<=2"
-                             :  "SELECT DISTINCT t.%1.sdo_gtype FROM %2 t WHERE t.%1 IS NOT NULL AND rownum<=2" ).arg( quotedIdentifier( geomCol ) ).arg( mQuery ) ) )
+    if ( mUseEstimatedMetadata && mRequestedGeomType != QGis::WKBUnknown )
+    {
+      QgsDebugMsg( "Trusting requested geometry type" );
+      detectedType = mRequestedGeomType;
+    }
+    else if ( exec( qry, QString( mUseEstimatedMetadata
+                                  ?  "SELECT DISTINCT gtype FROM (SELECT t.%1.sdo_gtype AS gtype FROM %2 t WHERE t.%1 IS NOT NULL AND rownum<100) WHERE rownum<=2"
+                                  :  "SELECT DISTINCT t.%1.sdo_gtype FROM %2 t WHERE t.%1 IS NOT NULL AND rownum<=2" ).arg( quotedIdentifier( geomCol ) ).arg( mQuery ) ) )
     {
       if ( qry.next() )
       {

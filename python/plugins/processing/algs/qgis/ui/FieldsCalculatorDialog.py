@@ -90,6 +90,7 @@ class FieldsCalculatorDialog(BASE, WIDGET):
         self.builder.loadRecent('fieldcalc')
 
         self.initContext()
+        self.updateLayer()
 
     def initContext(self):
         exp_context = self.builder.expressionContext()
@@ -171,6 +172,7 @@ class FieldsCalculatorDialog(BASE, WIDGET):
         if self.layer is None:
             return
 
+        self.mExistingFieldComboBox.clear()
         fields = self.layer.pendingFields()
         for f in fields:
             self.mExistingFieldComboBox.addItem(f.name())

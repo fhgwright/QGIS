@@ -12,7 +12,7 @@ class QgsCurvePolygonV2: public QgsSurfaceV2
 
     virtual QString geometryType() const;
     virtual int dimension() const;
-    virtual QgsCurvePolygonV2* clone() const;
+    virtual QgsCurvePolygonV2* clone() const /Factory/;
     void clear();
 
     virtual bool fromWkb( QgsConstWkbPtr wkb );
@@ -28,7 +28,7 @@ class QgsCurvePolygonV2: public QgsSurfaceV2
     //surface interface
     virtual double area() const;
     virtual double perimeter() const;
-    QgsPolygonV2* surfaceToPolygon() const;
+    QgsPolygonV2* surfaceToPolygon() const /Factory/;
     virtual QgsAbstractGeometryV2* boundary() const /Factory/;
 
 
@@ -68,6 +68,7 @@ class QgsCurvePolygonV2: public QgsSurfaceV2
     virtual bool deleteVertex( QgsVertexId position );
 
     virtual QList< QList< QList< QgsPointV2 > > > coordinateSequence() const;
+    virtual int nCoordinates() const;
     double closestSegment( const QgsPointV2& pt, QgsPointV2& segmentPt,  QgsVertexId& vertexAfter, bool* leftOf, double epsilon ) const;
     bool nextVertex( QgsVertexId& id, QgsPointV2& vertex ) const;
 

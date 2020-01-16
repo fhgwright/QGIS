@@ -657,6 +657,29 @@ int QgsWFSServer::getFeature( QgsRequestHandler& request, const QString& format 
               {
                 throw QgsMapServiceException( "RequestNotWellFormed", filter->parserErrorString() );
               }
+              QgsFeatureRequest req;
+              if ( filter->needsGeometry() )
+              {
+                req.setFlags( QgsFeatureRequest::NoFlags );
+              }
+              else
+              {
+                req.setFlags( QgsFeatureRequest::ExactIntersect | ( mWithGeom ? QgsFeatureRequest::NoFlags : QgsFeatureRequest::NoGeometry ) );
+              }
+              req.setFilterExpression( filter->expression() );
+#ifdef HAVE_SERVER_PYTHON_PLUGINS
+              mAccessControl->filterFeatures( layer, req );
+
+              QStringList attributes = QStringList();
+              Q_FOREACH ( int idx, attrIndexes )
+              {
+                attributes.append( layer->pendingFields().field( idx ).name() );
+              }
+              req.setSubsetOfAttributes(
+                mAccessControl->layerAttributes( layer, attributes ),
+                layer->pendingFields() );
+#endif
+              QgsFeatureIterator fit = layer->getFeatures( req );
               while ( fit.nextFeature( feature ) && ( !hasFeatureLimit || featureCounter < maxFeatures + startIndex ) )
               {
                 expressionContext.setFeature( feature );
@@ -1197,6 +1220,22 @@ void QgsWFSServer::startGetFeature( QgsRequestHandler& request, const QString& f
   if ( format == "GeoJSON" )
   {
     fcString = "{\"type\": \"FeatureCollection\",\n";
+    if ( crs.isValid() )
+    {
+      QgsGeometry* exportGeom = QgsGeometry::fromRect( *rect );
+      QgsCoordinateTransform transform;
+      transform.setSourceCrs( crs );
+      transform.setDestCRS( QgsCoordinateReferenceSystem( 4326, QgsCoordinateReferenceSystem::EpsgCrsId ) );
+      try
+      {
+        if ( exportGeom->transform( transform ) == 0 )
+          rect = new QgsRectangle( exportGeom->boundingBox() );
+      }
+      catch ( QgsCsException &cse )
+      {
+        Q_UNUSED( cse );
+      }
+    }
     fcString += " \"bbox\": [ " + qgsDoubleToString( rect->xMinimum(), prec ) + ", " + qgsDoubleToString( rect->yMinimum(), prec ) + ", " + qgsDoubleToString( rect->xMaximum(), prec ) + ", " + qgsDoubleToString( rect->yMaximum(), prec ) + "],\n";
     fcString += " \"features\": [\n";
     result = fcString.toUtf8();
