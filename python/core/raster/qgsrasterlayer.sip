@@ -38,14 +38,19 @@ class QgsRasterLayer : QgsMapLayer
      *
      * -
      * */
-    QgsRasterLayer( const QString & path,
-                    const QString &  baseName = QString::null,
+    QgsRasterLayer( const QString &path,
+                    const QString &baseName = QString::null,
                     bool loadDefaultStyleFlag = true );
 
+    //TODO - QGIS 3.0
+    //This constructor is confusing if used with string literals for providerKey,
+    //as the previous constructor will be called with the literal for providerKey
+    //implicitly converted to a bool.
+    //for QGIS 3.0, make either constructor explicit or alter the signatures
     /** \brief [ data provider interface ] Constructor in provider mode */
-    QgsRasterLayer( const QString & uri,
-                    const QString & baseName,
-                    const QString & providerKey,
+    QgsRasterLayer( const QString &uri,
+                    const QString &baseName,
+                    const QString &providerKey,
                     bool loadDefaultStyleFlag = true );
 
     /** \brief The destructor */
@@ -169,7 +174,9 @@ class QgsRasterLayer : QgsMapLayer
     /** \brief Set default contrast enhancement */
     void setDefaultContrastEnhancement();
 
-    /** \brief Overloaded version of the above function for convenience when restoring from xml */
+    /** \brief Overloaded version of the above function for convenience when restoring from xml
+     * @deprecated Deprecated since QGIS 2.10. Use setRendererForDrawingStyle() or directly setRenderer()
+     */
     void setDrawingStyle( const QString & theDrawingStyleQString ) /Deprecated/;
 
     /** \brief [ data provider interface ] A wrapper function to emit a progress update signal */
@@ -179,12 +186,12 @@ class QgsRasterLayer : QgsMapLayer
     virtual QStringList subLayers() const;
 
     /** \brief Draws a preview of the rasterlayer into a pixmap
-    @note - use previewAsImage() for rendering with QGIS>=2.4 */
-    QPixmap previewAsPixmap( const QSize& size, const QColor& bgColor = QColor( 255, 255, 255 ) ) /Deprecated/;
+    @deprecated use previewAsImage() for rendering with QGIS>=2.4 */
+    QPixmap previewAsPixmap( QSize size, const QColor& bgColor = QColor( 255, 255, 255 ) ) /Deprecated/;
 
     /** \brief Draws a preview of the rasterlayer into a QImage
      @note added in 2.4 */
-    QImage previewAsImage( const QSize& size, const QColor& bgColor = QColor( 255, 255, 255 ),
+    QImage previewAsImage( QSize size, const QColor& bgColor = QColor( 255, 255, 255 ),
                            QImage::Format format = QImage::Format_ARGB32_Premultiplied );
 
     /**

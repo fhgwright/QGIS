@@ -32,21 +32,31 @@
 
 #include <limits>
 
+///@cond PRIVATE
 
-class ItemDelegate : public QItemDelegate
+// RAII class to block a QObject signal until destroyed
+struct SignalBlocker
 {
-  public:
-    explicit ItemDelegate( QStandardItemModel* model ) : mModel( model ) {}
+  SignalBlocker( QObject * object )
+      : mObject( object )
+  {
+    mObject->blockSignals( true );
+  }
+  ~SignalBlocker()
+  {
+    mObject->blockSignals( false );
+  }
+private:
+  QObject * mObject;
 
-    QSize sizeHint( const QStyleOptionViewItem& /*option*/, const QModelIndex & index ) const override
-    {
-      return mModel->item( index.row() )->icon().actualSize( QSize( 512, 512 ) );
-    }
+  SignalBlocker( const SignalBlocker& rh );
+  SignalBlocker& operator=( const SignalBlocker& rh );
 
-  private:
-    QStandardItemModel* mModel;
+
 
 };
+
+///@endcond
 
 void QgsSizeScaleWidget::setFromSymbol()
 {
@@ -55,7 +65,16 @@ void QgsSizeScaleWidget::setFromSymbol()
     return;
   }
 
-  QgsDataDefined ddSize = mSymbol->dataDefinedSize();
+  QgsDataDefined ddSize;
+  if ( dynamic_cast< const QgsMarkerSymbolV2*>( mSymbol ) )
+  {
+    ddSize = static_cast< const QgsMarkerSymbolV2*>( mSymbol )->dataDefinedSize();
+  }
+  else if ( dynamic_cast< const QgsLineSymbolV2*>( mSymbol ) )
+  {
+    ddSize = dynamic_cast< const QgsLineSymbolV2*>( mSymbol )->dataDefinedWidth();
+  }
+
   QgsScaleExpression expr( ddSize.expressionString() );
   if ( expr )
   {
@@ -63,18 +82,20 @@ void QgsSizeScaleWidget::setFromSymbol()
     {
       if ( scaleMethodComboBox->itemData( i ).toInt() == int( expr.type() ) )
       {
-        scaleMethodComboBox->setCurrentIndex( i );
+        ( SignalBlocker( scaleMethodComboBox ), scaleMethodComboBox->setCurrentIndex( i ) );
         break;
       }
     }
 
-    mExpressionWidget->setField( expr.baseExpression() );
-
-    minValueSpinBox->setValue( expr.minValue() );
-    maxValueSpinBox->setValue( expr.maxValue() );
-    minSizeSpinBox->setValue( expr.minSize() );
-    maxSizeSpinBox->setValue( expr.maxSize() );
-    nullSizeSpinBox->setValue( expr.nullSize() );
+    // the (,) is used to create the Blocker first, then call the setter
+    // the unamed SignalBlocker is destroyed at the end of the line (semicolumn)
+    ( SignalBlocker( mExpressionWidget ), mExpressionWidget->setField( expr.baseExpression() ) );
+    ( SignalBlocker( minValueSpinBox ), minValueSpinBox->setValue( expr.minValue() ) );
+    ( SignalBlocker( maxValueSpinBox ), maxValueSpinBox->setValue( expr.maxValue() ) );
+    ( SignalBlocker( minSizeSpinBox ), minSizeSpinBox->setValue( expr.minSize() ) );
+    ( SignalBlocker( maxSizeSpinBox ), maxSizeSpinBox->setValue( expr.maxSize() ) );
+    ( SignalBlocker( nullSizeSpinBox ), nullSizeSpinBox->setValue( expr.nullSize() ) );
+    ( SignalBlocker( exponentSpinBox ), exponentSpinBox->setValue( expr.exponent() ) );
   }
   updatePreview();
 }
@@ -86,7 +107,7 @@ static QgsExpressionContext _getExpressionContext( const void* context )
   QgsExpressionContext expContext;
   expContext << QgsExpressionContextUtils::globalScope()
   << QgsExpressionContextUtils::projectScope()
-  << QgsExpressionContextUtils::atlasScope( 0 );
+  << QgsExpressionContextUtils::atlasScope( nullptr );
 
   if ( widget->mapCanvas() )
   {
@@ -101,15 +122,20 @@ static QgsExpressionContext _getExpressionContext( const void* context )
   if ( widget->layer() )
     expContext << QgsExpressionContextUtils::layerScope( widget->layer() );
 
+  expContext.lastScope()->addVariable( QgsExpressionContextScope::StaticVariable( QgsExpressionContext::EXPR_GEOMETRY_PART_COUNT, 1, true ) );
+  expContext.lastScope()->addVariable( QgsExpressionContextScope::StaticVariable( QgsExpressionContext::EXPR_GEOMETRY_PART_NUM, 1, true ) );
+
+  expContext.setHighlightedVariables( QStringList() << QgsExpressionContext::EXPR_GEOMETRY_PART_NUM );
+
   return expContext;
 }
 
-QgsSizeScaleWidget::QgsSizeScaleWidget( const QgsVectorLayer * layer, const QgsMarkerSymbolV2 * symbol )
+QgsSizeScaleWidget::QgsSizeScaleWidget( const QgsVectorLayer * layer, const QgsSymbolV2 * symbol )
     : mSymbol( symbol )
     // we just use the minimumValue and maximumValue from the layer, unfortunately they are
     // non const, so we get the layer from the registry instead
-    , mLayer( layer ? dynamic_cast<QgsVectorLayer *>( QgsMapLayerRegistry::instance()->mapLayer( layer->id() ) ) : 0 )
-    , mMapCanvas( 0 )
+    , mLayer( layer ? dynamic_cast<QgsVectorLayer *>( QgsMapLayerRegistry::instance()->mapLayer( layer->id() ) ) : nullptr )
+    , mMapCanvas( nullptr )
 {
   setupUi( this );
   setWindowFlags( Qt::WindowStaysOnTopHint );
@@ -123,7 +149,7 @@ QgsSizeScaleWidget::QgsSizeScaleWidget( const QgsVectorLayer * layer, const QgsM
   }
   else
   {
-    mLayerTreeLayer = 0;
+    mLayerTreeLayer = nullptr;
   }
 
   treeView->setModel( &mPreviewList );
@@ -145,9 +171,22 @@ QgsSizeScaleWidget::QgsSizeScaleWidget( const QgsVectorLayer * layer, const QgsM
     mExpressionWidget->setLayer( mLayer );
   }
 
-  scaleMethodComboBox->addItem( tr( "Flannery" ), int( QgsScaleExpression::Flannery ) );
-  scaleMethodComboBox->addItem( tr( "Surface" ), int( QgsScaleExpression::Area ) );
-  scaleMethodComboBox->addItem( tr( "Radius" ), int( QgsScaleExpression::Linear ) );
+  if ( dynamic_cast<const QgsMarkerSymbolV2*>( mSymbol ) )
+  {
+    scaleMethodComboBox->addItem( tr( "Flannery" ), int( QgsScaleExpression::Flannery ) );
+    scaleMethodComboBox->addItem( tr( "Surface" ), int( QgsScaleExpression::Area ) );
+    scaleMethodComboBox->addItem( tr( "Radius" ), int( QgsScaleExpression::Linear ) );
+  }
+  else if ( dynamic_cast<const QgsLineSymbolV2*>( mSymbol ) )
+  {
+    scaleMethodComboBox->addItem( tr( "Exponential" ), int( QgsScaleExpression::Exponential ) );
+    scaleMethodComboBox->addItem( tr( "Linear" ), int( QgsScaleExpression::Linear ) );
+  }
+  else
+  {
+    Q_ASSERT( false );
+  }
+
 
   minSizeSpinBox->setShowClearButton( false );
   maxSizeSpinBox->setShowClearButton( false );
@@ -163,6 +202,7 @@ QgsSizeScaleWidget::QgsSizeScaleWidget( const QgsVectorLayer * layer, const QgsM
   connect( minValueSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( updatePreview() ) );
   connect( maxValueSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( updatePreview() ) );
   connect( nullSizeSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( updatePreview() ) );
+  connect( exponentSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( updatePreview() ) );
   //potentially very expensive for large layers:
   connect( mExpressionWidget, SIGNAL( fieldChanged( QString ) ), this, SLOT( computeFromLayerTriggered() ) );
   connect( scaleMethodComboBox, SIGNAL( currentIndexChanged( int ) ), this, SLOT( updatePreview() ) );
@@ -182,12 +222,13 @@ void QgsSizeScaleWidget::showEvent( QShowEvent* )
 QgsScaleExpression *QgsSizeScaleWidget::createExpression() const
 {
   return new QgsScaleExpression( QgsScaleExpression::Type( scaleMethodComboBox->itemData( scaleMethodComboBox->currentIndex() ).toInt() ),
-                                 mExpressionWidget->currentField(),
+                                 mExpressionWidget->asExpression(),
                                  minValueSpinBox->value(),
                                  maxValueSpinBox->value(),
                                  minSizeSpinBox->value(),
                                  maxSizeSpinBox->value(),
-                                 nullSizeSpinBox->value() );
+                                 nullSizeSpinBox->value(),
+                                 exponentSpinBox->value() );
 }
 
 void QgsSizeScaleWidget::updatePreview()
@@ -196,6 +237,12 @@ void QgsSizeScaleWidget::updatePreview()
     return;
 
   QScopedPointer<QgsScaleExpression> expr( createExpression() );
+
+  if ( expr->type() == QgsScaleExpression::Exponential )
+    exponentSpinBox->show();
+  else
+    exponentSpinBox->hide();
+
   QList<double> breaks = QgsSymbolLayerV2Utils::prettyBreaks( expr->minValue(), expr->maxValue(), 4 );
 
   treeView->setIconSize( QSize( 512, 512 ) );
@@ -203,14 +250,27 @@ void QgsSizeScaleWidget::updatePreview()
   int widthMax = 0;
   for ( int i = 0; i < breaks.length(); i++ )
   {
-    QScopedPointer< QgsMarkerSymbolV2 > symbol( static_cast<QgsMarkerSymbolV2*>( mSymbol->clone() ) );
-    symbol->setDataDefinedSize( QgsDataDefined() );
-    symbol->setDataDefinedAngle( QgsDataDefined() ); // to avoid symbol not beeing drawn
-    symbol->setSize( expr->size( breaks[i] ) );
-    QgsSymbolV2LegendNode node( mLayerTreeLayer, QgsLegendSymbolItemV2( symbol.data(), QString::number( i ), 0 ) );
-    const QSize sz( node.minimumIconSize() );
-    node.setIconSize( sz );
-    QScopedPointer< QStandardItem > item( new QStandardItem( node.data( Qt::DecorationRole ).value<QPixmap>(), QString::number( breaks[i] ) ) );
+    QScopedPointer< QgsSymbolV2LegendNode > node;
+    if ( dynamic_cast<const QgsMarkerSymbolV2*>( mSymbol ) )
+    {
+      QScopedPointer< QgsMarkerSymbolV2 > symbol( static_cast<QgsMarkerSymbolV2*>( mSymbol->clone() ) );
+      symbol->setDataDefinedSize( QgsDataDefined() );
+      symbol->setDataDefinedAngle( QgsDataDefined() ); // to avoid symbol not beeing drawn
+      symbol->setSize( expr->size( breaks[i] ) );
+      node.reset( new QgsSymbolV2LegendNode( mLayerTreeLayer, QgsLegendSymbolItemV2( symbol.data(), QString::number( i ), nullptr ) ) );
+    }
+    else if ( dynamic_cast<const QgsLineSymbolV2*>( mSymbol ) )
+    {
+      QScopedPointer< QgsLineSymbolV2 > symbol( static_cast<QgsLineSymbolV2*>( mSymbol->clone() ) );
+      symbol->setDataDefinedWidth( QgsDataDefined() );
+      symbol->setWidth( expr->size( breaks[i] ) );
+      node.reset( new QgsSymbolV2LegendNode( mLayerTreeLayer, QgsLegendSymbolItemV2( symbol.data(), QString::number( i ), nullptr ) ) );
+
+    }
+
+    const QSize sz( node->minimumIconSize() );
+    node->setIconSize( sz );
+    QScopedPointer< QStandardItem > item( new QStandardItem( node->data( Qt::DecorationRole ).value<QPixmap>(), QString::number( breaks[i] ) ) );
     widthMax = qMax( sz.width(), widthMax );
     mPreviewList.appendRow( item.take() );
   }
@@ -240,7 +300,7 @@ void QgsSizeScaleWidget::computeFromLayerTriggered()
   QgsExpressionContext context;
   context << QgsExpressionContextUtils::globalScope()
   << QgsExpressionContextUtils::projectScope()
-  << QgsExpressionContextUtils::atlasScope( 0 )
+  << QgsExpressionContextUtils::atlasScope( nullptr )
   << QgsExpressionContextUtils::layerScope( mLayer );
 
   if ( ! expression.prepare( &context ) )
@@ -269,8 +329,8 @@ void QgsSizeScaleWidget::computeFromLayerTriggered()
       min = qMin( min, value );
     }
   }
-  minValueSpinBox->setValue( min );
-  maxValueSpinBox->setValue( max );
+  ( SignalBlocker( minValueSpinBox ), minValueSpinBox->setValue( min ) );
+  ( SignalBlocker( maxSizeSpinBox ), maxValueSpinBox->setValue( max ) );
   updatePreview();
 }
 

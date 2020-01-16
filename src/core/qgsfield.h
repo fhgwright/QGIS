@@ -27,7 +27,11 @@ class QgsExpression;
 class QgsFieldPrivate;
 class QgsFieldsPrivate;
 
-
+/***************************************************************************
+ * This class is considered CRITICAL and any change MUST be accompanied with
+ * full unit tests in testqgsfield.cpp.
+ * See details in QEP #17
+ ****************************************************************************/
 
 /** \class QgsField
   * \ingroup core
@@ -44,14 +48,13 @@ class CORE_EXPORT QgsField
      * @param name Field name
      * @param type Field variant type, currently supported: String / Int / Double
      * @param typeName Field type (eg. char, varchar, text, int, serial, double).
-     Field types are usually unique to the source and are stored exactly
-     as returned from the data store.
+     * Field types are usually unique to the source and are stored exactly
+     * as returned from the data store.
      * @param len Field length
      * @param prec Field precision. Usually decimal places but may also be
      * used in conjunction with other fields types (eg. variable character fields)
      * @param comment Comment for the field
      */
-
     QgsField( const QString& name = QString(),
               QVariant::Type type = QVariant::Invalid,
               const QString& typeName = QString(),
@@ -74,68 +77,68 @@ class CORE_EXPORT QgsField
     bool operator!=( const QgsField& other ) const;
 
     //! Gets the name of the field
-    const QString& name() const;
+    QString name() const;
 
     //! Gets variant type of the field as it will be retrieved from data source
     QVariant::Type type() const;
 
     /**
-      Gets the field type. Field types vary depending on the data source. Examples
-      are char, int, double, blob, geometry, etc. The type is stored exactly as
-      the data store reports it, with no attempt to standardize the value.
-      @return QString containing the field type
+     * Gets the field type. Field types vary depending on the data source. Examples
+     * are char, int, double, blob, geometry, etc. The type is stored exactly as
+     * the data store reports it, with no attempt to standardize the value.
+     * @return QString containing the field type
      */
-    const QString& typeName() const;
+    QString typeName() const;
 
     /**
-      Gets the length of the field.
-      @return int containing the length of the field
+     * Gets the length of the field.
+     * @return int containing the length of the field
      */
     int length() const;
 
     /**
-      Gets the precision of the field. Not all field types have a related precision.
-      @return int containing the precision or zero if not applicable to the field type.
+     * Gets the precision of the field. Not all field types have a related precision.
+     * @return int containing the precision or zero if not applicable to the field type.
      */
     int precision() const;
 
     /**
-    Returns the field comment
-    */
-    const QString& comment() const;
+     * Returns the field comment
+     */
+    QString comment() const;
 
     /**
-      Set the field name.
-      @param name Name of the field
+     * Set the field name.
+     * @param name Name of the field
      */
     void setName( const QString& name );
 
     /**
-      Set variant type.
+     * Set variant type.
      */
     void setType( QVariant::Type type );
 
     /**
-      Set the field type.
-      @param typeName Field type
+     * Set the field type.
+     * @param typeName Field type
      */
     void setTypeName( const QString& typeName );
 
     /**
-      Set the field length.
-      @param len Length of the field
+     * Set the field length.
+     * @param len Length of the field
      */
     void setLength( int len );
 
     /**
-      Set the field precision.
-      @param precision Precision of the field
+     * Set the field precision.
+     * @param precision Precision of the field
      */
     void setPrecision( int precision );
 
     /**
-      Set the field comment
-      */
+     * Set the field comment
+     */
     void setComment( const QString& comment );
 
     /** Formats string for display*/
@@ -150,7 +153,6 @@ class CORE_EXPORT QgsField
      */
     bool convertCompatible( QVariant& v ) const;
 
-
   private:
 
     QSharedDataPointer<QgsFieldPrivate> d;
@@ -158,12 +160,20 @@ class CORE_EXPORT QgsField
 
 }; // class QgsField
 
-Q_DECLARE_METATYPE( QgsField );
+Q_DECLARE_METATYPE( QgsField )
 
 /** Writes the field to stream out. QGIS version compatibility is not guaranteed. */
 CORE_EXPORT QDataStream& operator<<( QDataStream& out, const QgsField& field );
 /** Reads a field from stream in into field. QGIS version compatibility is not guaranteed. */
 CORE_EXPORT QDataStream& operator>>( QDataStream& in, QgsField& field );
+
+
+
+/***************************************************************************
+ * This class is considered CRITICAL and any change MUST be accompanied with
+ * full unit tests in testqgsfields.cpp.
+ * See details in QEP #17
+ ****************************************************************************/
 
 /** \class QgsFields
  * \ingroup core
@@ -274,13 +284,18 @@ class CORE_EXPORT QgsFields
     //! @note added in 2.6
     bool operator!=( const QgsFields& other ) const { return !( *this == other ); }
 
+    /** Returns an icon corresponding to a field index, based on the field's type and source
+     * @note added in QGIS 2.14
+     */
+    QIcon iconForField( int fieldIdx ) const;
+
   private:
 
     QSharedDataPointer<QgsFieldsPrivate> d;
 
 };
 
-Q_DECLARE_METATYPE( QgsFields );
+Q_DECLARE_METATYPE( QgsFields )
 
 /** Writes the fields to stream out. QGIS version compatibility is not guaranteed. */
 CORE_EXPORT QDataStream& operator<<( QDataStream& out, const QgsFields& fields );

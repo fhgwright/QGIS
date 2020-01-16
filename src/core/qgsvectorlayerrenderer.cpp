@@ -32,6 +32,7 @@
 #include "qgsvectorlayerlabeling.h"
 #include "qgsvectorlayerlabelprovider.h"
 #include "qgspainteffect.h"
+#include "qgsfeaturefilterprovider.h"
 
 #include <QSettings>
 #include <QPicture>
@@ -43,21 +44,22 @@
 QgsVectorLayerRenderer::QgsVectorLayerRenderer( QgsVectorLayer* layer, QgsRenderContext& context )
     : QgsMapLayerRenderer( layer->id() )
     , mContext( context )
+    , mLayer( layer )
     , mFields( layer->fields() )
-    , mRendererV2( 0 )
-    , mCache( 0 )
+    , mRendererV2( nullptr )
+    , mCache( nullptr )
     , mLabeling( false )
     , mDiagrams( false )
-    , mLabelProvider( 0 )
-    , mDiagramProvider( 0 )
+    , mLabelProvider( nullptr )
+    , mDiagramProvider( nullptr )
     , mLayerTransparency( 0 )
 {
   mSource = new QgsVectorLayerFeatureSource( layer );
 
-  mRendererV2 = layer->rendererV2() ? layer->rendererV2()->clone() : 0;
+  mRendererV2 = layer->rendererV2() ? layer->rendererV2()->clone() : nullptr;
   mSelectedFeatureIds = layer->selectedFeaturesIds();
 
-  mDrawVertexMarkers = ( layer->editBuffer() != 0 );
+  mDrawVertexMarkers = nullptr != layer->editBuffer();
 
   mGeometryType = layer->geometryType();
 
@@ -143,19 +145,28 @@ bool QgsVectorLayerRenderer::render()
 
   mRendererV2->startRender( mContext, mFields );
 
-  QString rendererFilter = mRendererV2->filter();
+  QString rendererFilter = mRendererV2->filter( mFields );
 
   QgsRectangle requestExtent = mContext.extent();
   mRendererV2->modifyRequestExtent( requestExtent, mContext );
 
   QgsFeatureRequest featureRequest = QgsFeatureRequest()
                                      .setFilterRect( requestExtent )
-                                     .setSubsetOfAttributes( mAttrNames, mFields );
+                                     .setSubsetOfAttributes( mAttrNames, mFields )
+                                     .setExpressionContext( mContext.expressionContext() );
+  if ( mRendererV2->orderByEnabled() )
+  {
+    featureRequest.setOrderBy( mRendererV2->orderBy() );
+  }
 
+  const QgsFeatureFilterProvider* featureFilterProvider = mContext.featureFilterProvider();
+  if ( featureFilterProvider )
+  {
+    featureFilterProvider->filterFeatures( mLayer, featureRequest );
+  }
   if ( !rendererFilter.isEmpty() && rendererFilter != "TRUE" )
   {
-    featureRequest.setFilterExpression( rendererFilter );
-    featureRequest.setExpressionContext( mContext.expressionContext() );
+    featureRequest.combineFilterExpression( rendererFilter );
   }
 
   // enable the simplification of the geometries (Using the current map2pixel context) before send it to renderer engine.
@@ -169,7 +180,7 @@ bool QgsVectorLayerRenderer::render()
     const QgsCoordinateTransform* ct = mContext.coordinateTransform();
 
     // resize the tolerance using the change of size of an 1-BBOX from the source CoordinateSystem to the target CoordinateSystem
-    if ( ct && !(( QgsCoordinateTransform* )ct )->isShortCircuited() )
+    if ( ct && !( ct->isShortCircuited() ) )
     {
       try
       {
@@ -195,7 +206,7 @@ bool QgsVectorLayerRenderer::render()
           QgsDebugMsg( QString( "Simplify - SourceHypothenuse=%1" ).arg( sourceHypothenuse ) );
           QgsDebugMsg( QString( "Simplify - TargetHypothenuse=%1" ).arg( targetHypothenuse ) );
 
-          if ( targetHypothenuse != 0 )
+          if ( !qgsDoubleNear( targetHypothenuse, 0.0 ) )
             map2pixelTol *= ( sourceHypothenuse / targetHypothenuse );
         }
       }
@@ -211,6 +222,8 @@ bool QgsVectorLayerRenderer::render()
       QgsSimplifyMethod simplifyMethod;
       simplifyMethod.setMethodType( QgsSimplifyMethod::OptimizeForRendering );
       simplifyMethod.setTolerance( map2pixelTol );
+      simplifyMethod.setThreshold( mSimplifyMethod.threshold() );
+
       simplifyMethod.setForceLocalOptimization( mSimplifyMethod.forceLocalOptimization() );
 
       featureRequest.setSimplifyMethod( simplifyMethod );
@@ -274,6 +287,9 @@ void QgsVectorLayerRenderer::setGeometryCachePointer( QgsGeometryCache* cache )
 
 void QgsVectorLayerRenderer::drawRendererV2( QgsFeatureIterator& fit )
 {
+  QgsExpressionContextScope* symbolScope = QgsExpressionContextUtils::updateSymbolScope( nullptr, new QgsExpressionContextScope() );
+  mContext.expressionContext().appendScope( symbolScope );
+
   QgsFeature fet;
   while ( fit.nextFeature( fet ) )
   {
@@ -319,13 +335,26 @@ void QgsVectorLayerRenderer::drawRendererV2( QgsFeatureIterator& fit )
         // new labeling engine
         if ( mContext.labelingEngineV2() )
         {
+          QScopedPointer<QgsGeometry> obstacleGeometry;
+          QgsSymbolV2List symbols = mRendererV2->originalSymbolsForFeature( fet, mContext );
+
+          if ( !symbols.isEmpty() && fet.constGeometry()->type() == QGis::Point )
+          {
+            obstacleGeometry.reset( QgsVectorLayerLabelProvider::getPointObstacleGeometry( fet, mContext, symbols ) );
+          }
+
+          if ( !symbols.isEmpty() )
+          {
+            QgsExpressionContextUtils::updateSymbolScope( symbols.at( 0 ), symbolScope );
+          }
+
           if ( mLabelProvider )
           {
-            mLabelProvider->registerFeature( fet, mContext );
+            mLabelProvider->registerFeature( fet, mContext, obstacleGeometry.data() );
           }
           if ( mDiagramProvider )
           {
-            mDiagramProvider->registerFeature( fet, mContext );
+            mDiagramProvider->registerFeature( fet, mContext, obstacleGeometry.data() );
           }
         }
       }
@@ -338,14 +367,16 @@ void QgsVectorLayerRenderer::drawRendererV2( QgsFeatureIterator& fit )
     }
   }
 
-  stopRendererV2( NULL );
+  delete mContext.expressionContext().popScope();
+
+  stopRendererV2( nullptr );
 }
 
 void QgsVectorLayerRenderer::drawRendererV2Levels( QgsFeatureIterator& fit )
 {
   QHash< QgsSymbolV2*, QList<QgsFeature> > features; // key = symbol, value = array of features
 
-  QgsSingleSymbolRendererV2* selRenderer = NULL;
+  QgsSingleSymbolRendererV2* selRenderer = nullptr;
   if ( !mSelectedFeatureIds.isEmpty() )
   {
     selRenderer = new QgsSingleSymbolRendererV2( QgsSymbolV2::defaultSymbol( mGeometryType ) );
@@ -353,6 +384,9 @@ void QgsVectorLayerRenderer::drawRendererV2Levels( QgsFeatureIterator& fit )
     selRenderer->setVertexMarkerAppearance( mVertexMarkerStyle, mVertexMarkerSize );
     selRenderer->startRender( mContext, mFields );
   }
+
+  QgsExpressionContextScope* symbolScope = QgsExpressionContextUtils::updateSymbolScope( nullptr, new QgsExpressionContextScope() );
+  mContext.expressionContext().appendScope( symbolScope );
 
   // 1. fetch features
   QgsFeature fet;
@@ -365,6 +399,7 @@ void QgsVectorLayerRenderer::drawRendererV2Levels( QgsFeatureIterator& fit )
     {
       qDebug( "rendering stop!" );
       stopRendererV2( selRenderer );
+      delete mContext.expressionContext().popScope();
       return;
     }
 
@@ -402,16 +437,31 @@ void QgsVectorLayerRenderer::drawRendererV2Levels( QgsFeatureIterator& fit )
     // new labeling engine
     if ( mContext.labelingEngineV2() )
     {
+      QScopedPointer<QgsGeometry> obstacleGeometry;
+      QgsSymbolV2List symbols = mRendererV2->originalSymbolsForFeature( fet, mContext );
+
+      if ( !symbols.isEmpty() && fet.constGeometry()->type() == QGis::Point )
+      {
+        obstacleGeometry.reset( QgsVectorLayerLabelProvider::getPointObstacleGeometry( fet, mContext, symbols ) );
+      }
+
+      if ( !symbols.isEmpty() )
+      {
+        QgsExpressionContextUtils::updateSymbolScope( symbols.at( 0 ), symbolScope );
+      }
+
       if ( mLabelProvider )
       {
-        mLabelProvider->registerFeature( fet, mContext );
+        mLabelProvider->registerFeature( fet, mContext, obstacleGeometry.data() );
       }
       if ( mDiagramProvider )
       {
-        mDiagramProvider->registerFeature( fet, mContext );
+        mDiagramProvider->registerFeature( fet, mContext, obstacleGeometry.data() );
       }
     }
   }
+
+  delete mContext.expressionContext().popScope();
 
   // find out the order
   QgsSymbolV2LevelOrder levels;
@@ -506,7 +556,7 @@ void QgsVectorLayerRenderer::prepareLabeling( QgsVectorLayer* layer, QStringList
           if ( !mLabelProvider->prepare( mContext, attributeNames ) )
           {
             engine2->removeProvider( mLabelProvider );
-            mLabelProvider = 0; // deleted by engine
+            mLabelProvider = nullptr; // deleted by engine
           }
         }
       }
@@ -562,7 +612,7 @@ void QgsVectorLayerRenderer::prepareDiagrams( QgsVectorLayer* layer, QStringList
         if ( !mDiagramProvider->prepare( mContext, attributeNames ) )
         {
           engine2->removeProvider( mDiagramProvider );
-          mDiagramProvider = 0;  // deleted by engine
+          mDiagramProvider = nullptr;  // deleted by engine
         }
       }
     }

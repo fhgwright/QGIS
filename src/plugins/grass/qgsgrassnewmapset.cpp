@@ -17,6 +17,7 @@
 #include "qgsgrassnewmapset.h"
 #include "qgsgrassplugin.h"
 #include "qgsgrass.h"
+#include "qgis.h"
 
 #include "qgisinterface.h"
 #include "qgsapplication.h"
@@ -37,6 +38,9 @@
 
 extern "C"
 {
+#if defined(_MSC_VER) && defined(M_PI_4)
+#undef M_PI_4 //avoid redefinition warning
+#endif
 #include <grass/gprojects.h>
 }
 
@@ -128,7 +132,7 @@ QgsGrassNewMapset::~QgsGrassNewMapset()
 /*************************** DATABASE *******************************/
 void QgsGrassNewMapset::browseDatabase()
 {
-  QString selectedDir = QFileDialog::getExistingDirectory( this, NULL, mDatabaseLineEdit->text() );
+  QString selectedDir = QFileDialog::getExistingDirectory( this, nullptr, mDatabaseLineEdit->text() );
   if ( selectedDir.isEmpty() )
   {
     return;
@@ -295,6 +299,7 @@ int QgsGrassNewMapset::nextId() const
         id = MAPSET;
         break;
       }
+      FALLTHROUGH;
     case DATABASE:
     case CRS:
     case REGION:
@@ -404,8 +409,8 @@ void QgsGrassNewMapset::setGrassProjection()
   {
     QgsDebugMsg( QString( "proj4 = %1" ).arg( proj4.toLocal8Bit().constData() ) );
 
-    OGRSpatialReferenceH hCRS = NULL;
-    hCRS = OSRNewSpatialReference( NULL );
+    OGRSpatialReferenceH hCRS = nullptr;
+    hCRS = OSRNewSpatialReference( nullptr );
     int errcode;
 
     {
@@ -424,7 +429,7 @@ void QgsGrassNewMapset::setGrassProjection()
     }
     else
     {
-      char *wkt = NULL;
+      char *wkt = nullptr;
 
       QgsDebugMsg( QString( "OSRIsGeographic = %1" ).arg( OSRIsGeographic( hCRS ) ) );
       QgsDebugMsg( QString( "OSRIsProjected = %1" ).arg( OSRIsProjected( hCRS ) ) );
@@ -567,10 +572,7 @@ void QgsGrassNewMapset::setRegionPage()
 
     QgsRectangle ext = mIface->mapCanvas()->extent();
 
-    if ( ext.xMinimum() >= ext.xMaximum() || ext.yMinimum() >= ext.yMaximum() )
-    {
-      mCurrentRegionButton->setEnabled( false );
-    }
+    mCurrentRegionButton->setEnabled( !ext.isEmpty() );
   }
 
   checkRegion();
@@ -585,10 +587,8 @@ void QgsGrassNewMapset::setGrassRegionDefaults()
 {
   QgsDebugMsg( QString( "mCellHead.proj = %1" ).arg( mCellHead.proj ) );
 
-  int srsid = QgsProject::instance()->readNumEntry(
-                "SpatialRefSys", "/ProjectCRSID", 0 );
-
-  QgsDebugMsg( QString( "current project srsid = %1" ).arg( srsid ) );
+  QgsCoordinateReferenceSystem srs = mIface->mapCanvas()->mapSettings().destinationCrs();
+  QgsDebugMsg( "srs = " + srs.toWkt() );
 
   QgsRectangle ext = mIface->mapCanvas()->extent();
   bool extSet = false;
@@ -600,7 +600,7 @@ void QgsGrassNewMapset::setGrassRegionDefaults()
   if ( extSet &&
        ( mNoProjRadioButton->isChecked() ||
          ( mProjRadioButton->isChecked()
-           && srsid == mProjectionSelector->selectedCrsId() )
+           && srs.srsid() == mProjectionSelector->selectedCrsId() )
        )
      )
   {
@@ -699,7 +699,8 @@ void QgsGrassNewMapset::checkRegion()
   mCellHead.ns_res  = res;
   mCellHead.ns_res3 = res3;
   mCellHead.tb_res  = 1.;
-  mCellHead.zone = 0;
+  // Do not override zone, it was set in setGrassProjection()
+  //mCellHead.zone = 0;
 
   button( QWizard::NextButton )->setEnabled( true );
 }
@@ -924,12 +925,8 @@ void QgsGrassNewMapset::setCurrentRegion()
 
   QgsRectangle ext = mIface->mapCanvas()->extent();
 
-  int srsid = QgsProject::instance()->readNumEntry(
-                "SpatialRefSys", "/ProjectCRSID", 0 );
-
-  QgsCoordinateReferenceSystem srs( srsid, QgsCoordinateReferenceSystem::InternalCrsId );
-  QgsDebugMsg( QString( "current project srsid = %1" ).arg( srsid ) );
-  QgsDebugMsg( QString( "srs.isValid() = %1" ).arg( srs.isValid() ) );
+  QgsCoordinateReferenceSystem srs = mIface->mapCanvas()->mapSettings().destinationCrs();
+  QgsDebugMsg( "srs = " + srs.toWkt() );
 
   std::vector<QgsPoint> points;
 
@@ -1016,17 +1013,17 @@ void QgsGrassNewMapset::drawRegion()
     }
   }
 
-  std::vector<QgsPoint> tpoints; // ll lr ur ul ll
-  tpoints.push_back( QgsPoint( w, s ) );
-  tpoints.push_back( QgsPoint( e, s ) );
-  tpoints.push_back( QgsPoint( e, n ) );
-  tpoints.push_back( QgsPoint( w, n ) );
-  tpoints.push_back( QgsPoint( w, s ) );
+  QList<QgsPoint> tpoints; // ll lr ur ul ll
+  tpoints << QgsPoint( w, s );
+  tpoints << QgsPoint( e, s );
+  tpoints << QgsPoint( e, n );
+  tpoints << QgsPoint( w, n );
+  tpoints << QgsPoint( w, s );
 
 
   // Because of possible shift +/- 360 in LL we have to split
   // the lines at least in 3 parts
-  std::vector<QgsPoint> points; //
+  QList<QgsPoint> points; //
   for ( int i = 0; i < 4; i++ )
   {
     for ( int j = 0; j < 3; j++ )
@@ -1036,11 +1033,11 @@ void QgsGrassNewMapset::drawRegion()
       double dx = ( tpoints[i+1].x() - x ) / 3;
       double dy = ( tpoints[i+1].y() - y ) / 3;
       QgsDebugMsg( QString( "dx = %1 x = %2" ).arg( dx ).arg( x + j*dx ) );
-      points.push_back( QgsPoint( x + j*dx, y + j*dy ) );
+      points << QgsPoint( x + j*dx, y + j*dy );
 
     }
   }
-  points.push_back( QgsPoint( points[0] ) ); // close polygon
+  points << points[0]; // close polygon
 
   // Warning: seems that crashes if source == dest
   if ( mProjectionSelector->selectedCrsId() != GEOCRS_ID )
@@ -1064,9 +1061,7 @@ void QgsGrassNewMapset::drawRegion()
 
     QgsCoordinateTransform trans( source, dest );
 
-
-    bool ok = true;
-    for ( int i = 0; i < 13; i++ )
+    for ( int i = points.size() - 1; i >= 0; i-- )
     {
       // Warning: I found that with some projections (e.g. Abidjan 1987)
       // if N = 90 or S = -90 the coordinate projected to
@@ -1082,6 +1077,7 @@ void QgsGrassNewMapset::drawRegion()
 
       QgsDebugMsg( QString( "%1,%2" ).arg( points[i].x() ).arg( points[i].y() ) );
 
+      // exclude points if transformation failed
       try
       {
         points[i] = trans.transform( points[i] );
@@ -1091,12 +1087,11 @@ void QgsGrassNewMapset::drawRegion()
       {
         Q_UNUSED( cse );
         QgsDebugMsg( "Cannot transform point" );
-        ok = false;
-        break;
+        points.removeAt( i );
       }
     }
 
-    if ( !ok )
+    if ( points.size() < 3 )
     {
       QgsDebugMsg( "Cannot reproject region." );
       return;
@@ -1396,16 +1391,12 @@ void QgsGrassNewMapset::pageSelected( int index )
         connect( mProjectionSelector, SIGNAL( sridSelected( QString ) ),
                  this, SLOT( sridSelected( QString ) ) );
 
-        // Se current QGIS projection
-        int srsid = QgsProject::instance()->readNumEntry(
-                      "SpatialRefSys", "/ProjectCRSID", 0 );
+        QgsCoordinateReferenceSystem  srs = mIface->mapCanvas()->mapSettings().destinationCrs();
+        QgsDebugMsg( "srs = " + srs.toWkt() );
 
-        QgsCoordinateReferenceSystem srs( srsid, QgsCoordinateReferenceSystem::InternalCrsId );
-        QgsDebugMsg( QString( "current project srsid = %1" ).arg( srsid ) );
-        QgsDebugMsg( QString( "srs.isValid() = %1" ).arg( srs.isValid() ) );
         if ( srs.isValid() )
         {
-          mProjectionSelector->setSelectedCrsId( srsid );
+          mProjectionSelector->setSelectedCrsId( srs.srsid() );
           mProjRadioButton->setChecked( true );
           projRadioSwitched();
         }

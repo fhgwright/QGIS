@@ -27,10 +27,10 @@
 
 QgsValueRelationSearchWidgetWrapper::QgsValueRelationSearchWidgetWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* parent )
     : QgsSearchWidgetWrapper( vl, fieldIdx, parent )
-    , mComboBox( 0 )
-    , mListWidget( 0 )
-    , mLineEdit( 0 )
-    , mLayer( 0 )
+    , mComboBox( nullptr )
+    , mListWidget( nullptr )
+    , mLineEdit( nullptr )
+    , mLayer( nullptr )
 {
 }
 
@@ -71,7 +71,7 @@ QVariant QgsValueRelationSearchWidgetWrapper::value() const
         selection << item->data( Qt::UserRole ).toString();
     }
 
-    v = selection.join( "," ).prepend( "{" ).append( "}" );
+    v = selection.join( "," ).prepend( '{' ).append( '}' );
   }
 
   if ( mLineEdit )
@@ -89,7 +89,7 @@ QVariant QgsValueRelationSearchWidgetWrapper::value() const
   return v;
 }
 
-bool QgsValueRelationSearchWidgetWrapper::valid()
+bool QgsValueRelationSearchWidgetWrapper::valid() const
 {
   return true;
 }
@@ -97,8 +97,15 @@ bool QgsValueRelationSearchWidgetWrapper::valid()
 void QgsValueRelationSearchWidgetWrapper::valueChanged()
 {
   QVariant vl = value();
-  QSettings settings;
-  setExpression( vl.isNull() ? settings.value( "qgis/nullValue", "NULL" ).toString() : vl.toString() );
+  if ( !vl.isValid() )
+  {
+    clearExpression();
+  }
+  else
+  {
+    QSettings settings;
+    setExpression( vl.isNull() ? settings.value( "qgis/nullValue", "NULL" ).toString() : vl.toString() );
+  }
   emit expressionChanged( mExpression );
 }
 
@@ -149,7 +156,7 @@ void QgsValueRelationSearchWidgetWrapper::initWidget( QWidget* editor )
 
   if ( mComboBox )
   {
-    mComboBox->addItem( tr( "Please select" ), QVariant( layer()->fields().at( mFieldIdx ).type() ) );
+    mComboBox->addItem( tr( "Please select" ), QVariant() ); // creates an invalid to allow selecting all features
     if ( config( "AllowNull" ).toBool() )
     {
       mComboBox->addItem( tr( "(no selection)" ), QVariant( layer()->fields().at( mFieldIdx ).type() ) );

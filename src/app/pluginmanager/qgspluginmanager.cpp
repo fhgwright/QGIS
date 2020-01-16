@@ -60,7 +60,7 @@ QgsPluginManager::QgsPluginManager( QWidget * parent, bool pluginsAreEnabled, Qt
     : QgsOptionsDialogBase( "PluginManager", parent, fl )
 {
   // initialize pointer
-  mPythonUtils = NULL;
+  mPythonUtils = nullptr;
 
   setupUi( this );
 
@@ -306,7 +306,7 @@ void QgsPluginManager::getCppPluginsMetadata()
   QString myPaths = settings.value( "plugins/searchPathsForPlugins", "" ).toString();
   if ( !myPaths.isEmpty() )
   {
-    myPathList.append( myPaths.split( "|" ) );
+    myPathList.append( myPaths.split( '|' ) );
   }
 
   for ( int j = 0; j < myPathList.size(); ++j )
@@ -477,8 +477,8 @@ void QgsPluginManager::reloadModelData()
     buttonUninstall->setEnabled( false );
   }
 
-  for ( QMap<QString, QMap<QString, QString> >::iterator it = mPlugins.begin();
-        it != mPlugins.end();
+  for ( QMap<QString, QMap<QString, QString> >::const_iterator it = mPlugins.constBegin();
+        it != mPlugins.constEnd();
         ++it )
   {
     if ( ! it->value( "id" ).isEmpty() )
@@ -754,7 +754,7 @@ void QgsPluginManager::showPluginDetails( QStandardItem * item )
   if ( ! metadata->value( "about" ).isEmpty() )
   {
     QString about = metadata->value( "about" );
-    html += about.replace( "\n", "<br/>" );
+    html += about.replace( '\n', "<br/>" );
   }
 
   html += "<br/><br/>";
@@ -819,7 +819,7 @@ void QgsPluginManager::showPluginDetails( QStandardItem * item )
   if ( ! metadata->value( "version_installed" ).isEmpty() )
   {
     QString ver = metadata->value( "version_installed" );
-    if ( ver == "-1" ) ver = "?";
+    if ( ver == "-1" ) ver = '?';
     html += tr( "Installed version: %1 (in %2)<br/>" ).arg( ver, metadata->value( "library" ) );
   }
   if ( ! metadata->value( "version_available" ).isEmpty() )
@@ -831,7 +831,7 @@ void QgsPluginManager::showPluginDetails( QStandardItem * item )
   {
     html += "<br/>";
     QString changelog = tr( "changelog:<br/>%1 <br/>" ).arg( metadata->value( "changelog" ) );
-    html += changelog.replace( "\n", "<br/>" );
+    html += changelog.replace( '\n', "<br/>" );
   }
 
   html += "</td></tr></table>";
@@ -912,7 +912,7 @@ const QMap<QString, QString> * QgsPluginManager::pluginMetadata( const QString& 
   {
     return &it.value();
   }
-  return NULL;
+  return nullptr;
 }
 
 
@@ -1070,8 +1070,8 @@ void QgsPluginManager::setCurrentTab( int idx )
 
     // load tab description HTML to the detail browser
     QString tabInfoHTML = "";
-    QMap<QString, QString>::iterator it = mTabDescriptions.find( tabTitle );
-    if ( it != mTabDescriptions.end() )
+    QMap<QString, QString>::const_iterator it = mTabDescriptions.constFind( tabTitle );
+    if ( it != mTabDescriptions.constEnd() )
     {
       tabInfoHTML += "<style>"
                      "body, table {"
@@ -1160,8 +1160,8 @@ void QgsPluginManager::on_wvDetails_linkClicked( const QUrl & url )
       QString params = url.path();
       QString response;
       QgsPythonRunner::eval( QString( "pyplugin_installer.instance().sendVote('%1', '%2')" )
-                             .arg( params.split( "/" )[1],
-                                   params.split( "/" )[2] ), response );
+                             .arg( params.split( '/' )[1],
+                                   params.split( '/' )[2] ), response );
       if ( response == "True" )
       {
         pushMessage( tr( "Vote sent successfully" ), QgsMessageBar::INFO );
@@ -1244,7 +1244,7 @@ void QgsPluginManager::setRepositoryFilter()
   if ( current )
   {
     QString key = current->text( 1 );
-    key = key.replace( "\'", "\\\'" ).replace( "\"", "\\\"" );
+    key = key.replace( '\'', "\\\'" ).replace( '\"', "\\\"" );
     QgsDebugMsg( "Disabling all repositories but selected: " + key );
     QgsPythonRunner::run( QString( "pyplugin_installer.instance().setRepositoryInspectionFilter('%1')" ).arg( key ) );
   }
@@ -1282,7 +1282,7 @@ void QgsPluginManager::on_buttonEditRep_clicked()
   if ( current )
   {
     QString key = current->text( 1 );
-    key = key.replace( "\'", "\\\'" ).replace( "\"", "\\\"" );
+    key = key.replace( '\'', "\\\'" ).replace( '\"', "\\\"" );
     QgsDebugMsg( "Editing repository connection: " + key );
     QgsPythonRunner::run( QString( "pyplugin_installer.instance().editRepository('%1')" ).arg( key ) );
   }
@@ -1296,7 +1296,7 @@ void QgsPluginManager::on_buttonDeleteRep_clicked()
   if ( current )
   {
     QString key = current->text( 1 );
-    key = key.replace( "\'", "\\\'" ).replace( "\"", "\\\"" );
+    key = key.replace( '\'', "\\\'" ).replace( '\"', "\\\"" );
     QgsDebugMsg( "Deleting repository connection: " + key );
     QgsPythonRunner::run( QString( "pyplugin_installer.instance().deleteRepository('%1')" ).arg( key ) );
   }
@@ -1354,8 +1354,8 @@ bool QgsPluginManager::isPluginEnabled( QString key )
 
 bool QgsPluginManager::hasAvailablePlugins()
 {
-  for ( QMap<QString, QMap<QString, QString> >::iterator it = mPlugins.begin();
-        it != mPlugins.end();
+  for ( QMap<QString, QMap<QString, QString> >::const_iterator it = mPlugins.constBegin();
+        it != mPlugins.constEnd();
         ++it )
   {
     if ( it->value( "status" ) == "not installed" || it->value( "status" ) == "new" )
@@ -1371,8 +1371,8 @@ bool QgsPluginManager::hasAvailablePlugins()
 
 bool QgsPluginManager::hasReinstallablePlugins()
 {
-  for ( QMap<QString, QMap<QString, QString> >::iterator it = mPlugins.begin();
-        it != mPlugins.end();
+  for ( QMap<QString, QMap<QString, QString> >::const_iterator it = mPlugins.constBegin();
+        it != mPlugins.constEnd();
         ++it )
   {
     // plugins marked as "installed" are available for download (otherwise they are marked "orphans")
@@ -1389,8 +1389,8 @@ bool QgsPluginManager::hasReinstallablePlugins()
 
 bool QgsPluginManager::hasUpgradeablePlugins()
 {
-  for ( QMap<QString, QMap<QString, QString> >::iterator it = mPlugins.begin();
-        it != mPlugins.end();
+  for ( QMap<QString, QMap<QString, QString> >::const_iterator it = mPlugins.constBegin();
+        it != mPlugins.constEnd();
         ++it )
   {
     if ( it->value( "status" ) == "upgradeable" )
@@ -1406,8 +1406,8 @@ bool QgsPluginManager::hasUpgradeablePlugins()
 
 bool QgsPluginManager::hasNewPlugins()
 {
-  for ( QMap<QString, QMap<QString, QString> >::iterator it = mPlugins.begin();
-        it != mPlugins.end();
+  for ( QMap<QString, QMap<QString, QString> >::const_iterator it = mPlugins.constBegin();
+        it != mPlugins.constEnd();
         ++it )
   {
     if ( it->value( "status" ) == "new" )
@@ -1423,8 +1423,8 @@ bool QgsPluginManager::hasNewPlugins()
 
 bool QgsPluginManager::hasNewerPlugins()
 {
-  for ( QMap<QString, QMap<QString, QString> >::iterator it = mPlugins.begin();
-        it != mPlugins.end();
+  for ( QMap<QString, QMap<QString, QString> >::const_iterator it = mPlugins.constBegin();
+        it != mPlugins.constEnd();
         ++it )
   {
     if ( it->value( "status" ) == "newer" )
@@ -1440,8 +1440,8 @@ bool QgsPluginManager::hasNewerPlugins()
 
 bool QgsPluginManager::hasInvalidPlugins()
 {
-  for ( QMap<QString, QMap<QString, QString> >::iterator it = mPlugins.begin();
-        it != mPlugins.end();
+  for ( QMap<QString, QMap<QString, QString> >::const_iterator it = mPlugins.constBegin();
+        it != mPlugins.constEnd();
         ++it )
   {
     if ( ! it->value( "error" ).isEmpty() )

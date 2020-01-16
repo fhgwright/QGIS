@@ -47,6 +47,7 @@
 #include "qgsrectangle.h"
 #include "qgsvectorlayer.h"
 #include "qgsvectordataprovider.h"
+#include "qgsmaplayerregistry.h"
 
 
 QgsMapLayer::QgsMapLayer( QgsMapLayer::LayerType type,
@@ -58,15 +59,18 @@ QgsMapLayer::QgsMapLayer( QgsMapLayer::LayerType type,
     , mID( "" )
     , mLayerType( type )
     , mBlendMode( QPainter::CompositionMode_SourceOver ) // Default to normal blending
-    , mLegend( 0 )
+    , mLegend( nullptr )
     , mStyleManager( new QgsMapLayerStyleManager( this ) )
 {
   mCRS = new QgsCoordinateReferenceSystem();
 
   // Set the display name = internal name
-  QgsDebugMsg( "original name: '" + mLayerOrigName + "'" );
+  QgsDebugMsg( "original name: '" + mLayerOrigName + '\'' );
   mLayerName = capitaliseLayerName( mLayerOrigName );
-  QgsDebugMsg( "display name: '" + mLayerName + "'" );
+  QgsDebugMsg( "display name: '" + mLayerName + '\'' );
+
+  // Set short name = the first original name
+  mShortName = lyrname;
 
   // Generate the unique ID of this layer
   QDateTime dt = QDateTime::currentDateTime();
@@ -106,9 +110,9 @@ QString QgsMapLayer::id() const
 /** Write property of QString layerName. */
 void QgsMapLayer::setLayerName( const QString & name )
 {
-  QgsDebugMsg( "new original name: '" + name + "'" );
+  QgsDebugMsg( "new original name: '" + name + '\'' );
   QString newName = capitaliseLayerName( name );
-  QgsDebugMsg( "new display name: '" + name + "'" );
+  QgsDebugMsg( "new display name: '" + name + '\'' );
   if ( name == mLayerOrigName && newName == mLayerName ) return;
   mLayerOrigName = name; // store the new original name
   mLayerName = newName;
@@ -116,9 +120,9 @@ void QgsMapLayer::setLayerName( const QString & name )
 }
 
 /** Read property of QString layerName. */
-QString const & QgsMapLayer::name() const
+QString QgsMapLayer::name() const
 {
-  QgsDebugMsgLevel( "returning name '" + mLayerName + "'", 4 );
+  QgsDebugMsgLevel( "returning name '" + mLayerName + '\'', 4 );
   return mLayerName;
 }
 
@@ -130,7 +134,7 @@ QString QgsMapLayer::publicSource() const
   return safeName;
 }
 
-QString const & QgsMapLayer::source() const
+QString QgsMapLayer::source() const
 {
   return mDataSource;
 }
@@ -141,7 +145,7 @@ QgsRectangle QgsMapLayer::extent()
 }
 
 /** Write blend mode for layer */
-void QgsMapLayer::setBlendMode( const QPainter::CompositionMode &blendMode )
+void QgsMapLayer::setBlendMode( QPainter::CompositionMode blendMode )
 {
   mBlendMode = blendMode;
   emit blendModeChanged( blendMode );
@@ -202,13 +206,13 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
   }
   else if ( provider == "ogr" )
   {
-    QStringList theURIParts = mDataSource.split( "|" );
+    QStringList theURIParts = mDataSource.split( '|' );
     theURIParts[0] = QgsProject::instance()->readPath( theURIParts[0] );
     mDataSource = theURIParts.join( "|" );
   }
   else if ( provider == "gpx" )
   {
-    QStringList theURIParts = mDataSource.split( "?" );
+    QStringList theURIParts = mDataSource.split( '?' );
     theURIParts[0] = QgsProject::instance()->readPath( theURIParts[0] );
     mDataSource = theURIParts.join( "?" );
   }
@@ -218,7 +222,7 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
 
     if ( !mDataSource.startsWith( "file:" ) )
     {
-      QUrl file = QUrl::fromLocalFile( mDataSource.left( mDataSource.indexOf( "?" ) ) );
+      QUrl file = QUrl::fromLocalFile( mDataSource.left( mDataSource.indexOf( '?' ) ) );
       urlSource.setScheme( "file" );
       urlSource.setPath( file.path() );
     }
@@ -246,7 +250,7 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
       QgsDataSourceURI uri;
       if ( !mDataSource.startsWith( "http:" ) )
       {
-        QStringList parts = mDataSource.split( "," );
+        QStringList parts = mDataSource.split( ',' );
         QStringListIterator iter( parts );
         while ( iter.hasNext() )
         {
@@ -265,7 +269,7 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
             // tiled=width;height - non tiled mode, specifies max width and max height
             // tiled=width;height;resolutions-1;resolution2;... - tile mode
 
-            QStringList params = item.mid( 6 ).split( ";" );
+            QStringList params = item.mid( 6 ).split( ';' );
 
             if ( params.size() == 2 ) // non tiled mode
             {
@@ -289,7 +293,7 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
           }
           else if ( item.startsWith( "ignoreUrl=" ) )
           {
-            uri.setParam( "ignoreUrl", item.mid( 10 ).split( ";" ) );
+            uri.setParam( "ignoreUrl", item.mid( 10 ).split( ';' ) );
           }
         }
       }
@@ -358,7 +362,7 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
         QRegExp r( "([^:]+):([^:]+):(.+)" );
         if ( r.exactMatch( mDataSource ) )
         {
-          mDataSource = r.cap( 1 ) + ":" + r.cap( 2 ) + ":" + QgsProject::instance()->readPath( r.cap( 3 ) );
+          mDataSource = r.cap( 1 ) + ':' + r.cap( 2 ) + ':' + QgsProject::instance()->readPath( r.cap( 3 ) );
           handled = true;
         }
       }
@@ -384,7 +388,7 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
   // Do not validate any projections in children, they will be overwritten anyway.
   // No need to ask the user for a projections when it is overwritten, is there?
   savedValidation = QgsCoordinateReferenceSystem::customSrsValidation();
-  QgsCoordinateReferenceSystem::setCustomSrsValidation( NULL );
+  QgsCoordinateReferenceSystem::setCustomSrsValidation( nullptr );
 
   // now let the children grab what they need from the Dom node.
   layerError = !readXml( layerElement );
@@ -425,6 +429,13 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
   mnl = layerElement.namedItem( "layername" );
   mne = mnl.toElement();
   setLayerName( mne.text() );
+
+  //short name
+  QDomElement shortNameElem = layerElement.firstChildElement( "shortname" );
+  if ( !shortNameElem.isNull() )
+  {
+    mShortName = shortNameElem.text();
+  }
 
   //title
   QDomElement titleElem = layerElement.firstChildElement( "title" );
@@ -543,13 +554,13 @@ bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& docume
   }
   else if ( vlayer && vlayer->providerType() == "ogr" )
   {
-    QStringList theURIParts = src.split( "|" );
+    QStringList theURIParts = src.split( '|' );
     theURIParts[0] = QgsProject::instance()->writePath( theURIParts[0], relativeBasePath );
     src = theURIParts.join( "|" );
   }
   else if ( vlayer && vlayer->providerType() == "gpx" )
   {
-    QStringList theURIParts = src.split( "?" );
+    QStringList theURIParts = src.split( '?' );
     theURIParts[0] = QgsProject::instance()->writePath( theURIParts[0], relativeBasePath );
     src = theURIParts.join( "?" );
   }
@@ -624,7 +635,7 @@ bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& docume
           QRegExp r( "([^:]+):([^:]+):(.+)" );
           if ( r.exactMatch( src ) )
           {
-            src = r.cap( 1 ) + ":" + r.cap( 2 ) + ":" + QgsProject::instance()->writePath( r.cap( 3 ), relativeBasePath );
+            src = r.cap( 1 ) + ':' + r.cap( 2 ) + ':' + QgsProject::instance()->writePath( r.cap( 3 ), relativeBasePath );
             handled = true;
           }
         }
@@ -646,6 +657,11 @@ bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& docume
   QDomText layerNameText = document.createTextNode( originalName() );
   layerName.appendChild( layerNameText );
 
+  // layer short name
+  QDomElement layerShortName = document.createElement( "shortname" );
+  QDomText layerShortNameText = document.createTextNode( shortName() );
+  layerShortName.appendChild( layerShortNameText );
+
   // layer title
   QDomElement layerTitle = document.createElement( "title" );
   QDomText layerTitleText = document.createTextNode( title() );
@@ -657,12 +673,13 @@ bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& docume
   layerAbstract.appendChild( layerAbstractText );
 
   layerElement.appendChild( layerName );
+  layerElement.appendChild( layerShortName );
   layerElement.appendChild( layerTitle );
   layerElement.appendChild( layerAbstract );
 
   // layer keyword list
-  QStringList keywordStringList = keywordList().split( "," );
-  if ( keywordStringList.size() > 0 )
+  QStringList keywordStringList = keywordList().split( ',' );
+  if ( !keywordStringList.isEmpty() )
   {
     QDomElement layerKeywordList = document.createElement( "keywordList" );
     for ( int i = 0; i < keywordStringList.size(); ++i )
@@ -772,7 +789,7 @@ QDomDocument QgsMapLayer::asLayerDefinition( const QList<QgsMapLayer *>& layers,
   return doc;
 }
 
-QList<QgsMapLayer*> QgsMapLayer::fromLayerDefinition( QDomDocument& document )
+QList<QgsMapLayer*> QgsMapLayer::fromLayerDefinition( QDomDocument& document, bool addToRegistry, bool addToLegend )
 {
   QList<QgsMapLayer*> layers;
   QDomNodeList layernodes = document.elementsByTagName( "maplayer" );
@@ -783,7 +800,7 @@ QList<QgsMapLayer*> QgsMapLayer::fromLayerDefinition( QDomDocument& document )
 
     QString type = layerElem.attribute( "type" );
     QgsDebugMsg( type );
-    QgsMapLayer *layer = 0;
+    QgsMapLayer *layer = nullptr;
 
     if ( type == "vector" )
     {
@@ -804,7 +821,11 @@ QList<QgsMapLayer*> QgsMapLayer::fromLayerDefinition( QDomDocument& document )
 
     bool ok = layer->readLayerXML( layerElem );
     if ( ok )
+    {
       layers << layer;
+      if ( addToRegistry )
+        QgsMapLayerRegistry::instance()->addMapLayer( layer, addToLegend );
+    }
   }
   return layers;
 }
@@ -1067,7 +1088,7 @@ bool QgsMapLayer::loadNamedStyleFromDb( const QString &db, const QString &theURI
   if ( db.isEmpty() || !QFile( db ).exists() )
     return false;
 
-  myResult = sqlite3_open_v2( db.toUtf8().data(), &myDatabase, SQLITE_OPEN_READONLY, NULL );
+  myResult = sqlite3_open_v2( db.toUtf8().data(), &myDatabase, SQLITE_OPEN_READONLY, nullptr );
   if ( myResult != SQLITE_OK )
   {
     return false;
@@ -1082,7 +1103,7 @@ bool QgsMapLayer::loadNamedStyleFromDb( const QString &db, const QString &theURI
     if ( sqlite3_bind_text( myPreparedStatement, 1, param.data(), param.length(), SQLITE_STATIC ) == SQLITE_OK &&
          sqlite3_step( myPreparedStatement ) == SQLITE_ROW )
     {
-      qml = QString::fromUtf8(( char * )sqlite3_column_text( myPreparedStatement, 0 ) );
+      qml = QString::fromUtf8( reinterpret_cast< const char * >( sqlite3_column_text( myPreparedStatement, 0 ) ) );
       theResultFlag = true;
     }
 
@@ -1153,30 +1174,33 @@ QString QgsMapLayer::loadNamedStyle( const QString &theURI, bool &theResultFlag 
 
 bool QgsMapLayer::importNamedStyle( QDomDocument& myDocument, QString& myErrorMessage )
 {
-  // get style file version string, if any
-  QgsProjectVersion fileVersion( myDocument.firstChildElement( "qgis" ).attribute( "version" ) );
-  QgsProjectVersion thisVersion( QGis::QGIS_VERSION );
-
-  if ( thisVersion > fileVersion )
-  {
-    QgsLogger::warning( "Loading a style file that was saved with an older "
-                        "version of qgis (saved in " + fileVersion.text() +
-                        ", loaded in " + QGis::QGIS_VERSION +
-                        "). Problems may occur." );
-
-    QgsProjectFileTransform styleFile( myDocument, fileVersion );
-    // styleFile.dump();
-    styleFile.updateRevision( thisVersion );
-    // styleFile.dump();
-  }
-
-  // now get the layer node out and pass it over to the layer
-  // to deserialise...
   QDomElement myRoot = myDocument.firstChildElement( "qgis" );
   if ( myRoot.isNull() )
   {
     myErrorMessage = tr( "Root <qgis> element could not be found" );
     return false;
+  }
+
+  // get style file version string, if any
+  QgsProjectVersion fileVersion( myRoot.attribute( "version" ) );
+  QgsProjectVersion thisVersion( QGis::QGIS_VERSION );
+
+  if ( thisVersion > fileVersion )
+  {
+    QgsProjectFileTransform styleFile( myDocument, fileVersion );
+    styleFile.updateRevision( thisVersion );
+  }
+
+  //Test for matching geometry type on vector layers when applying, if geometry type is given in the style
+  if ( type() == QgsMapLayer::VectorLayer && !myRoot.firstChildElement( "layerGeometryType" ).isNull() )
+  {
+    QgsVectorLayer *vl = static_cast<QgsVectorLayer*>( this );
+    int importLayerGeometryType = myRoot.firstChildElement( "layerGeometryType" ).text().toInt();
+    if ( vl->geometryType() != importLayerGeometryType )
+    {
+      myErrorMessage = tr( "Cannot apply style to layer with a different geometry type" );
+      return false;
+    }
   }
 
   // use scale dependent visibility flag
@@ -1226,6 +1250,25 @@ void QgsMapLayer::exportNamedStyle( QDomDocument &doc, QString &errorMsg )
     errorMsg = QObject::tr( "Could not save symbology because:\n%1" ).arg( errorMsg );
     return;
   }
+
+  /*
+   * Check to see if the layer is vector - in which case we should also export its geometryType
+   * to avoid eventually pasting to a layer with a different geometry
+  */
+  if ( type() == QgsMapLayer::VectorLayer )
+  {
+    //Getting the selectionLayer geometry
+    QgsVectorLayer *vl = static_cast<QgsVectorLayer*>( this );
+    QString geoType = QString::number( vl->geometryType() );
+
+    //Adding geometryinformation
+    QDomElement layerGeometryType = myDocument.createElement( "layerGeometryType" );
+    QDomText type = myDocument.createTextNode( geoType );
+
+    layerGeometryType.appendChild( type );
+    myRootNode.appendChild( layerGeometryType );
+  }
+
   doc = myDocument;
 }
 
@@ -1248,17 +1291,20 @@ QString QgsMapLayer::saveNamedStyle( const QString &theURI, bool &theResultFlag 
   QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( this );
   if ( vlayer && vlayer->providerType() == "ogr" )
   {
-    QStringList theURIParts = theURI.split( "|" );
+    QStringList theURIParts = theURI.split( '|' );
     filename = theURIParts[0];
   }
   else if ( vlayer && vlayer->providerType() == "gpx" )
   {
-    QStringList theURIParts = theURI.split( "?" );
+    QStringList theURIParts = theURI.split( '?' );
     filename = theURIParts[0];
   }
   else if ( vlayer && vlayer->providerType() == "delimitedtext" )
   {
     filename = QUrl::fromEncoded( theURI.toAscii() ).toLocalFile();
+    // toLocalFile() returns an empty string if theURI is a plain Windows-path, e.g. "C:/style.qml"
+    if ( filename.isEmpty() )
+      filename = theURI;
   }
   else
   {
@@ -1432,17 +1478,20 @@ QString QgsMapLayer::saveSldStyle( const QString &theURI, bool &theResultFlag )
   QString filename;
   if ( vlayer->providerType() == "ogr" )
   {
-    QStringList theURIParts = theURI.split( "|" );
+    QStringList theURIParts = theURI.split( '|' );
     filename = theURIParts[0];
   }
   else if ( vlayer->providerType() == "gpx" )
   {
-    QStringList theURIParts = theURI.split( "?" );
+    QStringList theURIParts = theURI.split( '?' );
     filename = theURIParts[0];
   }
   else if ( vlayer->providerType() == "delimitedtext" )
   {
     filename = QUrl::fromEncoded( theURI.toAscii() ).toLocalFile();
+    // toLocalFile() returns an empty string if theURI is a plain Windows-path, e.g. "C:/style.qml"
+    if ( filename.isEmpty() )
+      filename = theURI;
   }
   else
   {

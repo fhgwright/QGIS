@@ -192,7 +192,7 @@ bool QgsFontUtils::updateFontViaStyle( QFont& f, const QString& fontstyle, bool 
   // and we want to make sure that's preserved
   if ( foundmatch )
   {
-    if ( f.pointSizeF() != -1 )
+    if ( !qgsDoubleNear( f.pointSizeF(), -1 ) )
     {
       styledfont.setPointSizeF( f.pointSizeF() );
     }
@@ -351,7 +351,7 @@ bool QgsFontUtils::setFromXmlChildNode( QFont& font, const QDomElement& element,
   }
 
   QDomNodeList nodeList = element.elementsByTagName( childNode );
-  if ( nodeList.size() > 0 )
+  if ( !nodeList.isEmpty() )
   {
     QDomElement fontElem = nodeList.at( 0 ).toElement();
     return setFromXmlElement( font, fontElem );
@@ -375,10 +375,10 @@ static QMap<QString, QString> createTranslatedStyleMap()
 
 QString QgsFontUtils::translateNamedStyle( const QString& namedStyle )
 {
-  QStringList words = namedStyle.split( " ", QString::SkipEmptyParts );
+  QStringList words = namedStyle.split( ' ', QString::SkipEmptyParts );
   for ( int i = 0, n = words.length(); i < n; ++i )
   {
-    words[i] = QCoreApplication::translate( "QFontDatabase", words[i].toUtf8(), 0, QCoreApplication::UnicodeUTF8 );
+    words[i] = QCoreApplication::translate( "QFontDatabase", words[i].toUtf8(), nullptr, QCoreApplication::UnicodeUTF8 );
   }
   return words.join( " " );
 }
@@ -386,7 +386,7 @@ QString QgsFontUtils::translateNamedStyle( const QString& namedStyle )
 QString QgsFontUtils::untranslateNamedStyle( const QString& namedStyle )
 {
   static QMap<QString, QString> translatedStyleMap = createTranslatedStyleMap();
-  QStringList words = namedStyle.split( " ", QString::SkipEmptyParts );
+  QStringList words = namedStyle.split( ' ', QString::SkipEmptyParts );
   for ( int i = 0, n = words.length(); i < n; ++i )
   {
     if ( translatedStyleMap.contains( words[i] ) )

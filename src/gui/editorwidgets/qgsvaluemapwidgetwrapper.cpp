@@ -17,12 +17,12 @@
 
 QgsValueMapWidgetWrapper::QgsValueMapWidgetWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor, QWidget* parent )
     : QgsEditorWidgetWrapper( vl, fieldIdx, editor, parent )
-    , mComboBox( NULL )
+    , mComboBox( nullptr )
 {
 }
 
 
-QVariant QgsValueMapWidgetWrapper::value()
+QVariant QgsValueMapWidgetWrapper::value() const
 {
   QVariant v;
 
@@ -55,7 +55,7 @@ void QgsValueMapWidgetWrapper::initWidget( QWidget* editor )
   }
 }
 
-bool QgsValueMapWidgetWrapper::valid()
+bool QgsValueMapWidgetWrapper::valid() const
 {
   return mComboBox;
 }

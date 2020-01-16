@@ -41,8 +41,10 @@ class QgsLegendRenderer;
  */
 class CORE_EXPORT QgsLegendModelV2 : public QgsLayerTreeModel
 {
+    Q_OBJECT
+
   public:
-    QgsLegendModelV2( QgsLayerTreeGroup* rootNode, QObject *parent = 0 );
+    QgsLegendModelV2( QgsLayerTreeGroup* rootNode, QObject *parent = nullptr );
 
     QVariant data( const QModelIndex& index, int role ) const override;
 
@@ -74,7 +76,7 @@ class CORE_EXPORT QgsComposerLegend : public QgsComposerItem
     void adjustBoxSize();
 
     /** Returns pointer to the legend model*/
-    //! @note deprecated in 2.6 - use modelV2()
+    //! @deprecated in 2.6 - use modelV2()
     Q_DECL_DEPRECATED QgsLegendModel* model() {return &mLegendModel;}
 
     //! @note added in 2.6
@@ -92,6 +94,20 @@ class CORE_EXPORT QgsComposerLegend : public QgsComposerItem
     //! @note added in 2.6
     bool legendFilterByMapEnabled() const { return mLegendFilterByMap; }
 
+    //! Update() overloading. Use it rather than update()
+    //! @note added in 2.12
+    virtual void updateItem() override;
+
+    //! When set to true, during an atlas rendering, it will filter out legend elements
+    //! where features are outside the current atlas feature.
+    //! @note added in 2.14
+    void setLegendFilterOutAtlas( bool doFilter );
+
+    //! Whether to filter out legend elements outside of the current atlas feature
+    //! @see setLegendFilterOutAtlas()
+    //! @note added in 2.14
+    bool legendFilterOutAtlas() const;
+
     //setters and getters
     void setTitle( const QString& t );
     QString title() const;
@@ -100,13 +116,13 @@ class CORE_EXPORT QgsComposerLegend : public QgsComposerItem
      * @returns Qt::AlignmentFlag for the legend title
      * @note added in 2.3
      * @see setTitleAlignment
-    */
+     */
     Qt::AlignmentFlag titleAlignment() const;
     /** Sets the alignment of the legend title
      * @param alignment Text alignment for drawing the legend title
      * @note added in 2.3
      * @see titleAlignment
-    */
+     */
     void setTitleAlignment( Qt::AlignmentFlag alignment );
 
     /** Returns reference to modifiable style */
@@ -244,6 +260,12 @@ class CORE_EXPORT QgsComposerLegend : public QgsComposerItem
     //! update legend in case style of associated map has changed
     void mapLayerStyleOverridesChanged();
 
+    //! react to atlas
+    void onAtlasEnded();
+    void onAtlasFeature( QgsFeature* );
+
+    void nodeCustomPropertyChanged( QgsLayerTreeNode* node, const QString& key );
+
   private:
     QgsComposerLegend(); //forbidden
 
@@ -260,6 +282,17 @@ class CORE_EXPORT QgsComposerLegend : public QgsComposerItem
     const QgsComposerMap* mComposerMap;
 
     bool mLegendFilterByMap;
+    bool mLegendFilterByExpression;
+
+    //! whether to filter out legend elements outside of the atlas feature
+    bool mFilterOutAtlas;
+
+    //! tag for update request
+    bool mFilterAskedForUpdate;
+    //! actual filter update
+    void doUpdateFilterByMap();
+
+    bool mInAtlas;
 };
 
 #endif

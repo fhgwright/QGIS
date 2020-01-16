@@ -13,12 +13,12 @@ __copyright__ = 'Copyright 2012, The QGIS Project'
 __revision__ = '$Format:%H$'
 
 import qgis
-from utilities import unittest, TestCase
+from qgis.testing import unittest
 from qgis.utils import qgsfunction
 from qgis.core import QgsExpression
 
 
-class TestQgsExpressionCustomFunctions(TestCase):
+class TestQgsExpressionCustomFunctions(unittest.TestCase):
 
     @qgsfunction(1, 'testing', register=False)
     def testfun(values, feature, parent):
@@ -27,11 +27,11 @@ class TestQgsExpressionCustomFunctions(TestCase):
 
     @qgsfunction(args="auto", group='testing', register=False)
     def autocount(value1, value2, value3, feature, parent):
-                pass
+        pass
 
     @qgsfunction(args="auto", group='testing', register=False)
     def expandargs(value1, value2, value3, feature, parent):
-                return value1, value2, value3
+        return value1, value2, value3
 
     @qgsfunction(args=0, group='testing', register=False)
     def special(values, feature, parent):

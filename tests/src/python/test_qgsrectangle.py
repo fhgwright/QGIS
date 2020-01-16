@@ -16,21 +16,23 @@ import qgis
 
 from qgis.core import QgsRectangle, QgsPoint
 
-from utilities import (getQgisTestApp,
-                       compareWkt,
-                       TestCase,
-                       unittest,
-                       expectedFailure
-                       )
+from qgis.testing import (
+    start_app,
+    unittest
+)
 
-QGISAPP, CANVAS, IFACE, PARENT = getQgisTestApp()
+from utilities import (
+    compareWkt
+)
+
+start_app()
 
 
-class TestQgsRectangle(TestCase):
+class TestQgsRectangle(unittest.TestCase):
 
     # Because isEmpty() is not returning expected result in 9b0fee3
 
-    @expectedFailure
+    @unittest.expectedFailure
     def testCtor(self):
         rect = QgsRectangle(5.0, 5.0, 10.0, 10.0)
 
@@ -155,8 +157,7 @@ class TestQgsRectangle(TestCase):
         assert rect1.contains(rect2), myMessage
 
         print rect1.toString()
-        assert (rect1 == QgsRectangle(0.0, 0.0, 7.0, 7.0),
-                'Wrong combine with rectangle result')
+        assert rect1 == QgsRectangle(0.0, 0.0, 7.0, 7.0), 'Wrong combine with rectangle result'
 
         rect1 = QgsRectangle(0.0, 0.0, 5.0, 5.0)
         rect1.combineExtentWith(6.0, 2.0)

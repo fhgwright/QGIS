@@ -106,7 +106,7 @@ void QgsSmartGroupEditorDialog::addCondition()
   // enable the remove buttons when 2nd condition is added
   if ( mConditionMap.count() == 1 )
   {
-    Q_FOREACH ( QgsSmartGroupCondition *condition, mConditionMap.values() )
+    Q_FOREACH ( QgsSmartGroupCondition *condition, mConditionMap )
     {
       condition->hideRemoveButton( false );
     }
@@ -115,7 +115,7 @@ void QgsSmartGroupEditorDialog::addCondition()
   mLayout->addWidget( cond, mCondCount, 0, 1, 1 );
 
   connect( cond, SIGNAL( removed( int ) ), this, SLOT( removeCondition( int ) ) );
-  if ( mConditionMap.count() == 0 )
+  if ( mConditionMap.isEmpty() )
   {
     cond->hideRemoveButton( true );
   }
@@ -128,7 +128,7 @@ void QgsSmartGroupEditorDialog::removeCondition( int id )
   // hide the remove button of the last condition when 2nd last is removed
   if ( mConditionMap.count() == 2 )
   {
-    Q_FOREACH ( QgsSmartGroupCondition* condition, mConditionMap.values() )
+    Q_FOREACH ( QgsSmartGroupCondition* condition, mConditionMap )
     {
       condition->hideRemoveButton( true );
     }
@@ -142,7 +142,7 @@ QgsSmartConditionMap QgsSmartGroupEditorDialog::conditionMap()
 {
   QgsSmartConditionMap conditions;
 
-  Q_FOREACH ( QgsSmartGroupCondition* condition, mConditionMap.values() )
+  Q_FOREACH ( QgsSmartGroupCondition* condition, mConditionMap )
   {
     conditions.insert( condition->constraint(), condition->parameter() );
   }
@@ -155,7 +155,7 @@ QString QgsSmartGroupEditorDialog::conditionOperator()
   return mAndOrCombo->itemData( mAndOrCombo->currentIndex() ).toString();
 }
 
-void QgsSmartGroupEditorDialog::setConditionMap( QgsSmartConditionMap map )
+void QgsSmartGroupEditorDialog::setConditionMap( const QgsSmartConditionMap& map )
 {
   QStringList constraints;
   constraints << "tag" << "group" << "name" << "!tag" << "!group" << "!name";

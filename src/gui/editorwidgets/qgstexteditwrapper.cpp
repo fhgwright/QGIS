@@ -23,13 +23,13 @@
 
 QgsTextEditWrapper::QgsTextEditWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor, QWidget* parent )
     : QgsEditorWidgetWrapper( vl, fieldIdx, editor, parent )
-    , mTextEdit( NULL )
-    , mPlainTextEdit( NULL )
-    , mLineEdit( NULL )
+    , mTextEdit( nullptr )
+    , mPlainTextEdit( nullptr )
+    , mLineEdit( nullptr )
 {
 }
 
-QVariant QgsTextEditWrapper::value()
+QVariant QgsTextEditWrapper::value() const
 {
   QString v;
 
@@ -130,7 +130,7 @@ void QgsTextEditWrapper::initWidget( QWidget* editor )
   }
 }
 
-bool QgsTextEditWrapper::valid()
+bool QgsTextEditWrapper::valid() const
 {
   return mLineEdit || mTextEdit || mPlainTextEdit;
 }

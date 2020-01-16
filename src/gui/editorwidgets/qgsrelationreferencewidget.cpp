@@ -41,37 +41,35 @@ bool orderByLessThan( const QgsRelationReferenceWidget::ValueRelationItem& p1
   {
     case QVariant::String:
       return p1.first.toString() < p2.first.toString();
-      break;
 
     case QVariant::Double:
       return p1.first.toDouble() < p2.first.toDouble();
-      break;
 
     default:
       return p1.first.toInt() < p2.first.toInt();
-      break;
   }
 }
 
 QgsRelationReferenceWidget::QgsRelationReferenceWidget( QWidget* parent )
     : QWidget( parent )
     , mEditorContext( QgsAttributeEditorContext() )
-    , mCanvas( NULL )
-    , mMessageBar( NULL )
+    , mCanvas( nullptr )
+    , mMessageBar( nullptr )
     , mForeignKey( QVariant() )
-    , mFkeyFieldIdx( -1 )
+    , mReferencedFieldIdx( -1 )
+    , mReferencingFieldIdx( -1 )
     , mAllowNull( true )
-    , mHighlight( NULL )
-    , mMapTool( NULL )
-    , mMessageBarItem( NULL )
+    , mHighlight( nullptr )
+    , mMapTool( nullptr )
+    , mMessageBarItem( nullptr )
     , mRelationName( "" )
-    , mReferencedAttributeForm( NULL )
-    , mReferencedLayer( NULL )
-    , mReferencingLayer( NULL )
-    , mMasterModel( 0 )
-    , mFilterModel( 0 )
-    , mFeatureListModel( 0 )
-    , mWindowWidget( NULL )
+    , mReferencedAttributeForm( nullptr )
+    , mReferencedLayer( nullptr )
+    , mReferencingLayer( nullptr )
+    , mMasterModel( nullptr )
+    , mFilterModel( nullptr )
+    , mFeatureListModel( nullptr )
+    , mWindowWidget( nullptr )
     , mShown( false )
     , mIsEditable( true )
     , mEmbedForm( false )
@@ -83,7 +81,9 @@ QgsRelationReferenceWidget::QgsRelationReferenceWidget( QWidget* parent )
 {
   mTopLayout = new QVBoxLayout( this );
   mTopLayout->setContentsMargins( 0, 0, 0, 0 );
-  mTopLayout->setAlignment( Qt::AlignTop );
+
+  setSizePolicy( sizePolicy().horizontalPolicy(), QSizePolicy::Fixed );
+
   setLayout( mTopLayout );
 
   QHBoxLayout* editLayout = new QHBoxLayout();
@@ -142,9 +142,6 @@ QgsRelationReferenceWidget::QgsRelationReferenceWidget( QWidget* parent )
   mRemoveFKButton->setText( tr( "No selection" ) );
   editLayout->addWidget( mRemoveFKButton );
 
-  // spacer
-  editLayout->addItem( new QSpacerItem( 0, 0, QSizePolicy::Expanding ) );
-
   // add line to top layout
   mTopLayout->addLayout( editLayout );
 
@@ -199,7 +196,8 @@ void QgsRelationReferenceWidget::setRelation( const QgsRelation& relation, bool 
     mReferencingLayer = relation.referencingLayer();
     mRelationName = relation.name();
     mReferencedLayer = relation.referencedLayer();
-    mFkeyFieldIdx = mReferencedLayer->fieldNameIndex( relation.fieldPairs().at( 0 ).second );
+    mReferencedFieldIdx = mReferencedLayer->fieldNameIndex( relation.fieldPairs().at( 0 ).second );
+    mReferencingFieldIdx = mReferencingLayer->fieldNameIndex( relation.fieldPairs().at( 0 ).first );
 
     QgsAttributeEditorContext context( mEditorContext, relation, QgsAttributeEditorContext::Single, QgsAttributeEditorContext::Embed );
 
@@ -245,8 +243,10 @@ void QgsRelationReferenceWidget::setForeignKey( const QVariant& value )
   if ( !mReferencedLayer )
     return;
 
+  // Attributes from the referencing layer
   QgsAttributes attrs = QgsAttributes( mReferencingLayer->fields().count() );
-  attrs[mFkeyFieldIdx] = value;
+  // Set the value on the foreign key field of the referencing record
+  attrs[ mReferencingLayer->fieldNameIndex( mRelation.fieldPairs().at( 0 ).first )] = value;
 
   QgsFeatureRequest request = mRelation.getReferencedFeatureRequest( attrs );
 
@@ -258,7 +258,7 @@ void QgsRelationReferenceWidget::setForeignKey( const QVariant& value )
     return;
   }
 
-  mForeignKey = mFeature.attribute( mFkeyFieldIdx );
+  mForeignKey = mFeature.attribute( mReferencedFieldIdx );
 
   if ( mReadOnlySelector )
   {
@@ -271,7 +271,7 @@ void QgsRelationReferenceWidget::setForeignKey( const QVariant& value )
     QString title = expr.evaluate( &context ).toString();
     if ( expr.hasEvalError() )
     {
-      title = mFeature.attribute( mFkeyFieldIdx ).toString();
+      title = mFeature.attribute( mReferencedFieldIdx ).toString();
     }
     mLineEdit->setText( title );
   }
@@ -353,11 +353,11 @@ QVariant QgsRelationReferenceWidget::foreignKey()
   {
     if ( !mFeature.isValid() )
     {
-      return QVariant( mReferencingLayer->fields().at( mReferencingLayer->fieldNameIndex( mRelation.fieldPairs().at( 0 ).first ) ).type() );
+      return QVariant( mReferencingLayer->fields().at( mReferencingFieldIdx ).type() );
     }
     else
     {
-      return mFeature.attribute( mFkeyFieldIdx );
+      return mFeature.attribute( mReferencedFieldIdx );
     }
   }
 }
@@ -376,6 +376,12 @@ void QgsRelationReferenceWidget::setEditorContext( const QgsAttributeEditorConte
 
 void QgsRelationReferenceWidget::setEmbedForm( bool display )
 {
+  if ( display )
+  {
+    setSizePolicy( sizePolicy().horizontalPolicy(), QSizePolicy::MinimumExpanding );
+    mTopLayout->setAlignment( Qt::AlignTop );
+  }
+
   mAttributeEditorFrame->setVisible( display );
   mEmbedForm = display;
 }
@@ -435,7 +441,7 @@ void QgsRelationReferenceWidget::init()
 
     QgsVectorLayerCache* layerCache = new QgsVectorLayerCache( mReferencedLayer, 100000, this );
 
-    if ( mFilterFields.size() )
+    if ( !mFilterFields.isEmpty() )
     {
       Q_FOREACH ( const QString& fieldName, mFilterFields )
       {
@@ -481,6 +487,10 @@ void QgsRelationReferenceWidget::init()
         }
       }
     }
+    else
+    {
+      mFilterContainer->hide();
+    }
 
     QgsExpression exp( mReferencedLayer->displayExpression() );
 
@@ -504,7 +514,7 @@ void QgsRelationReferenceWidget::init()
     if ( mOrderByValue )
     {
       const QStringList referencedColumns = QgsExpression( mReferencedLayer->displayExpression() ).referencedColumns();
-      if ( referencedColumns.size() > 0 )
+      if ( !referencedColumns.isEmpty() )
       {
         int sortIdx = mReferencedLayer->fieldNameIndex( referencedColumns.first() );
         mFilterModel->sort( sortIdx );
@@ -521,7 +531,7 @@ void QgsRelationReferenceWidget::init()
       {
         QVariant v = mFeature.attribute( mFilterFields[i] );
         QString f = v.isNull() ? nullValue.toString() : v.toString();
-        mFilterComboBoxes[i]->setCurrentIndex( mFilterComboBoxes[i]->findText( f ) );
+        mFilterComboBoxes.at( i )->setCurrentIndex( mFilterComboBoxes.at( i )->findText( f ) );
       }
     }
 
@@ -632,7 +642,7 @@ void QgsRelationReferenceWidget::deleteHighlight()
     mHighlight->hide();
     delete mHighlight;
   }
-  mHighlight = NULL;
+  mHighlight = nullptr;
 }
 
 void QgsRelationReferenceWidget::mapIdentification()
@@ -673,7 +683,7 @@ void QgsRelationReferenceWidget::comboReferenceChanged( int index )
   mReferencedLayer->getFeatures( QgsFeatureRequest().setFilterFid( fid ) ).nextFeature( mFeature );
   highlightFeature( mFeature );
   updateAttributeEditorFrame( mFeature );
-  emit foreignKeyChanged( mFeature.attribute( mFkeyFieldIdx ) );
+  emit foreignKeyChanged( mFeature.attribute( mReferencedFieldIdx ) );
 }
 
 void QgsRelationReferenceWidget::updateAttributeEditorFrame( const QgsFeature& feature )
@@ -701,15 +711,15 @@ void QgsRelationReferenceWidget::featureIdentified( const QgsFeature& feature )
     QString title = expr.evaluate( &context ).toString();
     if ( expr.hasEvalError() )
     {
-      title = feature.attribute( mFkeyFieldIdx ).toString();
+      title = feature.attribute( mReferencedFieldIdx ).toString();
     }
     mLineEdit->setText( title );
-    mForeignKey = feature.attribute( mFkeyFieldIdx );
+    mForeignKey = feature.attribute( mReferencedFieldIdx );
     mFeature = feature;
   }
   else
   {
-    mComboBox->setCurrentIndex( mComboBox->findData( feature.attribute( mFkeyFieldIdx ), QgsAttributeTableModel::FeatureIdRole ) );
+    mComboBox->setCurrentIndex( mComboBox->findData( feature.attribute( mReferencedFieldIdx ), QgsAttributeTableModel::FeatureIdRole ) );
     mFeature = feature;
   }
 
@@ -743,7 +753,7 @@ void QgsRelationReferenceWidget::mapToolDeactivated()
   {
     mMessageBar->popWidget( mMessageBarItem );
   }
-  mMessageBarItem = NULL;
+  mMessageBarItem = nullptr;
 }
 
 void QgsRelationReferenceWidget::filterChanged()
@@ -759,18 +769,15 @@ void QgsRelationReferenceWidget::filterChanged()
 
   if ( mChainFilters )
   {
-    QComboBox* ccb = 0;
+    QComboBox* ccb = nullptr;
     Q_FOREACH ( QComboBox* cb, mFilterComboBoxes )
     {
-      if ( ccb == 0 )
+      if ( !ccb )
       {
-        if ( cb != scb )
-          continue;
-        else
-        {
+        if ( cb == scb )
           ccb = cb;
-          continue;
-        }
+
+        continue;
       }
 
       if ( ccb->currentIndex() == 0 )

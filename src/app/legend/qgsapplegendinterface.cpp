@@ -122,7 +122,7 @@ static QgsLayerTreeGroup* _groupIndexToNode( int groupIndex, QgsLayerTreeGroup* 
     }
   }
 
-  return 0;
+  return nullptr;
 }
 
 QgsLayerTreeGroup* QgsAppLegendInterface::groupIndexToNode( int itemIndex )
@@ -237,7 +237,7 @@ QList< GroupLayerInfo > QgsAppLegendInterface::groupLayerRelationship()
 
 bool QgsAppLegendInterface::groupExists( int groupIndex )
 {
-  return groupIndexToNode( groupIndex ) != 0;
+  return nullptr != groupIndexToNode( groupIndex );
 }
 
 bool QgsAppLegendInterface::isGroupExpanded( int groupIndex )
@@ -314,7 +314,7 @@ void QgsAppLegendInterface::onAddedChildren( QgsLayerTreeNode* node, int indexFr
     emit itemAdded( mLayerTreeView->layerTreeModel()->node2index( child ) );
 
     // also notify about all children
-    if ( QgsLayerTree::isGroup( child ) && child->children().count() )
+    if ( QgsLayerTree::isGroup( child ) && !child->children().isEmpty() )
       onAddedChildren( child, 0, child->children().count() - 1 );
   }
 }

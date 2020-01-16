@@ -60,6 +60,8 @@ class CORE_EXPORT QgsDiagramLayerSettings
     };
 
     QgsDiagramLayerSettings();
+    QgsDiagramLayerSettings( const QgsDiagramLayerSettings& rh );
+    QgsDiagramLayerSettings& operator=( const QgsDiagramLayerSettings& rh );
 
     ~QgsDiagramLayerSettings();
 
@@ -67,6 +69,10 @@ class CORE_EXPORT QgsDiagramLayerSettings
     Placement placement;
     unsigned int placementFlags;
     int priority; // 0 = low, 10 = high
+
+    //! Z-index of diagrams, where diagrams with a higher z-index are drawn on top of diagrams with a lower z-index
+    double zIndex;
+
     bool obstacle; // whether it's an obstacle
     double dist; // distance from the feature (in mm)
     QgsDiagramRendererV2* renderer; // if any renderer is assigned, it is owned by this class
@@ -82,6 +88,7 @@ class CORE_EXPORT QgsDiagramLayerSettings
 
     void readXML( const QDomElement& elem, const QgsVectorLayer* layer );
     void writeXML( QDomElement& layerElem, QDomDocument& doc, const QgsVectorLayer* layer ) const;
+
 };
 
 //diagram settings for rendering
@@ -195,7 +202,7 @@ class CORE_EXPORT QgsDiagramRendererV2
     /** Returns attribute indices needed for diagram rendering*/
     virtual QList<QString> diagramAttributes() const = 0;
 
-    void renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QPointF& pos );
+    void renderDiagram( const QgsFeature& feature, QgsRenderContext& c, QPointF pos );
 
     void setDiagram( QgsDiagram* d );
     QgsDiagram* diagram() const { return mDiagram; }
@@ -246,7 +253,7 @@ class CORE_EXPORT QgsSingleCategoryDiagramRenderer : public QgsDiagramRendererV2
     QgsSingleCategoryDiagramRenderer();
     ~QgsSingleCategoryDiagramRenderer();
 
-    QgsDiagramRendererV2* clone() const override;
+    QgsSingleCategoryDiagramRenderer* clone() const override;
 
     QString rendererName() const override { return "SingleCategory"; }
 
@@ -276,7 +283,7 @@ class CORE_EXPORT QgsLinearlyInterpolatedDiagramRenderer : public QgsDiagramRend
     QgsLinearlyInterpolatedDiagramRenderer();
     ~QgsLinearlyInterpolatedDiagramRenderer();
 
-    QgsDiagramRendererV2* clone() const override;
+    QgsLinearlyInterpolatedDiagramRenderer* clone() const override;
 
     /** Returns list with all diagram settings in the renderer*/
     QList<QgsDiagramSettings> diagramSettings() const override;

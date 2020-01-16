@@ -30,13 +30,13 @@
 #include <QUrl>
 
 
-QgsDelimitedTextFile::QgsDelimitedTextFile( QString url ) :
+QgsDelimitedTextFile::QgsDelimitedTextFile( const QString& url ) :
     mFileName( QString() ),
     mEncoding( "UTF-8" ),
-    mFile( 0 ),
-    mStream( 0 ),
+    mFile( nullptr ),
+    mStream( nullptr ),
     mUseWatcher( true ),
-    mWatcher( 0 ),
+    mWatcher( nullptr ),
     mDefinitionValid( false ),
     mUseHeader( true ),
     mDiscardEmptyFields( false ),
@@ -71,17 +71,17 @@ void QgsDelimitedTextFile::close()
   if ( mStream )
   {
     delete mStream;
-    mStream = 0;
+    mStream = nullptr;
   }
   if ( mFile )
   {
     delete mFile;
-    mFile = 0;
+    mFile = nullptr;
   }
   if ( mWatcher )
   {
     delete mWatcher;
-    mWatcher = 0;
+    mWatcher = nullptr;
   }
   mLineNumber = -1;
   mRecordLineNumber = -1;
@@ -100,7 +100,7 @@ bool QgsDelimitedTextFile::open()
     {
       QgsDebugMsg( "Data file " + mFileName + " could not be opened" );
       delete mFile;
-      mFile = 0;
+      mFile = nullptr;
     }
     if ( mFile )
     {
@@ -118,7 +118,7 @@ bool QgsDelimitedTextFile::open()
       }
     }
   }
-  return mFile != 0;
+  return nullptr != mFile;
 }
 
 void QgsDelimitedTextFile::updateFile()
@@ -136,7 +136,7 @@ void QgsDelimitedTextFile::resetDefinition()
 }
 
 // Extract the provider definition from the url
-bool QgsDelimitedTextFile::setFromUrl( QString url )
+bool QgsDelimitedTextFile::setFromUrl( const QString& url )
 {
   QUrl qurl = QUrl::fromEncoded( url.toAscii() );
   return setFromUrl( qurl );
@@ -232,9 +232,9 @@ bool QgsDelimitedTextFile::setFromUrl( const QUrl &url )
   QgsDebugMsg( "Delimited text file is: " + mFileName );
   QgsDebugMsg( "Encoding is: " + mEncoding );
   QgsDebugMsg( "Delimited file type is: " + type );
-  QgsDebugMsg( "Delimiter is: [" + delimiter + "]" );
-  QgsDebugMsg( "Quote character is: [" + quote + "]" );
-  QgsDebugMsg( "Escape character is: [" + escape + "]" );
+  QgsDebugMsg( "Delimiter is: [" + delimiter + ']' );
+  QgsDebugMsg( "Quote character is: [" + quote + ']' );
+  QgsDebugMsg( "Escape character is: [" + escape + ']' );
   QgsDebugMsg( "Skip lines: " + QString::number( mSkipLines ) );
   QgsDebugMsg( "Maximum number of fields in record: " + QString::number( mMaxFields ) );
   QgsDebugMsg( "Use headers: " + QString( mUseHeader ? "Yes" : "No" ) );
@@ -308,13 +308,13 @@ QUrl QgsDelimitedTextFile::url()
   return url;
 }
 
-void QgsDelimitedTextFile::setFileName( QString filename )
+void QgsDelimitedTextFile::setFileName( const QString& filename )
 {
   resetDefinition();
   mFileName = filename;
 }
 
-void QgsDelimitedTextFile::setEncoding( QString encoding )
+void QgsDelimitedTextFile::setEncoding( const QString& encoding )
 {
   resetDefinition();
   mEncoding = encoding;
@@ -341,14 +341,14 @@ void QgsDelimitedTextFile::setTypeWhitespace()
   mType = DelimTypeWhitespace;
 }
 
-void QgsDelimitedTextFile::setTypeRegexp( QString regexp )
+void QgsDelimitedTextFile::setTypeRegexp( const QString& regexp )
 {
   resetDefinition();
   mType = DelimTypeRegexp;
   mDelimRegexp.setPattern( regexp );
-  mAnchoredRegexp = regexp.startsWith( "^" );
+  mAnchoredRegexp = regexp.startsWith( '^' );
   mParser = &QgsDelimitedTextFile::parseRegexp;
-  mDefinitionValid = regexp.size() > 0 && mDelimRegexp.isValid();
+  mDefinitionValid = !regexp.isEmpty() && mDelimRegexp.isValid();
   if ( ! mDefinitionValid )
   {
     QgsDebugMsg( "Invalid regular expression in delimited text file delimiter: " + regexp );
@@ -368,11 +368,11 @@ QString QgsDelimitedTextFile::decodeChars( QString chars )
 
 QString QgsDelimitedTextFile::encodeChars( QString chars )
 {
-  chars = chars.replace( "\t", "\\t" );
+  chars = chars.replace( '\t', "\\t" );
   return chars;
 }
 
-void QgsDelimitedTextFile::setTypeCSV( QString delim, QString quote, QString escape )
+void QgsDelimitedTextFile::setTypeCSV( const QString& delim, const QString& quote, const QString& escape )
 {
   resetDefinition();
   mType = DelimTypeCSV;
@@ -380,7 +380,7 @@ void QgsDelimitedTextFile::setTypeCSV( QString delim, QString quote, QString esc
   mQuoteChar = decodeChars( quote );
   mEscapeChar = decodeChars( escape );
   mParser = &QgsDelimitedTextFile::parseQuoted;
-  mDefinitionValid = mDelimChars.size() > 0;
+  mDefinitionValid = !mDelimChars.isEmpty();
   if ( ! mDefinitionValid )
   {
     QgsDebugMsg( "Invalid empty delimiter defined for text file delimiter" );
@@ -484,7 +484,7 @@ QStringList &QgsDelimitedTextFile::fieldNames()
   return mFieldNames;
 }
 
-int QgsDelimitedTextFile::fieldIndex( QString name )
+int QgsDelimitedTextFile::fieldIndex( const QString& name )
 {
   // If not yet opened then reset file to read column headers
   //

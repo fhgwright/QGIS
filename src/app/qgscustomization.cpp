@@ -73,7 +73,7 @@ QgsCustomizationDialog::~QgsCustomizationDialog()
 QTreeWidgetItem * QgsCustomizationDialog::item( const QString& thePath, QTreeWidgetItem *theItem )
 {
   QString path = thePath;
-  if ( path.startsWith( "/" ) )
+  if ( path.startsWith( '/' ) )
     path = path.mid( 1 ); // remove '/'
   QStringList names = path.split( '/' );
   path = QStringList( names.mid( 1 ) ).join( "/" );
@@ -110,7 +110,7 @@ QTreeWidgetItem * QgsCustomizationDialog::item( const QString& thePath, QTreeWid
     }
   }
   QgsDebugMsg( "not found" );
-  return 0;
+  return nullptr;
 }
 
 bool QgsCustomizationDialog::itemChecked( const QString& thePath )
@@ -137,7 +137,7 @@ void QgsCustomizationDialog::settingsToItem( const QString& thePath, QTreeWidget
   if ( objectName.isEmpty() )
     return; // object is not identifiable
 
-  QString myPath = thePath + "/" + objectName;
+  QString myPath = thePath + '/' + objectName;
 
   bool on = theSettings->value( myPath, true ).toBool();
   theItem->setCheckState( 0, on ? Qt::Checked : Qt::Unchecked );
@@ -156,7 +156,7 @@ void QgsCustomizationDialog::itemToSettings( const QString& thePath, QTreeWidget
   if ( objectName.isEmpty() )
     return; // object is not identifiable
 
-  QString myPath = thePath + "/" + objectName;
+  QString myPath = thePath + '/' + objectName;
   bool on = theItem->checkState( 0 ) == Qt::Checked ? true : false;
   theSettings->setValue( myPath, on );
 
@@ -220,14 +220,22 @@ void QgsCustomizationDialog::on_actionSave_triggered( bool checked )
 {
   Q_UNUSED( checked );
   QSettings mySettings;
-  QString lastDir = mySettings.value( mLastDirSettingsName, "." ).toString();
+  QString lastDir = mySettings.value( mLastDirSettingsName, QDir::homePath() ).toString();
 
   QString fileName = QFileDialog::getSaveFileName( this,
                      tr( "Choose a customization INI file" ),
                      lastDir, tr( "Customization files (*.ini)" ) );
 
   if ( fileName.isEmpty() )
+  {
     return;
+  }
+
+  if ( !fileName.endsWith( ".ini", Qt::CaseInsensitive ) )
+  {
+    fileName += ".ini";
+  }
+
   QFileInfo fileInfo( fileName );
   mySettings.setValue( mLastDirSettingsName, fileInfo.absoluteDir().absolutePath() );
 
@@ -239,7 +247,7 @@ void QgsCustomizationDialog::on_actionLoad_triggered( bool checked )
 {
   Q_UNUSED( checked );
   QSettings mySettings;
-  QString lastDir = mySettings.value( mLastDirSettingsName, "." ).toString();
+  QString lastDir = mySettings.value( mLastDirSettingsName, QDir::homePath() ).toString();
 
   QString fileName = QFileDialog::getOpenFileName( this,
                      tr( "Choose a customization INI file" ),
@@ -314,19 +322,19 @@ QTreeWidgetItem * QgsCustomizationDialog::createTreeItemWidgets()
   QFile myFile( QgsApplication::pkgDataPath() +  "/resources/customization.xml" );
   if ( !myFile.open( QIODevice::ReadOnly ) )
   {
-    return NULL;
+    return nullptr;
   }
   if ( !myDoc.setContent( &myFile ) )
   {
     myFile.close();
-    return NULL;
+    return nullptr;
   }
   myFile.close();
 
   QDomElement myRoot = myDoc.documentElement();
   if ( myRoot.tagName() != "qgiswidgets" )
   {
-    return NULL;
+    return nullptr;
   }
   QTreeWidgetItem *myItem = readWidgetsXmlNode( myRoot );
   // Do not translate "Widgets", currently it is also used as path
@@ -404,7 +412,7 @@ bool QgsCustomizationDialog::switchWidget( QWidget *widget, QMouseEvent *e )
         return false;
       QString toolbarName = widget->parent()->objectName();
       QString actionName = action->objectName();
-      path = "/Toolbars/" + toolbarName + "/" + actionName;
+      path = "/Toolbars/" + toolbarName + '/' + actionName;
     }
     else
     {
@@ -453,7 +461,7 @@ QString QgsCustomizationDialog::widgetPath( QWidget * theWidget, const QString& 
   {
     if ( !path.isEmpty() )
     {
-      path = name + "/" + path;
+      path = name + '/' + path;
     }
     else
     {
@@ -465,7 +473,7 @@ QString QgsCustomizationDialog::widgetPath( QWidget * theWidget, const QString& 
 
   if ( !parent || theWidget->inherits( "QDialog" ) )
   {
-    return "/" + path;
+    return '/' + path;
   }
 
   return widgetPath( parent, path );
@@ -510,7 +518,7 @@ void QgsCustomization::addTreeItemMenu( QTreeWidgetItem* parentItem, QMenu* menu
 {
   QStringList menustrs;
   // remove '&' which are used to mark shortcut key
-  menustrs << menu->objectName() << menu->title().replace( "&", "" );
+  menustrs << menu->objectName() << menu->title().remove( '&' );
   QTreeWidgetItem* menuItem = new QTreeWidgetItem( parentItem, menustrs );
   menuItem->setFlags( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable );
   menuItem->setCheckState( 0, Qt::Checked );
@@ -615,10 +623,10 @@ void QgsCustomization::createTreeItemStatus()
 
 QStringList QgsCustomization::mInternalWidgets = QStringList() <<  "qt_tabwidget_stackedwidget" << "qt_tabwidget_tabbar";
 
-QgsCustomization *QgsCustomization::pinstance = 0;
+QgsCustomization *QgsCustomization::pinstance = nullptr;
 QgsCustomization *QgsCustomization::instance()
 {
-  if ( pinstance == 0 )
+  if ( !pinstance )
   {
     pinstance = new QgsCustomization();
   }
@@ -626,9 +634,9 @@ QgsCustomization *QgsCustomization::instance()
 }
 
 QgsCustomization::QgsCustomization()
-    : pDialog( 0 )
+    : pDialog( nullptr )
     , mEnabled( false )
-    , mSettings( NULL )
+    , mSettings( nullptr )
     , mStatusPath( "/Customization/status" )
 {
   QgsDebugMsg( "Entered" );
@@ -825,7 +833,7 @@ void QgsCustomization::customizeWidget( const QString& thePath, QWidget * theWid
 
   if ( !QgsCustomization::mInternalWidgets.contains( name ) )
   {
-    myPath = thePath + "/" + name;
+    myPath = thePath + '/' + name;
   }
 
   QObjectList children = theWidget->children();
@@ -836,7 +844,7 @@ void QgsCustomization::customizeWidget( const QString& thePath, QWidget * theWid
       continue;
     QWidget * w = qobject_cast<QWidget*>( *i );
 
-    QString p = myPath + "/" + w->objectName();
+    QString p = myPath + '/' + w->objectName();
 
     bool on = settings->value( p, true ).toBool();
     //QgsDebugMsg( QString( "p = %1 on = %2" ).arg( p ).arg( on ) );

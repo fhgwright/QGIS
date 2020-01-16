@@ -1,3 +1,17 @@
+/***************************************************************************
+    qgsogcutils.h
+    ---------------------
+    begin                : March 2013
+    copyright            : (C) 2013 by Martin Dobias
+    email                : wonder dot sk at gmail dot com
+ ***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
 #ifndef QGSOGCUTILS_H
 #define QGSOGCUTILS_H
 
@@ -49,22 +63,22 @@ class CORE_EXPORT QgsOgcUtils
     /** Exports the geometry to GML2 or GML3
         @return QDomElement
      */
-    static QDomElement geometryToGML( const QgsGeometry* geometry, QDomDocument& doc, const QString& format, const int &precision = 17 );
+    static QDomElement geometryToGML( const QgsGeometry* geometry, QDomDocument& doc, const QString& format, int precision = 17 );
 
     /** Exports the geometry to GML2
         @return QDomElement
      */
-    static QDomElement geometryToGML( const QgsGeometry* geometry, QDomDocument& doc, const int &precision = 17 );
+    static QDomElement geometryToGML( const QgsGeometry* geometry, QDomDocument& doc, int precision = 17 );
 
     /** Exports the rectangle to GML2 Box
         @return QDomElement
      */
-    static QDomElement rectangleToGMLBox( QgsRectangle* box, QDomDocument& doc, const int &precision = 17 );
+    static QDomElement rectangleToGMLBox( QgsRectangle* box, QDomDocument& doc, int precision = 17 );
 
     /** Exports the rectangle to GML2 Envelope
         @return QDomElement
      */
-    static QDomElement rectangleToGMLEnvelope( QgsRectangle* env, QDomDocument& doc, const int &precision = 17 );
+    static QDomElement rectangleToGMLEnvelope( QgsRectangle* env, QDomDocument& doc, int precision = 17 );
 
 
     /** Parse XML with OGC fill into QColor */
@@ -78,7 +92,7 @@ class CORE_EXPORT QgsOgcUtils
      * @return valid \verbatim <Filter> \endverbatim QDomElement on success,
      * otherwise null QDomElement
      */
-    static QDomElement expressionToOgcFilter( const QgsExpression& exp, QDomDocument& doc, QString* errorMessage = 0 );
+    static QDomElement expressionToOgcFilter( const QgsExpression& exp, QDomDocument& doc, QString* errorMessage = nullptr );
 
   private:
     /** Static method that creates geometry from GML Point */

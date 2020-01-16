@@ -46,7 +46,7 @@ class GUI_EXPORT QgsAttributeTableView : public QTableView
     Q_OBJECT
 
   public:
-    QgsAttributeTableView( QWidget* parent = 0 );
+    QgsAttributeTableView( QWidget* parent = nullptr );
     virtual ~QgsAttributeTableView();
 
     virtual void setModel( QgsAttributeTableFilterModel* filterModel );
@@ -126,7 +126,7 @@ class GUI_EXPORT QgsAttributeTableView : public QTableView
      * @param atIndex  The QModelIndex, to which the context menu belongs. Relative to the source model.
      *                 In most cases, this will be a @link QgsAttributeTableFilterModel @endlink
      */
-    void willShowContextMenu( QMenu* menu, QModelIndex atIndex );
+    void willShowContextMenu( QMenu* menu, const QModelIndex& atIndex );
 
     void finished();
 
@@ -139,6 +139,7 @@ class GUI_EXPORT QgsAttributeTableView : public QTableView
 
   private slots:
     void modelDeleted();
+    void showHorizontalSortIndicator();
 
   private:
     void selectRow( int row, bool anchor );

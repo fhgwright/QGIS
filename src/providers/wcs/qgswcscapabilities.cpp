@@ -19,7 +19,6 @@
  ***************************************************************************/
 #include <typeinfo>
 
-#define WCS_THRESHOLD 200  // time to wait for an answer without emitting dataChanged()
 #include "qgslogger.h"
 #include "qgswcscapabilities.h"
 #include "qgsowsconnection.h"
@@ -65,7 +64,7 @@
 
 QgsWcsCapabilities::QgsWcsCapabilities( QgsDataSourceURI const &theUri )
     : mUri( theUri )
-    , mCapabilitiesReply( NULL )
+    , mCapabilitiesReply( nullptr )
     , mCoverageCount( 0 )
     , mCacheLoadControl( QNetworkRequest::PreferNetwork )
 {
@@ -78,7 +77,7 @@ QgsWcsCapabilities::QgsWcsCapabilities( QgsDataSourceURI const &theUri )
 
 QgsWcsCapabilities::QgsWcsCapabilities()
     : mCapabilities()
-    , mCapabilitiesReply( NULL )
+    , mCapabilitiesReply( nullptr )
     , mCoverageCount( 0 )
     , mCacheLoadControl( QNetworkRequest::PreferNetwork )
 {
@@ -117,13 +116,13 @@ void QgsWcsCapabilities::setUri( QgsDataSourceURI const &theUri )
 
 QString QgsWcsCapabilities::prepareUri( QString uri )
 {
-  if ( !uri.contains( "?" ) )
+  if ( !uri.contains( '?' ) )
   {
-    uri.append( "?" );
+    uri.append( '?' );
   }
   else if ( uri.right( 1 ) != "?" && uri.right( 1 ) != "&" )
   {
-    uri.append( "&" );
+    uri.append( '&' );
   }
 
   return uri;
@@ -209,7 +208,7 @@ void QgsWcsCapabilities::clear()
   mCapabilities = QgsWcsCapabilitiesProperty();
 }
 
-QString QgsWcsCapabilities::getCapabilitiesUrl( const QString version ) const
+QString QgsWcsCapabilities::getCapabilitiesUrl( const QString& version ) const
 {
   QString url = prepareUri( mUri.param( "url" ) ) + "SERVICE=WCS&REQUEST=GetCapabilities";
 
@@ -266,7 +265,7 @@ bool QgsWcsCapabilities::retrieveServerCapabilities()
   return false;
 }
 
-bool QgsWcsCapabilities::retrieveServerCapabilities( QString preferredVersion )
+bool QgsWcsCapabilities::retrieveServerCapabilities( const QString& preferredVersion )
 {
   clear();
 
@@ -416,7 +415,7 @@ void QgsWcsCapabilities::capabilitiesReplyFinished()
   }
 
   mCapabilitiesReply->deleteLater();
-  mCapabilitiesReply = 0;
+  mCapabilitiesReply = nullptr;
 }
 
 void QgsWcsCapabilities::capabilitiesReplyProgress( qint64 bytesReceived, qint64 bytesTotal )
@@ -428,7 +427,7 @@ void QgsWcsCapabilities::capabilitiesReplyProgress( qint64 bytesReceived, qint64
 
 QString QgsWcsCapabilities::stripNS( const QString & name )
 {
-  return name.contains( ":" ) ? name.section( ':', 1 ) : name;
+  return name.contains( ':' ) ? name.section( ':', 1 ) : name;
 }
 
 bool QgsWcsCapabilities::parseCapabilitiesDom( QByteArray const &xml, QgsWcsCapabilitiesProperty &capabilities )
@@ -556,8 +555,8 @@ QList<QDomElement> QgsWcsCapabilities::domElements( const QDomElement &element, 
 {
   QList<QDomElement> list;
 
-  QStringList names = path.split( "." );
-  if ( names.size() == 0 ) return list;
+  QStringList names = path.split( '.' );
+  if ( names.isEmpty() ) return list;
   QString name = names.value( 0 );
   names.removeFirst();
 
@@ -570,7 +569,7 @@ QList<QDomElement> QgsWcsCapabilities::domElements( const QDomElement &element, 
       QString tagName = stripNS( el.tagName() );
       if ( tagName == name )
       {
-        if ( names.size() == 0 )
+        if ( names.isEmpty() )
         {
           list.append( el );
         }
@@ -600,8 +599,8 @@ QStringList QgsWcsCapabilities::domElementsTexts( const QDomElement &element, co
 
 QDomElement QgsWcsCapabilities::domElement( const QDomElement &element, const QString & path )
 {
-  QStringList names = path.split( "." );
-  if ( names.size() == 0 ) return QDomElement();
+  QStringList names = path.split( '.' );
+  if ( names.isEmpty() ) return QDomElement();
 
   QDomElement el = firstChild( element, names.value( 0 ) );
   if ( names.size() == 1 || el.isNull() )
@@ -621,7 +620,7 @@ QString QgsWcsCapabilities::domElementText( const QDomElement &element, const QS
 QList<int> QgsWcsCapabilities::parseInts( const QString &text )
 {
   QList<int> list;
-  Q_FOREACH ( const QString& s, text.split( " " ) )
+  Q_FOREACH ( const QString& s, text.split( ' ' ) )
   {
     bool ok;
     list.append( s.toInt( &ok ) );
@@ -637,7 +636,7 @@ QList<int> QgsWcsCapabilities::parseInts( const QString &text )
 QList<double> QgsWcsCapabilities::parseDoubles( const QString &text )
 {
   QList<double> list;
-  Q_FOREACH ( const QString& s, text.split( " " ) )
+  Q_FOREACH ( const QString& s, text.split( ' ' ) )
   {
     bool ok;
     list.append( s.toDouble( &ok ) );
@@ -656,10 +655,10 @@ QString QgsWcsCapabilities::crsUrnToAuthId( const QString &text )
 
   // URN format: urn:ogc:def:objectType:authority:version:code
   // URN example: urn:ogc:def:crs:EPSG::4326
-  QStringList urn = text.split( ":" );
+  QStringList urn = text.split( ':' );
   if ( urn.size() == 7 )
   {
-    authid = urn.value( 4 ) + ":" + urn.value( 6 );
+    authid = urn.value( 4 ) + ':' + urn.value( 6 );
   }
 
   return authid;
@@ -878,10 +877,10 @@ bool QgsWcsCapabilities::parseDescribeCoverageDom10( QByteArray const &xml, QgsW
     QString endPosition = domElementText( el, "endPosition" );
     QString timeResolution = domElementText( el, "timeResolution" );
     // Format used in request
-    QString time = beginPosition + "/" + endPosition;
+    QString time = beginPosition + '/' + endPosition;
     if ( !timeResolution.isEmpty() )
     {
-      time += "/" + timeResolution;
+      time += '/' + timeResolution;
     }
     coverage->times << time;
   }
@@ -974,7 +973,7 @@ bool QgsWcsCapabilities::parseDescribeCoverageDom11( QByteArray const &xml, QgsW
         box = QgsRectangle( low[0], low[1], high[0], high[1] );
       }
       coverage->boundingBoxes.insert( authid, box );
-      QgsDebugMsg( "crs: " + crs.authid() + " " + crs.description() + QString( " axisInverted = %1" ).arg( crs.axisInverted() ) );
+      QgsDebugMsg( "crs: " + crs.authid() + ' ' + crs.description() + QString( " axisInverted = %1" ).arg( crs.axisInverted() ) );
       QgsDebugMsg( "BoundingBox: " + authid + " : " + box.toString() );
     }
   }
@@ -1005,10 +1004,10 @@ bool QgsWcsCapabilities::parseDescribeCoverageDom11( QByteArray const &xml, QgsW
     QString endPosition = domElementText( el, "endTime" );
     QString timeResolution = domElementText( el, "timeResolution" );
     // Format used in request
-    QString time = beginPosition + "/" + endPosition;
+    QString time = beginPosition + '/' + endPosition;
     if ( !timeResolution.isEmpty() )
     {
-      time += "/" + timeResolution;
+      time += '/' + timeResolution;
     }
     coverage->times << time;
   }
@@ -1027,7 +1026,7 @@ bool QgsWcsCapabilities::parseDescribeCoverageDom11( QByteArray const &xml, QgsW
 
   QStringList formats = domElementsTexts( docElem, "CoverageDescription.SupportedFormat" );
   // There could be formats from GetCapabilities
-  if ( formats.size() > 0 )
+  if ( !formats.isEmpty() )
   {
     coverage->supportedFormat = formats;
   }
@@ -1039,7 +1038,7 @@ bool QgsWcsCapabilities::parseDescribeCoverageDom11( QByteArray const &xml, QgsW
   {
     authids.insert( crsUrnToAuthId( crs ) );
   }
-  if ( authids.size() > 0 )
+  if ( !authids.isEmpty() )
   {
     coverage->supportedCrs = authids.toList();
   }
@@ -1231,7 +1230,7 @@ QgsWcsCoverageSummary* QgsWcsCapabilities::coverageSummary( QString const & theI
       }
     }
   }
-  return 0;
+  return nullptr;
 }
 
 QList<QgsWcsCoverageSummary> QgsWcsCapabilities::coverages()

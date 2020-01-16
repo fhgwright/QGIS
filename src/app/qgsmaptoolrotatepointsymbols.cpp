@@ -29,12 +29,12 @@
 
 QgsMapToolRotatePointSymbols::QgsMapToolRotatePointSymbols( QgsMapCanvas* canvas )
     : QgsMapToolEdit( canvas ),
-    mActiveLayer( 0 ),
+    mActiveLayer( nullptr ),
     mFeatureNumber( 0 ),
     mCurrentMouseAzimut( 0.0 ),
     mCurrentRotationFeature( 0.0 ),
     mRotating( false ),
-    mRotationItem( 0 ),
+    mRotationItem( nullptr ),
     mCtrlPressed( false )
 {
 
@@ -99,7 +99,7 @@ void QgsMapToolRotatePointSymbols::canvasPressEvent( QgsMapMouseEvent* e )
   QgsPointLocator::Match m = mCanvas->snappingUtils()->snapToCurrentLayer( e->pos(), QgsPointLocator::Vertex );
   if ( !m.isValid() )
   {
-    emit messageEmitted( tr( "No point feature was detected at the clicked position. Please click closer to the feature or enhance the search tolerance under Settings->Options->Digitizing->Serch radius for vertex edits" ), QgsMessageBar::CRITICAL );
+    emit messageEmitted( tr( "No point feature was detected at the clicked position. Please click closer to the feature or enhance the search tolerance under Settings->Options->Digitizing->Search radius for vertex edits" ), QgsMessageBar::CRITICAL );
     return; //error during snapping
   }
 
@@ -123,7 +123,7 @@ void QgsMapToolRotatePointSymbols::canvasPressEvent( QgsMapMouseEvent* e )
   renderer->startRender( context, mActiveLayer->fields() );
 
   //find all rotation fields used by renderer for feature
-  QgsMarkerSymbolV2* markerSymbol = 0;
+  QgsMarkerSymbolV2* markerSymbol = nullptr;
   if ( renderer->capabilities() & QgsFeatureRendererV2::MoreSymbolsPerFeature )
   {
     //could be multiple symbols for this feature, so check them all
@@ -265,11 +265,11 @@ void QgsMapToolRotatePointSymbols::canvasReleaseEvent( QgsMapMouseEvent* e )
   }
   mRotating = false;
   delete mRotationItem;
-  mRotationItem = 0;
+  mRotationItem = nullptr;
   mCanvas->refresh();
 }
 
-double QgsMapToolRotatePointSymbols::calculateAzimut( const QPoint& mousePos )
+double QgsMapToolRotatePointSymbols::calculateAzimut( QPoint mousePos )
 {
   int dx = mousePos.x() - mSnappedPoint.x();
   int dy = mousePos.y() - mSnappedPoint.y();

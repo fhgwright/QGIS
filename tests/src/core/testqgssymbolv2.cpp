@@ -85,7 +85,7 @@ void TestQgsSymbolV2::initTestCase()
   QgsApplication::init( QDir::tempPath() + "/dot-qgis" );
   QgsApplication::initQgis();
   QgsApplication::createDB();
-  mTestDataDir = QString( TEST_DATA_DIR ) + "/"; //defined in CmakeLists.txt
+  mTestDataDir = QString( TEST_DATA_DIR ) + '/'; //defined in CmakeLists.txt
 
   // output test environment
   QgsApplication::showSettings();
@@ -107,7 +107,7 @@ void TestQgsSymbolV2::initTestCase()
   //create a point layer that will be used in all tests...
   //
   QString myDataDir( TEST_DATA_DIR ); //defined in CmakeLists.txt
-  mTestDataDir = myDataDir + "/";
+  mTestDataDir = myDataDir + '/';
   QString myPointsFileName = mTestDataDir + "points.shp";
   QFileInfo myPointFileInfo( myPointsFileName );
   mpPointsLayer = new QgsVectorLayer( myPointFileInfo.filePath(),
@@ -385,7 +385,7 @@ void TestQgsSymbolV2::testParseColorList()
     ++i;
   }
 
-  QList< QPair< QString, QList<QColor> > > colorListTests;
+  QVector< QPair< QString, QList<QColor> > > colorListTests;
   QList<QColor> list1;
   list1 << QColor( QString( "blue" ) ) << QColor( QString( "red" ) ) << QColor( QString( "green" ) );
   colorListTests.append( qMakePair( QString( "blue red green" ), list1 ) );
@@ -406,7 +406,7 @@ void TestQgsSymbolV2::testParseColorList()
   colorListTests.append( qMakePair( QString( "rgb(255,0,0)\nrgb(0,255,0)\nrgb(0,0,255)" ), list3 ) );
   colorListTests.append( qMakePair( QString( "rgb(255,0,0)\nrgb(0,255,0) rgb(0,0,255)" ), list3 ) );
 
-  QList< QPair< QString, QList<QColor> > >::const_iterator it = colorListTests.constBegin();
+  QVector< QPair< QString, QList<QColor> > >::const_iterator it = colorListTests.constBegin();
   while ( it != colorListTests.constEnd() )
   {
     QgsDebugMsg( "color list string: " + ( *it ).first );

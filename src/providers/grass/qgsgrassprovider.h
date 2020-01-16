@@ -133,7 +133,7 @@ class GRASS_LIB_EXPORT QgsGrassProvider : public QgsVectorDataProvider
     virtual bool addAttributes( const QList<QgsField> &attributes ) override;
     virtual bool deleteAttributes( const QgsAttributeIds &attributes ) override;
     virtual bool changeAttributeValues( const QgsChangedAttributesMap & attr_map ) override  { Q_UNUSED( attr_map ); return true; }
-    virtual bool changeGeometryValues( QgsGeometryMap & geometry_map ) override { Q_UNUSED( geometry_map ); return true; }
+    virtual bool changeGeometryValues( const QgsGeometryMap &geometry_map ) override { Q_UNUSED( geometry_map ); return true; }
 
 
     //----------------------------------------------------------------------------
@@ -391,7 +391,7 @@ class GRASS_LIB_EXPORT QgsGrassProvider : public QgsVectorDataProvider
     void onBeforeCommitChanges();
     void onBeforeRollBack();
     void onEditingStopped();
-    void onUndoIndexChanged( int index );
+    void onUndoIndexChanged( int currentIndex );
 
     void onDataChanged();
 
@@ -486,6 +486,7 @@ class GRASS_LIB_EXPORT QgsGrassProvider : public QgsVectorDataProvider
 
     friend class QgsGrassFeatureSource;
     friend class QgsGrassFeatureIterator;
+    friend class QgsGrassUndoCommandChangeAttribute;
 };
 
 #endif // QGSGRASSPROVIDER_H

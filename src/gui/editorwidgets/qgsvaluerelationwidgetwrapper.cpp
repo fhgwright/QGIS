@@ -31,15 +31,12 @@ bool QgsValueRelationWidgetWrapper::orderByKeyLessThan( const QgsValueRelationWi
   {
     case QVariant::String:
       return p1.first.toString() < p2.first.toString();
-      break;
 
     case QVariant::Double:
       return p1.first.toDouble() < p2.first.toDouble();
-      break;
 
     default:
       return p1.first.toInt() < p2.first.toInt();
-      break;
   }
 }
 
@@ -51,15 +48,15 @@ bool QgsValueRelationWidgetWrapper::orderByValueLessThan( const QgsValueRelation
 
 QgsValueRelationWidgetWrapper::QgsValueRelationWidgetWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor, QWidget* parent )
     : QgsEditorWidgetWrapper( vl, fieldIdx, editor, parent )
-    , mComboBox( 0 )
-    , mListWidget( 0 )
-    , mLineEdit( 0 )
-    , mLayer( 0 )
+    , mComboBox( nullptr )
+    , mListWidget( nullptr )
+    , mLineEdit( nullptr )
+    , mLayer( nullptr )
 {
 }
 
 
-QVariant QgsValueRelationWidgetWrapper::value()
+QVariant QgsValueRelationWidgetWrapper::value() const
 {
   QVariant v;
 
@@ -82,7 +79,7 @@ QVariant QgsValueRelationWidgetWrapper::value()
         selection << item->data( Qt::UserRole ).toString();
     }
 
-    v = selection.join( "," ).prepend( "{" ).append( "}" );
+    v = selection.join( "," ).prepend( '{' ).append( '}' );
   }
 
   if ( mLineEdit )
@@ -164,7 +161,7 @@ void QgsValueRelationWidgetWrapper::initWidget( QWidget* editor )
   }
 }
 
-bool QgsValueRelationWidgetWrapper::valid()
+bool QgsValueRelationWidgetWrapper::valid() const
 {
   return mListWidget || mLineEdit || mComboBox;
 }
@@ -173,7 +170,7 @@ void QgsValueRelationWidgetWrapper::setValue( const QVariant& value )
 {
   if ( mListWidget )
   {
-    QStringList checkList = value.toString().remove( QChar( '{' ) ).remove( QChar( '}' ) ).split( "," );
+    QStringList checkList = value.toString().remove( QChar( '{' ) ).remove( QChar( '}' ) ).split( ',' );
 
     for ( int i = 0; i < mListWidget->count(); ++i )
     {
@@ -222,7 +219,7 @@ QgsValueRelationWidgetWrapper::ValueRelationCache QgsValueRelationWidgetWrapper:
     << QgsExpressionContextUtils::projectScope()
     << QgsExpressionContextUtils::layerScope( layer );
 
-    QgsExpression *e = 0;
+    QgsExpression *e = nullptr;
     if ( !config.value( "FilterExpression" ).toString().isEmpty() )
     {
       e = new QgsExpression( config.value( "FilterExpression" ).toString() );

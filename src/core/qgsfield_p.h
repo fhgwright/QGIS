@@ -16,7 +16,7 @@
 #ifndef QGSFIELD_PRIVATE_H
 #define QGSFIELD_PRIVATE_H
 
-/// @cond
+/// @cond PRIVATE
 
 //
 //  W A R N I N G
@@ -31,6 +31,12 @@
 #include <QVariant>
 #include <QSharedData>
 #include "qgsfield.h"
+
+/***************************************************************************
+ * This class is considered CRITICAL and any change MUST be accompanied with
+ * full unit tests in testqgsfield.cpp.
+ * See details in QEP #17
+ ****************************************************************************/
 
 class QgsFieldPrivate : public QSharedData
 {
@@ -89,6 +95,12 @@ class QgsFieldPrivate : public QSharedData
     QString comment;
 };
 
+
+/***************************************************************************
+ * This class is considered CRITICAL and any change MUST be accompanied with
+ * full unit tests in testqgsfields.cpp.
+ * See details in QEP #17
+ ****************************************************************************/
 
 class CORE_EXPORT QgsFieldsPrivate : public QSharedData
 {

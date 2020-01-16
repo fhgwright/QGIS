@@ -1,3 +1,17 @@
+/***************************************************************************
+    qgsalignrasterdialog.cpp
+    ---------------------
+    begin                : June 2015
+    copyright            : (C) 2015 by Martin Dobias
+    email                : wonder dot sk at gmail dot com
+ ***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
 #include "qgsalignrasterdialog.h"
 
 #include "qgisapp.h"
@@ -22,12 +36,12 @@
 static QgsMapLayer* _rasterLayer( const QString& filename )
 {
   QMap<QString, QgsMapLayer*> layers = QgsMapLayerRegistry::instance()->mapLayers();
-  Q_FOREACH ( QgsMapLayer* layer, layers.values() )
+  Q_FOREACH ( QgsMapLayer* layer, layers )
   {
     if ( layer->type() == QgsMapLayer::RasterLayer && layer->source() == filename )
       return layer;
   }
-  return 0;
+  return nullptr;
 }
 
 static QString _rasterLayerName( const QString& filename )
@@ -436,14 +450,14 @@ void QgsAlignRasterLayerConfigDialog::setItem( const QString& inputFilename, con
 void QgsAlignRasterLayerConfigDialog::browseOutputFilename()
 {
   QSettings settings;
-  QString dirName = editOutput->text().isEmpty() ? settings.value( "/UI/lastRasterFileDir", "." ).toString() : editOutput->text();
+  QString dirName = editOutput->text().isEmpty() ? settings.value( "/UI/lastRasterFileDir", QDir::homePath() ).toString() : editOutput->text();
 
   QString fileName = QFileDialog::getSaveFileName( this, tr( "Select output file" ), dirName, tr( "GeoTIFF" ) + " (*.tif *.tiff *.TIF *.TIFF)" );
 
   if ( !fileName.isEmpty() )
   {
     // ensure the user never ommited the extension from the file name
-    if ( !fileName.toLower().endsWith( ".tif" ) && !fileName.toLower().endsWith( ".tiff" ) )
+    if ( !fileName.endsWith( ".tif", Qt::CaseInsensitive ) && !fileName.endsWith( ".tiff", Qt::CaseInsensitive ) )
     {
       fileName += ".tif";
     }

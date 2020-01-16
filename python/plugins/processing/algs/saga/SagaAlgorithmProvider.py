@@ -37,6 +37,7 @@ from SplitRGBBands import SplitRGBBands
 import SagaUtils
 from processing.tools.system import isWindows, isMac
 
+
 pluginPath = os.path.normpath(os.path.join(
     os.path.split(os.path.dirname(__file__))[0], os.pardir))
 
@@ -46,16 +47,20 @@ class SagaAlgorithmProvider(AlgorithmProvider):
     supportedVersions = {"2.1.2": ("2.1.2", SagaAlgorithm212),
                          "2.1.3": ("2.1.3", SagaAlgorithm213),
                          "2.1.4": ("2.1.4", SagaAlgorithm214),
-                         "2.2.0": ("2.2.0", SagaAlgorithm214)}
+                         "2.2.0": ("2.2.0", SagaAlgorithm214),
+                         "2.2.1": ("2.2.0", SagaAlgorithm214),
+                         "2.2.2": ("2.2.2", SagaAlgorithm214),
+                         "2.2.3": ("2.2.3", SagaAlgorithm214)}
 
     def __init__(self):
         AlgorithmProvider.__init__(self)
         self.activate = True
 
     def initializeSettings(self):
-        if isWindows() or isMac():
+        if (isWindows() or isMac()) and SagaUtils.findSagaFolder() is None:
             ProcessingConfig.addSetting(Setting("SAGA",
-                                                SagaUtils.SAGA_FOLDER, self.tr('SAGA folder'), '',
+                                                SagaUtils.SAGA_FOLDER, self.tr('SAGA folder'),
+                                                '',
                                                 valuetype=Setting.FOLDER))
         ProcessingConfig.addSetting(Setting("SAGA",
                                             SagaUtils.SAGA_IMPORT_EXPORT_OPTIMIZATION,
@@ -68,11 +73,11 @@ class SagaAlgorithmProvider(AlgorithmProvider):
                                             self.tr('Log console output'), True))
         ProcessingConfig.settingIcons["SAGA"] = self.getIcon()
         ProcessingConfig.addSetting(Setting("SAGA", "ACTIVATE_SAGA",
-                                    self.tr('Activate'), self.activate))
+                                            self.tr('Activate'), self.activate))
 
     def unload(self):
         AlgorithmProvider.unload(self)
-        if isWindows() or isMac():
+        if (isWindows() or isMac()) and SagaUtils.findSagaFolder() is None:
             ProcessingConfig.removeSetting(SagaUtils.SAGA_FOLDER)
 
         ProcessingConfig.removeSetting(SagaUtils.SAGA_LOG_CONSOLE)

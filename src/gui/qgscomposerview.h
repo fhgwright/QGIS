@@ -91,7 +91,7 @@ class GUI_EXPORT QgsComposerView: public QGraphicsView
       ActiveUntilMouseRelease
     };
 
-    QgsComposerView( QWidget* parent = 0, const char* name = 0, const Qt::WindowFlags& f = 0 );
+    QgsComposerView( QWidget* parent = nullptr, const char* name = nullptr, const Qt::WindowFlags& f = nullptr );
 
     /** Add an item group containing the selected items*/
     void groupItems();
@@ -122,7 +122,7 @@ class GUI_EXPORT QgsComposerView: public QGraphicsView
 
     /** Sets the composition for the view. If the composition is being set manually and not by a QgsComposer, then this must
      * be set BEFORE adding any items to the composition.
-    */
+     */
     void setComposition( QgsComposition* c );
 
     /** Returns the composition or 0 in case of error*/
@@ -147,14 +147,14 @@ class GUI_EXPORT QgsComposerView: public QGraphicsView
      * @param enabled Set to true to enable the preview effect on the view
      * @note added in 2.3
      * @see setPreviewMode
-    */
+     */
     void setPreviewModeEnabled( bool enabled );
     /** Sets the preview mode which should be used to modify the view's appearance. Preview modes are only used
      * if setPreviewMode is set to true.
      * @param mode PreviewMode to be used to draw the view
      * @note added in 2.3
      * @see setPreviewModeEnabled
-    */
+     */
     void setPreviewMode( QgsPreviewEffect::PreviewMode mode );
 
   protected:
@@ -232,7 +232,7 @@ class GUI_EXPORT QgsComposerView: public QGraphicsView
     /** Redraws the rectangular rubber band*/
     void updateRubberBandRect( QPointF & pos, const bool constrainSquare = false, const bool fromCenter = false );
     /** Redraws the linear rubber band*/
-    void updateRubberBandLine( const QPointF & pos, const bool constrainAngles = false );
+    void updateRubberBandLine( QPointF pos, const bool constrainAngles = false );
     /** Removes the rubber band and cleans up*/
     void removeRubberBand();
 

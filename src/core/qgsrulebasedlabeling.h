@@ -1,3 +1,17 @@
+/***************************************************************************
+    qgsrulebasedlabeling.h
+    ---------------------
+    begin                : September 2015
+    copyright            : (C) 2015 by Martin Dobias
+    email                : wonder dot sk at gmail dot com
+ ***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
 #ifndef QGSRULEBASEDLABELING_H
 #define QGSRULEBASEDLABELING_H
 
@@ -13,7 +27,13 @@ class QgsExpression;
 class QgsFeature;
 class QgsPalLayerSettings;
 class QgsRenderContext;
+class QgsGeometry;
 
+/**
+ * @class QgsRuleBasedLabeling
+ * @note not available in Python bindings
+ * @note this class is not a part of public API yet. See notes in QgsLabelingEngineV2
+ */
 
 class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
 {
@@ -22,6 +42,12 @@ class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
     typedef QList<Rule*> RuleList;
     typedef QMap<Rule*, QgsVectorLayerLabelProvider*> RuleToProviderMap;
 
+
+    /**
+     * @class QgsRuleBasedLabeling::Rule
+     * @note not available in Python bindings
+     * @note this class is not a part of public API yet. See notes in QgsLabelingEngineV2
+     */
     class CORE_EXPORT Rule
     {
       public:
@@ -37,9 +63,36 @@ class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
           Registered    //!< Something was registered
         };
 
+        /**
+         * Get the labeling settings. May return a null pointer.
+         */
         QgsPalLayerSettings* settings() const { return mSettings; }
+
+        /**
+         * Determines if scale based labeling is active
+         *
+         * @return True if scale based labeling is active
+         */
         bool dependsOnScale() const { return mScaleMinDenom != 0 || mScaleMaxDenom != 0; }
+
+        /**
+         * The minimum scale at which this label rule should be applied
+         *
+         * E.g. Denominator 1000 is a scale of 1:1000, where a rule with minimum denominator
+         * of 900 will not be applied while a rule with 2000 will be applied.
+         *
+         * @return The minimum scale denominator
+         */
         int scaleMinDenom() const { return mScaleMinDenom; }
+
+        /**
+         * The maximum scale denominator at which this label rule should be applied
+         *
+         * E.g. Denominator 1000 is a scale of 1:1000, where a rule with maximum denominator
+         * of 900 will be applied while a rule with 2000 will not be applied.
+         *
+         * @return The maximum scale denominator
+         */
         int scaleMaxDenom() const { return mScaleMaxDenom; }
         /**
          * A filter that will check if this rule applies
@@ -167,7 +220,7 @@ class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
         void prepare( const QgsRenderContext& context, QStringList& attributeNames, RuleToProviderMap& subProviders );
 
         //! register individual features
-        RegisterResult registerFeature( QgsFeature& feature, QgsRenderContext& context, RuleToProviderMap& subProviders );
+        RegisterResult registerFeature( QgsFeature& feature, QgsRenderContext& context, RuleToProviderMap& subProviders, QgsGeometry* obstacleGeometry = nullptr );
 
       protected:
         /**
@@ -186,6 +239,9 @@ class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
          */
         bool isScaleOK( double scale ) const;
 
+        /**
+         * Initialize filters. Automatically called by setFilterExpression.
+         */
         void initFilter();
 
         /**
@@ -205,6 +261,11 @@ class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
 
         // temporary
         QgsExpression* mFilter;
+
+      private:
+
+        Rule( const Rule& rh );
+        Rule& operator=( const Rule& rh );
     };
 
 
@@ -233,7 +294,11 @@ class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
 
 #include "qgsvectorlayerlabelprovider.h"
 
-
+/**
+ * @class QgsRuleBasedLabelProvider
+ * @note not available in Python bindings
+ * @note this class is not a part of public API yet. See notes in QgsLabelingEngineV2
+ */
 class CORE_EXPORT QgsRuleBasedLabelProvider : public QgsVectorLayerLabelProvider
 {
   public:
@@ -244,7 +309,7 @@ class CORE_EXPORT QgsRuleBasedLabelProvider : public QgsVectorLayerLabelProvider
 
     virtual bool prepare( const QgsRenderContext& context, QStringList& attributeNames ) override;
 
-    virtual void registerFeature( QgsFeature& feature, QgsRenderContext& context ) override;
+    virtual void registerFeature( QgsFeature& feature, QgsRenderContext& context, QgsGeometry* obstacleGeometry = nullptr ) override;
 
     // new methods
 

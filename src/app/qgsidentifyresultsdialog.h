@@ -53,7 +53,7 @@ class APP_EXPORT QgsIdentifyResultsWebView : public QgsWebView
 {
     Q_OBJECT
   public:
-    QgsIdentifyResultsWebView( QWidget *parent = 0 );
+    QgsIdentifyResultsWebView( QWidget *parent = nullptr );
     QSize sizeHint() const override;
   public slots:
     void print( void );
@@ -81,7 +81,7 @@ class APP_EXPORT QgsIdentifyResultsWebViewItem: public QObject, public QTreeWidg
     Q_OBJECT
 
   public:
-    QgsIdentifyResultsWebViewItem( QTreeWidget *treeWidget = 0 );
+    QgsIdentifyResultsWebViewItem( QTreeWidget *treeWidget = nullptr );
     QgsIdentifyResultsWebView *webView() { return mWebView; }
     void setHtml( const QString &html );
     /** @note added in 2.1 */
@@ -98,13 +98,16 @@ class APP_EXPORT QgsIdentifyPlotCurve
 {
   public:
 
-    QgsIdentifyPlotCurve() { mPlotCurve = 0; }
+    QgsIdentifyPlotCurve() { mPlotCurve = nullptr; }
     QgsIdentifyPlotCurve( const QMap<QString, QString> &attributes,
                           QwtPlot* plot, const QString &title = QString(), QColor color = QColor() );
     ~QgsIdentifyPlotCurve();
 
   private:
     QwtPlotCurve* mPlotCurve;
+
+    QgsIdentifyPlotCurve( const QgsIdentifyPlotCurve& rh );
+    QgsIdentifyPlotCurve& operator=( const QgsIdentifyPlotCurve& rh );
 };
 
 class APP_EXPORT QgsIdentifyResultsDialog: public QDialog, private Ui::QgsIdentifyResultsBase
@@ -115,7 +118,7 @@ class APP_EXPORT QgsIdentifyResultsDialog: public QDialog, private Ui::QgsIdenti
 
     //! Constructor - takes it own copy of the QgsAttributeAction so
     // that it is independent of whoever created it.
-    QgsIdentifyResultsDialog( QgsMapCanvas *canvas, QWidget *parent = 0, Qt::WindowFlags f = 0 );
+    QgsIdentifyResultsDialog( QgsMapCanvas *canvas, QWidget *parent = nullptr, Qt::WindowFlags f = nullptr );
 
     ~QgsIdentifyResultsDialog();
 

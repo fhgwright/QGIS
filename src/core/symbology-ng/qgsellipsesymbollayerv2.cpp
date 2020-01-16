@@ -20,6 +20,7 @@
 #include "qgsvectorlayer.h"
 #include "qgsdatadefined.h"
 #include "qgslogger.h"
+#include "qgsunittypes.h"
 
 #include <QPainter>
 #include <QSet>
@@ -203,7 +204,7 @@ QgsSymbolLayerV2* QgsEllipseSymbolLayerV2::create( const QgsStringMap& propertie
   return layer;
 }
 
-void QgsEllipseSymbolLayerV2::renderPoint( const QPointF& point, QgsSymbolV2RenderContext& context )
+void QgsEllipseSymbolLayerV2::renderPoint( QPointF point, QgsSymbolV2RenderContext& context )
 {
   bool ok;
   if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_WIDTH ) )
@@ -215,7 +216,7 @@ void QgsEllipseSymbolLayerV2::renderPoint( const QPointF& point, QgsSymbolV2Rend
   }
   if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_STYLE ) )
   {
-    context.setOriginalValueVariable( QgsSymbolLayerV2Utils::encodePenStyle( mPen.style() ) );
+    context.setOriginalValueVariable( QgsSymbolLayerV2Utils::encodePenStyle( mOutlineStyle ) );
     QString styleString = evaluateDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_STYLE, context, QVariant(), &ok ).toString();
     if ( ok )
     {
@@ -225,14 +226,14 @@ void QgsEllipseSymbolLayerV2::renderPoint( const QPointF& point, QgsSymbolV2Rend
   }
   if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_FILL_COLOR ) )
   {
-    context.setOriginalValueVariable( QgsSymbolLayerV2Utils::encodeColor( mBrush.color() ) );
+    context.setOriginalValueVariable( QgsSymbolLayerV2Utils::encodeColor( mColor ) );
     QString colorString = evaluateDataDefinedProperty( QgsSymbolLayerV2::EXPR_FILL_COLOR, context, QVariant(), &ok ).toString();
     if ( ok )
       mBrush.setColor( QgsSymbolLayerV2Utils::decodeColor( colorString ) );
   }
   if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_COLOR ) )
   {
-    context.setOriginalValueVariable( QgsSymbolLayerV2Utils::encodeColor( mPen.color() ) );
+    context.setOriginalValueVariable( QgsSymbolLayerV2Utils::encodeColor( mOutlineColor ) );
     QString colorString = evaluateDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_COLOR, context, QVariant(), &ok ).toString();
     if ( ok )
       mPen.setColor( QgsSymbolLayerV2Utils::decodeColor( colorString ) );
@@ -250,11 +251,11 @@ void QgsEllipseSymbolLayerV2::renderPoint( const QPointF& point, QgsSymbolV2Rend
     preparePath( symbolName, context, &scaledWidth, &scaledHeight, context.feature() );
   }
 
-  //offset
-  double offsetX = 0;
-  double offsetY = 0;
-  markerOffset( context, scaledWidth, scaledHeight, mSymbolWidthUnit, mSymbolHeightUnit, offsetX, offsetY, mSymbolWidthMapUnitScale, mSymbolHeightMapUnitScale );
-  QPointF off( offsetX, offsetY );
+  //offset and rotation
+  bool hasDataDefinedRotation = false;
+  QPointF offset;
+  double angle = 0;
+  calculateOffsetAndRotation( context, scaledWidth, scaledHeight, hasDataDefinedRotation, offset, angle );
 
   QPainter* p = context.renderContext().painter();
   if ( !p )
@@ -262,35 +263,64 @@ void QgsEllipseSymbolLayerV2::renderPoint( const QPointF& point, QgsSymbolV2Rend
     return;
   }
 
-  //priority for rotation: 1. data defined symbol level, 2. symbol layer rotation (mAngle)
-  double rotation = 0.0;
-
-  if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_ROTATION ) )
-  {
-    context.setOriginalValueVariable( mAngle );
-    rotation = evaluateDataDefinedProperty( QgsSymbolLayerV2::EXPR_ROTATION, context, mAngle ).toDouble() + mLineAngle;
-
-    const QgsMapToPixel& m2p = context.renderContext().mapToPixel();
-    rotation += m2p.mapRotation();
-  }
-  else if ( !qgsDoubleNear( mAngle + mLineAngle, 0.0 ) )
-  {
-    rotation = mAngle + mLineAngle;
-  }
-
-  if ( rotation )
-    off = _rotatedOffset( off, rotation );
-
   QMatrix transform;
-  transform.translate( point.x() + off.x(), point.y() + off.y() );
-  if ( !qgsDoubleNear( rotation, 0.0 ) )
+  transform.translate( point.x() + offset.x(), point.y() + offset.y() );
+  if ( !qgsDoubleNear( angle, 0.0 ) )
   {
-    transform.rotate( rotation );
+    transform.rotate( angle );
   }
 
   p->setPen( mPen );
   p->setBrush( mBrush );
   p->drawPath( transform.map( mPainterPath ) );
+}
+
+
+void QgsEllipseSymbolLayerV2::calculateOffsetAndRotation( QgsSymbolV2RenderContext& context,
+    double scaledWidth,
+    double scaledHeight,
+    bool& hasDataDefinedRotation,
+    QPointF& offset,
+    double& angle ) const
+{
+  double offsetX = 0;
+  double offsetY = 0;
+  markerOffset( context, scaledWidth, scaledHeight, mSymbolWidthUnit, mSymbolHeightUnit, offsetX, offsetY, mSymbolWidthMapUnitScale, mSymbolHeightMapUnitScale );
+  offset = QPointF( offsetX, offsetY );
+
+//priority for rotation: 1. data defined symbol level, 2. symbol layer rotation (mAngle)
+  bool ok = true;
+  angle = mAngle + mLineAngle;
+  bool usingDataDefinedRotation = false;
+  if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_ROTATION ) )
+  {
+    context.setOriginalValueVariable( angle );
+    angle = evaluateDataDefinedProperty( QgsSymbolLayerV2::EXPR_ROTATION, context, mAngle, &ok ).toDouble() + mLineAngle;
+    usingDataDefinedRotation = ok;
+  }
+
+  hasDataDefinedRotation = context.renderHints() & QgsSymbolV2::DataDefinedRotation || usingDataDefinedRotation;
+  if ( hasDataDefinedRotation )
+  {
+    // For non-point markers, "dataDefinedRotation" means following the
+    // shape (shape-data defined). For them, "field-data defined" does
+    // not work at all. TODO: if "field-data defined" ever gets implemented
+    // we'll need a way to distinguish here between the two, possibly
+    // using another flag in renderHints()
+    const QgsFeature* f = context.feature();
+    if ( f )
+    {
+      const QgsGeometry *g = f->constGeometry();
+      if ( g && g->type() == QGis::Point )
+      {
+        const QgsMapToPixel& m2p = context.renderContext().mapToPixel();
+        angle += m2p.mapRotation();
+      }
+    }
+  }
+
+  if ( angle )
+    offset = _rotatedOffset( offset, angle );
 }
 
 QString QgsEllipseSymbolLayerV2::layerType() const
@@ -316,9 +346,9 @@ void QgsEllipseSymbolLayerV2::stopRender( QgsSymbolV2RenderContext & )
 {
 }
 
-QgsSymbolLayerV2* QgsEllipseSymbolLayerV2::clone() const
+QgsEllipseSymbolLayerV2* QgsEllipseSymbolLayerV2::clone() const
 {
-  return QgsEllipseSymbolLayerV2::create( properties() );
+  return dynamic_cast< QgsEllipseSymbolLayerV2* >( QgsEllipseSymbolLayerV2::create( properties() ) );
 }
 
 void QgsEllipseSymbolLayerV2::toSld( QDomDocument &doc, QDomElement &element, const QgsStringMap& props ) const
@@ -391,7 +421,7 @@ QgsSymbolLayerV2* QgsEllipseSymbolLayerV2::createFromSld( QDomElement &element )
 
   QDomElement graphicElem = element.firstChildElement( "Graphic" );
   if ( graphicElem.isNull() )
-    return NULL;
+    return nullptr;
 
   QString name = "circle";
   QColor fillColor, borderColor;
@@ -412,7 +442,7 @@ QgsSymbolLayerV2* QgsEllipseSymbolLayerV2::createFromSld( QDomElement &element )
   }
 
   if ( !QgsSymbolLayerV2Utils::wellKnownMarkerFromSld( graphicElem, name, fillColor, borderColor, borderStyle, borderWidth, size ) )
-    return NULL;
+    return nullptr;
 
   double angle = 0.0;
   QString angleFunc;
@@ -465,11 +495,8 @@ QgsStringMap QgsEllipseSymbolLayerV2::properties() const
   return map;
 }
 
-void QgsEllipseSymbolLayerV2::preparePath( const QString& symbolName, QgsSymbolV2RenderContext& context, double* scaledWidth, double* scaledHeight, const QgsFeature* )
+QSizeF QgsEllipseSymbolLayerV2::calculateSize( QgsSymbolV2RenderContext& context, double* scaledWidth, double* scaledHeight )
 {
-  mPainterPath = QPainterPath();
-  const QgsRenderContext& ct = context.renderContext();
-
   double width = 0;
 
   if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_WIDTH ) ) //1. priority: data defined setting on symbol layer le
@@ -489,7 +516,7 @@ void QgsEllipseSymbolLayerV2::preparePath( const QString& symbolName, QgsSymbolV
   {
     *scaledWidth = width;
   }
-  width = QgsSymbolLayerV2Utils::convertToPainterUnits( ct, width, mSymbolWidthUnit, mSymbolHeightMapUnitScale );
+  width = QgsSymbolLayerV2Utils::convertToPainterUnits( context.renderContext(), width, mSymbolWidthUnit, mSymbolHeightMapUnitScale );
 
   double height = 0;
   if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_HEIGHT ) ) //1. priority: data defined setting on symbol layer level
@@ -509,29 +536,37 @@ void QgsEllipseSymbolLayerV2::preparePath( const QString& symbolName, QgsSymbolV
   {
     *scaledHeight = height;
   }
-  height = QgsSymbolLayerV2Utils::convertToPainterUnits( ct, height, mSymbolHeightUnit, mSymbolHeightMapUnitScale );
+  height = QgsSymbolLayerV2Utils::convertToPainterUnits( context.renderContext(), height, mSymbolHeightUnit, mSymbolHeightMapUnitScale );
+  return QSizeF( width, height );
+}
+
+void QgsEllipseSymbolLayerV2::preparePath( const QString& symbolName, QgsSymbolV2RenderContext& context, double* scaledWidth, double* scaledHeight, const QgsFeature* )
+{
+  mPainterPath = QPainterPath();
+
+  QSizeF size = calculateSize( context, scaledWidth, scaledHeight );
 
   if ( symbolName == "circle" )
   {
-    mPainterPath.addEllipse( QRectF( -width / 2.0, -height / 2.0, width, height ) );
+    mPainterPath.addEllipse( QRectF( -size.width() / 2.0, -size.height() / 2.0, size.width(), size.height() ) );
   }
   else if ( symbolName == "rectangle" )
   {
-    mPainterPath.addRect( QRectF( -width / 2.0, -height / 2.0, width, height ) );
+    mPainterPath.addRect( QRectF( -size.width() / 2.0, -size.height() / 2.0, size.width(), size.height() ) );
   }
   else if ( symbolName == "cross" )
   {
-    mPainterPath.moveTo( 0, -height / 2.0 );
-    mPainterPath.lineTo( 0, height / 2.0 );
-    mPainterPath.moveTo( -width / 2.0, 0 );
-    mPainterPath.lineTo( width / 2.0, 0 );
+    mPainterPath.moveTo( 0, -size.height() / 2.0 );
+    mPainterPath.lineTo( 0, size.height() / 2.0 );
+    mPainterPath.moveTo( -size.width() / 2.0, 0 );
+    mPainterPath.lineTo( size.width() / 2.0, 0 );
   }
   else if ( symbolName == "triangle" )
   {
-    mPainterPath.moveTo( 0, -height / 2.0 );
-    mPainterPath.lineTo( -width / 2.0, height / 2.0 );
-    mPainterPath.lineTo( width / 2.0, height / 2.0 );
-    mPainterPath.lineTo( 0, -height / 2.0 );
+    mPainterPath.moveTo( 0, -size.height() / 2.0 );
+    mPainterPath.lineTo( -size.width() / 2.0, size.height() / 2.0 );
+    mPainterPath.lineTo( size.width() / 2.0, size.height() / 2.0 );
+    mPainterPath.lineTo( 0, -size.height() / 2.0 );
   }
 }
 
@@ -572,7 +607,62 @@ QgsMapUnitScale QgsEllipseSymbolLayerV2::mapUnitScale() const
   return QgsMapUnitScale();
 }
 
-bool QgsEllipseSymbolLayerV2::writeDxf( QgsDxfExport& e, double mmMapUnitScaleFactor, const QString& layerName, QgsSymbolV2RenderContext *context, const QgsFeature*, const QPointF& shift ) const
+QRectF QgsEllipseSymbolLayerV2::bounds( QPointF point, QgsSymbolV2RenderContext& context )
+{
+  QSizeF size = calculateSize( context );
+
+  bool hasDataDefinedRotation = false;
+  QPointF offset;
+  double angle = 0;
+  calculateOffsetAndRotation( context, size.width(), size.height(), hasDataDefinedRotation, offset, angle );
+
+  double pixelSize = 1.0 / context.renderContext().rasterScaleFactor();
+
+  QMatrix transform;
+
+  // move to the desired position
+  transform.translate( point.x() + offset.x(), point.y() + offset.y() );
+
+  if ( !qgsDoubleNear( angle, 0.0 ) )
+    transform.rotate( angle );
+
+  double penWidth = 0.0;
+  bool ok = true;
+  if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_WIDTH ) )
+  {
+    context.setOriginalValueVariable( mOutlineWidth );
+    double outlineWidth = evaluateDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_WIDTH, context, QVariant(), &ok ).toDouble();
+    if ( ok )
+    {
+      penWidth = QgsSymbolLayerV2Utils::convertToPainterUnits( context.renderContext(), outlineWidth, mOutlineWidthUnit, mOutlineWidthMapUnitScale );
+    }
+  }
+  if ( hasDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_STYLE ) )
+  {
+    context.setOriginalValueVariable( QgsSymbolLayerV2Utils::encodePenStyle( mOutlineStyle ) );
+    QString outlineStyle = evaluateDataDefinedProperty( QgsSymbolLayerV2::EXPR_OUTLINE_STYLE, context, QVariant(), &ok ).toString();
+    if ( ok && outlineStyle == "no" )
+    {
+      penWidth = 0.0;
+    }
+  }
+
+  //antialiasing
+  penWidth += pixelSize;
+
+  QRectF symbolBounds = transform.mapRect( QRectF( -size.width() / 2.0,
+                        -size.height() / 2.0,
+                        size.width(),
+                        size.height() ) );
+
+  //extend bounds by pen width / 2.0
+  symbolBounds.adjust( -penWidth / 2.0, -penWidth / 2.0,
+                       penWidth / 2.0, penWidth / 2.0 );
+
+  return symbolBounds;
+}
+
+bool QgsEllipseSymbolLayerV2::writeDxf( QgsDxfExport& e, double mmMapUnitScaleFactor, const QString& layerName, QgsSymbolV2RenderContext *context, const QgsFeature*, QPointF shift ) const
 {
   //width
   double symbolWidth = mSymbolWidth;
@@ -673,7 +763,7 @@ bool QgsEllipseSymbolLayerV2::writeDxf( QgsDxfExport& e, double mmMapUnitScaleFa
   QTransform t;
   t.translate( shift.x() + offsetX, shift.y() + offsetY );
 
-  if ( rotation != 0 )
+  if ( !qgsDoubleNear( rotation, 0.0 ) )
     t.rotate( rotation );
 
   double halfWidth = symbolWidth / 2.0;

@@ -68,7 +68,7 @@ class GUI_EXPORT QgsDualView : public QStackedWidget, private Ui::QgsDualViewBas
      * @brief Constructor
      * @param parent  The parent widget
      */
-    explicit QgsDualView( QWidget* parent = 0 );
+    explicit QgsDualView( QWidget* parent = nullptr );
 
     /**
      * Has to be called to initialize the dual view.
@@ -170,7 +170,7 @@ class GUI_EXPORT QgsDualView : public QStackedWidget, private Ui::QgsDualViewBas
      * Is emitted, whenever the display expression is successfully changed
      * @param expression The expression that was applied
      */
-    void displayExpressionChanged( const QString expression );
+    void displayExpressionChanged( const QString& expression );
 
     /**
      * Is emitted, whenever the filter changes
@@ -216,6 +216,9 @@ class GUI_EXPORT QgsDualView : public QStackedWidget, private Ui::QgsDualViewBas
      * Use e.g. to close a dialog created from progress( int i, bool &cancel )
      */
     virtual void finished();
+
+    /** Zooms to the active feature*/
+    void zoomToCurrentFeature();
 
   private:
     void initLayerCache( QgsVectorLayer *layer, bool cacheGeometry );

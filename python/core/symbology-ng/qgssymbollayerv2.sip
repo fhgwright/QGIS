@@ -10,56 +10,56 @@ class QgsSymbolLayerV2
   {
     case QgsSymbolV2::Marker:
       if (dynamic_cast<QgsEllipseSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsEllipseSymbolLayerV2;
+	sipType = sipType_QgsEllipseSymbolLayerV2;
       else if (dynamic_cast<QgsFontMarkerSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsFontMarkerSymbolLayerV2;
+	sipType = sipType_QgsFontMarkerSymbolLayerV2;
       else if (dynamic_cast<QgsSimpleMarkerSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsSimpleMarkerSymbolLayerV2;
+	sipType = sipType_QgsSimpleMarkerSymbolLayerV2;
       else if (dynamic_cast<QgsSvgMarkerSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsSvgMarkerSymbolLayerV2;
+	sipType = sipType_QgsSvgMarkerSymbolLayerV2;
       else if (dynamic_cast<QgsVectorFieldSymbolLayer*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsVectorFieldSymbolLayer;
+	sipType = sipType_QgsVectorFieldSymbolLayer;
       else
-	sipClass = sipClass_QgsMarkerSymbolLayerV2;
+	sipType = sipType_QgsMarkerSymbolLayerV2;
       break;
 
     case QgsSymbolV2::Line:
       if (dynamic_cast<QgsMarkerLineSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsMarkerLineSymbolLayerV2;
+	sipType = sipType_QgsMarkerLineSymbolLayerV2;
       else if (dynamic_cast<QgsSimpleLineSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsSimpleLineSymbolLayerV2;
+	sipType = sipType_QgsSimpleLineSymbolLayerV2;
       else
-	sipClass = sipClass_QgsLineSymbolLayerV2;
+	sipType = sipType_QgsLineSymbolLayerV2;
       break;
 
     case QgsSymbolV2::Fill:
       if (dynamic_cast<QgsSimpleFillSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsSimpleFillSymbolLayerV2;
+	sipType = sipType_QgsSimpleFillSymbolLayerV2;
       else if (dynamic_cast<QgsImageFillSymbolLayer*>(sipCpp) != NULL)
       {
 	if (dynamic_cast<QgsLinePatternFillSymbolLayer*>(sipCpp) != NULL)
-	  sipClass = sipClass_QgsLinePatternFillSymbolLayer;
+	  sipType = sipType_QgsLinePatternFillSymbolLayer;
 	else if (dynamic_cast<QgsPointPatternFillSymbolLayer*>(sipCpp) != NULL)
-	  sipClass = sipClass_QgsPointPatternFillSymbolLayer;
+	  sipType = sipType_QgsPointPatternFillSymbolLayer;
 	else if (dynamic_cast<QgsSVGFillSymbolLayer*>(sipCpp) != NULL)
-	  sipClass = sipClass_QgsSVGFillSymbolLayer;
+	  sipType = sipType_QgsSVGFillSymbolLayer;
 	else if (dynamic_cast<QgsRasterFillSymbolLayer*>(sipCpp) != NULL)
-	  sipClass = sipClass_QgsRasterFillSymbolLayer;
+	  sipType = sipType_QgsRasterFillSymbolLayer;
 	else
-	  sipClass = sipClass_QgsImageFillSymbolLayer;
+	  sipType = sipType_QgsImageFillSymbolLayer;
       }
       else if (dynamic_cast<QgsCentroidFillSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsCentroidFillSymbolLayerV2;
+	sipType = sipType_QgsCentroidFillSymbolLayerV2;
       else if (dynamic_cast<QgsGradientFillSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsGradientFillSymbolLayerV2;
+	sipType = sipType_QgsGradientFillSymbolLayerV2;
       else if (dynamic_cast<QgsShapeburstFillSymbolLayerV2*>(sipCpp) != NULL)
-	sipClass = sipClass_QgsShapeburstFillSymbolLayerV2;
+	sipType = sipType_QgsShapeburstFillSymbolLayerV2;
       else
-	sipClass = sipClass_QgsFillSymbolLayerV2;
+	sipType = sipType_QgsFillSymbolLayerV2;
       break;
 
-    default:
-      sipClass = 0;
+    case QgsSymbolV2::Hybrid:
+      sipType = sipType_QgsGeometryGeneratorSymbolLayerV2;
       break;
   }
 %End
@@ -68,42 +68,66 @@ class QgsSymbolLayerV2
 
     virtual ~QgsSymbolLayerV2();
 
-    // not necessarily supported by all symbol layers...
+    /**
+     * The fill color.
+     */
     virtual QColor color() const;
+    /**
+     * The fill color.
+     */
     virtual void setColor( const QColor& color );
+
     /** Set outline color. Supported by marker and fill layers.
      * @note added in 2.1 */
     virtual void setOutlineColor( const QColor& color );
+
     /** Get outline color. Supported by marker and fill layers.
      * @note added in 2.1 */
     virtual QColor outlineColor() const;
+
     /** Set fill color. Supported by marker and fill layers.
      * @note added in 2.1 */
     virtual void setFillColor( const QColor& color );
+
     /** Get fill color. Supported by marker and fill layers.
      * @note added in 2.1 */
     virtual QColor fillColor() const;
 
+    /**
+     * Returns a string that represents this layer type. Used for serialization.
+     * Should match with the string used to register this symbol layer in the registry.
+     */
     virtual QString layerType() const = 0;
 
     virtual void startRender( QgsSymbolV2RenderContext& context ) = 0;
     virtual void stopRender( QgsSymbolV2RenderContext& context ) = 0;
 
+    /**
+     * Shall be reimplemented by subclasses to create a deep copy of the instance.
+     */
     virtual QgsSymbolLayerV2* clone() const = 0 /Factory/;
 
     virtual void toSld( QDomDocument &doc, QDomElement &element, const QgsStringMap& props ) const;
 
     virtual QString ogrFeatureStyle( double mmScaleFactor, double mapUnitScaleFactor ) const;
 
+    /**
+     * Should be reimplemented by subclasses to return a string map that
+     * contains the configuration information for the symbol layer. This
+     * is used to serialize a symbol layer perstistently.
+     */
     virtual QgsStringMap properties() const = 0;
 
     virtual void drawPreviewIcon( QgsSymbolV2RenderContext& context, QSize size ) = 0;
 
     virtual QgsSymbolV2* subSymbol();
-    // set layer's subsymbol. takes ownership of the passed symbol
+    //! set layer's subsymbol. takes ownership of the passed symbol
     virtual bool setSubSymbol( QgsSymbolV2* symbol /Transfer/ );
 
     QgsSymbolV2::SymbolType type() const;
+
+    //! Returns if the layer can be used below the specified symbol
+    virtual bool isCompatibleWithSymbol( QgsSymbolV2* symbol ) const;
 
     void setLocked( bool locked );
     bool isLocked() const;
@@ -155,10 +179,8 @@ class QgsSymbolLayerV2
     virtual QgsDataDefined* getDataDefinedProperty( const QString& property ) const;
 
     /** Sets a data defined property for the layer.
-     * @param property unique property key. Any existing data defined with the same
-     * key will be deleted and overriden.
-     * @param dataDefined data defined object to associate with property key. Ownership
-     * is transferred to the layer.
+     * @param property unique property key. Any existing data defined with the same key will be deleted and overridden.
+     * @param dataDefined data defined object to associate with property key. Ownership is transferred to the layer.
      * @note added in QGIS 2.9
      * @see getDataDefinedProperty
      * @see removeDataDefinedProperty
@@ -211,6 +233,7 @@ class QgsSymbolLayerV2
      * @see hasDataDefinedProperty
      * @see getDataDefinedProperty
      * @note added in QGIS 2.9
+     * @deprecated use variant which takes QgsSymbolV2RenderContext instead
      */
     virtual QVariant evaluateDataDefinedProperty( const QString& property, const QgsFeature* feature ) const /Deprecated/;
 
@@ -234,7 +257,7 @@ class QgsSymbolLayerV2
                            const QString& layerName,
                            QgsSymbolV2RenderContext* context,
                            const QgsFeature* f,
-                           const QPointF& shift = QPointF( 0.0, 0.0 ) ) const;
+                           QPointF shift = QPointF( 0.0, 0.0 ) ) const;
 
     virtual double dxfWidth( const QgsDxfExport& e, QgsSymbolV2RenderContext& context ) const;
     virtual double dxfOffset( const QgsDxfExport& e, QgsSymbolV2RenderContext& context ) const;
@@ -263,10 +286,11 @@ class QgsSymbolLayerV2
   protected:
     QgsSymbolLayerV2( QgsSymbolV2::SymbolType type, bool locked = false );
 
-   /** Prepares all data defined property expressions for evaluation. This should
+    /** Prepares all data defined property expressions for evaluation. This should
      * be called prior to evaluating data defined properties.
      * @param fields associated layer fields
      * @param scale map scale
+     * @deprecated use variant which takes QgsSymbolV2RenderContext instead
      */
     virtual void prepareExpressions( const QgsFields* fields, double scale = -1.0 ) /Deprecated/;
 
@@ -285,19 +309,19 @@ class QgsSymbolLayerV2
     /** Saves all data defined properties to a string map.
      * @param stringMap destination string map
      * @see restoreDataDefinedProperties
-    */
+     */
     void saveDataDefinedProperties( QgsStringMap& stringMap ) const;
 
     /** Restores all data defined properties from string map.
      * @param stringMap source string map
      * @note added in QGIS 2.9
      * @see saveDataDefinedProperties
-    */
+     */
     void restoreDataDefinedProperties( const QgsStringMap& stringMap );
 
     /** Copies all data defined properties of this layer to another symbol layer.
      * @param destLayer destination layer
-    */
+     */
     void copyDataDefinedProperties( QgsSymbolLayerV2* destLayer ) const;
 
     /** Copies paint effect of this layer to another symbol layer
@@ -333,7 +357,7 @@ class QgsMarkerSymbolLayerV2 : QgsSymbolLayerV2
 
     void startRender( QgsSymbolV2RenderContext& context );
 
-    virtual void renderPoint( const QPointF& point, QgsSymbolV2RenderContext& context ) = 0;
+    virtual void renderPoint( QPointF point, QgsSymbolV2RenderContext& context ) = 0;
 
     void drawPreviewIcon( QgsSymbolV2RenderContext& context, QSize size );
 
@@ -343,9 +367,9 @@ class QgsMarkerSymbolLayerV2 : QgsSymbolLayerV2
     /** Sets the line angle modification for the symbol's angle. This angle is added to
      * the marker's rotation and data defined rotation before rendering the symbol, and
      * is usually used for orienting symbols to match a line's angle.
-     * @param lineangle Angle in degrees, valid values are between 0 and 360
+     * @param lineAngle Angle in degrees, valid values are between 0 and 360
      * @note added in QGIS 2.9
-    */
+     */
     void setLineAngle( double lineAngle );
 
     void setSize( double size );
@@ -385,6 +409,15 @@ class QgsMarkerSymbolLayerV2 : QgsSymbolLayerV2
     void setVerticalAnchorPoint( VerticalAnchorPoint v );
     VerticalAnchorPoint verticalAnchorPoint() const;
 
+    /** Returns the approximate bounding box of the marker symbol layer, taking into account
+     * any data defined overrides and offsets which are set for the marker layer.
+     * @returns approximate symbol bounds, in painter units
+     * @note added in QGIS 2.14
+     * @note this method will become pure virtual in QGIS 3.0
+     */
+    //TODO QGIS 3.0 - make pure virtual
+    virtual QRectF bounds( QPointF point, QgsSymbolV2RenderContext& context );
+
   protected:
     QgsMarkerSymbolLayerV2( bool locked = false );
 
@@ -400,7 +433,7 @@ class QgsMarkerSymbolLayerV2 : QgsSymbolLayerV2
                        double& offsetX, double& offsetY,
                        const QgsMapUnitScale &widthMapUnitScale, const QgsMapUnitScale &heightMapUnitScale ) const /PyName=markerOffset2/;
 
-    static QPointF _rotatedOffset( const QPointF& offset, double angle );
+    static QPointF _rotatedOffset( QPointF offset, double angle );
 };
 
 class QgsLineSymbolLayerV2 : QgsSymbolLayerV2

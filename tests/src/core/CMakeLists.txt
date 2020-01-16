@@ -15,6 +15,8 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/src/core/layertree
   ${CMAKE_SOURCE_DIR}/src/core/raster
   ${CMAKE_SOURCE_DIR}/src/core/symbology-ng
+)
+INCLUDE_DIRECTORIES(SYSTEM
   ${QT_INCLUDE_DIR}
   ${GDAL_INCLUDE_DIR}
   ${PROJ_INCLUDE_DIR}
@@ -31,6 +33,13 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
 ADD_DEFINITIONS(-DTEST_DATA_DIR="\\"${TEST_DATA_DIR}\\"")
 
 ADD_DEFINITIONS(-DINSTALL_PREFIX="\\"${CMAKE_INSTALL_PREFIX}\\"")
+
+# enable postgresql tests
+SET (ENABLE_PGTEST FALSE CACHE BOOL "Enable PostgreSQL provider tests")
+IF ( ENABLE_PGTEST )
+  ADD_DEFINITIONS( "-DENABLE_PGTEST" )
+ENDIF ()
+
 #############################################################
 # libraries
 
@@ -57,9 +66,7 @@ ENDIF (APPLE)
 #See: http://www.cmake.org/Wiki/CMake_RPATH_handling#No_relinking_and_full_RPATH_for_the_install_tree
 
 MACRO (ADD_QGIS_TEST testname testsrc)
-  SET(qgis_${testname}_SRCS ${testsrc} ${util_SRCS})
-  SET(qgis_${testname}_MOC_CPPS ${testsrc})
-  ADD_EXECUTABLE(qgis_${testname} ${qgis_${testname}_SRCS})
+  ADD_EXECUTABLE(qgis_${testname} ${testsrc} ${util_SRCS})
   SET_TARGET_PROPERTIES(qgis_${testname} PROPERTIES AUTOMOC TRUE)
   TARGET_LINK_LIBRARIES(qgis_${testname}
     ${QT_QTXML_LIBRARY}
@@ -71,9 +78,6 @@ MACRO (ADD_QGIS_TEST testname testsrc)
     ${GDAL_LIBRARY}
     qgis_core)
   ADD_TEST(qgis_${testname} ${CMAKE_CURRENT_BINARY_DIR}/../../../output/bin/qgis_${testname} -maxwarnings 10000)
-  #SET_TARGET_PROPERTIES(qgis_${testname} PROPERTIES
-  #  INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${QGIS_LIB_DIR}
-  #  INSTALL_RPATH_USE_LINK_PATH true )
 ENDMACRO (ADD_QGIS_TEST)
 
 #############################################################
@@ -86,7 +90,7 @@ ADD_QGIS_TEST(authconfigtest testqgsauthconfig.cpp)
 ADD_QGIS_TEST(authmanagertest testqgsauthmanager.cpp)
 ADD_QGIS_TEST(blendmodestest testqgsblendmodes.cpp)
 ADD_QGIS_TEST(clippertest testqgsclipper.cpp)
-ADD_QGIS_TEST(colorscheme testqgscolorscheme.cpp)
+ADD_QGIS_TEST(colorschemetest testqgscolorscheme.cpp)
 ADD_QGIS_TEST(colorschemeregistry testqgscolorschemeregistry.cpp)
 ADD_QGIS_TEST(composerddtest testqgscomposerdd.cpp)
 ADD_QGIS_TEST(composereffectstest testqgscomposereffects.cpp)
@@ -116,13 +120,14 @@ ADD_QGIS_TEST(dataitemtest testqgsdataitem.cpp)
 ADD_QGIS_TEST(datasourceuritest testqgsdatasourceuri.cpp)
 ADD_QGIS_TEST(diagramtest testqgsdiagram.cpp)
 ADD_QGIS_TEST(distanceareatest testqgsdistancearea.cpp)
+ADD_QGIS_TEST(ellipsemarkertest testqgsellipsemarker.cpp)
 ADD_QGIS_TEST(expressioncontext testqgsexpressioncontext.cpp)
 ADD_QGIS_TEST(expressiontest testqgsexpression.cpp)
 ADD_QGIS_TEST(featuretest testqgsfeature.cpp)
 ADD_QGIS_TEST(fieldstest testqgsfields.cpp)
 ADD_QGIS_TEST(fieldtest testqgsfield.cpp)
 ADD_QGIS_TEST(filewritertest testqgsvectorfilewriter.cpp)
-ADD_QGIS_TEST(fontutils testqgsfontutils.cpp)
+ADD_QGIS_TEST(fontmarkertest2 testqgsfontmarker.cpp)
 ADD_QGIS_TEST(geometryimporttest testqgsgeometryimport.cpp)
 ADD_QGIS_TEST(geometrytest testqgsgeometry.cpp)
 ADD_QGIS_TEST(geometryutilstest testqgsgeometryutils.cpp)
@@ -141,6 +146,7 @@ ADD_QGIS_TEST(maplayertest testqgsmaplayer.cpp)
 ADD_QGIS_TEST(maprenderertest testqgsmaprenderer.cpp)
 ADD_QGIS_TEST(maprotationtest testqgsmaprotation.cpp)
 ADD_QGIS_TEST(mapsettingstest testqgsmapsettings.cpp)
+ADD_QGIS_TEST(maptopixelgeometrysimplifiertest testqgsmaptopixelgeometrysimplifier.cpp)
 ADD_QGIS_TEST(maptopixeltest testqgsmaptopixel.cpp)
 ADD_QGIS_TEST(markerlinessymboltest testqgsmarkerlinesymbol.cpp)
 ADD_QGIS_TEST(networkcontentfetcher testqgsnetworkcontentfetcher.cpp )
@@ -164,12 +170,17 @@ ADD_QGIS_TEST(rendererstest testqgsrenderers.cpp)
 ADD_QGIS_TEST(rulebasedrenderertest testqgsrulebasedrenderer.cpp)
 ADD_QGIS_TEST(scaleexpressiontest testqgsscaleexpression.cpp)
 ADD_QGIS_TEST(shapebursttest testqgsshapeburst.cpp )
+ADD_QGIS_TEST(simplemarkertest testqgssimplemarker.cpp)
 ADD_QGIS_TEST(snappingutilstest testqgssnappingutils.cpp )
 ADD_QGIS_TEST(spatialindextest testqgsspatialindex.cpp)
 ADD_QGIS_TEST(statisticalsummarytest testqgsstatisticalsummary.cpp)
 ADD_QGIS_TEST(stringutilstest testqgsstringutils.cpp)
 ADD_QGIS_TEST(stylev2test testqgsstylev2.cpp)
+ADD_QGIS_TEST(svgmarkertest testqgssvgmarker.cpp)
 ADD_QGIS_TEST(symbolv2test testqgssymbolv2.cpp)
+ADD_QGIS_TEST(tracertest testqgstracer.cpp)
+#for some obscure reason calling this test "fontutils" kills the build on Ubuntu 15.10
+ADD_QGIS_TEST(typographicstylingutils testqgsfontutils.cpp)
 ADD_QGIS_TEST(vectordataprovidertest testqgsvectordataprovider.cpp)
 ADD_QGIS_TEST(vectorlayercachetest testqgsvectorlayercache.cpp )
 ADD_QGIS_TEST(vectorlayerjoinbuffer testqgsvectorlayerjoinbuffer.cpp )

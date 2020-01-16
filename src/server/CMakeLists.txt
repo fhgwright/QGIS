@@ -25,6 +25,7 @@ SET ( qgis_mapserv_SRCS
   qgsgetrequesthandler.cpp
   qgspostrequesthandler.cpp
   qgssoaprequesthandler.cpp
+  qgsowsserver.cpp
   qgswmsserver.cpp
   qgswfsserver.cpp
   qgswcsserver.cpp
@@ -61,6 +62,7 @@ SET (qgis_mapserv_MOC_HDRS
   qgsconfigcache.h
   qgsmslayercache.h
   qgsserverlogger.h
+  qgsserverstreamingdevice.h
 )
 
 SET (qgis_mapserv_RCCS
@@ -82,6 +84,8 @@ SET(qgis_mapserv_SRCS ${qgis_mapserv_SRCS}
     qgsserverplugins.cpp
     qgsserverinterface.cpp
     qgsserverfilter.cpp
+    qgsaccesscontrolfilter.cpp
+    qgsaccesscontrol.cpp
     qgsserverinterfaceimpl.cpp
 )
 ENDIF (WITH_SERVER_PLUGINS)

@@ -245,7 +245,7 @@ QString QgsPoint::toDegreesMinutesSeconds( int thePrecision, const bool useSuffi
   QString rep = myXSign + QString::number( myDegreesX ) + QChar( 176 ) +
                 myMinutesX + QChar( 0x2032 ) +
                 myStrSecondsX + QChar( 0x2033 ) +
-                myXHemisphere + QLatin1String( "," ) +
+                myXHemisphere + ',' +
                 myYSign + QString::number( myDegreesY ) + QChar( 176 ) +
                 myMinutesY + QChar( 0x2032 ) +
                 myStrSecondsY + QChar( 0x2033 ) +
@@ -330,7 +330,7 @@ QString QgsPoint::toDegreesMinutes( int thePrecision, const bool useSuffix, cons
 
   QString rep = myXSign + QString::number( myDegreesX ) + QChar( 176 ) +
                 myStrMinutesX + QChar( 0x2032 ) +
-                myXHemisphere + QLatin1String( "," ) +
+                myXHemisphere + ',' +
                 myYSign + QString::number( myDegreesY ) + QChar( 176 ) +
                 myStrMinutesY + QChar( 0x2032 ) +
                 myYHemisphere;
@@ -367,7 +367,7 @@ bool QgsPoint::compare( const QgsPoint &other, double epsilon ) const
 // operators
 bool QgsPoint::operator==( const QgsPoint & other )
 {
-  if (( m_x == other.x() ) && ( m_y == other.y() ) )
+  if ( qgsDoubleNear( m_x, other.x() ) && qgsDoubleNear( m_y, other.y() ) )
     return true;
   else
     return false;
@@ -375,7 +375,7 @@ bool QgsPoint::operator==( const QgsPoint & other )
 
 bool QgsPoint::operator!=( const QgsPoint & other ) const
 {
-  if (( m_x == other.x() ) && ( m_y == other.y() ) )
+  if ( qgsDoubleNear( m_x, other.x() ) && qgsDoubleNear( m_y, other.y() ) )
     return false;
   else
     return true;
@@ -392,7 +392,7 @@ QgsPoint & QgsPoint::operator=( const QgsPoint & other )
   return *this;
 }
 
-void QgsPoint::multiply( const double& scalar )
+void QgsPoint::multiply( double scalar )
 {
   m_x *= scalar;
   m_y *= scalar;

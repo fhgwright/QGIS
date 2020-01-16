@@ -120,9 +120,9 @@ QString QgsMimeDataUtils::encode( const QStringList& items )
   Q_FOREACH ( const QString& item, items )
   {
     QString str = item;
-    str.replace( "\\", "\\\\" );
-    str.replace( ":", "\\:" );
-    encoded += str + ":";
+    str.replace( '\\', "\\\\" );
+    str.replace( ':', "\\:" );
+    encoded += str + ':';
   }
   return encoded.left( encoded.length() - 1 );
 }
@@ -132,7 +132,7 @@ QStringList QgsMimeDataUtils::decode( const QString& encoded )
   QStringList items;
   QString item;
   bool inEscape = false;
-  Q_FOREACH ( const QChar& c, encoded )
+  Q_FOREACH ( QChar c, encoded )
   {
     if ( c == '\\' && inEscape )
     {

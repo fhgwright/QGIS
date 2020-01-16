@@ -19,11 +19,15 @@
 #include "qgseditorconfigwidget.h"
 #include "ui_qgsdatetimeeditconfig.h"
 
+/** \class QgsDateTimeEditConfig
+ * \note not available in Python bindings
+ */
+
 class GUI_EXPORT QgsDateTimeEditConfig : public QgsEditorConfigWidget, private Ui::QgsDateTimeEditConfig
 {
     Q_OBJECT
   public:
-    QgsDateTimeEditConfig( QgsVectorLayer* vl, int fieldIdx, QWidget* parent = 0 );
+    QgsDateTimeEditConfig( QgsVectorLayer* vl, int fieldIdx, QWidget* parent = nullptr );
 
   private slots:
     void updateDemoWidget();

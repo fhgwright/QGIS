@@ -225,7 +225,7 @@ void TestQgsCoordinateReferenceSystem::createFromESRIWkt()
     CPLSetConfigOption( "GDAL_FIX_ESRI_WKT", configOld );
     myCrs.createFromUserInput( "ESRI::" + myWktStrings[i] );
     msg = testESRIWkt( i, myCrs );
-    if ( GDAL_VERSION_NUM < myGdalVersionOK[i] )
+    if ( GDAL_VERSION_NUM < myGdalVersionOK.at( i ) )
     {
       QEXPECT_FAIL( "", QString( "expected failure with GDAL %1 : %2"
                                ).arg( GDAL_VERSION_NUM ).arg( msg ).toLocal8Bit().constData(),
@@ -241,7 +241,7 @@ void TestQgsCoordinateReferenceSystem::createFromESRIWkt()
     {
       // use ogr to open file, make sure CRS is ok
       // this probably could be in another test, but leaving it here since it deals with CRS
-      QString fileStr = QString( TEST_DATA_DIR ) + "/" + myFiles[i];
+      QString fileStr = QString( TEST_DATA_DIR ) + '/' + myFiles[i];
       QgsDebugMsg( QString( "i=%1 file=%2" ).arg( i ).arg( fileStr ) );
 
       QgsVectorLayer *myLayer = new QgsVectorLayer( fileStr, "", "ogr" );
@@ -254,7 +254,7 @@ void TestQgsCoordinateReferenceSystem::createFromESRIWkt()
       {
         myCrs = myLayer->crs();
         msg = testESRIWkt( i, myCrs );
-        if ( GDAL_VERSION_NUM < myGdalVersionOK[i] )
+        if ( GDAL_VERSION_NUM < myGdalVersionOK.at( i ) )
         {
           QEXPECT_FAIL( "", QString( "expected failure with GDAL %1 : %2 using layer %3"
                                    ).arg( GDAL_VERSION_NUM ).arg( msg, fileStr ).toLocal8Bit().constData(),

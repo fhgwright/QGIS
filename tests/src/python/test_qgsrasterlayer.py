@@ -14,7 +14,6 @@ __revision__ = '$Format:%H$'
 
 import qgis
 import os
-import unittest
 
 from PyQt4.QtCore import QFileInfo, QObject, SIGNAL
 from PyQt4 import QtGui
@@ -31,16 +30,17 @@ from qgis.core import (QgsRaster,
                        QgsRenderChecker,
                        QgsSingleBandGrayRenderer,
                        QgsSingleBandPseudoColorRenderer)
-from utilities import (unitTestDataPath,
-                       getQgisTestApp,
-                       TestCase)
+from utilities import unitTestDataPath
+from qgis.testing import (start_app,
+                          unittest
+                          )
 
 # Convenience instances in case you may need them
 # not used in this test
-QGISAPP, CANVAS, IFACE, PARENT = getQgisTestApp()
+start_app()
 
 
-class TestQgsRasterLayer(TestCase):
+class TestQgsRasterLayer(unittest.TestCase):
 
     def testIdentify(self):
         myPath = os.path.join(unitTestDataPath(), 'landsat.tif')
@@ -50,7 +50,7 @@ class TestQgsRasterLayer(TestCase):
         myMessage = 'Raster not loaded: %s' % myPath
         assert myRasterLayer.isValid(), myMessage
         myPoint = QgsPoint(786690, 3345803)
-        #print 'Extents: %s' % myRasterLayer.extent().toString()
+        # print 'Extents: %s' % myRasterLayer.extent().toString()
         #myResult, myRasterValues = myRasterLayer.identify(myPoint)
         #assert myResult
         myRasterValues = myRasterLayer.dataProvider().identify(myPoint, QgsRaster.IdentifyFormatValue).results()
@@ -59,7 +59,7 @@ class TestQgsRasterLayer(TestCase):
 
         # Get the name of the first band
         myBand = myRasterValues.keys()[0]
-        #myExpectedName = 'Band 1
+        # myExpectedName = 'Band 1
         myExpectedBand = 1
         myMessage = 'Expected "%s" got "%s" for first raster band name' % (
                     myExpectedBand, myBand)
@@ -92,9 +92,9 @@ class TestQgsRasterLayer(TestCase):
             QgsRaster.ContrastEnhancementMinMax)
 
         myContrastEnhancement = myRasterLayer.renderer().contrastEnhancement()
-        #print ("myContrastEnhancement.minimumValue = %.17g" %
+        # print ("myContrastEnhancement.minimumValue = %.17g" %
         #       myContrastEnhancement.minimumValue())
-        #print ("myContrastEnhancement.maximumValue = %.17g" %
+        # print ("myContrastEnhancement.maximumValue = %.17g" %
         #        myContrastEnhancement.maximumValue())
 
         # Unfortunately the minimum/maximum values calculated in C++ and Python

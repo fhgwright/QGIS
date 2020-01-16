@@ -39,8 +39,14 @@
 
 #ifndef Q_OS_WIN
 #include <netinet/in.h>
+#include <pwd.h>
 #else
 #include <winsock.h>
+#include <windows.h>
+#include <Lmcons.h>
+#define SECURITY_WIN32
+#include <Security.h>
+#pragma comment( lib, "Secur32.lib" )
 #endif
 
 #include "qgsconfig.h"
@@ -72,6 +78,10 @@ QStringList ABISYM( QgsApplication::mGdalSkipList );
 int ABISYM( QgsApplication::mMaxThreads );
 QString ABISYM( QgsApplication::mAuthDbDirPath );
 
+QString QgsApplication::sUserName;
+QString QgsApplication::sUserFullName;
+QString QgsApplication::sPlatformName = "desktop";
+
 const char* QgsApplication::QGIS_ORGANIZATION_NAME = "QGIS";
 const char* QgsApplication::QGIS_ORGANIZATION_DOMAIN = "qgis.org";
 const char* QgsApplication::QGIS_APPLICATION_NAME = "QGIS2";
@@ -89,9 +99,11 @@ const char* QgsApplication::QGIS_APPLICATION_NAME = "QGIS2";
   so that platform-conditional code is minimized and paths are easier
   to change due to centralization.
 */
-QgsApplication::QgsApplication( int & argc, char ** argv, bool GUIenabled, const QString& customConfigPath )
+QgsApplication::QgsApplication( int & argc, char ** argv, bool GUIenabled, const QString& customConfigPath, const QString& platformName )
     : QApplication( argc, argv, GUIenabled )
 {
+  sPlatformName = platformName;
+
   init( customConfigPath ); // init can also be called directly by e.g. unit tests that don't inherit QApplication.
 }
 
@@ -132,7 +144,7 @@ void QgsApplication::init( QString customConfigPath )
     qDebug( "- source directory: %s", ABISYM( mBuildSourcePath ).toUtf8().data() );
     qDebug( "- output directory of the build: %s", ABISYM( mBuildOutputPath ).toUtf8().data() );
 #ifdef _MSC_VER
-    ABISYM( mCfgIntDir ) = prefixPath.split( "/", QString::SkipEmptyParts ).last();
+    ABISYM( mCfgIntDir ) = prefixPath.split( '/', QString::SkipEmptyParts ).last();
     qDebug( "- cfg: %s", ABISYM( mCfgIntDir ).toUtf8().data() );
 #endif
   }
@@ -142,16 +154,16 @@ void QgsApplication::init( QString customConfigPath )
     // we run from source directory - not installed to destination (specified prefix)
     ABISYM( mPrefixPath ) = QString(); // set invalid path
 #if defined(_MSC_VER) && !defined(USING_NMAKE)
-    setPluginPath( ABISYM( mBuildOutputPath ) + "/" + QString( QGIS_PLUGIN_SUBDIR ) + "/" + ABISYM( mCfgIntDir ) );
+    setPluginPath( ABISYM( mBuildOutputPath ) + '/' + QString( QGIS_PLUGIN_SUBDIR ) + '/' + ABISYM( mCfgIntDir ) );
 #else
-    setPluginPath( ABISYM( mBuildOutputPath ) + "/" + QString( QGIS_PLUGIN_SUBDIR ) );
+    setPluginPath( ABISYM( mBuildOutputPath ) + '/' + QString( QGIS_PLUGIN_SUBDIR ) );
 #endif
     setPkgDataPath( ABISYM( mBuildSourcePath ) ); // directly source path - used for: doc, resources, svg
-    ABISYM( mLibraryPath ) = ABISYM( mBuildOutputPath ) + "/" + QGIS_LIB_SUBDIR + "/";
+    ABISYM( mLibraryPath ) = ABISYM( mBuildOutputPath ) + '/' + QGIS_LIB_SUBDIR + '/';
 #if defined(_MSC_VER) && !defined(USING_NMAKE)
-    ABISYM( mLibexecPath ) = ABISYM( mBuildOutputPath ) + "/" + QGIS_LIBEXEC_SUBDIR + "/" + ABISYM( mCfgIntDir ) + "/";
+    ABISYM( mLibexecPath ) = ABISYM( mBuildOutputPath ) + '/' + QGIS_LIBEXEC_SUBDIR + '/' + ABISYM( mCfgIntDir ) + '/';
 #else
-    ABISYM( mLibexecPath ) = ABISYM( mBuildOutputPath ) + "/" + QGIS_LIBEXEC_SUBDIR + "/";
+    ABISYM( mLibexecPath ) = ABISYM( mBuildOutputPath ) + '/' + QGIS_LIBEXEC_SUBDIR + '/';
 #endif
   }
   else
@@ -182,7 +194,7 @@ void QgsApplication::init( QString customConfigPath )
 
   if ( !customConfigPath.isEmpty() )
   {
-    ABISYM( mConfigPath ) = customConfigPath + "/"; // make sure trailing slash is included
+    ABISYM( mConfigPath ) = customConfigPath + '/'; // make sure trailing slash is included
   }
 
   ABISYM( mDefaultSvgPaths ) << qgisSettingsDirPath() + QLatin1String( "svg/" );
@@ -318,11 +330,11 @@ void QgsApplication::setPrefixPath( const QString &thePrefixPath, bool useDefaul
 #endif
   if ( useDefaultPaths && !ABISYM( mRunningFromBuildDir ) )
   {
-    setPluginPath( ABISYM( mPrefixPath ) + "/" + QString( QGIS_PLUGIN_SUBDIR ) );
-    setPkgDataPath( ABISYM( mPrefixPath ) + "/" + QString( QGIS_DATA_SUBDIR ) );
+    setPluginPath( ABISYM( mPrefixPath ) + '/' + QString( QGIS_PLUGIN_SUBDIR ) );
+    setPkgDataPath( ABISYM( mPrefixPath ) + '/' + QString( QGIS_DATA_SUBDIR ) );
   }
-  ABISYM( mLibraryPath ) = ABISYM( mPrefixPath ) + "/" + QGIS_LIB_SUBDIR + "/";
-  ABISYM( mLibexecPath ) = ABISYM( mPrefixPath ) + "/" + QGIS_LIBEXEC_SUBDIR + "/";
+  ABISYM( mLibraryPath ) = ABISYM( mPrefixPath ) + '/' + QGIS_LIB_SUBDIR + '/';
+  ABISYM( mLibexecPath ) = ABISYM( mPrefixPath ) + '/' + QGIS_LIBEXEC_SUBDIR + '/';
 }
 
 void QgsApplication::setPluginPath( const QString &thePluginPath )
@@ -382,6 +394,10 @@ QString QgsApplication::activeThemePath()
   return userThemesFolder() + QDir::separator() + themeName() + QDir::separator() + "icons/";
 }
 
+QString QgsApplication::appIconPath()
+{
+  return iconsPath() + ( QDate::currentDate().month() == 12 ? tr( "qgis-icon-60x60_xmas.png", "December application icon" ) : QString( "qgis-icon-60x60.png" ) );
+}
 
 QString QgsApplication::iconPath( const QString& iconFile )
 {
@@ -478,9 +494,9 @@ void QgsApplication::setUITheme( const QString &themeName )
     {
       QString line = in.readLine();
       // This is is a variable
-      if ( line.startsWith( "@" ) )
+      if ( line.startsWith( '@' ) )
       {
-        int index = line.indexOf( ":" );
+        int index = line.indexOf( ':' );
         QString name = line.mid( 0, index );
         QString value = line.mid( index + 1, line.length() );
         styledata.replace( name, value );
@@ -680,19 +696,131 @@ QStringList QgsApplication::svgPaths()
   //defined by user in options dialog
   QSettings settings;
   QStringList myPathList;
-  QString myPaths = settings.value( "svg/searchPathsForSVG", "" ).toString();
+  QString myPaths = settings.value( "svg/searchPathsForSVG", QDir::homePath() ).toString();
   if ( !myPaths.isEmpty() )
   {
-    myPathList = myPaths.split( "|" );
+    myPathList = myPaths.split( '|' );
   }
 
   myPathList << ABISYM( mDefaultSvgPaths );
   return myPathList;
 }
 
+/*!
+  Returns the paths to the composer template directories.
+*/
+QStringList QgsApplication::composerTemplatePaths()
+{
+  //local directories to search when looking for an SVG with a given basename
+  //defined by user in options dialog
+  QSettings settings;
+  QStringList myPathList;
+  QString myPaths = settings.value( "composer/searchPathsForTemplates", QDir::homePath() ).toString();
+  if ( !myPaths.isEmpty() )
+  {
+    myPathList = myPaths.split( '|' );
+  }
+
+  return myPathList;
+}
+
 QString QgsApplication::userStyleV2Path()
 {
   return qgisSettingsDirPath() + QLatin1String( "symbology-ng-style.db" );
+}
+
+QRegExp QgsApplication::shortNameRegExp()
+{
+  return QRegExp( "^[A-Za-z][A-Za-z0-9\\._-]*" );
+}
+
+QString QgsApplication::userLoginName()
+{
+  if ( !sUserName.isEmpty() )
+    return sUserName;
+
+#ifdef Q_OS_WIN
+  TCHAR name [ UNLEN + 1 ];
+  DWORD size = UNLEN + 1;
+
+  if ( GetUserName(( TCHAR* )name, &size ) )
+  {
+    sUserName = QString( name );
+  }
+
+#else
+  QProcess process;
+
+  process.start( "whoami" );
+  process.waitForFinished();
+  sUserName = process.readAllStandardOutput().trimmed();
+#endif
+
+  if ( !sUserName.isEmpty() )
+    return sUserName;
+
+  //backup plan - use environment variables
+  sUserName = qgetenv( "USER" );
+  if ( !sUserName.isEmpty() )
+    return sUserName;
+
+  //last resort
+  sUserName = qgetenv( "USERNAME" );
+  return sUserName;
+}
+
+QString QgsApplication::userFullName()
+{
+  if ( !sUserFullName.isEmpty() )
+    return sUserFullName;
+
+#ifdef Q_OS_WIN
+  TCHAR name [ UNLEN + 1 ];
+  DWORD size = UNLEN + 1;
+
+  //note - this only works for accounts connected to domain
+  if ( GetUserNameEx( NameDisplay, ( TCHAR* )name, &size ) )
+  {
+    sUserFullName = QString( name );
+  }
+
+  //fall back to login name
+  if ( sUserFullName.isEmpty() )
+    sUserFullName = userLoginName();
+#elif defined(Q_OS_ANDROID)
+  sUserFullName = "Not available";
+#else
+  struct passwd *p = getpwuid( getuid() );
+
+  if ( p )
+  {
+    QString gecosName = QString( p->pw_gecos );
+    sUserFullName = gecosName.left( gecosName.indexOf( ',', 0 ) );
+  }
+
+#endif
+
+  return sUserFullName;
+}
+
+QString QgsApplication::osName()
+{
+#if defined(Q_OS_ANDROID)
+  return QLatin1String( "android" );
+#elif defined(Q_OS_MAC)
+  return QLatin1String( "osx" );
+#elif defined(Q_OS_WIN)
+  return QLatin1String( "windows" );
+#elif defined(Q_OS_LINUX)
+  return QLatin1String( "linux" );
+#else
+  return QLatin1String( "unknown" );
+#endif
+}
+
+QString QgsApplication::platform()
+{
+  return sPlatformName;
 }
 
 QString QgsApplication::userThemesFolder()
@@ -746,10 +874,14 @@ void QgsApplication::exitQgis()
   //Ensure that all remaining deleteLater QObjects are actually deleted before we exit.
   //This isn't strictly necessary (since we're exiting anyway) but doing so prevents a lot of
   //LeakSanitiser noise which hides real issues
-  QgsApplication::sendPostedEvents( 0, QEvent::DeferredDelete );
+  QgsApplication::sendPostedEvents( nullptr, QEvent::DeferredDelete );
 
   //delete all registered functions from expression engine (see above comment)
   QgsExpression::cleanRegisteredFunctions();
+
+  // tear-down GDAL/OGR
+  OGRCleanupAll();
+  GDALDestroyDriverManager();
 }
 
 QString QgsApplication::showSettings()
@@ -896,38 +1028,40 @@ void QgsApplication::registerOgrDrivers()
   }
 }
 
-QString QgsApplication::absolutePathToRelativePath( QString aPath, QString targetPath )
+QString QgsApplication::absolutePathToRelativePath( const QString& aPath, const QString& targetPath )
 {
+  QString aPathUrl = aPath;
+  QString tPathUrl = targetPath;
 #if defined( Q_OS_WIN )
   const Qt::CaseSensitivity cs = Qt::CaseInsensitive;
 
-  aPath.replace( "\\", "/" );
-  if ( aPath.startsWith( "//" ) )
+  aPathUrl.replace( '\\', '/' );
+  if ( aPathUrl.startsWith( "//" ) )
   {
     // keep UNC prefix
-    aPath = "\\\\" + aPath.mid( 2 );
+    aPathUrl = "\\\\" + aPathUrl.mid( 2 );
   }
 
-  targetPath.replace( "\\", "/" );
-  if ( targetPath.startsWith( "//" ) )
+  tPathUrl.replace( '\\', '/' );
+  if ( tPathUrl.startsWith( "//" ) )
   {
     // keep UNC prefix
-    targetPath = "\\\\" + targetPath.mid( 2 );
+    tPathUrl = "\\\\" + tPathUrl.mid( 2 );
   }
 #else
   const Qt::CaseSensitivity cs = Qt::CaseSensitive;
 #endif
 
-  QStringList targetElems = targetPath.split( "/", QString::SkipEmptyParts );
-  QStringList aPathElems = aPath.split( "/", QString::SkipEmptyParts );
+  QStringList targetElems = tPathUrl.split( '/', QString::SkipEmptyParts );
+  QStringList aPathElems = aPathUrl.split( '/', QString::SkipEmptyParts );
 
   targetElems.removeAll( "." );
   aPathElems.removeAll( "." );
 
   // remove common part
   int n = 0;
-  while ( aPathElems.size() > 0 &&
-          targetElems.size() > 0 &&
+  while ( !aPathElems.isEmpty() &&
+          !targetElems.isEmpty() &&
           aPathElems[0].compare( targetElems[0], cs ) == 0 )
   {
     aPathElems.removeFirst();
@@ -938,10 +1072,10 @@ QString QgsApplication::absolutePathToRelativePath( QString aPath, QString targe
   if ( n == 0 )
   {
     // no common parts; might not even be a file
-    return aPath;
+    return aPathUrl;
   }
 
-  if ( targetElems.size() > 0 )
+  if ( !targetElems.isEmpty() )
   {
     // go up to the common directory
     for ( int i = 0; i < targetElems.size(); i++ )
@@ -959,7 +1093,7 @@ QString QgsApplication::absolutePathToRelativePath( QString aPath, QString targe
   return aPathElems.join( "/" );
 }
 
-QString QgsApplication::relativePathToAbsolutePath( QString rpath, QString targetPath )
+QString QgsApplication::relativePathToAbsolutePath( const QString& rpath, const QString& targetPath )
 {
   // relative path should always start with ./ or ../
   if ( !rpath.startsWith( "./" ) && !rpath.startsWith( "../" ) )
@@ -967,15 +1101,18 @@ QString QgsApplication::relativePathToAbsolutePath( QString rpath, QString targe
     return rpath;
   }
 
-#if defined(Q_OS_WIN)
-  rpath.replace( "\\", "/" );
-  targetPath.replace( "\\", "/" );
+  QString rPathUrl = rpath;
+  QString targetPathUrl = targetPath;
 
-  bool uncPath = targetPath.startsWith( "//" );
+#if defined(Q_OS_WIN)
+  rPathUrl.replace( '\\', '/' );
+  targetPathUrl.replace( '\\', '/' );
+
+  bool uncPath = targetPathUrl.startsWith( "//" );
 #endif
 
-  QStringList srcElems = rpath.split( "/", QString::SkipEmptyParts );
-  QStringList targetElems = targetPath.split( "/", QString::SkipEmptyParts );
+  QStringList srcElems = rPathUrl.split( '/', QString::SkipEmptyParts );
+  QStringList targetElems = targetPathUrl.split( '/', QString::SkipEmptyParts );
 
 #if defined(Q_OS_WIN)
   if ( uncPath )
@@ -1132,7 +1269,7 @@ bool QgsApplication::createDB( QString *errorMessage )
     }
 
     char *errmsg;
-    int res = sqlite3_exec( db, "SELECT epsg FROM tbl_srs LIMIT 0", 0, 0, &errmsg );
+    int res = sqlite3_exec( db, "SELECT epsg FROM tbl_srs LIMIT 0", nullptr, nullptr, &errmsg );
     if ( res == SQLITE_OK )
     {
       // epsg column exists => need migration
@@ -1151,7 +1288,7 @@ bool QgsApplication::createDB( QString *errorMessage )
                          "deprecated boolean);"
                          "CREATE INDEX idx_srsauthid on tbl_srs(auth_name,auth_id);"
                          "INSERT INTO tbl_srs(srs_id,description,projection_acronym,ellipsoid_acronym,parameters,srid,auth_name,auth_id,is_geo,deprecated) SELECT srs_id,description,projection_acronym,ellipsoid_acronym,parameters,srid,'','',is_geo,0 FROM tbl_srs_bak;"
-                         "DROP TABLE tbl_srs_bak", 0, 0, &errmsg ) != SQLITE_OK
+                         "DROP TABLE tbl_srs_bak", nullptr, nullptr, &errmsg ) != SQLITE_OK
          )
       {
         if ( errorMessage )
@@ -1168,7 +1305,7 @@ bool QgsApplication::createDB( QString *errorMessage )
       sqlite3_free( errmsg );
     }
 
-    if ( sqlite3_exec( db, "DROP VIEW vw_srs", 0, 0, &errmsg ) != SQLITE_OK )
+    if ( sqlite3_exec( db, "DROP VIEW vw_srs", nullptr, nullptr, &errmsg ) != SQLITE_OK )
     {
       QgsDebugMsg( QString( "vw_srs didn't exists in private qgis.db: %1" ).arg( errmsg ) );
     }
@@ -1186,7 +1323,7 @@ bool QgsApplication::createDB( QString *errorMessage )
                        ",a.deprecated AS deprecated"
                        " FROM tbl_srs a"
                        " LEFT OUTER JOIN tbl_projection b ON a.projection_acronym=b.acronym"
-                       " ORDER BY coalesce(b.name,a.projection_acronym),a.description", 0, 0, &errmsg ) != SQLITE_OK
+                       " ORDER BY coalesce(b.name,a.projection_acronym),a.description", nullptr, nullptr, &errmsg ) != SQLITE_OK
        )
     {
       if ( errorMessage )

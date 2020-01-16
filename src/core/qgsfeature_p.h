@@ -16,7 +16,7 @@ email                : nyall dot dawson at gmail dot com
 #ifndef QGSFEATURE_PRIVATE_H
 #define QGSFEATURE_PRIVATE_H
 
-/// @cond
+/// @cond PRIVATE
 
 //
 //  W A R N I N G
@@ -26,6 +26,12 @@ email                : nyall dot dawson at gmail dot com
 // implementation detail.  This header file may change from version to
 // version without notice, or even be removed.
 //
+
+/***************************************************************************
+ * This class is considered CRITICAL and any change MUST be accompanied with
+ * full unit tests in testqgsfeature.cpp.
+ * See details in QEP #17
+ ****************************************************************************/
 
 #include "qgsfield.h"
 
@@ -37,7 +43,7 @@ class QgsFeaturePrivate : public QSharedData
 
     explicit QgsFeaturePrivate( QgsFeatureId id )
         : fid( id )
-        , geometry( 0 )
+        , geometry( nullptr )
         , ownsGeometry( false )
         , valid( false )
     {

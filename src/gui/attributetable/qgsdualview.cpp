@@ -35,13 +35,13 @@
 QgsDualView::QgsDualView( QWidget* parent )
     : QStackedWidget( parent )
     , mEditorContext()
-    , mMasterModel( 0 )
-    , mFilterModel( 0 )
-    , mFeatureListModel( 0 )
-    , mAttributeForm( 0 )
-    , mLayerCache( 0 )
-    , mProgressDlg( 0 )
-    , mFeatureSelectionManager( 0 )
+    , mMasterModel( nullptr )
+    , mFilterModel( nullptr )
+    , mFeatureListModel( nullptr )
+    , mAttributeForm( nullptr )
+    , mLayerCache( nullptr )
+    , mProgressDlg( nullptr )
+    , mFeatureSelectionManager( nullptr )
 {
   setupUi( this );
 
@@ -75,7 +75,8 @@ void QgsDualView::init( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, const Qg
   mTableView->setModel( mFilterModel );
   mFeatureList->setModel( mFeatureListModel );
   mAttributeForm = new QgsAttributeForm( layer, QgsFeature(), mEditorContext );
-  mAttributeEditorScrollArea->setLayout( new QGridLayout() );
+  if ( !mAttributeEditorScrollArea->layout() )
+    mAttributeEditorScrollArea->setLayout( new QGridLayout() );
   mAttributeEditorScrollArea->layout()->addWidget( mAttributeForm );
   mAttributeEditorScrollArea->setWidget( mAttributeForm );
 
@@ -120,7 +121,7 @@ void QgsDualView::columnBoxInit()
   {
     QgsAttributeList pkAttrs = mLayerCache->layer()->pkAttributeList();
 
-    if ( pkAttrs.size() > 0 )
+    if ( !pkAttrs.isEmpty() )
     {
       if ( pkAttrs.size() == 1 )
         defaultField = pkAttrs.at( 0 );
@@ -135,7 +136,7 @@ void QgsDualView::columnBoxInit()
 
       displayExpression = pkFields.join( "||', '||" );
     }
-    else if ( fields.size() > 0 )
+    else if ( !fields.isEmpty() )
     {
       if ( fields.size() == 1 )
         defaultField = fields.at( 0 ).name();
@@ -165,7 +166,7 @@ void QgsDualView::columnBoxInit()
     if ( fieldIndex == -1 )
       continue;
 
-    if ( mLayerCache->layer()->editorWidgetV2( fieldIndex ) != "Hidden" )
+    if ( mLayerCache->layer()->editFormConfig()->widgetType( fieldIndex ) != "Hidden" )
     {
       QIcon icon = QgsApplication::getThemeIcon( "/mActionNewAttribute.png" );
       QString text = field.name();
@@ -348,6 +349,18 @@ int QgsDualView::filteredFeatureCount()
 
 void QgsDualView::viewWillShowContextMenu( QMenu* menu, const QModelIndex& atIndex )
 {
+  if ( !menu )
+  {
+    return;
+  }
+
+  QgsVectorLayer* vl = mFilterModel->layer();
+  QgsMapCanvas* canvas = mFilterModel->mapCanvas();
+  if ( canvas && vl && vl->geometryType() != QGis::NoGeometry )
+  {
+    menu->addAction( tr( "Zoom to feature" ), this, SLOT( zoomToCurrentFeature() ) );
+  }
+
   QModelIndex sourceIndex = mFilterModel->mapToSource( atIndex );
 
   //add user-defined actions to context menu
@@ -371,7 +384,7 @@ void QgsDualView::viewWillShowContextMenu( QMenu* menu, const QModelIndex& atInd
 
   //add actions from QgsMapLayerActionRegistry to context menu
   QList<QgsMapLayerAction *> registeredActions = QgsMapLayerActionRegistry::instance()->mapLayerActions( mLayerCache->layer() );
-  if ( registeredActions.size() > 0 )
+  if ( !registeredActions.isEmpty() )
   {
     //add a separator between user defined and standard actions
     menu->addSeparator();
@@ -387,6 +400,23 @@ void QgsDualView::viewWillShowContextMenu( QMenu* menu, const QModelIndex& atInd
   menu->addSeparator();
   QgsAttributeTableAction *a = new QgsAttributeTableAction( tr( "Open form" ), this, -1, sourceIndex );
   menu->addAction( tr( "Open form" ), a, SLOT( featureForm() ) );
+}
+
+void QgsDualView::zoomToCurrentFeature()
+{
+  QModelIndex currentIndex = mTableView->currentIndex();
+  if ( !currentIndex.isValid() )
+  {
+    return;
+  }
+
+  QgsFeatureIds ids;
+  ids.insert( mFilterModel->rowToId( currentIndex ) );
+  QgsMapCanvas* canvas = mFilterModel->mapCanvas();
+  if ( canvas )
+  {
+    canvas->zoomToFeatureIds( mLayerCache->layer(), ids );
+  }
 }
 
 void QgsDualView::previewExpressionChanged( const QString& expression )
@@ -412,7 +442,7 @@ void QgsDualView::setRequest( const QgsFeatureRequest& request )
 void QgsDualView::setFeatureSelectionManager( QgsIFeatureSelectionManager* featureSelectionManager )
 {
   mTableView->setFeatureSelectionManager( featureSelectionManager );
-  // mFeatureList->setFeatureSelectionManager( featureSelectionManager );
+  mFeatureList->setFeatureSelectionManager( featureSelectionManager );
 
   if ( mFeatureSelectionManager && mFeatureSelectionManager->parent() == this )
     delete mFeatureSelectionManager;
@@ -441,7 +471,7 @@ void QgsDualView::progress( int i, bool& cancel )
 void QgsDualView::finished()
 {
   delete mProgressDlg;
-  mProgressDlg = 0;
+  mProgressDlg = nullptr;
 }
 
 /*

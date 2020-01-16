@@ -37,7 +37,7 @@ QgsHandleBadLayersHandler::QgsHandleBadLayersHandler()
 {
 }
 
-void QgsHandleBadLayersHandler::handleBadLayers( QList<QDomNode> layers, QDomDocument projectDom )
+void QgsHandleBadLayersHandler::handleBadLayers( const QList<QDomNode>& layers, const QDomDocument& projectDom )
 {
   QApplication::setOverrideCursor( Qt::ArrowCursor );
   QgsHandleBadLayers *dialog = new QgsHandleBadLayers( layers, projectDom );
@@ -173,7 +173,7 @@ void QgsHandleBadLayers::selectionChanged()
     mRows << item->row();
   }
 
-  mBrowseButton->setEnabled( mRows.size() > 0 );
+  mBrowseButton->setEnabled( !mRows.isEmpty() );
 }
 
 QString QgsHandleBadLayers::filename( int row )
@@ -191,7 +191,7 @@ QString QgsHandleBadLayers::filename( int row )
     }
     else if ( provider == "ogr" )
     {
-      QStringList theURIParts = datasource.split( "|" );
+      QStringList theURIParts = datasource.split( '|' );
       return theURIParts[0];
     }
     else if ( provider == "delimitedtext" )
@@ -228,7 +228,7 @@ void QgsHandleBadLayers::setFilename( int row, const QString& filename )
     }
     else if ( provider == "ogr" )
     {
-      QStringList theURIParts = datasource.split( "|" );
+      QStringList theURIParts = datasource.split( '|' );
       theURIParts[0] = filename;
       datasource = theURIParts.join( "|" );
     }
@@ -254,7 +254,7 @@ void QgsHandleBadLayers::browseClicked()
 
   if ( mRows.size() == 1 )
   {
-    int row = mRows[0];
+    int row = mRows.at( 0 );
     QString type = mLayerList->item( row, 1 )->text();
 
     QString memoryQualifier, fileFilter;
@@ -291,7 +291,7 @@ void QgsHandleBadLayers::browseClicked()
     QString title = tr( "Select new directory of selected files" );
 
     QSettings settings;
-    QString lastDir = settings.value( "/UI/missingDirectory", "" ).toString();
+    QString lastDir = settings.value( "/UI/missingDirectory", QDir::homePath() ).toString();
     QString selectedFolder = QFileDialog::getExistingDirectory( this, title, lastDir );
     if ( selectedFolder.isEmpty() )
     {

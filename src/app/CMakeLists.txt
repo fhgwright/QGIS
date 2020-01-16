@@ -30,6 +30,7 @@ SET(QGIS_APP_SRCS
   qgsdecorationgriddialog.cpp
   qgsdxfexportdialog.cpp
   qgsformannotationdialog.cpp
+  qgsguivectorlayertools.cpp
   qgshtmlannotationdialog.cpp
   qgsdelattrdialog.cpp
   qgsdiagramproperties.cpp
@@ -48,10 +49,10 @@ SET(QGIS_APP_SRCS
   qgsmaplayerstyleguiutils.cpp
   qgsrulebasedlabelingwidget.cpp
   qgssavestyletodbdialog.cpp
-  qgsguivectorlayertools.cpp
+  qgsstatusbarcoordinateswidget.cpp
+  qgsversioninfo.cpp
   qgswelcomepageitemsmodel.cpp
   qgswelcomepage.cpp
-  qgsversioninfo.cpp
 
   qgsmaptooladdfeature.cpp
   qgsmaptooladdpart.cpp
@@ -104,6 +105,8 @@ SET(QGIS_APP_SRCS
   qgsprojectproperties.cpp
   qgsrastercalcdialog.cpp
   qgsrasterlayerproperties.cpp
+  qgsrelationmanagerdialog.cpp
+  qgsrelationadddlg.cpp
   qgsstatisticalsummarydockwidget.cpp
   qgstextannotationdialog.cpp
   qgsshortcutsmanager.cpp
@@ -176,6 +179,7 @@ SET (QGIS_APP_MOC_HDRS
   qgsjoindialog.h
   qgsaddtaborgroup.h
   qgsannotationwidget.h
+  qgsapplayertreeviewmenuprovider.h
   qgsattributeactiondialog.h
   qgsattributetypedialog.h
   qgsattributetabledialog.h
@@ -202,11 +206,13 @@ SET (QGIS_APP_MOC_HDRS
   qgsfieldcalculator.h
   qgsfieldsproperties.h
   qgsformannotationdialog.h
+  qgsguivectorlayertools.h
   qgshtmlannotationdialog.h
   qgsidentifyresultsdialog.h
   qgslabeldialog.h
   qgslabelengineconfigdialog.h
   qgslabelinggui.h
+  qgslabelpreview.h
   qgslabelingwidget.h
   qgslabelpropertydialog.h
   qgsloadstylefromdbdialog.h
@@ -214,13 +220,13 @@ SET (QGIS_APP_MOC_HDRS
   qgsrulebasedlabelingwidget.h
   qgssavestyletodbdialog.h
   qgsshortcutsmanager.h
-  qgsapplayertreeviewmenuprovider.h
-  qgsguivectorlayertools.h
+  qgsstatusbarcoordinateswidget.h
+  qgsversioninfo.h
   qgswelcomepageitemsmodel.h
   qgswelcomepage.h
-  qgsversioninfo.h
 
   qgsmaptooladdfeature.h
+  qgsmaptoolannotation.h
   qgsmaptoolcircularstringradius.h
   qgsmaptooladdpart.h
   qgsmaptooladdring.h
@@ -229,12 +235,15 @@ SET (QGIS_APP_MOC_HDRS
   qgsmaptooldeletepart.h
   qgsmaptooldeletering.h
   qgsmaptoolfeatureaction.h
+  qgsmaptoolformannotation.h
+  qgsmaptoolhtmlannotation.h
   qgsmaptoolpinlabels.h
   qgsmaptoolshowhidelabels.h
   qgsmaptoolidentifyaction.h
   qgsmaptoolmeasureangle.h
   qgsmaptoolmovefeature.h
   qgsmaptoolmovelabel.h
+  qgsmaptoollabel.h
   qgsmaptooloffsetcurve.h
   qgsmaptoolreshape.h
   qgsmaptoolrotatefeature.h
@@ -248,7 +257,10 @@ SET (QGIS_APP_MOC_HDRS
   qgsmaptoolsimplify.h
   qgsmaptoolsplitfeatures.h
   qgsmaptoolsplitparts.h
+  qgsmaptoolsvgannotation.h
+  qgsmaptooltextannotation.h
   qgsmaptooladdcircularstring.h
+  qgsmaptoolcircularstringcurvepoint.h
 
   nodetool/qgsmaptoolnodetool.h
   nodetool/qgsselectedfeature.h
@@ -262,6 +274,8 @@ SET (QGIS_APP_MOC_HDRS
   qgsprojectproperties.h
   qgsrastercalcdialog.h
   qgsrasterlayerproperties.h
+  qgsrelationmanagerdialog.h
+  qgsrelationadddlg.h
   qgssnappingdialog.h
   qgssponsors.h
   qgsstatisticalsummarydockwidget.h
@@ -283,6 +297,8 @@ SET (QGIS_APP_MOC_HDRS
   composer/qgscomposeritemwidget.h
   composer/qgscomposerlabelwidget.h
   composer/qgscomposerlegendwidget.h
+  composer/qgscomposerlegenditemdialog.h
+  composer/qgscomposerlegendlayersdialog.h
   composer/qgscomposermanager.h
   composer/qgscomposermapwidget.h
   composer/qgscomposerpicturewidget.h
@@ -513,11 +529,11 @@ IF(ENABLE_MODELTEST)
 ENDIF(ENABLE_MODELTEST)
 
 IF (ANDROID)
-  INCLUDE_DIRECTORIES(${ANDROID_NDK_TOOLCHAIN_ROOT}/sysroot/usr/include)
+  INCLUDE_DIRECTORIES(SYSTEM ${ANDROID_NDK_TOOLCHAIN_ROOT}/sysroot/usr/include)
 ENDIF (ANDROID)
 
 IF (POSTGRES_FOUND)
-  INCLUDE_DIRECTORIES(${POSTGRES_INCLUDE_DIR})
+  INCLUDE_DIRECTORIES(SYSTEM ${POSTGRES_INCLUDE_DIR})
 ENDIF (POSTGRES_FOUND)
 
 #############
@@ -568,18 +584,9 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 ENDIF(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 
 TARGET_LINK_LIBRARIES(${QGIS_APP_NAME}
-  ${QWT_LIBRARY}
-  ${QT_QTSQL_LIBRARY}
-  ${QT_QTUITOOLS_LIBRARY}
-  ${QT_QTWEBKIT_LIBRARY}
   #should only be needed for win
   ${QT_QTMAIN_LIBRARY}
-  ${QWTPOLAR_LIBRARY}
-  ${GDAL_LIBRARY}
   qgis_app
-  qgis_core
-  qgis_gui
-  qgis_analysis
 )
 
 IF (ANDROID)

@@ -28,22 +28,20 @@ from qgis.core import (QgsComposerMap,
                        QgsMultiBandColorRenderer,
                        )
 
-from utilities import (unitTestDataPath,
-                       getQgisTestApp,
-                       TestCase,
-                       unittest,
-                       expectedFailure
-                       )
+from qgis.testing import (start_app,
+                          unittest
+                          )
+from utilities import unitTestDataPath
 from qgscompositionchecker import QgsCompositionChecker
 
-QGISAPP, CANVAS, IFACE, PARENT = getQgisTestApp()
+start_app()
 TEST_DATA_DIR = unitTestDataPath()
 
 
-class TestQgsComposerMap(TestCase):
+class TestQgsComposerMap(unittest.TestCase):
 
     def __init__(self, methodName):
-        """Run once on class initialisation."""
+        """Run once on class initialization."""
         unittest.TestCase.__init__(self, methodName)
         myPath = os.path.join(TEST_DATA_DIR, 'rgb256x256.png')
         rasterFileInfo = QFileInfo(myPath)
@@ -137,14 +135,14 @@ class TestQgsComposerMap(TestCase):
         assert myTestResult, myMessage
 
     # Fails because addItemsFromXML has been commented out in sip
-    @expectedFailure
+    @unittest.expectedFailure
     def testuniqueId(self):
         doc = QDomDocument()
         documentElement = doc.createElement('ComposerItemClipboard')
         self.mComposition.writeXML(documentElement, doc)
         self.mComposition.addItemsFromXML(documentElement, doc, 0, False)
 
-        #test if both composer maps have different ids
+        # test if both composer maps have different ids
         newMap = QgsComposerMap()
         mapList = self.mComposition.composerMapItems()
 

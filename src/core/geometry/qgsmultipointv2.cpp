@@ -33,7 +33,7 @@ bool QgsMultiPointV2::fromWkt( const QString& wkt )
   if ( regex.indexIn( collectionWkt ) >= 0 )
   {
     //alternate style without extra brackets, upgrade to standard
-    collectionWkt.replace( "(", "((" ).replace( ")", "))" ).replace( ",", "),(" );
+    collectionWkt.replace( '(', "((" ).replace( ')', "))" ).replace( ',', "),(" );
   }
 
   return fromCollectionWkt( collectionWkt, QList<QgsAbstractGeometryV2*>() << new QgsPointV2, "Point" );
@@ -75,7 +75,7 @@ QString QgsMultiPointV2::asJSON( int precision ) const
 {
   QString json = "{\"type\": \"MultiPoint\", \"coordinates\": ";
 
-  QList<QgsPointV2> pts;
+  QgsPointSequenceV2 pts;
   Q_FOREACH ( const QgsAbstractGeometryV2 *geom, mGeometries )
   {
     if ( dynamic_cast<const QgsPointV2*>( geom ) )

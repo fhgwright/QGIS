@@ -37,7 +37,7 @@ QgsGeometryCheckerFixDialog::QgsGeometryCheckerFixDialog( QgsGeometryChecker *ch
 {
   setWindowTitle( tr( "Fix errors" ) );
 
-  QGridLayout* layout = new QGridLayout( );
+  QGridLayout* layout = new QGridLayout();
   layout->setContentsMargins( 4, 4, 4, 4 );
   setLayout( layout );
 
@@ -87,7 +87,7 @@ void QgsGeometryCheckerFixDialog::setupNextError()
   mStatusLabel->setText( "" );
   mResolutionsBox->setEnabled( true );
 
-  QgsGeometryCheckError* error = mErrors.first();
+  QgsGeometryCheckError* error = mErrors.at( 0 );
   emit currentErrorChanged( error );
 
   mResolutionsBox->setTitle( tr( "Select how to fix error \"%1\":" ).arg( error->description() ) );
@@ -120,7 +120,7 @@ void QgsGeometryCheckerFixDialog::fixError()
 
   setCursor( Qt::WaitCursor );
 
-  QgsGeometryCheckError* error = mErrors.first();
+  QgsGeometryCheckError* error = mErrors.at( 0 );
   mChecker->fixError( error, mRadioGroup->checkedId() );
 
   unsetCursor();
@@ -140,7 +140,7 @@ void QgsGeometryCheckerFixDialog::fixError()
   }
   mErrors.removeFirst();
 
-  while ( !mErrors.isEmpty() && mErrors.first()->status() >= QgsGeometryCheckError::StatusFixed )
+  while ( !mErrors.isEmpty() && mErrors.at( 0 )->status() >= QgsGeometryCheckError::StatusFixed )
   {
     mErrors.removeFirst();
   }
@@ -169,7 +169,7 @@ void QgsGeometryCheckerFixDialog::skipError()
 {
   mErrors.removeFirst();
 
-  while ( !mErrors.isEmpty() && mErrors.first()->status() >= QgsGeometryCheckError::StatusFixed )
+  while ( !mErrors.isEmpty() && mErrors.at( 0 )->status() >= QgsGeometryCheckError::StatusFixed )
   {
     mErrors.removeFirst();
   }

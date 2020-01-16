@@ -17,22 +17,21 @@ import os
 
 from qgis.core import QgsPoint, QgsVectorLayer
 
-from utilities import (getQgisTestApp,
-                       TestCase,
-                       unittest
-                       )
+from qgis.testing import (start_app,
+                          unittest
+                          )
 
 from pyspatialite import dbapi2 as sqlite3
 
 # Convenience instances in case you may need them
-QGISAPP, CANVAS, IFACE, PARENT = getQgisTestApp()
+start_app()
 
 
 def die(error_message):
     raise Exception(error_message)
 
 
-class TestQgsSpatialiteProvider(TestCase):
+class TestQgsSpatialiteProvider(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -80,7 +79,7 @@ class TestQgsSpatialiteProvider(TestCase):
     def tearDownClass(cls):
         """Run after all tests"""
         # for the time beeing, keep the file to check with qgis
-        #if os.path.exists("test.sqlite") :
+        # if os.path.exists("test.sqlite") :
         #    os.remove("test.sqlite")
         pass
 

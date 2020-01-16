@@ -25,7 +25,6 @@ from PyQt4.QtGui import QDockWidget, QToolBar, QToolButton, QWidget,\
     QSplitter, QTreeWidget, QAction, QFileDialog, QCheckBox, QSizePolicy, QMenu, QGridLayout, QApplication, \
     QDesktopServices
 from PyQt4.QtGui import QVBoxLayout
-from PyQt4 import pyqtconfig
 from qgis.utils import iface
 from console_sci import ShellScintilla
 from console_output import ShellOutputScintilla
@@ -168,7 +167,7 @@ class PythonConsoleWidget(QWidget):
         ##------------------Toolbar Editor-------------------------------------
 
         ## Action for Open File
-        openFileBt = QCoreApplication.translate("PythonConsole", "Open file")
+        openFileBt = QCoreApplication.translate("PythonConsole", "Open Script...")
         self.openFileButton = QAction(self)
         self.openFileButton.setCheckable(False)
         self.openFileButton.setEnabled(True)
@@ -178,7 +177,7 @@ class PythonConsoleWidget(QWidget):
         self.openFileButton.setToolTip(openFileBt)
         self.openFileButton.setText(openFileBt)
 
-        openExtEditorBt = QCoreApplication.translate("PythonConsole", "Open in external editor")
+        openExtEditorBt = QCoreApplication.translate("PythonConsole", "Open in External Editor")
         self.openInEditorButton = QAction(self)
         self.openInEditorButton.setCheckable(False)
         self.openInEditorButton.setEnabled(True)
@@ -212,7 +211,7 @@ class PythonConsoleWidget(QWidget):
         self.cutEditorButton = QAction(self)
         self.cutEditorButton.setCheckable(False)
         self.cutEditorButton.setEnabled(True)
-        self.cutEditorButton.setIcon(QgsApplication.getThemeIcon("console/iconCutEditorConsole.png"))
+        self.cutEditorButton.setIcon(QgsApplication.getThemeIcon("mActionEditCut.png"))
         self.cutEditorButton.setMenuRole(QAction.PreferencesRole)
         self.cutEditorButton.setIconVisibleInMenu(True)
         self.cutEditorButton.setToolTip(cutEditorBt)
@@ -222,7 +221,7 @@ class PythonConsoleWidget(QWidget):
         self.copyEditorButton = QAction(self)
         self.copyEditorButton.setCheckable(False)
         self.copyEditorButton.setEnabled(True)
-        self.copyEditorButton.setIcon(QgsApplication.getThemeIcon("console/iconCopyEditorConsole.png"))
+        self.copyEditorButton.setIcon(QgsApplication.getThemeIcon("mActionEditCopy.png"))
         self.copyEditorButton.setMenuRole(QAction.PreferencesRole)
         self.copyEditorButton.setIconVisibleInMenu(True)
         self.copyEditorButton.setToolTip(copyEditorBt)
@@ -232,7 +231,7 @@ class PythonConsoleWidget(QWidget):
         self.pasteEditorButton = QAction(self)
         self.pasteEditorButton.setCheckable(False)
         self.pasteEditorButton.setEnabled(True)
-        self.pasteEditorButton.setIcon(QgsApplication.getThemeIcon("console/iconPasteEditorConsole.png"))
+        self.pasteEditorButton.setIcon(QgsApplication.getThemeIcon("mActionEditPaste.png"))
         self.pasteEditorButton.setMenuRole(QAction.PreferencesRole)
         self.pasteEditorButton.setIconVisibleInMenu(True)
         self.pasteEditorButton.setToolTip(pasteEditorBt)
@@ -268,7 +267,7 @@ class PythonConsoleWidget(QWidget):
         self.uncommentEditorButton.setToolTip(uncommentEditorBt)
         self.uncommentEditorButton.setText(uncommentEditorBt)
         ## Action for Object browser
-        objList = QCoreApplication.translate("PythonConsole", "Object Inspector")
+        objList = QCoreApplication.translate("PythonConsole", "Object Inspector...")
         self.objectListButton = QAction(self)
         self.objectListButton.setCheckable(True)
         self.objectListButton.setEnabled(self.settings.value("pythonConsole/enableObjectInsp",
@@ -292,7 +291,7 @@ class PythonConsoleWidget(QWidget):
         ##----------------Toolbar Console-------------------------------------
 
         ## Action Show Editor
-        showEditor = QCoreApplication.translate("PythonConsole", "Show editor")
+        showEditor = QCoreApplication.translate("PythonConsole", "Show Editor")
         self.showEditorButton = QAction(self)
         self.showEditorButton.setEnabled(True)
         self.showEditorButton.setCheckable(True)
@@ -302,7 +301,7 @@ class PythonConsoleWidget(QWidget):
         self.showEditorButton.setToolTip(showEditor)
         self.showEditorButton.setText(showEditor)
         ## Action for Clear button
-        clearBt = QCoreApplication.translate("PythonConsole", "Clear console")
+        clearBt = QCoreApplication.translate("PythonConsole", "Clear Console")
         self.clearButton = QAction(self)
         self.clearButton.setCheckable(False)
         self.clearButton.setEnabled(True)
@@ -312,7 +311,7 @@ class PythonConsoleWidget(QWidget):
         self.clearButton.setToolTip(clearBt)
         self.clearButton.setText(clearBt)
         ## Action for settings
-        optionsBt = QCoreApplication.translate("PythonConsole", "Settings")
+        optionsBt = QCoreApplication.translate("PythonConsole", "Options...")
         self.optionsButton = QAction(self)
         self.optionsButton.setCheckable(False)
         self.optionsButton.setEnabled(True)
@@ -332,7 +331,7 @@ class PythonConsoleWidget(QWidget):
         self.actionClass.setToolTip(actionClassBt)
         self.actionClass.setText(actionClassBt)
         ## Import Processing class
-        loadProcessingBt = QCoreApplication.translate("PythonConsole", "Import Processing class")
+        loadProcessingBt = QCoreApplication.translate("PythonConsole", "Import Processing Class")
         self.loadProcessingButton = QAction(self)
         self.loadProcessingButton.setCheckable(False)
         self.loadProcessingButton.setEnabled(True)
@@ -342,7 +341,7 @@ class PythonConsoleWidget(QWidget):
         self.loadProcessingButton.setToolTip(loadProcessingBt)
         self.loadProcessingButton.setText(loadProcessingBt)
         ## Import QtCore class
-        loadQtCoreBt = QCoreApplication.translate("PythonConsole", "Import PyQt.QtCore class")
+        loadQtCoreBt = QCoreApplication.translate("PythonConsole", "Import PyQt.QtCore Class")
         self.loadQtCoreButton = QAction(self)
         self.loadQtCoreButton.setCheckable(False)
         self.loadQtCoreButton.setEnabled(True)
@@ -352,7 +351,7 @@ class PythonConsoleWidget(QWidget):
         self.loadQtCoreButton.setToolTip(loadQtCoreBt)
         self.loadQtCoreButton.setText(loadQtCoreBt)
         ## Import QtGui class
-        loadQtGuiBt = QCoreApplication.translate("PythonConsole", "Import PyQt.QtGui class")
+        loadQtGuiBt = QCoreApplication.translate("PythonConsole", "Import PyQt.QtGui Class")
         self.loadQtGuiButton = QAction(self)
         self.loadQtGuiButton.setCheckable(False)
         self.loadQtGuiButton.setEnabled(True)
@@ -362,7 +361,7 @@ class PythonConsoleWidget(QWidget):
         self.loadQtGuiButton.setToolTip(loadQtGuiBt)
         self.loadQtGuiButton.setText(loadQtGuiBt)
         ## Action for Run script
-        runBt = QCoreApplication.translate("PythonConsole", "Run command")
+        runBt = QCoreApplication.translate("PythonConsole", "Run Command")
         self.runButton = QAction(self)
         self.runButton.setCheckable(False)
         self.runButton.setEnabled(True)
@@ -372,7 +371,7 @@ class PythonConsoleWidget(QWidget):
         self.runButton.setToolTip(runBt)
         self.runButton.setText(runBt)
         ## Help action
-        helpBt = QCoreApplication.translate("PythonConsole", "Help")
+        helpBt = QCoreApplication.translate("PythonConsole", "Help...")
         self.helpButton = QAction(self)
         self.helpButton.setCheckable(False)
         self.helpButton.setEnabled(True)
@@ -482,10 +481,7 @@ class PythonConsoleWidget(QWidget):
         self.lineEditFind = QgsFilterLineEdit()
         placeHolderTxt = QCoreApplication.translate("PythonConsole", "Enter text to find...")
 
-        if pyqtconfig.Configuration().qt_version >= 0x40700:
-            self.lineEditFind.setPlaceholderText(placeHolderTxt)
-        else:
-            self.lineEditFind.setToolTip(placeHolderTxt)
+        self.lineEditFind.setPlaceholderText(placeHolderTxt)
         self.findNextButton = QToolButton()
         self.findNextButton.setEnabled(False)
         toolTipfindNext = QCoreApplication.translate("PythonConsole", "Find Next")
@@ -633,7 +629,7 @@ class PythonConsoleWidget(QWidget):
             QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
     def openScriptFile(self):
-        lastDirPath = self.settings.value("pythonConsole/lastDirPath", QDir.home())
+        lastDirPath = self.settings.value("pythonConsole/lastDirPath", QDir.homePath())
         openFileTr = QCoreApplication.translate("PythonConsole", "Open File")
         fileList = QFileDialog.getOpenFileNames(
             self, openFileTr, lastDirPath, "Script file (*.py)")

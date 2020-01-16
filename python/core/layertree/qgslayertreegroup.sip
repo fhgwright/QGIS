@@ -66,7 +66,7 @@ class QgsLayerTreeGroup : QgsLayerTreeNode
     virtual QString dump() const;
 
     //! Return a clone of the group. The children are cloned too.
-    virtual QgsLayerTreeNode* clone() const /Factory/;
+    virtual QgsLayerTreeGroup* clone() const /Factory/;
 
     //! Return the check state of the group node
     Qt::CheckState isVisible() const;
@@ -81,6 +81,18 @@ class QgsLayerTreeGroup : QgsLayerTreeNode
     //! of -1 will determine automatically (either first one currently checked or none)
     //! @note added in 2.12
     void setIsMutuallyExclusive( bool enabled, int initialChildIndex = -1 );
+
+  protected slots:
+    void layerDestroyed();
+    void nodeVisibilityChanged( QgsLayerTreeNode* node );
+
+  protected:
+    //! Set check state of this group from its children
+    void updateVisibilityFromChildren();
+    //! Set check state of children (when this group's check state changes) - if not mutually exclusive
+    void updateChildVisibility();
+    //! Set check state of children - if mutually exclusive
+    void updateChildVisibilityMutuallyExclusive();
 
   private:
     QgsLayerTreeGroup( const QgsLayerTreeGroup& other );

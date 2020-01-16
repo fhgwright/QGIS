@@ -5,10 +5,16 @@ class QgsPolygonV2: public QgsCurvePolygonV2
 %End
 
   public:
+    QgsPolygonV2();
+
+    bool operator==( const QgsPolygonV2& other ) const;
+    bool operator!=( const QgsPolygonV2& other ) const;
+
     virtual QString geometryType() const;
     virtual QgsPolygonV2* clone() const;
 
-    virtual bool fromWkb( const unsigned char* wkb );
+    virtual bool fromWkb( QgsConstWkbPtr wkb );
+
     // inherited: bool fromWkt( const QString &wkt );
 
     int wkbSize() const;
@@ -19,4 +25,9 @@ class QgsPolygonV2: public QgsCurvePolygonV2
     // inherited: QString asJSON( int precision = 17 ) const;
 
     QgsPolygonV2* surfaceToPolygon() const;
+
+    void addInteriorRing( QgsCurveV2* ring /Transfer/ );
+    //overridden to handle LineString25D rings
+    virtual void setExteriorRing( QgsCurveV2* ring /Transfer/ );
+
 };

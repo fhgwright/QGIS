@@ -23,11 +23,13 @@
 
 #include "ui_qgsgraduatedsymbolrendererv2widget.h"
 
+/// @cond PRIVATE
+
 class GUI_EXPORT QgsGraduatedSymbolRendererV2Model : public QAbstractItemModel
 {
     Q_OBJECT
   public:
-    QgsGraduatedSymbolRendererV2Model( QObject * parent = 0 );
+    QgsGraduatedSymbolRendererV2Model( QObject * parent = nullptr );
     Qt::ItemFlags flags( const QModelIndex & index ) const override;
     Qt::DropActions supportedDropActions() const override;
     QVariant data( const QModelIndex &index, int role ) const override;
@@ -63,11 +65,15 @@ class GUI_EXPORT QgsGraduatedSymbolRendererV2Model : public QAbstractItemModel
 // View style which shows drop indicator line between items
 class QgsGraduatedSymbolRendererV2ViewStyle: public QProxyStyle
 {
-  public:
-    explicit QgsGraduatedSymbolRendererV2ViewStyle( QStyle* style = 0 );
+    Q_OBJECT
 
-    void drawPrimitive( PrimitiveElement element, const QStyleOption * option, QPainter * painter, const QWidget * widget = 0 ) const override;
+  public:
+    explicit QgsGraduatedSymbolRendererV2ViewStyle( QStyle* style = nullptr );
+
+    void drawPrimitive( PrimitiveElement element, const QStyleOption * option, QPainter * painter, const QWidget * widget = nullptr ) const override;
 };
+
+///@endcond
 
 class GUI_EXPORT QgsGraduatedSymbolRendererV2Widget : public QgsRendererV2Widget, private Ui::QgsGraduatedSymbolRendererV2Widget
 {

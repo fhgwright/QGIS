@@ -19,14 +19,6 @@ class QgsRelation
 #include <qgsrelation.h>
 %End
   public:
-    /**
-     * Defines a relation between matchin fields of the two involved tables of a relation.
-     * Often, a relation is only defined by just one FieldPair with the name of the foreign key
-     * column of the referencing table as first element and the name of the primary key column
-     * of the referenced table as the second element.
-     *
-     */
-    typedef QPair< QString, QString > FieldPair;
 
     /**
      * Default constructor. Creates an invalid relation.
@@ -96,7 +88,7 @@ class QgsRelation
      * @param fieldPair A pair of two strings
      * @note not available in python bindings
      */
-    // void addFieldPair( FieldPair fieldPair );
+    // void addFieldPair( const FieldPair& fieldPair );
 
     /**
      * Creates an iterator which returns all the features on the referencing (child) layer
@@ -114,17 +106,47 @@ class QgsRelation
      *
      * @param feature A feature from the referenced (parent) layer
      *
-     * @return An request for all the referenced features
+     * @return A request for all the referencing features
      */
     QgsFeatureRequest getRelatedFeaturesRequest( const QgsFeature& feature ) const;
 
-    QgsFeatureRequest getReferencedFeatureRequest( const QgsFeature& feature ) const;
-
-    QgsFeature getReferencedFeature( const QgsFeature& child ) const;
+    /**
+     * Creates a request to return the feature on the referenced (parent) layer
+     * which is referenced by the provided feature.
+     *
+     * @param attributes An attribute vector containing the foreign key
+     *
+     * @return A request the referenced feature
+     * @note not available in python bindings
+     */
+    QgsFeatureRequest getReferencedFeatureRequest( const QgsAttributes& attributes ) const;
 
     /**
-     * The id
-     * @return
+     * Creates a request to return the feature on the referenced (parent) layer
+     * which is referenced by the provided feature.
+     *
+     * @param feature A feature from the referencing (child) layer
+     *
+     * @return A request the referenced feature
+     */
+    QgsFeatureRequest getReferencedFeatureRequest( const QgsFeature& feature ) const;
+
+    /**
+     * Creates a request to return the feature on the referenced (parent) layer
+     * which is referenced by the provided feature.
+     *
+     * @param feature A feature from the referencing (child) layer
+     *
+     * @return A request the referenced feature
+     */
+    QgsFeature getReferencedFeature( const QgsFeature& feature ) const;
+
+    /**
+     * Returns a human readable name for this relation. Mostly used as title for the children.
+     *
+     * @see id()
+     *
+     * @return A name
      */
     QString name() const;
 
@@ -183,6 +205,22 @@ class QgsRelation
 %End
 
     /**
+     * Returns a list of attributes used to form the referenced fields
+     * (most likely primary key) on the referenced layer.
+     *
+     * @return A list of attributes
+     */
+    QgsAttributeList referencedFields() const;
+
+    /**
+     * Returns a list of attributes used to form the referencing fields
+     * (foreign key) on the referencing layer.
+     *
+     * @return A list of attributes
+     */
+    QgsAttributeList referencingFields() const;
+
+    /**
      * Returns the validity of this relation. Don't use the information if it's not valid.
      *
      * @return true if the relation is valid
@@ -190,5 +228,9 @@ class QgsRelation
     bool isValid() const;
 
   protected:
+    /**
+     * Updates the validity status of this relation.
+     * Will be called internally whenever a member is changed.
+     */
     void updateRelationStatus();
 };

@@ -161,6 +161,17 @@ bool QgsVectorLayerEditBuffer::deleteFeature( QgsFeatureId fid )
   return true;
 }
 
+bool QgsVectorLayerEditBuffer::deleteFeatures( const QgsFeatureIds& fids )
+{
+  if ( !( L->dataProvider()->capabilities() & QgsVectorDataProvider::DeleteFeatures ) )
+    return false;
+
+  Q_FOREACH ( QgsFeatureId fid, fids )
+    deleteFeature( fid );
+
+  return true;
+}
+
 
 bool QgsVectorLayerEditBuffer::changeGeometry( QgsFeatureId fid, QgsGeometry* geom )
 {
@@ -260,17 +271,21 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList& commitErrors )
   int cap = provider->capabilities();
   bool success = true;
 
+  // geometry updates   attribute updates
+  // yes                no                    => changeGeometryValues
+  // no                 yes                   => changeAttributeValues
+  // yes                yes                   => changeFeatures
+
   //
   // update geometries
   //
-  if ( !mChangedGeometries.isEmpty() )
+  if ( !mChangedGeometries.isEmpty() && (( cap & QgsVectorDataProvider::ChangeFeatures ) == 0 || mChangedAttributeValues.isEmpty() ) )
   {
-    if (( cap & QgsVectorDataProvider::ChangeGeometries ) && provider->changeGeometryValues( mChangedGeometries ) )
+    if ( provider->changeGeometryValues( mChangedGeometries ) )
     {
       commitErrors << tr( "SUCCESS: %n geometries were changed.", "changed geometries count", mChangedGeometries.size() );
 
       emit committedGeometriesChanges( L->id(), mChangedGeometries );
-
       mChangedGeometries.clear();
     }
     else
@@ -304,7 +319,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList& commitErrors )
       QString list = "ERROR: Pending attribute deletes:";
       Q_FOREACH ( int idx, mDeletedAttributeIds )
       {
-        list.append( " " + L->pendingFields().at( idx ).name() );
+        list.append( ' ' + L->pendingFields().at( idx ).name() );
       }
       commitErrors << list;
 #endif
@@ -333,7 +348,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList& commitErrors )
       QString list = "ERROR: Pending adds:";
       Q_FOREACH ( QgsField f, mAddedAttributes )
       {
-        list.append( " " + f.name() );
+        list.append( ' ' + f.name() );
       }
       commitErrors << list;
 #endif
@@ -387,36 +402,56 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList& commitErrors )
 
   if ( attributeChangesOk )
   {
-    //
-    // change attributes
-    //
-    if ( !mChangedAttributeValues.isEmpty() )
+    if ( cap & QgsVectorDataProvider::ChangeFeatures && !mChangedGeometries.isEmpty() && !mChangedAttributeValues.isEmpty() )
     {
-      if (( cap & QgsVectorDataProvider::ChangeAttributeValues ) && provider->changeAttributeValues( mChangedAttributeValues ) )
+      Q_ASSERT(( cap & ( QgsVectorDataProvider::ChangeAttributeValues | QgsVectorDataProvider::ChangeGeometries ) ) == ( QgsVectorDataProvider::ChangeAttributeValues | QgsVectorDataProvider::ChangeGeometries ) );
+
+      if ( provider->changeFeatures( mChangedAttributeValues, mChangedGeometries ) )
       {
-        commitErrors << tr( "SUCCESS: %n attribute value(s) changed.", "changed attribute values count", mChangedAttributeValues.size() );
-
+        commitErrors << tr( "SUCCESS: %1 attribute value(s) and %2 geometries changed." ).arg( mChangedAttributeValues.size(), mChangedGeometries.size() );
         emit committedAttributeValuesChanges( L->id(), mChangedAttributeValues );
-
         mChangedAttributeValues.clear();
+
+        emit committedGeometriesChanges( L->id(), mChangedGeometries );
+        mChangedGeometries.clear();
       }
       else
       {
-        commitErrors << tr( "ERROR: %n attribute value change(s) not applied.", "not changed attribute values count", mChangedAttributeValues.size() );
-#if 0
-        QString list = "ERROR: pending changes:";
-        Q_FOREACH ( QgsFeatureId id, mChangedAttributeValues.keys() )
-        {
-          list.append( "\n  " + FID_TO_STRING( id ) + "[" );
-          Q_FOREACH ( int idx, mChangedAttributeValues[ id ].keys() )
-          {
-            list.append( QString( " %1:%2" ).arg( L->pendingFields().at( idx ).name() ).arg( mChangedAttributeValues[id][idx].toString() ) );
-          }
-          list.append( " ]" );
-        }
-        commitErrors << list;
-#endif
         success = false;
+      }
+    }
+    else
+    {
+      //
+      // change attributes
+      //
+      if ( !mChangedAttributeValues.isEmpty() && (( cap & QgsVectorDataProvider::ChangeFeatures ) == 0 || mChangedGeometries.isEmpty() ) )
+      {
+        if (( cap & QgsVectorDataProvider::ChangeAttributeValues ) && provider->changeAttributeValues( mChangedAttributeValues ) )
+        {
+          commitErrors << tr( "SUCCESS: %n attribute value(s) changed.", "changed attribute values count", mChangedAttributeValues.size() );
+
+          emit committedAttributeValuesChanges( L->id(), mChangedAttributeValues );
+          mChangedAttributeValues.clear();
+        }
+        else
+        {
+          commitErrors << tr( "ERROR: %n attribute value change(s) not applied.", "not changed attribute values count", mChangedAttributeValues.size() );
+#if 0
+          QString list = "ERROR: pending changes:";
+          Q_FOREACH ( QgsFeatureId id, mChangedAttributeValues.keys() )
+          {
+            list.append( "\n  " + FID_TO_STRING( id ) + '[' );
+            Q_FOREACH ( int idx, mChangedAttributeValues[ id ].keys() )
+            {
+              list.append( QString( " %1:%2" ).arg( L->pendingFields().at( idx ).name() ).arg( mChangedAttributeValues[id][idx].toString() ) );
+            }
+            list.append( " ]" );
+          }
+          commitErrors << list;
+#endif
+          success = false;
+        }
       }
     }
 
@@ -429,10 +464,10 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList& commitErrors )
       {
         commitErrors << tr( "SUCCESS: %n feature(s) deleted.", "deleted features count", mDeletedFeatureIds.size() );
         // TODO[MD]: we should not need this here
-        for ( QgsFeatureIds::const_iterator it = mDeletedFeatureIds.begin(); it != mDeletedFeatureIds.end(); ++it )
+        Q_FOREACH ( QgsFeatureId id, mDeletedFeatureIds )
         {
-          mChangedAttributeValues.remove( *it );
-          mChangedGeometries.remove( *it );
+          mChangedAttributeValues.remove( id );
+          mChangedGeometries.remove( id );
         }
 
         emit committedFeaturesRemoved( L->id(), mDeletedFeatureIds );
@@ -446,7 +481,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList& commitErrors )
         QString list = "ERROR: pending deletes:";
         Q_FOREACH ( QgsFeatureId id, mDeletedFeatureIds )
         {
-          list.append( " " + FID_TO_STRING( id ) );
+          list.append( ' ' + FID_TO_STRING( id ) );
         }
         commitErrors << list;
 #endif
@@ -498,7 +533,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList& commitErrors )
           QString list = "ERROR: pending adds:";
           Q_FOREACH ( QgsFeature f, mAddedFeatures )
           {
-            list.append( " " + FID_TO_STRING( f.id() ) + "[" );
+            list.append( ' ' + FID_TO_STRING( f.id() ) + '[' );
             for ( int i = 0; i < L->pendingFields().size(); i++ )
             {
               list.append( QString( " %1:%2" ).arg( L->pendingFields().at( i ).name() ).arg( f.attributes()[i].toString() ) );
@@ -527,7 +562,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList& commitErrors )
     commitErrors << tr( "\n  Provider errors:" );
     Q_FOREACH ( QString e, provider->errors() )
     {
-      commitErrors << "    " + e.replace( "\n", "\n    " );
+      commitErrors << "    " + e.replace( '\n', "\n    " );
     }
     provider->clearErrors();
   }
@@ -572,9 +607,10 @@ QString QgsVectorLayerEditBuffer::dumpEditBuffer()
 void QgsVectorLayerEditBuffer::handleAttributeAdded( int index )
 {
   // go through the changed attributes map and adapt indices
-  Q_FOREACH ( QgsFeatureId fid, mChangedAttributeValues.keys() )
+  QgsChangedAttributesMap::iterator it = mChangedAttributeValues.begin();
+  for ( ; it != mChangedAttributeValues.end(); ++it )
   {
-    updateAttributeMapIndex( mChangedAttributeValues[fid], index, + 1 );
+    updateAttributeMapIndex( it.value(), index, + 1 );
   }
 
   // go through added features and adapt attributes
@@ -590,9 +626,10 @@ void QgsVectorLayerEditBuffer::handleAttributeAdded( int index )
 void QgsVectorLayerEditBuffer::handleAttributeDeleted( int index )
 {
   // go through the changed attributes map and adapt indices
-  Q_FOREACH ( QgsFeatureId fid, mChangedAttributeValues.keys() )
+  QgsChangedAttributesMap::iterator it = mChangedAttributeValues.begin();
+  for ( ; it != mChangedAttributeValues.end(); ++it )
   {
-    QgsAttributeMap& attrMap = mChangedAttributeValues[fid];
+    QgsAttributeMap& attrMap = it.value();
     // remove the attribute
     if ( attrMap.contains( index ) )
       attrMap.remove( index );

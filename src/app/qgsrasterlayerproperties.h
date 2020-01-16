@@ -46,7 +46,7 @@ class APP_EXPORT QgsRasterLayerProperties : public QgsOptionsDialogBase, private
     /** \brief Constructor
      * @param ml Map layer for which properties will be displayed
      */
-    QgsRasterLayerProperties( QgsMapLayer *lyr, QgsMapCanvas* theCanvas, QWidget *parent = 0, Qt::WindowFlags = QgisGui::ModalDialogFlags );
+    QgsRasterLayerProperties( QgsMapLayer *lyr, QgsMapCanvas* theCanvas, QWidget *parent = nullptr, Qt::WindowFlags = QgisGui::ModalDialogFlags );
     /** \brief Destructor */
     ~QgsRasterLayerProperties();
 
@@ -120,7 +120,7 @@ class APP_EXPORT QgsRasterLayerProperties : public QgsOptionsDialogBase, private
 
   signals:
     /** Emitted when changes to layer were saved to update legend */
-    void refreshLegend( QString layerID, bool expandItem );
+    void refreshLegend( const QString& layerID, bool expandItem );
 
   private:
     /** \brief  A constant that signals property not used */

@@ -33,7 +33,6 @@
 #include "qgsexpression.h"
 struct expression_parser_context;
 #include "qgsexpressionparser.hpp"
-#include <QRegExp>
 #include <QLocale>
 
 // if not defined, searches for isatty()
@@ -59,7 +58,7 @@ static QString stripText(QString text)
   text = text.mid( 1, text.length() - 2 );
 
   // make single "single quotes" from double "single quotes"
-  text.replace( QRegExp( "''" ), "'" );
+  text.replace( "''", "'" );
 
   // strip \n \' etc.
   int index = 0;
@@ -86,7 +85,7 @@ static QString stripColumnRef(QString text)
   text = text.mid( 1, text.length() - 2 );
 
   // make single "double quotes" from double "double quotes"
-  text.replace( QRegExp( "\"\"" ), "\"" );
+  text.replace( "\"\"", "\"" );
   return text;
 }
 
@@ -133,48 +132,48 @@ string      "'"{str_char}*"'"
   \n        yylineno++;
 }
 
-"NOT"   { U_OP(uoNot); return NOT; }
-"AND"   { B_OP(boAnd); return AND; }
-"OR"    { B_OP(boOr);  return OR;  }
+"NOT"               { U_OP(uoNot); return NOT; }
+"AND"               { B_OP(boAnd); return AND; }
+"OR"                { B_OP(boOr);  return OR;  }
 
-"="   {  B_OP(boEQ); return EQ; }
-"!="  {  B_OP(boNE); return NE; }
-"<="  {  B_OP(boLE); return LE; }
-">="  {  B_OP(boGE); return GE; }
-"<>"  {  B_OP(boNE); return NE; }
-"<"   {  B_OP(boLT); return LT; }
-">"   {  B_OP(boGT); return GT; }
+"="                 { B_OP(boEQ); return EQ; }
+"!="                { B_OP(boNE); return NE; }
+"<="                { B_OP(boLE); return LE; }
+">="                { B_OP(boGE); return GE; }
+"<>"                { B_OP(boNE); return NE; }
+"<"                 { B_OP(boLT); return LT; }
+">"                 { B_OP(boGT); return GT; }
 
-"~"         { B_OP(boRegexp); return REGEXP; }
-"LIKE"      { B_OP(boLike); return LIKE; }
-"NOT LIKE"  { B_OP(boNotLike); return LIKE; }
-"ILIKE"     { B_OP(boILike); return LIKE; }
-"NOT ILIKE" { B_OP(boNotILike); return LIKE; }
-"IS"        { B_OP(boIs); return IS; }
-"IS NOT"    { B_OP(boIsNot); return IS; }
-"||"        { B_OP(boConcat); return CONCAT; }
+"~"                 { B_OP(boRegexp); return REGEXP; }
+"LIKE"              { B_OP(boLike); return LIKE; }
+"NOT"{white}"LIKE"  { B_OP(boNotLike); return LIKE; }
+"ILIKE"             { B_OP(boILike); return LIKE; }
+"NOT"{white}"ILIKE" { B_OP(boNotILike); return LIKE; }
+"IS"                { B_OP(boIs); return IS; }
+"IS"{white}"NOT"    { B_OP(boIsNot); return IS; }
+"||"                { B_OP(boConcat); return CONCAT; }
 
-"+"  { B_OP(boPlus); return PLUS; }
-"-"  { B_OP(boMinus); return MINUS; }
-"*"  { B_OP(boMul); return MUL; }
-"//"  { B_OP(boIntDiv); return INTDIV; }
-"/"  { B_OP(boDiv); return DIV; }
-"%"  { B_OP(boMod); return MOD; }
-"^"  { B_OP(boPow); return POW; }
+"+"                 { B_OP(boPlus); return PLUS; }
+"-"                 { B_OP(boMinus); return MINUS; }
+"*"                 { B_OP(boMul); return MUL; }
+"//"                { B_OP(boIntDiv); return INTDIV; }
+"/"                 { B_OP(boDiv); return DIV; }
+"%"                 { B_OP(boMod); return MOD; }
+"^"                 { B_OP(boPow); return POW; }
 
-"IN"  {  return IN; }
+"IN"                { return IN; }
 
-"NULL"	{ return NULLVALUE; }
+"NULL"              { return NULLVALUE; }
 
-"CASE" { return CASE; }
-"WHEN" { return WHEN; }
-"THEN" { return THEN; }
-"ELSE" { return ELSE; }
-"END"  { return END;  }
+"CASE"              { return CASE; }
+"WHEN"              { return WHEN; }
+"THEN"              { return THEN; }
+"ELSE"              { return ELSE; }
+"END"               { return END;  }
 
-[()]      { return yytext[0]; }
+[()]                { return yytext[0]; }
 
-","   { return COMMA; }
+","                 { return COMMA; }
 
 {num_float}  { yylval->numberFloat = cLocale.toDouble( QString::fromAscii(yytext) ); return NUMBER_FLOAT; }
 {num_int}  {

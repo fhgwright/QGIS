@@ -52,12 +52,12 @@ class CORE_EXPORT QgsSimpleLineSymbolLayerV2 : public QgsLineSymbolLayerV2
 
     void renderPolyline( const QPolygonF& points, QgsSymbolV2RenderContext& context ) override;
 
-    //overriden so that clip path can be set when using draw inside polygon option
+    //overridden so that clip path can be set when using draw inside polygon option
     void renderPolygonOutline( const QPolygonF& points, QList<QPolygonF>* rings, QgsSymbolV2RenderContext& context ) override;
 
     QgsStringMap properties() const override;
 
-    QgsSymbolLayerV2* clone() const override;
+    QgsSimpleLineSymbolLayerV2* clone() const override;
 
     void toSld( QDomDocument &doc, QDomElement &element, const QgsStringMap& props ) const override;
 
@@ -142,6 +142,9 @@ class CORE_EXPORT QgsMarkerLineSymbolLayerV2 : public QgsLineSymbolLayerV2
 
     ~QgsMarkerLineSymbolLayerV2();
 
+    /**
+     * Defines how/where the marker should be placed on the line
+     */
     enum Placement
     {
       Interval,
@@ -154,7 +157,22 @@ class CORE_EXPORT QgsMarkerLineSymbolLayerV2 : public QgsLineSymbolLayerV2
 
     // static stuff
 
+    /**
+     * Create a new MarkerLineSymbolLayerV2
+     *
+     * @param properties A property map to deserialize saved information from properties()
+     *
+     * @return A new MarkerLineSymbolLayerV2
+     */
     static QgsSymbolLayerV2* create( const QgsStringMap& properties = QgsStringMap() );
+
+    /**
+     * Create a new MarkerLineSymbolLayerV2 from SLD
+     *
+     * @param element An SLD XML DOM element
+     *
+     * @return A new MarkerLineSymbolLayerV2
+     */
     static QgsSymbolLayerV2* createFromSld( QDomElement &element );
 
     // implemented from base classes
@@ -171,7 +189,7 @@ class CORE_EXPORT QgsMarkerLineSymbolLayerV2 : public QgsLineSymbolLayerV2
 
     QgsStringMap properties() const override;
 
-    QgsSymbolLayerV2* clone() const override;
+    QgsMarkerLineSymbolLayerV2* clone() const override;
 
     void toSld( QDomDocument &doc, QDomElement &element, const QgsStringMap& props ) const override;
 
@@ -187,13 +205,36 @@ class CORE_EXPORT QgsMarkerLineSymbolLayerV2 : public QgsLineSymbolLayerV2
 
     // new stuff
 
+    /**
+     * Shall the marker be rotated.
+     *
+     * @return True if the marker should be rotated.
+     */
     bool rotateMarker() const { return mRotateMarker; }
+
+    /**
+     * Shall the marker be rotated.
+     */
     void setRotateMarker( bool rotate ) { mRotateMarker = rotate; }
 
+    /**
+     * The interval between individual markers.
+     */
     double interval() const { return mInterval; }
+
+    /**
+     * The interval between individual markers.
+     */
     void setInterval( double interval ) { mInterval = interval; }
 
+    /**
+     * The placement of the markers.
+     */
     Placement placement() const { return mPlacement; }
+
+    /**
+     * The placement of the markers.
+     */
     void setPlacement( Placement p ) { mPlacement = p; }
 
     /** Returns the offset along the line for the marker placement. For Interval placements, this is the distance
@@ -205,7 +246,7 @@ class CORE_EXPORT QgsMarkerLineSymbolLayerV2 : public QgsLineSymbolLayerV2
      * @see setOffsetAlongLine
      * @see offsetAlongLineUnit
      * @see placement
-    */
+     */
     double offsetAlongLine() const { return mOffsetAlongLine; }
 
     /** Sets the the offset along the line for the marker placement. For Interval placements, this is the distance
@@ -218,21 +259,21 @@ class CORE_EXPORT QgsMarkerLineSymbolLayerV2 : public QgsLineSymbolLayerV2
      * @see offsetAlongLine
      * @see setOffsetAlongLineUnit
      * @see setPlacement
-    */
+     */
     void setOffsetAlongLine( double offsetAlongLine ) { mOffsetAlongLine = offsetAlongLine; }
 
     /** Returns the unit used for calculating the offset along line for markers.
      * @returns Offset along line unit type.
      * @see setOffsetAlongLineUnit
      * @see offsetAlongLine
-    */
+     */
     QgsSymbolV2::OutputUnit offsetAlongLineUnit() const { return mOffsetAlongLineUnit; }
 
     /** Sets the unit used for calculating the offset along line for markers.
      * @param unit Offset along line unit type.
      * @see offsetAlongLineUnit
      * @see setOffsetAlongLine
-    */
+     */
     void setOffsetAlongLineUnit( QgsSymbolV2::OutputUnit unit ) { mOffsetAlongLineUnit = unit; }
 
     /** Returns the map unit scale used for calculating the offset in map units along line for markers.
@@ -258,6 +299,9 @@ class CORE_EXPORT QgsMarkerLineSymbolLayerV2 : public QgsLineSymbolLayerV2
     QgsMapUnitScale mapUnitScale() const override;
 
     QSet<QString> usedAttributes() const override;
+
+    void setDataDefinedProperty( const QString& property, QgsDataDefined* dataDefined ) override;
+
 
   protected:
 
@@ -287,7 +331,7 @@ class CORE_EXPORT QgsMarkerLineSymbolLayerV2 : public QgsLineSymbolLayerV2
      * @param context render context
      * @see setoffsetAlongLine
      * @see setOffsetAlongLineUnit
-    */
+     */
     void renderOffsetVertexAlongLine( const QPolygonF& points, int vertex, double distance, QgsSymbolV2RenderContext &context );
 };
 

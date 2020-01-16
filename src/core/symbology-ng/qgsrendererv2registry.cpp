@@ -22,6 +22,7 @@
 #include "qgspointdisplacementrenderer.h"
 #include "qgsinvertedpolygonrenderer.h"
 #include "qgsheatmaprenderer.h"
+#include "qgs25drenderer.h"
 
 QgsRendererV2Registry::QgsRendererV2Registry()
 {
@@ -45,25 +46,26 @@ QgsRendererV2Registry::QgsRendererV2Registry()
                                           QgsRuleBasedRendererV2::createFromSld ) );
 
   addRenderer( new QgsRendererV2Metadata( "pointDisplacement",
-                                          QObject::tr( "Point displacement" ),
+                                          QObject::tr( "Point Displacement" ),
                                           QgsPointDisplacementRenderer::create ) );
 
   addRenderer( new QgsRendererV2Metadata( "invertedPolygonRenderer",
-                                          QObject::tr( "Inverted polygons" ),
+                                          QObject::tr( "Inverted Polygons" ),
                                           QgsInvertedPolygonRenderer::create ) );
 
   addRenderer( new QgsRendererV2Metadata( "heatmapRenderer",
                                           QObject::tr( "Heatmap" ),
                                           QgsHeatmapRenderer::create ) );
+
+
+  addRenderer( new QgsRendererV2Metadata( "25dRenderer",
+                                          QObject::tr( "2.5 D" ),
+                                          Qgs25DRenderer::create ) );
 }
 
 QgsRendererV2Registry::~QgsRendererV2Registry()
 {
-  Q_FOREACH ( const QString& name, mRenderers.keys() )
-  {
-    delete mRenderers[name];
-  }
-  mRenderers.clear();
+  qDeleteAll( mRenderers );
 }
 
 QgsRendererV2Registry* QgsRendererV2Registry::instance()
@@ -75,7 +77,7 @@ QgsRendererV2Registry* QgsRendererV2Registry::instance()
 
 bool QgsRendererV2Registry::addRenderer( QgsRendererV2AbstractMetadata* metadata )
 {
-  if ( metadata == NULL || mRenderers.contains( metadata->name() ) )
+  if ( !metadata || mRenderers.contains( metadata->name() ) )
     return false;
 
   mRenderers[metadata->name()] = metadata;

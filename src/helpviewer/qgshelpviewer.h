@@ -36,7 +36,7 @@ class QgsReaderThread : public QThread
     virtual void run() override;
 
   signals:
-    void helpRead( QString help );
+    void helpRead( const QString& help );
 };
 
 
@@ -44,7 +44,7 @@ class QgsHelpViewer : public QDialog, private Ui::QgsHelpViewerBase
 {
     Q_OBJECT
   public:
-    QgsHelpViewer( QWidget *parent = 0, const Qt::WindowFlags& = 0 );
+    QgsHelpViewer( QWidget *parent = nullptr, const Qt::WindowFlags& = nullptr );
     ~QgsHelpViewer();
   public slots:
     void showHelp( const QString& );

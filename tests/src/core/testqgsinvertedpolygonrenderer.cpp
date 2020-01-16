@@ -65,7 +65,7 @@ class TestQgsInvertedPolygon : public QObject
 
 TestQgsInvertedPolygon::TestQgsInvertedPolygon()
     : mTestHasError( false )
-    , mpPolysLayer( NULL )
+    , mpPolysLayer( nullptr )
 {
 
 }
@@ -79,7 +79,7 @@ void TestQgsInvertedPolygon::initTestCase()
   QgsApplication::showSettings();
 
   QString myDataDir( TEST_DATA_DIR ); //defined in CmakeLists.txt
-  mTestDataDir = myDataDir + "/";
+  mTestDataDir = myDataDir + '/';
 
   //
   //create a poly layer that will be used in all tests...

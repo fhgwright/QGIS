@@ -69,7 +69,7 @@ my $translators= {
 	'mr' => '',
 	'nb' => 'James Stott, Maléne Peterson',
 	'nl' => 'Richard Duivenvoorde, Raymond Nijssen, Carlo van Rijswijk, Diethard Jansen, Willem Hoffmans, Dick Groskamp',
-	'pl' => 'Robert Szczepanek, Milena Nowotarska, Borys Jurgiel, Mateusz Łoskot, Tomasz Paul, Andrzej Świąder, Radosław Pasiok',
+	'pl' => 'Robert Szczepanek, Milena Nowotarska, Borys Jurgiel, Mateusz Łoskot, Tomasz Paul, Andrzej Świąder, Radosław Pasiok, Michał Kułach',
 	'pt_BR' => 'Sidney Schaberle Goveia, Arthur Nanni, Marcelo Soares Souza, Narcélio de Sá Pereira Filho, Leônidas Descovi Filho, Felipe Sodré Barros ',
 	'pt_PT' => 'Giovanni Manghi, Joana Simões, Duarte Carreira, Alexandre Neto, Pedro Pereira, Pedro Palheiro, Nelson Silva, Ricardo Sena, Leandro Infantini, João Gaspar',
 	'ro' => 'Sorin Călinică, Tudor Bărăscu, Georgiana Ioanovici, Alex Bădescu, Lonut Losifescu-Enescu, Bogdan Pacurar',
@@ -88,9 +88,8 @@ my $translators= {
 	'tr' => 'Osman Yalçın YILMAZ, Omur Saygin',
 	'uk' => 'Alexander Bruy',
 	'vi' => 'Phùng Văn Doanh, Bùi Hữu Mạnh, Nguyễn Văn Thanh, Nguyễn Hữu Phúc, Cao Minh Tu',
-	'zh_CN' => 'Calvin Ngei, Zhang Jun, Richard Xie',
+	'zh-Hant' => 'Calvin Ngei, Zhang Jun, Richard Xie',
 	'zh-Hans' => 'Calvin Ngei, Lisashen',
-	'zh_TW' => 'Nung-yao Lin',
 };
 
 my $maxn;

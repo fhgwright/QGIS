@@ -48,6 +48,7 @@ class Dialog(QDialog, Ui_Dialog):
         QObject.connect(self.btnUpdate, SIGNAL("clicked()"), self.updateLayer)
         QObject.connect(self.btnCanvas, SIGNAL("clicked()"), self.updateCanvas)
         QObject.connect(self.chkAlign, SIGNAL("toggled(bool)"), self.chkAlignToggled)
+        QObject.connect(self.chkLock, SIGNAL("toggled(bool)"), self.chkLockToggled)
         self.buttonOk = self.buttonBox_2.button(QDialogButtonBox.Ok)
         self.setWindowTitle(self.tr("Vector grid"))
         self.xMin.setValidator(QDoubleValidator(self.xMin))
@@ -72,6 +73,9 @@ class Dialog(QDialog, Ui_Dialog):
         mLayerName = self.inShape.currentText()
         if not mLayerName == "":
             mLayer = ftools_utils.getMapLayerByName(unicode(mLayerName))
+            if mLayer.crs() != self.iface.mapCanvas().mapRenderer().destinationCrs():
+                QMessageBox.warning(self, self.tr("Vector grid"), self.tr("Layer and project have different CRS!\nResults may be wrong."))
+
             # get layer extents
             boundBox = mLayer.extent()
             # if "align extents and resolution..." button is checked
@@ -166,6 +170,7 @@ class Dialog(QDialog, Ui_Dialog):
             crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
         else:
             crs = layer.crs()
+
         if not crs.isValid():
             crs = None
 
@@ -329,6 +334,10 @@ class Dialog(QDialog, Ui_Dialog):
         if self.shapefileName is None or self.encoding is None:
             return
         self.outShape.setText(self.shapefileName)
+
+    def chkLockToggled(self, checked):
+        if checked:
+            self.spnY.setValue(self.spnX.value())
 
     def chkAlignToggled(self):
         if self.chkAlign.isChecked():

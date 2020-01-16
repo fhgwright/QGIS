@@ -79,14 +79,14 @@ QgsGeorefPluginGui::QgsGeorefPluginGui( QgisInterface* theQgisInterface, QWidget
     , mMousePrecisionDecimalPlaces( 0 )
     , mTransformParam( QgsGeorefTransform::InvalidTransform )
     , mIface( theQgisInterface )
-    , mLayer( 0 )
+    , mLayer( nullptr )
     , mAgainAddRaster( false )
-    , mMovingPoint( 0 )
-    , mMovingPointQgis( 0 )
-    , mMapCoordsDialog( 0 )
+    , mMovingPoint( nullptr )
+    , mMovingPointQgis( nullptr )
+    , mMapCoordsDialog( nullptr )
     , mUseZeroForTrans( false )
     , mLoadInQgis( false )
-    , mDock( 0 )
+    , mDock( nullptr )
 {
   setupUi( this );
 
@@ -135,9 +135,9 @@ void QgsGeorefPluginGui::dockThisWindow( bool dock )
     show();
 
     mIface->removeDockWidget( mDock );
-    mDock->setWidget( 0 );
+    mDock->setWidget( nullptr );
     delete mDock;
-    mDock = 0;
+    mDock = nullptr;
   }
 
   if ( dock )
@@ -244,7 +244,7 @@ void QgsGeorefPluginGui::openRaster()
   QSettings s;
   QString dir = s.value( "/Plugin-GeoReferencer/rasterdirectory" ).toString();
   if ( dir.isEmpty() )
-    dir = ".";
+    dir = '.';
 
   QString otherFiles = tr( "All other files (*)" );
   QString lastUsedFilter = s.value( "/Plugin-GeoReferencer/lastusedfilter", otherFiles ).toString();
@@ -263,8 +263,8 @@ void QgsGeorefPluginGui::openRaster()
   {
     QString msg = tr( "%1 is not a supported raster data source" ).arg( mRasterFileName );
 
-    if ( errMsg.size() > 0 )
-      msg += "\n" + errMsg;
+    if ( !errMsg.isEmpty() )
+      msg += '\n' + errMsg;
 
     QMessageBox::information( this, tr( "Unsupported Data Source" ), msg );
     return;
@@ -400,6 +400,7 @@ void QgsGeorefPluginGui::generateGDALScript()
         break;
       }
     }
+    FALLTHROUGH;
     default:
       mMessageBar->pushMessage( tr( "Invalid Transform" ), tr( "GDAL scripting is not supported for %1 transformation." )
                                 .arg( convertTransformEnumToString( mTransformParam ) )
@@ -513,7 +514,7 @@ void QgsGeorefPluginGui::addPoint( const QgsPoint& pixelCoords, const QgsPoint& 
   //    logRequaredGCPs();
 }
 
-void QgsGeorefPluginGui::deleteDataPoint( const QPoint &coords )
+void QgsGeorefPluginGui::deleteDataPoint( QPoint coords )
 {
   for ( QgsGCPList::iterator it = mPoints.begin(); it != mPoints.end(); ++it )
   {
@@ -539,13 +540,13 @@ void QgsGeorefPluginGui::deleteDataPoint( int theGCPIndex )
   updateGeorefTransform();
 }
 
-void QgsGeorefPluginGui::selectPoint( const QPoint &p )
+void QgsGeorefPluginGui::selectPoint( QPoint p )
 {
   // Get Map Sender
   bool isMapPlugin = sender() == mToolMovePoint;
   QgsGeorefDataPoint *&mvPoint = isMapPlugin ? mMovingPoint : mMovingPointQgis;
 
-  for ( QgsGCPList::iterator it = mPoints.begin(); it != mPoints.end(); ++it )
+  for ( QgsGCPList::const_iterator it = mPoints.constBegin(); it != mPoints.constEnd(); ++it )
   {
     if (( *it )->contains( p, isMapPlugin ) )
     {
@@ -555,7 +556,7 @@ void QgsGeorefPluginGui::selectPoint( const QPoint &p )
   }
 }
 
-void QgsGeorefPluginGui::movePoint( const QPoint &p )
+void QgsGeorefPluginGui::movePoint( QPoint p )
 {
   // Get Map Sender
   bool isMapPlugin = sender() == mToolMovePoint;
@@ -569,17 +570,17 @@ void QgsGeorefPluginGui::movePoint( const QPoint &p )
 
 }
 
-void QgsGeorefPluginGui::releasePoint( const QPoint &p )
+void QgsGeorefPluginGui::releasePoint( QPoint p )
 {
   Q_UNUSED( p );
   // Get Map Sender
   if ( sender() == mToolMovePoint )
   {
-    mMovingPoint = 0;
+    mMovingPoint = nullptr;
   }
   else
   {
-    mMovingPointQgis = 0;
+    mMovingPointQgis = nullptr;
   }
 }
 
@@ -827,7 +828,7 @@ void QgsGeorefPluginGui::extentsChanged()
     }
     else
     {
-      mLayer = 0;
+      mLayer = nullptr;
       mAgainAddRaster = false;
     }
   }
@@ -1011,7 +1012,7 @@ void QgsGeorefPluginGui::createMenus()
 {
   // Get platform for menu layout customization (Gnome, Kde, Mac, Win)
   QDialogButtonBox::ButtonLayout layout =
-    QDialogButtonBox::ButtonLayout( style()->styleHint( QStyle::SH_DialogButtonLayout, 0, this ) );
+    QDialogButtonBox::ButtonLayout( style()->styleHint( QStyle::SH_DialogButtonLayout, nullptr, this ) );
 
   mPanelMenu = new QMenu( tr( "Panels" ) );
   mPanelMenu->setObjectName( "mPanelMenu" );
@@ -1120,7 +1121,7 @@ void QgsGeorefPluginGui::removeOldLayer()
   {
     QgsMapLayerRegistry::instance()->removeMapLayers(
       ( QStringList() << mLayer->id() ) );
-    mLayer = NULL;
+    mLayer = nullptr;
   }
   mCanvas->refresh();
 }
@@ -1240,15 +1241,15 @@ bool QgsGeorefPluginGui::loadGCPs( /*bool verbose*/ )
   {
     line = points.readLine();
     QStringList ls;
-    if ( line.contains( QRegExp( "," ) ) ) // in previous format "\t" is delimiter of points in new - ","
+    if ( line.contains( ',' ) ) // in previous format "\t" is delimiter of points in new - ","
     {
       // points from new georeferencer
-      ls = line.split( "," );
+      ls = line.split( ',' );
     }
     else
     {
       // points from prev georeferencer
-      ls = line.split( "\t" );
+      ls = line.split( '\t' );
     }
 
     if ( ls.count() < 4 )
@@ -1415,8 +1416,6 @@ bool QgsGeorefPluginGui::georeference()
       return true;
     }
   }
-
-  return false;
 }
 
 bool QgsGeorefPluginGui::writeWorldFile( const QgsPoint& origin, double pixelXSize, double pixelYSize, double rotation )
@@ -1457,7 +1456,7 @@ bool QgsGeorefPluginGui::calculateMeanError( double& error ) const
     return false;
   }
 
-  unsigned int nPointsEnabled = 0;
+  int nPointsEnabled = 0;
   QgsGCPList::const_iterator gcpIt = mPoints.constBegin();
   for ( ; gcpIt != mPoints.constEnd(); ++gcpIt )
   {
@@ -1645,11 +1644,11 @@ bool QgsGeorefPluginGui::writePDFReportFile( const QString& fileName, const QgsG
   composerMap->setMapCanvas( mCanvas );
   composition->addItem( composerMap );
 
-  QgsComposerTextTableV2* parameterTable = 0;
+  QgsComposerTextTableV2* parameterTable = nullptr;
   double scaleX, scaleY, rotation;
   QgsPoint origin;
 
-  QgsComposerLabel* parameterLabel = 0;
+  QgsComposerLabel* parameterLabel = nullptr;
   //transformation that involves only scaling and rotation (linear or helmert) ?
   bool wldTransform = transform.getOriginScaleRotation( origin, scaleX, scaleY, rotation );
 
@@ -1803,16 +1802,18 @@ void QgsGeorefPluginGui::updateTransformParamLabel()
   double scaleX, scaleY, rotation;
   if ( mGeorefTransform.getOriginScaleRotation( origin, scaleX, scaleY, rotation ) )
   {
-    labelString += " ";
-    labelString += tr( "Translation (%1, %2)" ).arg( origin.x() ).arg( origin.y() ); labelString += " ";
-    labelString += tr( "Scale (%1, %2)" ).arg( scaleX ).arg( scaleY ); labelString += " ";
+    labelString += ' ';
+    labelString += tr( "Translation (%1, %2)" ).arg( origin.x() ).arg( origin.y() );
+    labelString += ' ';
+    labelString += tr( "Scale (%1, %2)" ).arg( scaleX ).arg( scaleY );
+    labelString += ' ';
     labelString += tr( "Rotation: %1" ).arg( rotation * 180 / M_PI );
   }
 
   double meanError = 0;
   if ( calculateMeanError( meanError ) )
   {
-    labelString += " ";
+    labelString += ' ';
     labelString += tr( "Mean error: %1" ).arg( meanError );
   }
   mTransformParamLabel->setText( labelString );
@@ -1821,7 +1822,7 @@ void QgsGeorefPluginGui::updateTransformParamLabel()
 // Gdal script
 void QgsGeorefPluginGui::showGDALScript( const QStringList& commands )
 {
-  QString script = commands.join( "\n" ) + "\n";
+  QString script = commands.join( "\n" ) + '\n';
 
   // create window to show gdal script
   QDialogButtonBox *bbxGdalScript = new QDialogButtonBox( QDialogButtonBox::Cancel, Qt::Horizontal, this );
@@ -1868,7 +1869,7 @@ QString QgsGeorefPluginGui::generateGDALtranslateCommand( bool generateTFW )
   }
 
   QFileInfo rasterFileInfo( mRasterFileName );
-  mTranslatedRasterFileName = QDir::tempPath() + "/" + rasterFileInfo.fileName();
+  mTranslatedRasterFileName = QDir::tempPath() + '/' + rasterFileInfo.fileName();
   gdalCommand << QString( "\"%1\"" ).arg( mRasterFileName ) << QString( "\"%1\"" ).arg( mTranslatedRasterFileName );
 
   return gdalCommand.join( " " );
@@ -1960,7 +1961,7 @@ bool QgsGeorefPluginGui::checkReadyGeoref()
 
 bool QgsGeorefPluginGui::updateGeorefTransform()
 {
-  std::vector<QgsPoint> mapCoords, pixelCoords;
+  QVector<QgsPoint> mapCoords, pixelCoords;
   if ( mGCPListWidget->gcpList() )
     mGCPListWidget->gcpList()->createGCPVectors( mapCoords, pixelCoords );
   else

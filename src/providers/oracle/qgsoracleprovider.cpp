@@ -33,6 +33,7 @@
 #include "qgsoraclesourceselect.h"
 #include "qgsoracledataitems.h"
 #include "qgsoraclefeatureiterator.h"
+#include "qgsoracleconnpool.h"
 
 #include <QSqlRecord>
 #include <QSqlField>
@@ -69,7 +70,7 @@ QgsOracleProvider::QgsOracleProvider( QString const & uri )
   mRequestedGeomType = mUri.wkbType();
   mUseEstimatedMetadata = mUri.useEstimatedMetadata();
 
-  mConnection = QgsOracleConn::connectDb( mUri );
+  mConnection = QgsOracleConn::connectDb( mUri.connectionInfo() );
   if ( !mConnection )
   {
     return;
@@ -1888,7 +1889,7 @@ void QgsOracleProvider::appendGeomParam( const QgsGeometry *geom, QSqlQuery &qry
   qry.addBindValue( QVariant::fromValue( g ) );
 }
 
-bool QgsOracleProvider::changeGeometryValues( QgsGeometryMap & geometry_map )
+bool QgsOracleProvider::changeGeometryValues( const QgsGeometryMap &geometry_map )
 {
   QgsDebugMsg( "entering." );
 
@@ -1918,8 +1919,8 @@ bool QgsOracleProvider::changeGeometryValues( QgsGeometryMap & geometry_map )
       throw OracleException( tr( "Could not prepare update statement." ), qry );
     }
 
-    for ( QgsGeometryMap::iterator iter  = geometry_map.begin();
-          iter != geometry_map.end();
+    for ( QgsGeometryMap::const_iterator iter = geometry_map.constBegin();
+          iter != geometry_map.constEnd();
           ++iter )
     {
       appendGeomParam( &iter.value(), qry );
@@ -1956,7 +1957,7 @@ int QgsOracleProvider::capabilities() const
   return mEnabledCapabilities;
 }
 
-bool QgsOracleProvider::setSubsetString( QString theSQL, bool updateFeatureCount )
+bool QgsOracleProvider::setSubsetString( const QString& theSQL, bool updateFeatureCount )
 {
   QString prevWhere = mSqlWhereClause;
 
@@ -1998,6 +1999,8 @@ bool QgsOracleProvider::setSubsetString( QString theSQL, bool updateFeatureCount
     mFeaturesCounted = -1;
   }
   mLayerExtent.setMinimal();
+
+  emit dataChanged();
 
   return true;
 }
@@ -2971,7 +2974,6 @@ QGISEXTERN bool deleteLayer( const QString& uri, QString& errCause )
   if ( !conn )
   {
     errCause = QObject::tr( "Connection to database failed" );
-    conn->disconnect();
     return false;
   }
 

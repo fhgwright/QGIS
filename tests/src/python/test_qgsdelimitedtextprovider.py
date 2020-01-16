@@ -34,34 +34,38 @@ import test_qgsdelimitedtextprovider_wanted as want
 
 rebuildTests = 'REBUILD_DELIMITED_TEXT_TESTS' in os.environ
 
-from PyQt4.QtCore import (QCoreApplication,
-                          QUrl,
-                          QObject
-                          )
+import qgis
 
-from qgis.core import (QgsProviderRegistry,
-                       QgsVectorLayer,
-                       QgsFeatureRequest,
-                       QgsRectangle,
-                       QgsMessageLog,
-                       QGis
-                       )
+from PyQt4.QtCore import (
+    QCoreApplication,
+    QUrl,
+    QObject
+)
 
-from utilities import (getQgisTestApp,
-                       TestCase,
-                       unitTestDataPath,
-                       unittest,
-                       compareWkt
-                       )
+from qgis.core import (
+    QgsProviderRegistry,
+    QgsVectorLayer,
+    QgsFeatureRequest,
+    QgsRectangle,
+    QgsMessageLog,
+    QGis
+)
+
+from qgis.testing import (
+    start_app,
+    unittest
+)
+
+from utilities import (
+    unitTestDataPath,
+    compareWkt
+)
 
 from providertestbase import ProviderTestCase
 
-QGISAPP, CANVAS, IFACE, PARENT = getQgisTestApp()
+start_app()
 TEST_DATA_DIR = unitTestDataPath()
 
-import sip
-sipversion = str(sip.getapi('QVariant'))
-sipwanted = '2'
 geomkey = "#geometry"
 fidkey = "#fid"
 
@@ -245,9 +249,6 @@ def recordDifference(record1, record2):
 
 
 def runTest(file, requests, **params):
-    # No point doing test if haven't got the right SIP vesion
-    if sipversion != sipwanted:
-        return
     testname = inspect.stack()[1][3]
     verbose = not rebuildTests
     if verbose:
@@ -280,9 +281,13 @@ def runTest(file, requests, **params):
         failures.append(msg)
     wanted_data = wanted['data']
     for id in sorted(wanted_data.keys()):
+        print('getting wanted data')
         wrec = wanted_data[id]
+        print('getting received data')
         trec = data.get(id, {})
+        print('getting description')
         description = wrec['description']
+        print('getting difference')
         difference = recordDifference(wrec, trec)
         if not difference:
             print '    {0}: Passed'.format(description)
@@ -318,7 +323,7 @@ def runTest(file, requests, **params):
     assert len(failures) == 0, "\n".join(failures)
 
 
-class TestQgsDelimitedTextProviderXY(TestCase, ProviderTestCase):
+class TestQgsDelimitedTextProviderXY(unittest.TestCase, ProviderTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -345,7 +350,7 @@ class TestQgsDelimitedTextProviderXY(TestCase, ProviderTestCase):
         """Run after all tests"""
 
 
-class TestQgsDelimitedTextProviderWKT(TestCase, ProviderTestCase):
+class TestQgsDelimitedTextProviderWKT(unittest.TestCase, ProviderTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -366,18 +371,37 @@ class TestQgsDelimitedTextProviderWKT(TestCase, ProviderTestCase):
         assert cls.vl.isValid(), "{} is invalid".format(cls.basetestfile)
         cls.provider = cls.vl.dataProvider()
 
+        cls.basetestpolyfile = os.path.join(srcpath, 'delimited_wkt_poly.csv')
+
+        url = QUrl.fromLocalFile(cls.basetestpolyfile)
+        url.addQueryItem("crs", "epsg:4326")
+        url.addQueryItem("type", "csv")
+        url.addQueryItem("wktField", "wkt")
+        url.addQueryItem("spatialIndex", "no")
+        url.addQueryItem("subsetIndex", "no")
+        url.addQueryItem("watchFile", "no")
+
+        cls.vl_poly = QgsVectorLayer(url.toString(), u'test_polygon', u'delimitedtext')
+        assert cls.vl_poly.isValid(), "{} is invalid".format(cls.basetestpolyfile)
+        cls.poly_provider = cls.vl_poly.dataProvider()
+
     @classmethod
     def tearDownClass(cls):
         """Run after all tests"""
 
 
-class TestQgsDelimitedTextProviderOther(TestCase):
+class TestQgsDelimitedTextProviderOther(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        """Run before all tests"""
+        # toggle full ctest output to debug flaky CI test
+        print('CTEST_FULL_OUTPUT')
 
     def test_001_provider_defined(self):
         registry = QgsProviderRegistry.instance()
         metadata = registry.providerMetadata('delimitedtext')
         assert metadata is not None, "Delimited text provider is not installed"
-        assert sipversion == sipwanted, "SIP version " + sipversion + " -  require version " + sipwanted + " for delimited text tests"
 
     def test_002_load_csv_file(self):
         # CSV file parsing

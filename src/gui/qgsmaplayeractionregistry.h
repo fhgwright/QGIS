@@ -74,7 +74,7 @@ class GUI_EXPORT QgsMapLayerAction : public QAction
 
   signals:
     /** Triggered when action has been run for a specific list of features */
-    void triggeredForFeatures( QgsMapLayer* layer, const QList<QgsFeature> featureList );
+    void triggeredForFeatures( QgsMapLayer* layer, const QList<QgsFeature>& featureList );
 
     /** Triggered when action has been run for a specific feature */
     void triggeredForFeature( QgsMapLayer* layer, const QgsFeature& feature );
@@ -129,7 +129,7 @@ class GUI_EXPORT QgsMapLayerActionRegistry : public QObject
 
   protected:
     //! protected constructor
-    QgsMapLayerActionRegistry( QObject * parent = 0 );
+    QgsMapLayerActionRegistry( QObject * parent = nullptr );
 
     QList< QgsMapLayerAction* > mMapLayerActionList;
 

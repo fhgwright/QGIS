@@ -143,7 +143,7 @@ void TestQgsPaintEffect::initTestCase()
   registry->addEffectType( new QgsPaintEffectMetadata( "Dummy", "Dummy effect", DummyPaintEffect::create ) );
 
   QString myDataDir( TEST_DATA_DIR ); //defined in CmakeLists.txt
-  mTestDataDir = myDataDir + "/";
+  mTestDataDir = myDataDir + '/';
 }
 
 void TestQgsPaintEffect::cleanupTestCase()
@@ -254,13 +254,13 @@ void TestQgsPaintEffect::stackSaveRestore()
 
   //check if stack effect node was written
   QDomNodeList evalNodeList = effectParentElem.childNodes();
-  QCOMPARE( evalNodeList.length(), ( unsigned int )1 );
+  QCOMPARE( evalNodeList.count(), 1 );
   QDomElement effectElem = evalNodeList.at( 0 ).toElement();
   QCOMPARE( effectElem.attribute( "type" ), stack->type() );
 
   //should be two effect child nodes
   QDomNodeList childNodeList = effectElem.elementsByTagName( "effect" );
-  QCOMPARE( childNodeList.length(), ( unsigned int )2 );
+  QCOMPARE( childNodeList.count(), 2 );
   QCOMPARE( childNodeList.at( 0 ).toElement().attribute( "type" ), blur->type() );
   QCOMPARE( childNodeList.at( 1 ).toElement().attribute( "type" ), shadow->type() );
 
@@ -916,7 +916,7 @@ bool TestQgsPaintEffect::imageCheck( const QString& testName, QImage &image, int
   painter.end();
 
   mReport += "<h2>" + testName + "</h2>\n";
-  QString tempDir = QDir::tempPath() + "/";
+  QString tempDir = QDir::tempPath() + '/';
   QString fileName = tempDir + testName + ".png";
   imageWithBackground.save( fileName, "PNG" );
   QgsRenderChecker checker;

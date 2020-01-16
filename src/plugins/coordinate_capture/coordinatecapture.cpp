@@ -68,15 +68,15 @@ static const QgisPlugin::PLUGINTYPE sPluginType = QgisPlugin::UI;
  */
 CoordinateCapture::CoordinateCapture( QgisInterface * theQgisInterface )
     : QgisPlugin( sName, sDescription, sCategory, sPluginVersion, sPluginType )
-    , mpMapTool( NULL )
-    , mpTrackMouseButton( NULL )
-    , mpCaptureButton( NULL )
-    , mypUserCrsToolButton( NULL )
-    , mypCRSLabel( NULL )
+    , mpMapTool( nullptr )
+    , mpTrackMouseButton( nullptr )
+    , mpCaptureButton( nullptr )
+    , mypUserCrsToolButton( nullptr )
+    , mypCRSLabel( nullptr )
     , mCanvasDisplayPrecision( 5 )
     , mUserCrsDisplayPrecision( 5 )
     , mQGisIface( theQgisInterface )
-    , mQActionPointer( NULL )
+    , mQActionPointer( nullptr )
 {
 }
 
@@ -221,10 +221,10 @@ void CoordinateCapture::update( const QgsPoint& thePoint )
 {
   //this is the coordinate resolved back to lat / lon
   QgsPoint myUserCrsPoint = mTransform.transform( thePoint );
-  mpUserCrsEdit->setText( QString::number( myUserCrsPoint.x(), 'f', mUserCrsDisplayPrecision ) + "," +
+  mpUserCrsEdit->setText( QString::number( myUserCrsPoint.x(), 'f', mUserCrsDisplayPrecision ) + ',' +
                           QString::number( myUserCrsPoint.y(), 'f', mUserCrsDisplayPrecision ) );
   // This is the coordinate space of the map canvas
-  mpCanvasEdit->setText( QString::number( thePoint.x(), 'f', mCanvasDisplayPrecision ) + "," +
+  mpCanvasEdit->setText( QString::number( thePoint.x(), 'f', mCanvasDisplayPrecision ) + ',' +
                          QString::number( thePoint.y(), 'f', mCanvasDisplayPrecision ) );
 }
 void CoordinateCapture::copy()
@@ -233,10 +233,10 @@ void CoordinateCapture::copy()
   //if we are on x11 system put text into selection ready for middle button pasting
   if ( myClipboard->supportsSelection() )
   {
-    myClipboard->setText( mpUserCrsEdit->text() + "," + mpCanvasEdit->text(), QClipboard::Selection );
+    myClipboard->setText( mpUserCrsEdit->text() + ',' + mpCanvasEdit->text(), QClipboard::Selection );
   }
 
-  myClipboard->setText( mpUserCrsEdit->text() + "," + mpCanvasEdit->text(), QClipboard::Clipboard );
+  myClipboard->setText( mpUserCrsEdit->text() + ',' + mpCanvasEdit->text(), QClipboard::Clipboard );
 }
 
 
@@ -272,11 +272,11 @@ void CoordinateCapture::unload()
   mQGisIface->removeVectorToolBarIcon( mQActionPointer );
   mpMapTool->deactivate();
   delete mpMapTool;
-  mpMapTool = 0;
+  mpMapTool = nullptr;
   delete mpDockWidget;
-  mpDockWidget = 0;
+  mpDockWidget = nullptr;
   delete mQActionPointer;
-  mQActionPointer = 0;
+  mQActionPointer = nullptr;
 }
 
 // Set icons to the current theme

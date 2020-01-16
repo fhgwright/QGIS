@@ -69,6 +69,19 @@ class GUI_EXPORT QgsRendererV2Widget : public QWidget
      */
     const QgsVectorLayer* vectorLayer() const { return mLayer; }
 
+    /**
+     * This method should be called whenever the renderer is actually set on the layer.
+     */
+    void applyChanges();
+
+  signals:
+    /**
+     * Emitted when expression context variables on the associated
+     * vector layers have been changed. Will request the parent dialog
+     * to re-synchronize with the variables.
+     */
+    void layerVariablesChanged();
+
   protected:
     QgsVectorLayer* mLayer;
     QgsStyleV2* mStyle;
@@ -83,7 +96,7 @@ class GUI_EXPORT QgsRendererV2Widget : public QWidget
     virtual void refreshSymbolView() {}
 
   protected slots:
-    void  contextMenuViewCategories( const QPoint& p );
+    void  contextMenuViewCategories( QPoint p );
     /** Change color of selected symbols*/
     void changeSymbolColor();
     /** Change opacity of selected symbols*/
@@ -100,6 +113,13 @@ class GUI_EXPORT QgsRendererV2Widget : public QWidget
     virtual void copy() {}
     virtual void paste() {}
 
+  private:
+    /**
+     * This will be called whenever the renderer is set on a layer.
+     * This can be overwritten in subclasses.
+     */
+    virtual void apply();
+
 };
 
 
@@ -115,6 +135,7 @@ class QgsFields;
 /**
 Utility class for providing GUI for data-defined rendering.
 @deprecated unused, will be removed in QGIS 3.0
+@note not available in Python bindings
 */
 class QgsRendererV2DataDefinedMenus : public QObject
 {
@@ -122,6 +143,7 @@ class QgsRendererV2DataDefinedMenus : public QObject
 
   public:
 
+    //! @deprecated will be removed in QGIS 3.0
     Q_DECL_DEPRECATED QgsRendererV2DataDefinedMenus( QMenu* menu, QgsVectorLayer* layer, const QString& rotationField, const QString& sizeScaleField, QgsSymbolV2::ScaleMethod scaleMethod );
     ~QgsRendererV2DataDefinedMenus();
 
@@ -137,8 +159,8 @@ class QgsRendererV2DataDefinedMenus : public QObject
 
   signals:
 
-    void rotationFieldChanged( QString fldName );
-    void sizeScaleFieldChanged( QString fldName );
+    void rotationFieldChanged( const QString& fldName );
+    void sizeScaleFieldChanged( const QString& fldName );
     void scaleMethodChanged( QgsSymbolV2::ScaleMethod scaleMethod );
 
   protected:
@@ -214,8 +236,8 @@ class GUI_EXPORT QgsDataDefinedSizeDialog : public QgsDataDefinedValueDialog
         : QgsDataDefinedValueDialog( symbolList, layer, tr( "Size" ) )
     {
       init( tr( "Symbol size" ) );
-      if ( symbolList.length() && mLayer )
-        mDDBtn->setAssistant( tr( "Size Assistant..." ), new QgsSizeScaleWidget( mLayer, static_cast<const QgsMarkerSymbolV2*>( symbolList[0] ) ) );
+      if ( !symbolList.isEmpty() && symbolList.at( 0 ) && mLayer )
+        mDDBtn->setAssistant( tr( "Size Assistant..." ), new QgsSizeScaleWidget( mLayer, static_cast<const QgsMarkerSymbolV2*>( symbolList.at( 0 ) ) ) );
     }
 
   protected:

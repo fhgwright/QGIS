@@ -28,15 +28,51 @@ QgsDiagramLayerSettings::QgsDiagramLayerSettings()
     : placement( AroundPoint )
     , placementFlags( OnLine )
     , priority( 5 )
+    , zIndex( 0.0 )
     , obstacle( false )
     , dist( 0.0 )
-    , renderer( 0 )
-    , ct( 0 )
-    , xform( 0 )
+    , renderer( nullptr )
+    , ct( nullptr )
+    , xform( nullptr )
     , xPosColumn( -1 )
     , yPosColumn( -1 )
     , showAll( true )
 {
+}
+
+QgsDiagramLayerSettings::QgsDiagramLayerSettings( const QgsDiagramLayerSettings& rh )
+    : placement( rh.placement )
+    , placementFlags( rh.placementFlags )
+    , priority( rh.priority )
+    , zIndex( rh.zIndex )
+    , obstacle( rh.obstacle )
+    , dist( rh.dist )
+    , renderer( rh.renderer ? rh.renderer->clone() : nullptr )
+    , ct( rh.ct )
+    , xform( rh.xform )
+    , fields( rh.fields )
+    , xPosColumn( rh.xPosColumn )
+    , yPosColumn( rh.yPosColumn )
+    , showAll( rh.showAll )
+{
+}
+
+QgsDiagramLayerSettings&QgsDiagramLayerSettings::operator=( const QgsDiagramLayerSettings & rh )
+{
+  placement = rh.placement;
+  placementFlags = rh.placementFlags;
+  priority = rh.priority;
+  zIndex = rh.zIndex;
+  obstacle = rh.obstacle;
+  dist = rh.dist;
+  renderer = rh.renderer ? rh.renderer->clone() : nullptr;
+  ct = rh.ct;
+  xform = rh.xform;
+  fields = rh.fields;
+  xPosColumn = rh.xPosColumn;
+  yPosColumn = rh.yPosColumn;
+  showAll = rh.showAll;
+  return *this;
 }
 
 QgsDiagramLayerSettings::~QgsDiagramLayerSettings()
@@ -48,9 +84,10 @@ void QgsDiagramLayerSettings::readXML( const QDomElement& elem, const QgsVectorL
 {
   Q_UNUSED( layer )
 
-  placement = ( Placement )elem.attribute( "placement" ).toInt();
-  placementFlags = ( LinePlacementFlags )elem.attribute( "linePlacementFlags" ).toInt();
+  placement = static_cast< Placement >( elem.attribute( "placement" ).toInt() );
+  placementFlags = static_cast< LinePlacementFlags >( elem.attribute( "linePlacementFlags" ).toInt() );
   priority = elem.attribute( "priority" ).toInt();
+  zIndex = elem.attribute( "zIndex" ).toDouble();
   obstacle = elem.attribute( "obstacle" ).toInt();
   dist = elem.attribute( "dist" ).toDouble();
   xPosColumn = elem.attribute( "xPosColumn" ).toInt();
@@ -66,6 +103,7 @@ void QgsDiagramLayerSettings::writeXML( QDomElement& layerElem, QDomDocument& do
   diagramLayerElem.setAttribute( "placement", placement );
   diagramLayerElem.setAttribute( "linePlacementFlags", placementFlags );
   diagramLayerElem.setAttribute( "priority", priority );
+  diagramLayerElem.setAttribute( "zIndex", zIndex );
   diagramLayerElem.setAttribute( "obstacle", obstacle );
   diagramLayerElem.setAttribute( "dist", QString::number( dist ) );
   diagramLayerElem.setAttribute( "xPosColumn", xPosColumn );
@@ -182,7 +220,7 @@ void QgsDiagramSettings::readXML( const QDomElement& elem, const QgsVectorLayer*
   {
     // Restore old format attributes and colors
 
-    QStringList colorList = elem.attribute( "colors" ).split( "/" );
+    QStringList colorList = elem.attribute( "colors" ).split( '/' );
     QStringList::const_iterator colorIt = colorList.constBegin();
     for ( ; colorIt != colorList.constEnd(); ++colorIt )
     {
@@ -193,7 +231,7 @@ void QgsDiagramSettings::readXML( const QDomElement& elem, const QgsVectorLayer*
 
     //attribute indices
     categoryAttributes.clear();
-    QStringList catList = elem.attribute( "categories" ).split( "/" );
+    QStringList catList = elem.attribute( "categories" ).split( '/' );
     QStringList::const_iterator catIt = catList.constBegin();
     for ( ; catIt != catList.constEnd(); ++catIt )
     {
@@ -295,7 +333,7 @@ void QgsDiagramSettings::writeXML( QDomElement& rendererElem, QDomDocument& doc,
 }
 
 QgsDiagramRendererV2::QgsDiagramRendererV2()
-    : mDiagram( 0 )
+    : mDiagram( nullptr )
 {
 }
 
@@ -311,11 +349,11 @@ void QgsDiagramRendererV2::setDiagram( QgsDiagram* d )
 }
 
 QgsDiagramRendererV2::QgsDiagramRendererV2( const QgsDiagramRendererV2& other )
-    : mDiagram( other.mDiagram ? other.mDiagram->clone() : 0 )
+    : mDiagram( other.mDiagram ? other.mDiagram->clone() : nullptr )
 {
 }
 
-void QgsDiagramRendererV2::renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QPointF& pos )
+void QgsDiagramRendererV2::renderDiagram( const QgsFeature& feature, QgsRenderContext& c, QPointF pos )
 {
   if ( !mDiagram )
   {
@@ -392,7 +430,7 @@ void QgsDiagramRendererV2::_readXML( const QDomElement& elem, const QgsVectorLay
   }
   else
   {
-    mDiagram = 0;
+    mDiagram = nullptr;
   }
 }
 
@@ -415,7 +453,7 @@ QgsSingleCategoryDiagramRenderer::~QgsSingleCategoryDiagramRenderer()
 {
 }
 
-QgsDiagramRendererV2* QgsSingleCategoryDiagramRenderer::clone() const
+QgsSingleCategoryDiagramRenderer* QgsSingleCategoryDiagramRenderer::clone() const
 {
   return new QgsSingleCategoryDiagramRenderer( *this );
 }
@@ -469,7 +507,7 @@ QgsLinearlyInterpolatedDiagramRenderer::~QgsLinearlyInterpolatedDiagramRenderer(
 {
 }
 
-QgsDiagramRendererV2 *QgsLinearlyInterpolatedDiagramRenderer::clone() const
+QgsLinearlyInterpolatedDiagramRenderer* QgsLinearlyInterpolatedDiagramRenderer::clone() const
 {
   return new QgsLinearlyInterpolatedDiagramRenderer( *this );
 }
@@ -553,7 +591,7 @@ QList< QgsLayerTreeModelLegendNode* > QgsDiagramSettings::legendItems( QgsLayerT
   {
     QPixmap pix( 16, 16 );
     pix.fill( categoryColors[i] );
-    list << new QgsSimpleLegendNode( nodeLayer, categoryLabels[i], QIcon( pix ), 0, QString( "diagram_%1" ).arg( QString::number( i ) ) );
+    list << new QgsSimpleLegendNode( nodeLayer, categoryLabels[i], QIcon( pix ), nullptr, QString( "diagram_%1" ).arg( QString::number( i ) ) );
   }
   return list;
 }

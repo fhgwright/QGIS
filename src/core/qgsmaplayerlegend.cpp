@@ -98,7 +98,7 @@ QList<int> QgsMapLayerLegendUtils::legendNodeOrder( QgsLayerTreeLayer* nodeLayer
   int numNodes = _originalLegendNodeCount( nodeLayer );
 
   QList<int> lst;
-  Q_FOREACH ( const QString& item, orderStr.split( "," ) )
+  Q_FOREACH ( const QString& item, orderStr.split( ',' ) )
   {
     bool ok;
     int id = item.toInt( &ok );
@@ -244,7 +244,7 @@ QList<QgsLayerTreeModelLegendNode*> QgsDefaultRasterLayerLegend::createLayerTree
   }
 
   QgsLegendColorList rasterItemList = mLayer->legendSymbologyItems();
-  if ( rasterItemList.count() == 0 )
+  if ( rasterItemList.isEmpty() )
     return nodes;
 
   // Paletted raster may have many colors, for example UInt16 may have 65536 colors
@@ -284,7 +284,7 @@ QList<QgsLayerTreeModelLegendNode*> QgsDefaultPluginLayerLegend::createLayerTree
   QSize iconSize( 16, 16 );
   QgsLegendSymbologyList symbologyList = mLayer->legendSymbologyItems( iconSize );
 
-  if ( symbologyList.count() == 0 )
+  if ( symbologyList.isEmpty() )
     return nodes;
 
   typedef QPair<QString, QPixmap> XY;

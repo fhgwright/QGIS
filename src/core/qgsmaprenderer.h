@@ -182,7 +182,7 @@ class CORE_EXPORT QgsMapRenderer : public QObject
     //! starts rendering
     //! @param painter painter to render to
     //! @param forceWidthScale Force a specific scale factor for line widths and marker sizes. Automatically calculated from output device DPI if 0
-    void render( QPainter* painter, double* forceWidthScale = 0 );
+    void render( QPainter* painter, double* forceWidthScale = nullptr );
 
     //! sets extent and checks whether suitable (returns false if not)
     bool setExtent( const QgsRectangle& extent );
@@ -208,8 +208,8 @@ class CORE_EXPORT QgsMapRenderer : public QObject
     void setScale( double scale ) {mScale = scale;}
     double mapUnitsPerPixel() const { return mMapUnitsPerPixel; }
 
-    int width() const { return ( int ) mSize.width(); }
-    int height() const { return ( int ) mSize.height(); }
+    int width() const { return static_cast< int >( mSize.width() ); }
+    int height() const { return static_cast< int >( mSize.height() ); }
 
     //! Recalculate the map scale
     void updateScale();
@@ -306,7 +306,7 @@ class CORE_EXPORT QgsMapRenderer : public QObject
     //! Accessor for render context
     QgsRenderContext* rendererContext() {return &mRenderContext;}
 
-    //! Labeling engine (NULL if there's no custom engine)
+    //! Labeling engine (nullptr if there's no custom engine)
     QgsLabelingEngineInterface* labelingEngine() { return mLabelingEngine; }
 
     //! Set labeling engine. Previous engine (if any) is deleted.
@@ -314,9 +314,9 @@ class CORE_EXPORT QgsMapRenderer : public QObject
     void setLabelingEngine( QgsLabelingEngineInterface* iface );
 
     //! Returns a QPainter::CompositionMode corresponding to a BlendMode
-    static QPainter::CompositionMode getCompositionMode( const QgsMapRenderer::BlendMode &blendMode );
+    static QPainter::CompositionMode getCompositionMode( BlendMode blendMode );
     //! Returns a BlendMode corresponding to a QPainter::CompositionMode
-    static QgsMapRenderer::BlendMode getBlendModeEnum( const QPainter::CompositionMode &blendMode );
+    static QgsMapRenderer::BlendMode getBlendModeEnum( QPainter::CompositionMode blendMode );
 
     void addLayerCoordinateTransform( const QString& layerId, const QString& srcAuthId, const QString& destAuthId, int srcDatumTransform = -1, int destDatumTransform = -1 );
     void clearLayerCoordinateTransforms();
@@ -334,6 +334,15 @@ class CORE_EXPORT QgsMapRenderer : public QObject
      * also sets the contents of the r2 parameter
      */
     bool splitLayersExtent( QgsMapLayer* layer, QgsRectangle& extent, QgsRectangle& r2 );
+
+    /** Set a feature filter provider to filter the features shown in the map.
+     * @param ffp the feature filter provider
+     * @note added in QGIS 2.14
+     */
+    void setFeatureFilterProvider( const QgsFeatureFilterProvider* ffp )
+    {
+      mRenderContext.setFeatureFilterProvider( ffp );
+    }
 
   signals:
 
@@ -373,6 +382,7 @@ class CORE_EXPORT QgsMapRenderer : public QObject
     void rotationChanged( double );
 
     //! Notifies higher level components to show the datum transform dialog and add a QgsLayerCoordinateTransformInfo for that layer
+    //! @note not available in Python bindings
     void datumTransformInfoRequested( const QgsMapLayer* ml, const QString& srcAuthId, const QString& destAuthId ) const;
 
 
@@ -436,7 +446,7 @@ class CORE_EXPORT QgsMapRenderer : public QObject
     //!Output units
     OutputUnits mOutputUnits;
 
-    //! Labeling engine (NULL by default)
+    //! Labeling engine (nullptr by default)
     QgsLabelingEngineInterface* mLabelingEngine;
 
     //! Locks rendering loop for concurrent draws

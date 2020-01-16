@@ -96,18 +96,18 @@ class QgsWcsProvider : public QgsRasterDataProvider, QgsGdalProviderBase
 
   public:
     /**
-    * Constructor for the provider.
-    *
-    * \param   uri   HTTP URL of the Web Server.  If needed a proxy will be used
-    *                otherwise we contact the host directly.
-    *
-    */
-    explicit QgsWcsProvider( QString const & uri = 0 );
+     * Constructor for the provider.
+     *
+     * \param   uri   HTTP URL of the Web Server.  If needed a proxy will be used
+     *                otherwise we contact the host directly.
+     *
+     */
+    explicit QgsWcsProvider( QString const & uri = nullptr );
 
     //! Destructor
     virtual ~QgsWcsProvider();
 
-    QgsRasterInterface * clone() const override;
+    QgsWcsProvider * clone() const override;
 
     /** Get the QgsCoordinateReferenceSystem for this layer
      * @note Must be reimplemented by each provider.
@@ -157,7 +157,7 @@ class QgsWcsProvider : public QgsRasterDataProvider, QgsGdalProviderBase
     void getCache( int bandNo, QgsRectangle  const & viewExtent, int width, int height, QString crs = "" );
 
     /** Return the extent for this data layer
-    */
+     */
     virtual QgsRectangle extent() override;
 
     /** Returns true if layer is valid
@@ -208,16 +208,13 @@ class QgsWcsProvider : public QgsRasterDataProvider, QgsGdalProviderBase
     /** \brief emit a signal to notify of a progress event */
     void progressChanged( int theProgress, int theTotalSteps );
 
-    /** \brief emit a signal to be caught by qgisapp and display a msg on status bar */
-    void statusChanged( QString const &  theStatusQString );
-
     void dataChanged();
 
   private:
     void showMessageBox( const QString& title, const QString& text );
 
     // case insensitive attribute value lookup
-    static QString nodeAttribute( const QDomElement &e, QString name, QString defValue = QString::null );
+    static QString nodeAttribute( const QDomElement &e, const QString& name, const QString& defValue = QString::null );
 
     //! parse the WCS ServiceException XML element
     static void parseServiceException( QDomElement const &e, const QString& wcsVersion, QString& errorTitle, QString& errorText );
@@ -238,7 +235,7 @@ class QgsWcsProvider : public QgsRasterDataProvider, QgsGdalProviderBase
      *
      */
 
-    bool parseUri( QString uri );
+    bool parseUri( const QString& uri );
 
     /**
      * \brief Prepare the URI so that we can later simply append param=value
@@ -250,7 +247,7 @@ class QgsWcsProvider : public QgsRasterDataProvider, QgsGdalProviderBase
     QString coverageMetadata( const QgsWcsCoverageSummary& c );
 
     //! remove query item and replace it with a new value
-    void setQueryItem( QUrl &url, QString key, QString value );
+    void setQueryItem( QUrl &url, const QString& key, const QString& value );
 
     //! Release cache resources
     void clearCache();

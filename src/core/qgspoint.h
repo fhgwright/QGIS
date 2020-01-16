@@ -37,6 +37,7 @@ class CORE_EXPORT QgsVector
     QgsVector();
     QgsVector( double x, double y );
 
+    //! @note not available in Python bindings
     QgsVector operator-( void ) const;
     QgsVector operator*( double scalar ) const;
     QgsVector operator/( double scalar ) const;
@@ -49,6 +50,7 @@ class CORE_EXPORT QgsVector
     // perpendicular vector (rotated 90 degrees counter-clockwise)
     QgsVector perpVector() const;
 
+    //! @note not available in Python bindings
     double angle( void ) const;
     double angle( QgsVector v ) const;
     QgsVector rotateBy( double rot ) const;
@@ -82,7 +84,7 @@ class CORE_EXPORT QgsPoint
      * @param point QPointF source
      * @note added in QGIS 2.7
      */
-    QgsPoint( const QPointF& point )
+    QgsPoint( QPointF point )
         : m_x( point.x() ), m_y( point.y() )
     {}
 
@@ -90,7 +92,7 @@ class CORE_EXPORT QgsPoint
      * @param point QPoint source
      * @note added in QGIS 2.7
      */
-    QgsPoint( const QPoint& point )
+    QgsPoint( QPoint point )
         : m_x( point.x() ), m_y( point.y() )
     {}
 
@@ -194,7 +196,7 @@ class CORE_EXPORT QgsPoint
      * @param epsilon maximum difference for coordinates between the points
      * @returns true if points are equal within specified tolerance
      * @note added in QGIS 2.9
-    */
+     */
     bool compare( const QgsPoint &other, double epsilon = 4 * DBL_EPSILON ) const;
 
     //! equality operator
@@ -204,7 +206,7 @@ class CORE_EXPORT QgsPoint
     bool operator!=( const QgsPoint &other ) const;
 
     //! Multiply x and y by the given value
-    void multiply( const double& scalar );
+    void multiply( double scalar );
 
     //! Test if this point is on the segment defined by points a, b
     //! @return 0 if this point is not on the open ray through a and b,
@@ -216,10 +218,10 @@ class CORE_EXPORT QgsPoint
     QgsPoint & operator=( const QgsPoint &other );
 
     QgsVector operator-( const QgsPoint& p ) const { return QgsVector( m_x - p.m_x, m_y - p.m_y ); }
-    QgsPoint &operator+=( const QgsVector &v ) { *this = *this + v; return *this; }
-    QgsPoint &operator-=( const QgsVector &v ) { *this = *this - v; return *this; }
-    QgsPoint operator+( const QgsVector &v ) const { return QgsPoint( m_x + v.x(), m_y + v.y() ); }
-    QgsPoint operator-( const QgsVector &v ) const { return QgsPoint( m_x - v.x(), m_y - v.y() ); }
+    QgsPoint &operator+=( QgsVector v ) { *this = *this + v; return *this; }
+    QgsPoint &operator-=( QgsVector v ) { *this = *this - v; return *this; }
+    QgsPoint operator+( QgsVector v ) const { return QgsPoint( m_x + v.x(), m_y + v.y() ); }
+    QgsPoint operator-( QgsVector v ) const { return QgsPoint( m_x - v.x(), m_y - v.y() ); }
 
   private:
 
@@ -236,7 +238,7 @@ class CORE_EXPORT QgsPoint
 
 inline bool operator==( const QgsPoint &p1, const QgsPoint &p2 )
 {
-  if (( p1.x() == p2.x() ) && ( p1.y() == p2.y() ) )
+  if ( qgsDoubleNear( p1.x(), p2.x() ) && qgsDoubleNear( p1.y(), p2.y() ) )
     { return true; }
   else
     { return false; }
@@ -252,8 +254,8 @@ inline std::ostream& operator << ( std::ostream& os, const QgsPoint &p )
 inline uint qHash( const QgsPoint& p )
 {
   uint hash;
-  uint h1 = qHash(( quint64 )p.m_x );
-  uint h2 = qHash(( quint64 )p.m_y );
+  uint h1 = qHash( static_cast< quint64 >( p.m_x ) );
+  uint h2 = qHash( static_cast< quint64 >( p.m_y ) );
   hash = h1 ^( h2 << 1 );
   return hash;
 }

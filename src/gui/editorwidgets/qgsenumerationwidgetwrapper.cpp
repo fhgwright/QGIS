@@ -20,12 +20,12 @@
 
 QgsEnumerationWidgetWrapper::QgsEnumerationWidgetWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor, QWidget* parent )
     : QgsEditorWidgetWrapper( vl, fieldIdx, editor, parent )
-    , mComboBox( NULL )
+    , mComboBox( nullptr )
 {
 }
 
 
-QVariant QgsEnumerationWidgetWrapper::value()
+QVariant QgsEnumerationWidgetWrapper::value() const
 {
   QVariant value;
 
@@ -57,7 +57,7 @@ void QgsEnumerationWidgetWrapper::initWidget( QWidget* editor )
   }
 }
 
-bool QgsEnumerationWidgetWrapper::valid()
+bool QgsEnumerationWidgetWrapper::valid() const
 {
   return mComboBox;
 }

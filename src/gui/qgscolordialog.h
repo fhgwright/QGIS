@@ -46,9 +46,9 @@ class GUI_EXPORT QgsColorDialog : public QObject
      * @return Selected color on accepted() or initialColor on rejected().
      */
     static QColor getLiveColor( const QColor& initialColor, QObject* updateObject, const char* updateSlot,
-                                QWidget* parent = 0,
+                                QWidget* parent = nullptr,
                                 const QString& title = "",
-                                const QColorDialog::ColorDialogOptions& options = 0 );
+                                const QColorDialog::ColorDialogOptions& options = nullptr );
 };
 
 
@@ -71,7 +71,7 @@ class GUI_EXPORT QgsColorDialogV2 : public QDialog, private Ui::QgsColorDialogBa
      * @param fl window flags
      * @param color initial color for dialog
      */
-    QgsColorDialogV2( QWidget *parent = 0, const Qt::WindowFlags& fl = QgisGui::ModalDialogFlags,
+    QgsColorDialogV2( QWidget *parent = nullptr, const Qt::WindowFlags& fl = QgisGui::ModalDialogFlags,
                       const QColor& color = QColor() );
 
     ~QgsColorDialogV2();
@@ -103,7 +103,7 @@ class GUI_EXPORT QgsColorDialogV2 : public QDialog, private Ui::QgsColorDialogBa
      * @see getColor
      */
     static QColor getLiveColor( const QColor& initialColor, QObject* updateObject, const char* updateSlot,
-                                QWidget* parent = 0,
+                                QWidget* parent = nullptr,
                                 const QString& title = QString(),
                                 const bool allowAlpha = true );
 
@@ -191,7 +191,7 @@ class GUI_EXPORT QgsColorDialogV2 : public QDialog, private Ui::QgsColorDialogBa
      * @param takeSample set to true to actually sample the color, false to just cancel
      * the color picking operation
      */
-    void stopPicking( const QPoint& eventPos, const bool takeSample = true );
+    void stopPicking( QPoint eventPos, const bool takeSample = true );
 
     /** Returns the average color from the pixels in an image
      * @param image image to sample
@@ -203,7 +203,7 @@ class GUI_EXPORT QgsColorDialogV2 : public QDialog, private Ui::QgsColorDialogBa
      * @param point position of color to sample
      * @returns average color from sampled position
      */
-    QColor sampleColor( const QPoint &point ) const;
+    QColor sampleColor( QPoint point ) const;
 
     /** Repopulates the scheme combo box with current color schemes
      */

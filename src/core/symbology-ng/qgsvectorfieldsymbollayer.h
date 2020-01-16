@@ -54,11 +54,11 @@ class CORE_EXPORT QgsVectorFieldSymbolLayer: public QgsMarkerSymbolLayerV2
     bool setSubSymbol( QgsSymbolV2* symbol ) override;
     QgsSymbolV2* subSymbol() override { return mLineSymbol; }
 
-    void renderPoint( const QPointF& point, QgsSymbolV2RenderContext& context ) override;
+    void renderPoint( QPointF point, QgsSymbolV2RenderContext& context ) override;
     void startRender( QgsSymbolV2RenderContext& context ) override;
     void stopRender( QgsSymbolV2RenderContext& context ) override;
 
-    QgsSymbolLayerV2* clone() const override;
+    QgsVectorFieldSymbolLayer* clone() const override;
     QgsStringMap properties() const override;
 
     void toSld( QDomDocument& doc, QDomElement &element, const QgsStringMap& props ) const override;

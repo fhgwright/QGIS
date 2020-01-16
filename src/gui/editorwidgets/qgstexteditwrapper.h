@@ -30,23 +30,23 @@
  * <li><b>IsMultiline</b> <i>If set to True, a multiline widget will be used.</i></li>
  * <li><b>UseHtml</b> <i>Will represent the content as HTML. Only available for multiline widgets.</i></li>
  * </ul>
- *
+ * \note not available in Python bindings
  */
 
 class GUI_EXPORT QgsTextEditWrapper : public QgsEditorWidgetWrapper
 {
     Q_OBJECT
   public:
-    explicit QgsTextEditWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor = 0, QWidget* parent = 0 );
+    explicit QgsTextEditWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor = nullptr, QWidget* parent = nullptr );
 
     // QgsEditorWidgetWrapper interface
   public:
-    QVariant value() override;
+    QVariant value() const override;
 
   protected:
     QWidget*createWidget( QWidget* parent ) override;
     void initWidget( QWidget* editor ) override;
-    bool valid() override;
+    bool valid() const override;
 
   public slots:
     void setValue( const QVariant& value ) override;

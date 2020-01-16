@@ -23,7 +23,7 @@
 #include <QFontDialog>
 #include <QWidget>
 
-QgsComposerScaleBarWidget::QgsComposerScaleBarWidget( QgsComposerScaleBar* scaleBar ): QgsComposerItemBaseWidget( 0, scaleBar ), mComposerScaleBar( scaleBar )
+QgsComposerScaleBarWidget::QgsComposerScaleBarWidget( QgsComposerScaleBar* scaleBar ): QgsComposerItemBaseWidget( nullptr, scaleBar ), mComposerScaleBar( scaleBar )
 {
   setupUi( this );
   connectUpdateSignal();
@@ -111,7 +111,7 @@ void QgsComposerScaleBarWidget::refreshMapComboBox()
 
     if ( saveCurrentComboText.isEmpty() && mComposerScaleBar->composerMap() )
     {
-      //combo box was not initialised before
+      //combo box was not initialized before
       mMapComboBox->setCurrentIndex( mMapComboBox->findText( tr( "Map %1" ).arg( mComposerScaleBar->composerMap()->id() ) ) );
     }
   }
@@ -149,7 +149,7 @@ void QgsComposerScaleBarWidget::on_mMapComboBox_activated( const QString& text )
   //extract id
   int id;
   bool conversionOk;
-  QStringList textSplit = text.split( " " );
+  QStringList textSplit = text.split( ' ' );
   if ( textSplit.size() < 1 )
   {
     return;

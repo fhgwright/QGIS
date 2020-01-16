@@ -39,8 +39,10 @@
 
 // ------------------------------ Model ------------------------------------
 
+///@cond PRIVATE
+
 QgsGraduatedSymbolRendererV2Model::QgsGraduatedSymbolRendererV2Model( QObject * parent ) : QAbstractItemModel( parent )
-    , mRenderer( 0 )
+    , mRenderer( nullptr )
     , mMimeFormat( "application/x-qgsgraduatedsymbolrendererv2model" )
 {
 }
@@ -50,7 +52,7 @@ void QgsGraduatedSymbolRendererV2Model::setRenderer( QgsGraduatedSymbolRendererV
   if ( mRenderer )
   {
     beginRemoveRows( QModelIndex(), 0, mRenderer->ranges().size() - 1 );
-    mRenderer = 0;
+    mRenderer = nullptr;
     endRemoveRows();
   }
   if ( renderer )
@@ -134,8 +136,10 @@ QVariant QgsGraduatedSymbolRendererV2Model::data( const QModelIndex &index, int 
         if ( decimalPlaces < 0 ) decimalPlaces = 0;
         return QString::number( range.lowerValue(), 'f', decimalPlaces ) + " - " + QString::number( range.upperValue(), 'f', decimalPlaces );
       }
-      case 2: return range.label();
-      default: return QVariant();
+      case 2:
+        return range.label();
+      default:
+        return QVariant();
     }
   }
   else if ( role == Qt::DecorationRole && index.column() == 0 && range.symbol() )
@@ -151,8 +155,10 @@ QVariant QgsGraduatedSymbolRendererV2Model::data( const QModelIndex &index, int 
     switch ( index.column() )
     {
         // case 1: return rangeStr;
-      case 2: return range.label();
-      default: return QVariant();
+      case 2:
+        return range.label();
+      default:
+        return QVariant();
     }
   }
 
@@ -178,7 +184,6 @@ bool QgsGraduatedSymbolRendererV2Model::setData( const QModelIndex & index, cons
   {
     case 1: // range
       return false; // range is edited in popup dialog
-      break;
     case 2: // label
       mRenderer->updateRangeLabel( index.row(), value.toString() );
       break;
@@ -194,7 +199,8 @@ QVariant QgsGraduatedSymbolRendererV2Model::headerData( int section, Qt::Orienta
 {
   if ( orientation == Qt::Horizontal && role == Qt::DisplayRole && section >= 0 && section < 3 )
   {
-    QStringList lst; lst << tr( "Symbol" ) << tr( "Values" ) << tr( "Legend" );
+    QStringList lst;
+    lst << tr( "Symbol" ) << tr( "Values" ) << tr( "Legend" );
     return lst.value( section );
   }
   return QVariant();
@@ -373,6 +379,8 @@ void QgsGraduatedSymbolRendererV2ViewStyle::drawPrimitive( PrimitiveElement elem
   QProxyStyle::drawPrimitive( element, option, painter, widget );
 }
 
+///@endcond
+
 // ------------------------------ Widget ------------------------------------
 
 QgsRendererV2Widget* QgsGraduatedSymbolRendererV2Widget::create( QgsVectorLayer* layer, QgsStyleV2* style, QgsFeatureRendererV2* renderer )
@@ -387,7 +395,7 @@ static QgsExpressionContext _getExpressionContext( const void* context )
   QgsExpressionContext expContext;
   expContext << QgsExpressionContextUtils::globalScope()
   << QgsExpressionContextUtils::projectScope()
-  << QgsExpressionContextUtils::atlasScope( 0 );
+  << QgsExpressionContextUtils::atlasScope( nullptr );
 
   if ( widget->mapCanvas() )
   {
@@ -407,8 +415,8 @@ static QgsExpressionContext _getExpressionContext( const void* context )
 
 QgsGraduatedSymbolRendererV2Widget::QgsGraduatedSymbolRendererV2Widget( QgsVectorLayer* layer, QgsStyleV2* style, QgsFeatureRendererV2* renderer )
     : QgsRendererV2Widget( layer, style )
-    , mRenderer( 0 )
-    , mModel( 0 )
+    , mRenderer( nullptr )
+    , mModel( nullptr )
 {
 
 
@@ -614,7 +622,7 @@ void QgsGraduatedSymbolRendererV2Widget::updateUiFromRenderer( bool updateCount 
   else
   {
     methodComboBox->setCurrentIndex( 1 );
-    if ( mRenderer->ranges().count() ) // avoid overiding default size with zeros
+    if ( !mRenderer->ranges().isEmpty() ) // avoid overiding default size with zeros
     {
       minSizeSpinBox->setValue( mRenderer->minSymbolSize() );
       maxSizeSpinBox->setValue( mRenderer->maxSymbolSize() );
@@ -650,7 +658,7 @@ void QgsGraduatedSymbolRendererV2Widget::on_methodComboBox_currentIndexChanged( 
     mRenderer->setGraduatedMethod( QgsGraduatedSymbolRendererV2::GraduatedColor );
     QgsVectorColorRampV2* ramp = cboGraduatedColorRamp->currentColorRamp();
 
-    if ( ramp == NULL )
+    if ( !ramp )
     {
       if ( cboGraduatedColorRamp->count() == 0 )
         QMessageBox::critical( this, tr( "Error" ), tr( "There are no available color ramps. You can add them in Style Manager." ) );
@@ -721,7 +729,7 @@ void QgsGraduatedSymbolRendererV2Widget::classifyGraduated()
   {
     QgsVectorColorRampV2* ramp = cboGraduatedColorRamp->currentColorRamp();
 
-    if ( ramp == NULL )
+    if ( !ramp )
     {
       if ( cboGraduatedColorRamp->count() == 0 )
         QMessageBox::critical( this, tr( "Error" ), tr( "There are no available color ramps. You can add them in Style Manager." ) );
@@ -733,7 +741,7 @@ void QgsGraduatedSymbolRendererV2Widget::classifyGraduated()
   }
   else
   {
-    mRenderer->setSourceColorRamp( NULL );
+    mRenderer->setSourceColorRamp( nullptr );
   }
 
   QApplication::setOverrideCursor( Qt::WaitCursor );
@@ -752,7 +760,7 @@ void QgsGraduatedSymbolRendererV2Widget::classifyGraduated()
 void QgsGraduatedSymbolRendererV2Widget::reapplyColorRamp()
 {
   QgsVectorColorRampV2* ramp = cboGraduatedColorRamp->currentColorRamp();
-  if ( ramp == NULL )
+  if ( !ramp )
     return;
 
   mRenderer->updateColorRamp( ramp, cbxInvertedColorRamp->isChecked() );
@@ -772,7 +780,7 @@ void QgsGraduatedSymbolRendererV2Widget::changeGraduatedSymbol()
   // Change the selected symbols alone if anything is selected
   QItemSelectionModel* m = viewGraduated->selectionModel();
   QModelIndexList i = m->selectedRows();
-  if ( m && i.size() > 0 )
+  if ( m && !i.isEmpty() )
   {
     changeSelectedSymbols();
     return;
@@ -869,7 +877,7 @@ void QgsGraduatedSymbolRendererV2Widget::changeSelectedSymbols()
 {
   QItemSelectionModel* m = viewGraduated->selectionModel();
   QModelIndexList selectedIndexes = m->selectedRows( 1 );
-  if ( m && selectedIndexes.size() > 0 )
+  if ( m && !selectedIndexes.isEmpty() )
   {
     QgsSymbolV2* newSymbol = mGraduatedSymbol->clone();
     QgsSymbolV2SelectorDialog dlg( newSymbol, mStyle, mLayer, this );
@@ -1047,13 +1055,13 @@ QList<QgsSymbolV2*> QgsGraduatedSymbolRendererV2Widget::selectedSymbols()
 
   QItemSelectionModel* m = viewGraduated->selectionModel();
   QModelIndexList selectedIndexes = m->selectedRows( 1 );
-  if ( m && selectedIndexes.size() > 0 )
+  if ( m && !selectedIndexes.isEmpty() )
   {
     const QgsRangeList& ranges = mRenderer->ranges();
     QModelIndexList::const_iterator indexIt = selectedIndexes.constBegin();
     for ( ; indexIt != selectedIndexes.constEnd(); ++indexIt )
     {
-      QStringList list = m->model()->data( *indexIt ).toString().split( " " );
+      QStringList list = m->model()->data( *indexIt ).toString().split( ' ' );
       if ( list.size() < 3 )
       {
         continue;
@@ -1081,7 +1089,7 @@ QgsSymbolV2* QgsGraduatedSymbolRendererV2Widget::findSymbolForRange( double lowe
       return it->symbol();
     }
   }
-  return 0;
+  return nullptr;
 }
 
 void QgsGraduatedSymbolRendererV2Widget::refreshSymbolView()

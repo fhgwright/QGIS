@@ -119,6 +119,7 @@ void usage( std::string const & appName )
             << "\t[--project projectfile]\tload the given QGIS project\n"
             << "\t[--extent xmin,ymin,xmax,ymax]\tset initial map extent\n"
             << "\t[--nologo]\thide splash screen\n"
+            << "\t[--noversioncheck]\tdon't check for new version of QGIS at startup"
             << "\t[--noplugins]\tdon't restore plugins on startup\n"
             << "\t[--nocustomization]\tdon't apply GUI customization\n"
             << "\t[--customizationfile]\tuse the given ini file as GUI customization\n"
@@ -133,7 +134,8 @@ void usage( std::string const & appName )
             << "\t[--dxf-scale-denom scale]\tscale for dxf output\n"
             << "\t[--dxf-encoding encoding]\tencoding to use for dxf output\n"
             << "\t[--dxf-preset visiblity-preset]\tlayer visibility preset to use for dxf output\n"
-            << "\t[--help]\t\tthis text\n\n"
+            << "\t[--help]\t\tthis text\n"
+            << "\t[--]\t\ttreat all following arguments as FILEs\n\n"
             << "  FILE:\n"
             << "    Files specified on the command line can include rasters,\n"
             << "    vectors, and QGIS project files (.qgs): \n"
@@ -211,7 +213,7 @@ static void dumpBacktrace( unsigned int depth )
       }
 
       close( fd[1] );        // close writing end
-      execl( "/usr/bin/c++filt", "c++filt", ( char * ) 0 );
+      execl( "/usr/bin/c++filt", "c++filt", static_cast< char * >( nullptr ) );
       perror( "could not start c++filt" );
       exit( 1 );
     }
@@ -256,7 +258,7 @@ static void dumpBacktrace( unsigned int depth )
   SymSetOptions( SYMOPT_DEFERRED_LOADS | SYMOPT_INCLUDE_32BIT_MODULES | SYMOPT_UNDNAME );
   SymInitialize( GetCurrentProcess(), "http://msdl.microsoft.com/download/symbols;http://download.osgeo.org/osgeo4w/symstore", TRUE );
 
-  unsigned short nFrames = CaptureStackBackTrace( 1, depth, buffer, NULL );
+  unsigned short nFrames = CaptureStackBackTrace( 1, depth, buffer, nullptr );
   SYMBOL_INFO *symbol = ( SYMBOL_INFO * ) qgsMalloc( sizeof( SYMBOL_INFO ) + 256 );
   symbol->MaxNameLen = 255;
   symbol->SizeOfStruct = sizeof( SYMBOL_INFO );
@@ -456,7 +458,7 @@ int main( int argc, char *argv[] )
 #endif
 
   // initialize random number seed
-  qsrand( time( NULL ) );
+  qsrand( time( nullptr ) );
 
   /////////////////////////////////////////////////////////////////
   // Command line options 'behaviour' flag setup
@@ -475,6 +477,7 @@ int main( int argc, char *argv[] )
   int mySnapshotHeight = 600;
 
   bool myHideSplash = false;
+  bool mySkipVersionCheck = false;
 #if defined(ANDROID)
   QgsDebugMsg( QString( "Android: Splash hidden" ) );
   myHideSplash = true;
@@ -542,6 +545,10 @@ int main( int argc, char *argv[] )
       {
         myHideSplash = true;
       }
+      else if ( arg == "--noversioncheck" || arg == "-V" )
+      {
+        mySkipVersionCheck = true;
+      }
       else if ( arg == "--noplugins" || arg == "-P" )
       {
         myRestorePlugins = false;
@@ -606,7 +613,7 @@ int main( int argc, char *argv[] )
       {
         QgsLocaleNumC l;
         QString ext( args[++i] );
-        QStringList coords( ext.split( "," ) );
+        QStringList coords( ext.split( ',' ) );
 
         if ( coords.size() != 4 )
         {
@@ -683,6 +690,11 @@ int main( int argc, char *argv[] )
       {
         dxfPreset = args[++i];
       }
+      else if ( arg == "--" )
+      {
+        for ( i++; i < args.size(); ++i )
+          myFileList.append( QDir::toNativeSeparators( QFileInfo( args[i] ).absoluteFilePath() ) );
+      }
       else
       {
         myFileList.append( QDir::toNativeSeparators( QFileInfo( args[i] ).absoluteFilePath() ) );
@@ -720,7 +732,7 @@ int main( int argc, char *argv[] )
   /////////////////////////////////////////////////////////////////////
 
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC) && !defined(ANDROID)
-  bool myUseGuiFlag = getenv( "DISPLAY" ) != 0;
+  bool myUseGuiFlag = nullptr != getenv( "DISPLAY" );
 #else
   bool myUseGuiFlag = true;
 #endif
@@ -750,10 +762,7 @@ int main( int argc, char *argv[] )
 
   QgsApplication myApp( argc, argv, myUseGuiFlag, configpath );
 
-// (if Windows/Mac, use icon from resource)
-#if !defined(Q_OS_WIN) && !defined(Q_OS_MAC)
-  myApp.setWindowIcon( QIcon( QgsApplication::iconsPath() + "qgis-icon-60x60.png" ) );
-#endif
+  myApp.setWindowIcon( QIcon( QgsApplication::appIconPath() ) );
 
   //
   // Set up the QSettings environment must be done after qapp is created
@@ -937,8 +946,8 @@ int main( int argc, char *argv[] )
     }
   }
 
-  QTranslator qgistor( 0 );
-  QTranslator qttor( 0 );
+  QTranslator qgistor( nullptr );
+  QTranslator qttor( nullptr );
   if ( myTranslationCode != "C" )
   {
     if ( qgistor.load( QString( "qgis_" ) + myTranslationCode, i18nPath ) )
@@ -1029,7 +1038,7 @@ int main( int argc, char *argv[] )
   // this should be done in QgsApplication::init() but it doesn't know the settings dir.
   QgsApplication::setMaxThreads( QSettings().value( "/qgis/max_threads", -1 ).toInt() );
 
-  QgisApp *qgis = new QgisApp( mypSplash, myRestorePlugins ); // "QgisApp" used to find canonical instance
+  QgisApp *qgis = new QgisApp( mypSplash, myRestorePlugins, mySkipVersionCheck ); // "QgisApp" used to find canonical instance
   qgis->setObjectName( "QgisApp" );
 
   myApp.connect(
@@ -1115,7 +1124,7 @@ int main( int argc, char *argv[] )
   {
 #ifdef Q_OS_WIN
     //replace backslashes with forward slashes
-    pythonfile.replace( "\\", "/" );
+    pythonfile.replace( '\\', '/' );
 #endif
     QgsPythonRunner::run( QString( "execfile('%1')" ).arg( pythonfile ) );
   }
@@ -1129,7 +1138,7 @@ int main( int argc, char *argv[] )
       rendered properly.
 
       It looks like you don't run the event loop in non-interactive mode, so the
-      event is never occuring.
+      event is never occurring.
 
       To achieve this without running the event loop: show the window, then call
       qApp->processEvents(), grab the pixmap, save it, hide the window and exit.
@@ -1169,7 +1178,7 @@ int main( int argc, char *argv[] )
     }
     else
     {
-      Q_FOREACH ( QgsMapLayer *ml, QgsMapLayerRegistry::instance()->mapLayers().values() )
+      Q_FOREACH ( QgsMapLayer *ml, QgsMapLayerRegistry::instance()->mapLayers() )
       {
         QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( ml );
         if ( !vl )

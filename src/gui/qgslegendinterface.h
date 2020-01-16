@@ -108,7 +108,7 @@ class GUI_EXPORT QgsLegendInterface : public QObject
     void groupRelationsChanged();
 
     /* //! emitted when an item (group/layer) is added */
-    void itemAdded( QModelIndex index );
+    void itemAdded( const QModelIndex& index );
 
     /* //! emitted when an item (group/layer) is removed */
     void itemRemoved();
@@ -121,7 +121,7 @@ class GUI_EXPORT QgsLegendInterface : public QObject
 
     //! Add a new group
     //! a parent group can be given to nest the new group in it
-    virtual int addGroup( const QString& name, bool expand = true, QTreeWidgetItem* parent = 0 ) = 0;
+    virtual int addGroup( const QString& name, bool expand = true, QTreeWidgetItem* parent = nullptr ) = 0;
 
     //! Add a new group
     //! a parent group index has to be given to nest the new group in it

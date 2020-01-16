@@ -31,7 +31,7 @@ QgsTextDiagram::~QgsTextDiagram()
 {
 }
 
-QgsDiagram* QgsTextDiagram::clone() const
+QgsTextDiagram* QgsTextDiagram::clone() const
 {
   return new QgsTextDiagram( *this );
 }
@@ -102,7 +102,7 @@ QSizeF QgsTextDiagram::diagramSize( const QgsAttributes& attributes, const QgsRe
   return s.size;
 }
 
-void QgsTextDiagram::renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QgsDiagramSettings& s, const QPointF& position )
+void QgsTextDiagram::renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QgsDiagramSettings& s, QPointF position )
 {
   QPainter* p = c.painter();
   if ( !p )
@@ -118,7 +118,7 @@ void QgsTextDiagram::renderDiagram( const QgsFeature& feature, QgsRenderContext&
   double baseX = position.x();
   double baseY = position.y() - h;
 
-  QList<QPointF> textPositions; //midpoints for text placement
+  QVector<QPointF> textPositions; //midpoints for text placement
   int nCategories = s.categoryAttributes.size();
   for ( int i = 0; i < nCategories; ++i )
   {
@@ -146,7 +146,8 @@ void QgsTextDiagram::renderDiagram( const QgsFeature& feature, QgsRenderContext&
     //draw separator lines
     QList<QPointF> intersect; //intersections between shape and separation lines
     QPointF center( baseX + w / 2.0, baseY + h / 2.0 );
-    double r1 = w / 2.0; double r2 = h / 2.0;
+    double r1 = w / 2.0;
+    double r2 = h / 2.0;
 
     for ( int i = 1; i < nCategories; ++i )
     {
@@ -254,7 +255,7 @@ void QgsTextDiagram::renderDiagram( const QgsFeature& feature, QgsRenderContext&
   }
 }
 
-void QgsTextDiagram::lineEllipseIntersection( const QPointF& lineStart, const QPointF& lineEnd, const QPointF& ellipseMid, double r1, double r2, QList<QPointF>& result ) const
+void QgsTextDiagram::lineEllipseIntersection( QPointF lineStart, QPointF lineEnd, QPointF ellipseMid, double r1, double r2, QList<QPointF>& result ) const
 {
   result.clear();
 

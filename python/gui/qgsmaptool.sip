@@ -9,8 +9,6 @@
 #include <qgsmaptoolidentify.h>
 %End
 
-%Feature HAVE_TOUCH
-
 class QgsMapTool : QObject
 {
 %TypeHeaderCode
@@ -19,15 +17,15 @@ class QgsMapTool : QObject
 
 %ConvertToSubClassCode
   if (dynamic_cast<QgsMapToolZoom*>(sipCpp) != NULL)
-    sipClass = sipClass_QgsMapToolZoom;
+    sipType = sipType_QgsMapToolZoom;
   else if (dynamic_cast<QgsMapToolPan*>(sipCpp) != NULL)
-    sipClass = sipClass_QgsMapToolPan;
+    sipType = sipType_QgsMapToolPan;
   else if (dynamic_cast<QgsMapToolEmitPoint*>(sipCpp) != NULL)
-    sipClass = sipClass_QgsMapToolEmitPoint;
+    sipType = sipType_QgsMapToolEmitPoint;
   else if (dynamic_cast<QgsMapToolIdentify*>(sipCpp) != NULL)
-    sipClass = sipClass_QgsMapToolIdentify;
+    sipType = sipType_QgsMapToolIdentify;
   else
-    sipClass = NULL;
+    sipType = NULL;
 %End
 
   public:
@@ -126,7 +124,7 @@ class QgsMapTool : QObject
 
   signals:
     //! emit a message
-    void messageEmitted( QString message, QgsMessageBar::MessageLevel = QgsMessageBar::INFO );
+    void messageEmitted( const QString& message, QgsMessageBar::MessageLevel = QgsMessageBar::INFO );
 
     //! emit signal to clear previous message
     void messageDiscarded();
@@ -143,16 +141,20 @@ class QgsMapTool : QObject
     QgsMapTool( QgsMapCanvas* canvas /TransferThis/ );
 
     //! transformation from screen coordinates to map coordinates
-    QgsPoint toMapCoordinates( const QPoint& point );
+    QgsPoint toMapCoordinates( QPoint point );
 
     //! transformation from screen coordinates to layer's coordinates
-    QgsPoint toLayerCoordinates( QgsMapLayer* layer, const QPoint& point );
+    QgsPoint toLayerCoordinates( QgsMapLayer* layer, QPoint point );
 
     //! transformation from map coordinates to layer's coordinates
     QgsPoint toLayerCoordinates( QgsMapLayer* layer, const QgsPoint& point );
 
     //!transformation from layer's coordinates to map coordinates (which is different in case reprojection is used)
     QgsPoint toMapCoordinates( QgsMapLayer* layer, const QgsPoint& point );
+
+    //!transformation from layer's coordinates to map coordinates (which is different in case reprojection is used)
+    //! @note available in python bindings as toMapCoordinatesV2
+    QgsPointV2 toMapCoordinates( QgsMapLayer* layer, const QgsPointV2 &point ) /PyName=toMapCoordinatesV2/;
 
     //! trnasformation of the rect from map coordinates to layer's coordinates
     QgsRectangle toLayerCoordinates( QgsMapLayer* layer, const QgsRectangle& rect );

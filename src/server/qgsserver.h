@@ -47,16 +47,28 @@
 class SERVER_EXPORT QgsServer
 {
   public:
+    /**
+     * Standard ctor for CGI/FCGI
+     * @note Not available in Python bindings
+     */
+    QgsServer( int & argc, char ** argv );
+    //! The following is mainly for python bindings, that do not pass argc/argv
     QgsServer();
     ~QgsServer();
-    /** Server initialisation: intialise QGIS ang QT core application.
-     * This method is automatically called by handleRequest if it wasn't
-     * explicitly called before
+
+    /** Server initialization: intialise QGIS ang QT core application.
      * @note Not available in Python bindings
      */
     static bool init( int & argc, char ** argv );
     //! The following is mainly for python bindings, that do not pass argc/argv
     static bool init();
+
+    /** Set environment variable
+     * @param var environment variable name
+     * @param val value
+     * @note added in 2.14
+     */
+    void putenv( const QString &var, const QString &val );
 
     /** Handles the request. The output is normally printed trough FCGI printf
      * by the request handler or, in case the server has been invoked from python
@@ -69,14 +81,15 @@ class SERVER_EXPORT QgsServer
      * @param queryString optional QString containing the query string
      * @return the response headers and body QPair of QByteArray if called from python bindings, empty otherwise
      */
-    QPair<QByteArray, QByteArray> handleRequest( const QString queryString = QString( ) );
-    /* The following code was used to test type conversion in python bindings
+    QPair<QByteArray, QByteArray> handleRequest( const QString& queryString = QString() );
+#if 0
+    // The following code was used to test type conversion in python bindings
     QPair<QByteArray, QByteArray> testQPair( QPair<QByteArray, QByteArray> pair );
-    */
+#endif
 
     /** Returns a pointer to the server interface */
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
-    QgsServerInterfaceImpl* serverInterface( ) { return mServerInterface; }
+    QgsServerInterfaceImpl* serverInterface() { return sServerInterface; }
 #endif
 
   private:
@@ -96,23 +109,25 @@ class SERVER_EXPORT QgsServer
     static QFileInfo defaultAdminSLD();
     static void setupNetworkAccessManager();
     //! Create and return a request handler instance
-    static QgsRequestHandler* createRequestHandler(
-      const bool captureOutput = FALSE );
+    static QgsRequestHandler* createRequestHandler( const bool captureOutput = false );
 
-    // Server status
-    static QString mConfigFilePath;
-    static QgsCapabilitiesCache* mCapabilitiesCache;
-    static QgsMapRenderer* mMapRenderer;
+    // Return the server name
+    static QString &serverName();
+
+    // Status
+    static QString* sConfigFilePath;
+    static QgsCapabilitiesCache* sCapabilitiesCache;
+    static QgsMapRenderer* sMapRenderer;
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
-    static QgsServerInterfaceImpl* mServerInterface;
-    static bool mInitPython;
+    static QgsServerInterfaceImpl* sServerInterface;
+    static bool sInitPython;
 #endif
-    static bool mInitialised;
-    static QString mServerName;
-    static char* mArgv[1];
-    static int mArgc;
-    static QgsApplication* mQgsApplication;
-    static bool mCaptureOutput;
+    //! Initialization must run once for all servers
+    static bool sInitialised;
+    static char* sArgv[1];
+    static int sArgc;
+    static QgsApplication* sQgsApplication;
+    static bool sCaptureOutput;
 };
 #endif // QGSSERVER_H
 

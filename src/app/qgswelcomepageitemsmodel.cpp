@@ -48,7 +48,7 @@ void QgsWelcomePageItemDelegate::paint( QPainter* painter, const QStyleOptionVie
     ctx.palette.setColor( QPalette::Text, optionV4.palette.color( QPalette::Active, QPalette::HighlightedText ) );
 
     QStyle *style = QApplication::style();
-    style->drawPrimitive( QStyle::PE_PanelItemViewItem, &option, painter, NULL );
+    style->drawPrimitive( QStyle::PE_PanelItemViewItem, &option, painter, nullptr );
   }
   else if ( option.state & QStyle::State_Enabled )
   {
@@ -56,7 +56,7 @@ void QgsWelcomePageItemDelegate::paint( QPainter* painter, const QStyleOptionVie
     ctx.palette.setColor( QPalette::Text, optionV4.palette.color( QPalette::Active, QPalette::Text ) );
 
     QStyle *style = QApplication::style();
-    style->drawPrimitive( QStyle::PE_PanelItemViewItem, &option, painter, NULL );
+    style->drawPrimitive( QStyle::PE_PanelItemViewItem, &option, painter, nullptr );
   }
   else
   {
@@ -114,7 +114,7 @@ QSize QgsWelcomePageItemDelegate::sizeHint( const QStyleOptionViewItem & option,
                      index.data( QgsWelcomePageItemsModel::CrsRole ).toString() ) );
   doc.setTextWidth( width - ( !icon.isNull() ? icon.width() + 35 : 35 ) );
 
-  return QSize( width, qMax( doc.size().height() + 10, ( double )icon.height() ) + 20 );
+  return QSize( width, qMax(( double ) doc.size().height() + 10, ( double )icon.height() ) + 20 );
 }
 
 QgsWelcomePageItemsModel::QgsWelcomePageItemsModel( QObject* parent )

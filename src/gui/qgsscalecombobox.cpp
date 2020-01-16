@@ -30,7 +30,7 @@ QgsScaleComboBox::QgsScaleComboBox( QWidget* parent ) : QComboBox( parent ), mSc
 
   setEditable( true );
   setInsertPolicy( QComboBox::NoInsert );
-  setCompleter( 0 );
+  setCompleter( nullptr );
   connect( this, SIGNAL( activated( const QString & ) ), this, SLOT( fixupScale() ) );
   connect( lineEdit(), SIGNAL( editingFinished() ), this, SLOT( fixupScale() ) );
   fixupScale();
@@ -51,7 +51,7 @@ void QgsScaleComboBox::updateScales( const QStringList &scales )
     QString myScales = settings.value( "Map/scales", PROJECT_SCALES ).toString();
     if ( !myScales.isEmpty() )
     {
-      myScalesList = myScales.split( "," );
+      myScalesList = myScales.split( ',' );
     }
   }
   else

@@ -23,12 +23,12 @@
 
 QgsUniqueValuesWidgetWrapper::QgsUniqueValuesWidgetWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor, QWidget* parent )
     : QgsEditorWidgetWrapper( vl, fieldIdx, editor, parent )
-    , mComboBox( NULL )
-    , mLineEdit( NULL )
+    , mComboBox( nullptr )
+    , mLineEdit( nullptr )
 {
 }
 
-QVariant QgsUniqueValuesWidgetWrapper::value()
+QVariant QgsUniqueValuesWidgetWrapper::value() const
 {
   QVariant value;
 
@@ -100,7 +100,7 @@ void QgsUniqueValuesWidgetWrapper::initWidget( QWidget* editor )
   }
 }
 
-bool QgsUniqueValuesWidgetWrapper::valid()
+bool QgsUniqueValuesWidgetWrapper::valid() const
 {
   return mComboBox || mLineEdit;
 }

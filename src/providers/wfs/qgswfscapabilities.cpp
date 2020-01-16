@@ -27,8 +27,8 @@
 
 static const QString WFS_NAMESPACE = "http://www.opengis.net/wfs";
 
-QgsWFSCapabilities::QgsWFSCapabilities( QString theUri )
-    : mCapabilitiesReply( 0 )
+QgsWFSCapabilities::QgsWFSCapabilities( const QString& theUri )
+    : mCapabilitiesReply( nullptr )
     , mErrorCode( QgsWFSCapabilities::NoError )
 {
   mUri.setEncodedUri( theUri );
@@ -46,7 +46,7 @@ QgsWFSCapabilities::QgsWFSCapabilities( QString theUri )
 
   //make a GetCapabilities request
   //modify mUri to add '?' or '&' at the end if it is not already there
-  if ( !( mUri.contains( "?" ) ) )
+  if ( !( mUri.contains( '?' ) ) )
   {
     mUri.append( "?" );
   }
@@ -59,13 +59,13 @@ QgsWFSCapabilities::QgsWFSCapabilities( QString theUri )
 
 QString QgsWFSCapabilities::prepareUri( QString uri )
 {
-  if ( !uri.contains( "?" ) )
+  if ( !uri.contains( '?' ) )
   {
-    uri.append( "?" );
+    uri.append( '?' );
   }
   else if ( uri.right( 1 ) != "?" && uri.right( 1 ) != "&" )
   {
-    uri.append( "&" );
+    uri.append( '&' );
   }
 
   return uri;
@@ -81,7 +81,7 @@ QString QgsWFSCapabilities::uriDescribeFeatureType( const QString& typeName ) co
   return mBaseUrl + "SERVICE=WFS&REQUEST=DescribeFeatureType&VERSION=1.0.0&TYPENAME=" + typeName;
 }
 
-QString QgsWFSCapabilities::uriGetFeature( QString typeName, QString crsString, QString filter, QgsRectangle bBox ) const
+QString QgsWFSCapabilities::uriGetFeature( const QString& typeName, QString crsString, QString filter, const QgsRectangle& bBox ) const
 {
   //get CRS
   if ( !crsString.isEmpty() )
@@ -92,7 +92,7 @@ QString QgsWFSCapabilities::uriGetFeature( QString typeName, QString crsString, 
   QString filterString;
 
   //if the xml comes from the dialog, it needs to be a string to pass the validity test
-  if ( filter.startsWith( "'" ) && filter.endsWith( "'" ) && filter.size() > 1 )
+  if ( filter.startsWith( '\'' ) && filter.endsWith( '\'' ) && filter.size() > 1 )
   {
     filter.chop( 1 );
     filter.remove( 0, 1 );
@@ -189,7 +189,7 @@ void QgsWFSCapabilities::capabilitiesReplyFinished()
 {
   QNetworkReply *reply = mCapabilitiesReply;
   reply->deleteLater();
-  mCapabilitiesReply = 0;
+  mCapabilitiesReply = nullptr;
 
   // handle network errors
   if ( reply->error() != QNetworkReply::NoError )

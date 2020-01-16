@@ -30,7 +30,7 @@
 class CORE_EXPORT QgsRasterNuller : public QgsRasterInterface
 {
   public:
-    QgsRasterNuller( QgsRasterInterface* input = 0 );
+    QgsRasterNuller( QgsRasterInterface* input = nullptr );
     ~QgsRasterNuller();
 
     struct NoData
@@ -39,7 +39,7 @@ class CORE_EXPORT QgsRasterNuller : public QgsRasterInterface
       double max;
     };
 
-    QgsRasterInterface * clone() const override;
+    QgsRasterNuller * clone() const override;
 
     int bandCount() const override;
 

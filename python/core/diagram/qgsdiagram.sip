@@ -7,9 +7,11 @@ class QgsDiagram
     virtual ~QgsDiagram();
     /** Returns an instance that is equivalent to this one
      * @note added in 2.4 */
-    virtual QgsDiagram* clone() const = 0;
+    virtual QgsDiagram* clone() const = 0 /Factory/;
 
     void clearCache();
+
+    //! @deprecated use QgsExpressionContext variant instead
     QgsExpression* getExpression( const QString& expression, const QgsFields* fields ) /Deprecated/;
 
     /** Returns a prepared expression for the specified context.
@@ -20,9 +22,9 @@ class QgsDiagram
     QgsExpression* getExpression( const QString& expression, const QgsExpressionContext& context );
 
     /** @deprecated `void renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QgsDiagramSettings& s, const QPointF& position )` should be used instead */
-    virtual void renderDiagram( const QgsAttributes& att, QgsRenderContext& c, const QgsDiagramSettings& s, const QPointF& position ) /Deprecated/;
+    virtual void renderDiagram( const QgsAttributes& att, QgsRenderContext& c, const QgsDiagramSettings& s, QPointF position ) /Deprecated/;
     /** Draws the diagram at the given position (in pixel coordinates)*/
-    virtual void renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QgsDiagramSettings& s, const QPointF& position ) = 0;
+    virtual void renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QgsDiagramSettings& s, QPointF position ) = 0;
     virtual QString diagramName() const = 0;
     /** Returns the size in map units the diagram will use to render.*/
     virtual QSizeF diagramSize( const QgsAttributes& attributes, const QgsRenderContext& c, const QgsDiagramSettings& s ) = 0;
@@ -49,7 +51,7 @@ class QgsDiagram
      *
      *  @return The converted size for rendering
      */
-    QSizeF sizePainterUnits( const QSizeF& size, const QgsDiagramSettings& s, const QgsRenderContext& c );
+    QSizeF sizePainterUnits( QSizeF size, const QgsDiagramSettings& s, const QgsRenderContext& c );
 
     /** Calculates a length to match the current settings and rendering context
      *  @param l    The length to convert

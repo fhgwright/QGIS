@@ -104,7 +104,7 @@ class CORE_EXPORT QgsAction
  * attributes.
  */
 
-class  CORE_EXPORT QgsAttributeAction
+class CORE_EXPORT QgsAttributeAction
 {
   public:
     //! Constructor
@@ -174,7 +174,7 @@ class  CORE_EXPORT QgsAttributeAction
      */
     QString expandAction( const QString& action,
                           QgsFeature &feat,
-                          const QMap<QString, QVariant> *substitutionMap = 0 );
+                          const QMap<QString, QVariant> *substitutionMap = nullptr );
 
 
     //! Writes the actions out in XML format
@@ -187,8 +187,10 @@ class  CORE_EXPORT QgsAttributeAction
     QgsAction &at( int idx ) { return mActions[idx]; }
     QgsAction &operator[]( int idx ) { return mActions[idx]; }
 
-    //! @deprecated Initialize QgsPythonRunner instead
-    static void setPythonExecute( void ( * )( const QString & ) );
+    /** @deprecated Initialize QgsPythonRunner instead
+     * @note not available in Python bindings
+     */
+    Q_DECL_DEPRECATED static void setPythonExecute( void ( * )( const QString & ) );
 
     //! Whether the action is the default action
     int defaultAction() const { return mDefaultAction < 0 || mDefaultAction >= size() ? -1 : mDefaultAction; }
@@ -200,7 +202,7 @@ class  CORE_EXPORT QgsAttributeAction
     static void ( *smPythonExecute )( const QString & );
 
     void runAction( const QgsAction &action,
-                    void ( *executePython )( const QString & ) = 0 );
+                    void ( *executePython )( const QString & ) = nullptr );
 
     int mDefaultAction;
 

@@ -24,13 +24,13 @@
 
 QgsFileNameWidgetWrapper::QgsFileNameWidgetWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor, QWidget* parent )
     : QgsEditorWidgetWrapper( vl, fieldIdx, editor, parent )
-    , mLineEdit( NULL )
-    , mPushButton( NULL )
-    , mLabel( NULL )
+    , mLineEdit( nullptr )
+    , mPushButton( nullptr )
+    , mLabel( nullptr )
 {
 }
 
-QVariant QgsFileNameWidgetWrapper::value()
+QVariant QgsFileNameWidgetWrapper::value() const
 {
   QVariant value;
 
@@ -48,7 +48,7 @@ QVariant QgsFileNameWidgetWrapper::value()
   return value;
 }
 
-bool QgsFileNameWidgetWrapper::valid()
+bool QgsFileNameWidgetWrapper::valid() const
 {
   return mLineEdit || mLabel;
 }

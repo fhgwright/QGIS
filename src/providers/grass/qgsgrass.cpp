@@ -58,6 +58,9 @@ extern "C"
 #include <sys/types.h>
 #endif
 #include <grass/version.h>
+#if defined(_MSC_VER) && defined(M_PI_4)
+#undef M_PI_4 //avoid redefinition warning
+#endif
 #include <grass/gprojects.h>
 
 #if GRASS_VERSION_MAJOR < 7
@@ -192,6 +195,8 @@ QString QgsGrassObject::elementShort( Type type )
     return "stvds";
   else if ( type == Str3ds )
     return "str3ds";
+  else if ( type == Stds )
+    return "stds";
   else
     return "";
 }
@@ -368,9 +373,11 @@ bool QgsGrass::init( void )
     return false;
   }
 
-  // I think that mask should not be used in QGIS as it can only confuses people,
+  // I think that mask should not be used in QGIS as it can confuse users,
   // anyway, I don't think anybody is using MASK
   // TODO7: Rast_suppress_masking (see G_suppress_masking() macro above) needs MAPSET
+  // (it should not be necessary, because rasters are read by modules qgis.g.info and qgis.d.rast
+  //  where masking is suppressed)
 #if GRASS_VERSION_MAJOR < 7
   G_suppress_masking();
 #endif
@@ -409,6 +416,7 @@ bool QgsGrass::init( void )
     mGrassModulesPaths << gisbase() + "/bin";
     mGrassModulesPaths << gisbase() + "/scripts";
     mGrassModulesPaths << QgsApplication::pkgDataPath() + "/grass/scripts";
+    mGrassModulesPaths << qgisGrassModulePath();
 
     // On windows the GRASS libraries are in
     // QgsApplication::prefixPath(), we have to add them
@@ -593,7 +601,11 @@ void QgsGrass::setLocation( QString gisdbase, QString location )
 void QgsGrass::setMapset( QString gisdbase, QString location, QString mapset )
 {
   QgsDebugMsg( QString( "gisdbase = %1 location = %2 mapset = %3" ).arg( gisdbase, location, mapset ) );
-  init();
+  if ( !init() )
+  {
+    QgsDebugMsg( QgsGrass::initError() );
+    return;
+  }
 
   // Set principal GRASS variables (in memory)
 #ifdef Q_OS_WIN
@@ -643,6 +655,52 @@ void QgsGrass::setMapset( QgsGrassObject grassObject )
 bool QgsGrass::isMapsetInSearchPath( QString mapset )
 {
   return mMapsetSearchPath.contains( mapset );
+}
+
+void QgsGrass::addMapsetToSearchPath( const QString & mapset, QString& error )
+{
+  QgsDebugMsg( "entered" );
+  QString cmd = gisbase() + "/bin/g.mapsets";
+  QStringList arguments;
+
+#if GRASS_VERSION_MAJOR < 7
+  arguments << "addmapset=" + mapset;
+#else
+  arguments << "operation=add" << "mapset=" + mapset;
+#endif
+
+  try
+  {
+    int timeout = -1; // What timeout to use? It can take long time on network or database
+    runModule( getDefaultGisdbase(), getDefaultLocation(), getDefaultMapset(), cmd, arguments, timeout, false );
+  }
+  catch ( QgsGrass::Exception &e )
+  {
+    error = tr( "Cannot add mapset %1 to search path:" ).arg( mapset ) + " " + e.what();
+  }
+}
+
+void QgsGrass::removeMapsetFromSearchPath( const QString & mapset, QString& error )
+{
+  QgsDebugMsg( "entered" );
+  QString cmd = gisbase() + "/bin/g.mapsets";
+  QStringList arguments;
+
+#if GRASS_VERSION_MAJOR < 7
+  arguments << "removemapset=" + mapset;
+#else
+  arguments << "operation=remove" << "mapset=" + mapset;
+#endif
+
+  try
+  {
+    int timeout = -1; // What timeout to use? It can take long time on network or database
+    runModule( getDefaultGisdbase(), getDefaultLocation(), getDefaultMapset(), cmd, arguments, timeout, false );
+  }
+  catch ( QgsGrass::Exception &e )
+  {
+    error = tr( "Cannot remove mapset %1 from search path:" ).arg( mapset ) + " " + e.what();
+  }
 }
 
 void QgsGrass::loadMapsetSearchPath()
@@ -1244,12 +1302,12 @@ QStringList QgsGrass::vectors( const QString& mapsetPath )
   list.reserve( d.count() );
   for ( unsigned int i = 0; i < d.count(); ++i )
   {
-    /*
-    if ( QFile::exists ( mapsetPath + "/vector/" + d[i] + "/head" ) )
+#if 0
+    if ( QFile::exists( mapsetPath + "/vector/" + d[i] + "/head" ) )
     {
-    list.append(d[i]);
+      list.append( d[i] );
     }
-    */
+#endif
     list.append( d[i] );
   }
   return list;
@@ -1484,10 +1542,12 @@ QStringList QgsGrass::grassObjects( const QgsGrassObject& mapsetObject, QgsGrass
     QgsDebugMsg( "mapset is not readable" );
     return QStringList();
   }
-  else if ( type == QgsGrassObject::Strds || type == QgsGrassObject::Stvds || type == QgsGrassObject::Str3ds )
+  else if ( type == QgsGrassObject::Strds || type == QgsGrassObject::Stvds
+            || type == QgsGrassObject::Str3ds || type == QgsGrassObject::Stds )
   {
 #if GRASS_VERSION_MAJOR >= 7
-    QString cmd =  gisbase() + "/scripts/t.list";
+    QString cmd = "t.list";
+
     QStringList arguments;
 
     // Running t.list module is quite slow (about 500ms) -> check first if temporal db exists.
@@ -1499,21 +1559,36 @@ QStringList QgsGrass::grassObjects( const QgsGrassObject& mapsetObject, QgsGrass
     }
     else
     {
-      arguments << "type=" + QgsGrassObject::elementShort( type );
+      if ( type == QgsGrassObject::Stds )
+      {
+        arguments << "type=strds,stvds,str3ds";
+      }
+      else
+      {
+        arguments << "type=" + QgsGrassObject::elementShort( type );
+      }
 
       int timeout = -1; // What timeout to use? It can take long time on network or database
-      QByteArray data = runModule( mapsetObject.gisdbase(), mapsetObject.location(), mapsetObject.mapset(), cmd, arguments, timeout, false );
-      Q_FOREACH ( QString fullName, QString::fromLocal8Bit( data ).split( '\n' ) )
+      try
       {
-        fullName = fullName.trimmed();
-        if ( !fullName.isEmpty() )
+        QByteArray data = runModule( mapsetObject.gisdbase(), mapsetObject.location(), mapsetObject.mapset(), cmd, arguments, timeout, false );
+        Q_FOREACH ( QString fullName, QString::fromLocal8Bit( data ).split( '\n' ) )
         {
-          QStringList nameMapset = fullName.split( "@" );
-          if ( nameMapset.value( 1 ) == mapsetObject.mapset() || nameMapset.value( 1 ).isEmpty() )
+          fullName = fullName.trimmed();
+          if ( !fullName.isEmpty() )
           {
-            list << nameMapset.value( 0 );
+            QStringList nameMapset = fullName.split( "@" );
+            if ( nameMapset.value( 1 ) == mapsetObject.mapset() || nameMapset.value( 1 ).isEmpty() )
+            {
+              list << nameMapset.value( 0 );
+            }
           }
         }
+      }
+      catch ( QgsGrass::Exception &e )
+      {
+        // TODO: notify somehow user
+        QgsDebugMsg( QString( "Cannot run %1: %2" ).arg( cmd ).arg( e.what() ) );
       }
     }
 #endif
@@ -1879,7 +1954,7 @@ bool QgsGrass::mapRegion( QgsGrassObject::Type type, QString gisdbase,
 #if GRASS_VERSION_MAJOR < 7
     if ( G__get_window( window, ( char * ) "windows",
                         map.toUtf8().data(),
-                        mapset.toUtf8().data() ) != NULL )
+                        mapset.toUtf8().data() ) )
     {
       warning( tr( "Cannot read region" ) );
       return false;
@@ -1900,6 +1975,51 @@ bool QgsGrass::mapRegion( QgsGrassObject::Type type, QString gisdbase,
   return true;
 }
 
+QString QgsGrass::findModule( QString module )
+{
+  QgsDebugMsg( "called." );
+  if ( QFile::exists( module ) )
+  {
+    return module;  // full path
+  }
+
+  QStringList extensions;
+#ifdef Q_OS_WIN
+  // On windows try .bat first
+  extensions << ".bat" << ".py" << ".exe";
+#endif
+  // and then try if it's a module without extension (standard on UNIX)
+  extensions << "";
+
+  QStringList paths;
+  // Try first full path
+  paths << "";
+  paths << QgsGrass::grassModulesPaths();
+
+  // Extensions first to prefer .bat over .exe on Windows
+  Q_FOREACH ( const QString& ext, extensions )
+  {
+    Q_FOREACH ( const QString& path, paths )
+    {
+      QString full = module + ext;;
+      if ( !path.isEmpty() )
+      {
+        full.prepend( path + "/" );
+      }
+      if ( QFile::exists( full ) )
+      {
+        QgsDebugMsg( "found " + full );
+        return full;
+      }
+      else
+      {
+        QgsDebugMsg( "not found " + full );
+      }
+    }
+  }
+  return QString();
+}
+
 QProcess *QgsGrass::startModule( const QString& gisdbase, const QString&  location,
                                  const QString&  mapset, const QString& moduleName, const QStringList& arguments,
                                  QTemporaryFile &gisrcFile, bool qgisModule )
@@ -1912,9 +2032,12 @@ QProcess *QgsGrass::startModule( const QString& gisdbase, const QString&  locati
   {
     module += QString::number( QgsGrass::versionMajor() );
   }
-#ifdef Q_OS_WIN
-  module += ".exe";
-#endif
+
+  QString modulePath = findModule( module );
+  if ( modulePath.isEmpty() )
+  {
+    throw QgsGrass::Exception( QObject::tr( "Cannot find module %1" ).arg( module ) );
+  }
 
   // We have to set GISRC file, uff
   if ( !gisrcFile.open() )
@@ -1947,9 +2070,8 @@ QProcess *QgsGrass::startModule( const QString& gisdbase, const QString&  locati
 
   process->setEnvironment( environment );
 
-  QgsDebugMsg( module + " " + arguments.join( " " ) );
-  //process->start( module, arguments, QProcess::Unbuffered );
-  process->start( module, arguments );
+  QgsDebugMsg( modulePath + " " + arguments.join( " " ) );
+  process->start( modulePath, arguments );
   if ( !process->waitForStarted() )
   {
     throw QgsGrass::Exception( error );
@@ -2864,7 +2986,7 @@ void QgsGrass::sleep( int ms )
   Sleep( uint( ms ) );
 #else
   struct timespec ts = { ms / 1000, ( ms % 1000 ) * 1000 * 1000 };
-  nanosleep( &ts, NULL );
+  nanosleep( &ts, nullptr );
 #endif
 }
 

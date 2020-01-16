@@ -75,9 +75,9 @@ QgsTipFactory::QgsTipFactory() : QObject()
                         "<ul>"
                         "<li>QGIS Library - this is the C++ library that contains"
                         " the core logic that is used to build the QGIS user interface and other applications.</li>"
-                        "<li>QGIS Application - this is the desktop application that you know and love so much :-).</li>"
-                        "<li>QGIS Mapserver - this is a server-side application based on the QGIS Library"
-                        " that will serve up your .qgs projects using the WMS protocol.</li>"
+                        "<li>QGIS Desktop - this is the desktop application that you know and love so much :-).</li>"
+                        "<li>QGIS Server - this is a server-side application based on the QGIS Library"
+                        " that will serve up your .qgs projects using OGC standard protocols.</li>"
                         "</ul>"
                       ) );
   addGenericTip( myTip );
@@ -216,6 +216,14 @@ QgsTipFactory::QgsTipFactory() : QObject()
                         "will appear instead. For example, if you have just one layer, and click "
                         "somewhere with several features, the first menu will list the feature list "
                         "instead of layer list."
+                      ) );
+  addGuiTip( myTip );
+  // by Alister Hood
+  myTip.setTitle( tr( "Use VRT files" ) );
+  myTip.setContent( tr( "If you have a number of aerial photos spread across a wide area, instead of "
+                        "loading each file as a separate layer you can treat them all as a single layer "
+                        "by using a .vrt file. "
+                        "To create a .vrt, go to Raster -> Miscellaneous -> Build Virtual Raster (Catalog)."
                       ) );
   addGuiTip( myTip );
 

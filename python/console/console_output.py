@@ -31,7 +31,7 @@ class writeOut:
 
     def __init__(self, shellOut, out=None, style=None):
         """
-        This class allow to write stdout and stderr
+        This class allows writing to stdout and stderr
         """
         self.sO = shellOut
         self.out = None
@@ -221,19 +221,18 @@ class ShellOutputScintilla(QsciScintilla):
                                    self.enteredSelected,
                                    QKeySequence(Qt.CTRL + Qt.Key_E))
         clearAction = menu.addAction(iconClear,
-                                     QCoreApplication.translate("PythonConsole", "Clear console"),
+                                     QCoreApplication.translate("PythonConsole", "Clear Console"),
                                      self.clearConsole)
         menu.addSeparator()
         copyAction = menu.addAction(
             QCoreApplication.translate("PythonConsole", "Copy"),
             self.copy, QKeySequence.Copy)
-        menu.addSeparator()
         selectAllAction = menu.addAction(
             QCoreApplication.translate("PythonConsole", "Select All"),
             self.selectAll, QKeySequence.SelectAll)
         menu.addSeparator()
         menu.addAction(iconSettings,
-                       QCoreApplication.translate("PythonConsole", "Settings"),
+                       QCoreApplication.translate("PythonConsole", "Options..."),
                        self.parent.openSettings)
         runAction.setEnabled(False)
         clearAction.setEnabled(False)

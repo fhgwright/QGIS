@@ -68,7 +68,7 @@ class APP_EXPORT QgsMapToolIdentifyAction : public QgsMapToolIdentify
 
   signals:
     void identifyProgress( int, int );
-    void identifyMessage( QString );
+    void identifyMessage( const QString& );
     void copyToClipboard( QgsFeatureStore & );
 
   private slots:
@@ -80,7 +80,8 @@ class APP_EXPORT QgsMapToolIdentifyAction : public QgsMapToolIdentify
 
     QgsIdentifyResultsDialog *resultsDialog();
 
-    virtual QGis::UnitType displayUnits() override;
+    virtual QGis::UnitType displayDistanceUnits() const override;
+    virtual QgsUnitTypes::AreaUnit displayAreaUnits() const override;
 
 };
 

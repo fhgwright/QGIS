@@ -89,7 +89,7 @@ void QgsCustomProjectionDialog::populateList()
   sqlite3_stmt *myPreparedStatement;
   int           myResult;
   //check the db is available
-  myResult = sqlite3_open_v2( QgsApplication::qgisUserDbFilePath().toUtf8().data(), &myDatabase, SQLITE_OPEN_READONLY, NULL );
+  myResult = sqlite3_open_v2( QgsApplication::qgisUserDbFilePath().toUtf8().data(), &myDatabase, SQLITE_OPEN_READONLY, nullptr );
   if ( myResult != SQLITE_OK )
   {
     QgsDebugMsg( QString( "Can't open database: %1" ).arg( sqlite3_errmsg( myDatabase ) ) );
@@ -211,10 +211,10 @@ void  QgsCustomProjectionDialog::insertProjection( const QString& myProjectionAc
         // We have the result from system srs.db. Now insert into user db.
         mySql = "insert into tbl_projection(acronym,name,notes,parameters) values ("
                 + quotedValue( QString::fromUtf8(( char * )sqlite3_column_text( srsPreparedStatement, 0 ) ) )
-                + "," + quotedValue( QString::fromUtf8(( char * )sqlite3_column_text( srsPreparedStatement, 1 ) ) )
-                + "," + quotedValue( QString::fromUtf8(( char * )sqlite3_column_text( srsPreparedStatement, 2 ) ) )
-                + "," + quotedValue( QString::fromUtf8(( char * )sqlite3_column_text( srsPreparedStatement, 3 ) ) )
-                + ")"
+                + ',' + quotedValue( QString::fromUtf8(( char * )sqlite3_column_text( srsPreparedStatement, 1 ) ) )
+                + ',' + quotedValue( QString::fromUtf8(( char * )sqlite3_column_text( srsPreparedStatement, 2 ) ) )
+                + ',' + quotedValue( QString::fromUtf8(( char * )sqlite3_column_text( srsPreparedStatement, 3 ) ) )
+                + ')'
                 ;
         myResult = sqlite3_prepare( myDatabase, mySql.toUtf8(), mySql.length(), &myPreparedStatement, &myTail );
         if ( myResult != SQLITE_OK || sqlite3_step( myPreparedStatement ) != SQLITE_DONE )
@@ -403,7 +403,7 @@ void QgsCustomProjectionDialog::on_buttonBox_accepted()
 
   //Check if all CRS are valid:
   QgsCoordinateReferenceSystem CRS;
-  for ( size_t i = 0; i < customCRSids.size(); ++i )
+  for ( int i = 0; i < customCRSids.size(); ++i )
   {
     CRS.createFromProj4( customCRSparameters[i] );
     if ( !CRS.isValid() )
@@ -415,19 +415,19 @@ void QgsCustomProjectionDialog::on_buttonBox_accepted()
   }
   //Modify the CRS changed:
   bool save_success = true;
-  for ( size_t i = 0; i < customCRSids.size(); ++i )
+  for ( int i = 0; i < customCRSids.size(); ++i )
   {
     CRS.createFromProj4( customCRSparameters[i] );
     //Test if we just added this CRS (if it has no existing ID)
     if ( customCRSids[i] == "" )
     {
-      save_success = save_success && saveCRS( CRS, customCRSnames[i], "", true );
+      save_success &= saveCRS( CRS, customCRSnames[i], "", true );
     }
     else
     {
       if ( existingCRSnames[customCRSids[i]] != customCRSnames[i] || existingCRSparameters[customCRSids[i]] != customCRSparameters[i] )
       {
-        save_success = save_success && saveCRS( CRS, customCRSnames[i], customCRSids[i], false );
+        save_success &= saveCRS( CRS, customCRSnames[i], customCRSids[i], false );
       }
     }
     if ( ! save_success )
@@ -436,9 +436,9 @@ void QgsCustomProjectionDialog::on_buttonBox_accepted()
     }
   }
   QgsDebugMsg( "We remove the deleted CRS." );
-  for ( size_t i = 0; i < deletedCRSs.size(); ++i )
+  for ( int i = 0; i < deletedCRSs.size(); ++i )
   {
-    save_success = save_success && deleteCRS( deletedCRSs[i] );
+    save_success &= deleteCRS( deletedCRSs[i] );
     if ( ! save_success )
     {
       QgsDebugMsg( QString( "Problem for layer '%1'" ).arg( customCRSparameters[i] ) );
@@ -463,7 +463,7 @@ void QgsCustomProjectionDialog::on_pbnCalculate_clicked()
 
   QgsDebugMsg( QString( "My proj: %1" ).arg( teParameters->toPlainText() ) );
 
-  if ( myProj == NULL )
+  if ( !myProj )
   {
     QMessageBox::information( this, tr( "QGIS Custom Projection" ),
                               tr( "This proj4 projection definition is not valid." ) );
@@ -490,7 +490,7 @@ void QgsCustomProjectionDialog::on_pbnCalculate_clicked()
 
   projPJ wgs84Proj = pj_init_plus( GEOPROJ4.toLocal8Bit().data() ); //defined in qgis.h
 
-  if ( wgs84Proj == NULL )
+  if ( !wgs84Proj )
   {
     QMessageBox::information( this, tr( "QGIS Custom Projection" ),
                               tr( "Internal Error (source projection invalid?)" ) );
@@ -528,7 +528,7 @@ void QgsCustomProjectionDialog::on_pbnCalculate_clicked()
 
 QString QgsCustomProjectionDialog::quotedValue( QString value )
 {
-  value.replace( "'", "''" );
-  return value.prepend( "'" ).append( "'" );
+  value.replace( '\'', "''" );
+  return value.prepend( '\'' ).append( '\'' );
 }
 

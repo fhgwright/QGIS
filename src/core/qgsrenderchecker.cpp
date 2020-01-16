@@ -54,7 +54,15 @@ QString QgsRenderChecker::controlImagePath() const
 void QgsRenderChecker::setControlName( const QString &theName )
 {
   mControlName = theName;
-  mExpectedImageFile = controlImagePath() + theName + "/" + mControlPathSuffix + theName + ".png";
+  mExpectedImageFile = controlImagePath() + theName + '/' + mControlPathSuffix + theName + ".png";
+}
+
+void QgsRenderChecker::setControlPathSuffix( const QString& theName )
+{
+  if ( !theName.isEmpty() )
+    mControlPathSuffix = theName + '/';
+  else
+    mControlPathSuffix.clear();
 }
 
 QString QgsRenderChecker::imageToHash( const QString& theImageFile )
@@ -103,7 +111,7 @@ void QgsRenderChecker::drawBackground( QImage* image )
 
 bool QgsRenderChecker::isKnownAnomaly( const QString& theDiffImageFile )
 {
-  QString myControlImageDir = controlImagePath() + mControlName + "/";
+  QString myControlImageDir = controlImagePath() + mControlName + '/';
   QDir myDirectory = QDir( myControlImageDir );
   QStringList myList;
   QString myFilename = "*";
@@ -122,7 +130,7 @@ bool QgsRenderChecker::isKnownAnomaly( const QString& theDiffImageFile )
     mReport += "<tr><td colspan=3>"
                "Checking if " + myFile + " is a known anomaly.";
     mReport += "</td></tr>";
-    QString myAnomalyHash = imageToHash( controlImagePath() + mControlName + "/" + myFile );
+    QString myAnomalyHash = imageToHash( controlImagePath() + mControlName + '/' + myFile );
     QString myHashMessage = QString(
                               "Checking if anomaly %1 (hash %2)<br>" )
                             .arg( myFile,
@@ -209,7 +217,7 @@ bool QgsRenderChecker::runTest( const QString& theTestName,
   // Save the pixmap to disk so the user can make a
   // visual assessment if needed
   //
-  mRenderedImageFile = QDir::tempPath() + "/" + theTestName + "_result.png";
+  mRenderedImageFile = QDir::tempPath() + '/' + theTestName + "_result.png";
 
   myImage.setDotsPerMeterX( myExpectedImage.dotsPerMeterX() );
   myImage.setDotsPerMeterY( myExpectedImage.dotsPerMeterY() );
@@ -225,7 +233,7 @@ bool QgsRenderChecker::runTest( const QString& theTestName,
 
   //create a world file to go with the image...
 
-  QFile wldFile( QDir::tempPath() + "/" + theTestName + "_result.wld" );
+  QFile wldFile( QDir::tempPath() + '/' + theTestName + "_result.wld" );
   if ( wldFile.open( QIODevice::WriteOnly ) )
   {
     QgsRectangle r = mMapSettings.extent();
@@ -244,7 +252,7 @@ bool QgsRenderChecker::runTest( const QString& theTestName,
 
 bool QgsRenderChecker::compareImages( const QString& theTestName,
                                       unsigned int theMismatchCount,
-                                      QString theRenderedImageFile )
+                                      const QString& theRenderedImageFile )
 {
   if ( mExpectedImageFile.isEmpty() )
   {
@@ -257,10 +265,9 @@ bool QgsRenderChecker::compareImages( const QString& theTestName,
   }
   if ( ! theRenderedImageFile.isEmpty() )
   {
-#ifndef Q_OS_WIN
     mRenderedImageFile = theRenderedImageFile;
-#else
-    mRenderedImageFile = theRenderedImageFile.replace( "\\", "/" );
+#ifdef Q_OS_WIN
+    mRenderedImageFile = mRenderedImageFile.replace( '\\', '/' );
 #endif
   }
 
@@ -291,7 +298,7 @@ bool QgsRenderChecker::compareImages( const QString& theTestName,
   QImage myDifferenceImage( myExpectedImage.width(),
                             myExpectedImage.height(),
                             QImage::Format_RGB32 );
-  QString myDiffImageFile = QDir::tempPath() + "/" + theTestName + "_result_diff.png";
+  QString myDiffImageFile = QDir::tempPath() + '/' + theTestName + "_result_diff.png";
   myDifferenceImage.fill( qRgb( 152, 219, 249 ) );
 
   //check for mask
@@ -405,13 +412,13 @@ bool QgsRenderChecker::compareImages( const QString& theTestName,
   int maxWidth = qMin( myExpectedImage.width(), myResultImage.width() );
 
   mMismatchCount = 0;
-  int colorTolerance = ( int ) mColorTolerance;
+  int colorTolerance = static_cast< int >( mColorTolerance );
   for ( int y = 0; y < maxHeight; ++y )
   {
-    const QRgb* expectedScanline = ( const QRgb* )myExpectedImage.constScanLine( y );
-    const QRgb* resultScanline = ( const QRgb* )myResultImage.constScanLine( y );
-    const QRgb* maskScanline = hasMask ? ( const QRgb* )maskImage->constScanLine( y ) : 0;
-    QRgb* diffScanline = ( QRgb* )myDifferenceImage.scanLine( y );
+    const QRgb* expectedScanline = reinterpret_cast< const QRgb* >( myExpectedImage.constScanLine( y ) );
+    const QRgb* resultScanline = reinterpret_cast< const QRgb* >( myResultImage.constScanLine( y ) );
+    const QRgb* maskScanline = hasMask ? reinterpret_cast< const QRgb* >( maskImage->constScanLine( y ) ) : nullptr;
+    QRgb* diffScanline = reinterpret_cast< QRgb* >( myDifferenceImage.scanLine( y ) );
 
     for ( int x = 0; x < maxWidth; ++x )
     {

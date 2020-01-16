@@ -25,6 +25,7 @@
 #include "qgslogger.h"
 #include "qgspoint.h"
 #include "qgsrectangle.h"
+#include "qgswkbptr.h"
 
 #include <QPair>
 #include <QByteArray>
@@ -62,7 +63,7 @@ class CORE_EXPORT QgsGml : public QObject
      */
     int getFeatures( const QString& uri,
                      QGis::WkbType* wkbType,
-                     QgsRectangle* extent = 0,
+                     QgsRectangle* extent = nullptr,
                      const QString& userName = QString(),
                      const QString& password = QString(),
                      const QString& authcfg = QString() );
@@ -70,7 +71,7 @@ class CORE_EXPORT QgsGml : public QObject
     /** Read from GML data. Constructor uri param is ignored
      *  Supports only UTF-8, UTF-16, ISO-8859-1, ISO-8859-1 XML encodings.
      */
-    int getFeatures( const QByteArray &data, QGis::WkbType* wkbType, QgsRectangle* extent = 0 );
+    int getFeatures( const QByteArray &data, QGis::WkbType* wkbType, QgsRectangle* extent = nullptr );
 
     /** Get parsed features for given type name */
     QMap<QgsFeatureId, QgsFeature* > featuresMap() const { return mFeatures; }
@@ -164,12 +165,12 @@ class CORE_EXPORT QgsGml : public QObject
     int pointsFromPosListString( QList<QgsPoint>& points, const QString& coordString, int dimension ) const;
 
     int pointsFromString( QList<QgsPoint>& points, const QString& coordString ) const;
-    int getPointWKB( unsigned char** wkb, int* size, const QgsPoint& ) const;
-    int getLineWKB( unsigned char** wkb, int* size, const QList<QgsPoint>& lineCoordinates ) const;
-    int getRingWKB( unsigned char** wkb, int* size, const QList<QgsPoint>& ringCoordinates ) const;
+    int getPointWKB( QgsWkbPtr &wkbPtr, const QgsPoint& ) const;
+    int getLineWKB( QgsWkbPtr &wkbPtr, const QList<QgsPoint>& lineCoordinates ) const;
+    int getRingWKB( QgsWkbPtr &wkbPtr, const QList<QgsPoint>& ringCoordinates ) const;
     /** Creates a multiline from the information in mCurrentWKBFragments and
      * mCurrentWKBFragmentSizes. Assign the result. The multiline is in
-     * mCurrentWKB and mCurrentWKBSize. The function deletes the memory in
+     * mCurrentWKB. The function deletes the memory in
      * mCurrentWKBFragments. Returns 0 in case of success.
      */
     int createMultiLineFromFragments();
@@ -224,19 +225,15 @@ class CORE_EXPORT QgsGml : public QObject
     QString mCurrentFeatureId;
     int mFeatureCount;
     /** The total WKB for a feature*/
-    unsigned char* mCurrentWKB;
-    /** The total WKB size for a feature*/
-    int mCurrentWKBSize;
+    QgsWkbPtr mCurrentWKB;
     QgsRectangle mCurrentExtent;
     /** WKB intermediate storage during parsing. For points and lines, no
      * intermediate WKB is stored at all. For multipoints and multilines and
      * polygons, only one nested list is used. For multipolygons, both nested lists
      * are used*/
-    QList< QList<unsigned char*> > mCurrentWKBFragments;
-    /** Similar to mCurrentWKB, but only the size*/
-    QList< QList<int> > mCurrentWKBFragmentSizes;
+    QList< QList<QgsWkbPtr> > mCurrentWKBFragments;
     QString mAttributeName;
-    QgsApplication::endian_t mEndian;
+    char mEndian;
     /** Coordinate separator for coordinate strings. Usually "," */
     QString mCoordinateSeparator;
     /** Tuple separator for coordinate strings. Usually " " */

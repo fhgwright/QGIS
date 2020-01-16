@@ -41,6 +41,8 @@ class QgsLineSymbolLayerV2;
 
 class QgsMapCanvas;
 
+/// @cond PRIVATE
+
 class DataDefinedRestorer: public QObject
 {
     Q_OBJECT
@@ -67,13 +69,14 @@ class DataDefinedRestorer: public QObject
 
     void save();
 };
+///@endcond
 
 class GUI_EXPORT QgsSymbolV2SelectorDialog : public QDialog, private Ui::QgsSymbolV2SelectorDialogBase
 {
     Q_OBJECT
 
   public:
-    QgsSymbolV2SelectorDialog( QgsSymbolV2* symbol, QgsStyleV2* style, const QgsVectorLayer* vl, QWidget* parent = 0, bool embedded = false );
+    QgsSymbolV2SelectorDialog( QgsSymbolV2* symbol, QgsStyleV2* style, const QgsVectorLayer* vl, QWidget* parent = nullptr, bool embedded = false );
     ~QgsSymbolV2SelectorDialog();
 
     //! return menu for "advanced" button - create it if doesn't exist and show the advanced button
@@ -133,8 +136,13 @@ class GUI_EXPORT QgsSymbolV2SelectorDialog : public QDialog, private Ui::QgsSymb
     void addLayer();
     void removeLayer();
 
-    void saveSymbol();
     void lockLayer();
+
+    Q_DECL_DEPRECATED void saveSymbol();
+
+    //! Duplicates the current symbol layer and places the duplicated layer above the current symbol layer
+    //! @note added in QGIS 2.14
+    void duplicateLayer();
 
     void layerChanged();
 

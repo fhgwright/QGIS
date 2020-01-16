@@ -5,8 +5,8 @@ class QgsHttpTransaction : QObject
 %End
   public:
     /**
-    * Constructor.
-    */
+     * Constructor.
+     */
     QgsHttpTransaction( const QString& uri,
                         const QString& proxyHost = QString(),
                         int     proxyPort = 80,
@@ -93,5 +93,5 @@ class QgsHttpTransaction : QObject
     void totalSteps( int theTotalSteps );
 
     /** \brief emit a signal to be caught by qgisapp and display a msg on status bar */
-    void statusChanged( QString theStatusQString );
+    void statusChanged( const QString& theStatusQString );
 };

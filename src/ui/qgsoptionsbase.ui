@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>791</width>
+    <height>629</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -337,8 +337,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>610</width>
-                <height>670</height>
+                <width>618</width>
+                <height>582</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -619,8 +619,34 @@
                     </item>
                     <item>
                      <widget class="QCheckBox" name="cbxShowTips">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
                       <property name="text">
                        <string>Show tips at start up</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="Line" name="line_2">
+                      <property name="minimumSize">
+                       <size>
+                        <width>12</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="orientation">
+                       <enum>Qt::Vertical</enum>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="cbxCheckVersion">
+                      <property name="text">
+                       <string>Check QGIS version at startup</string>
                       </property>
                      </widget>
                     </item>
@@ -660,7 +686,7 @@
                     <item>
                      <widget class="QCheckBox" name="cbxCanvasRotation">
                       <property name="text">
-                       <string>Experimental canvas rotation support (restart required)</string>
+                       <string>Canvas rotation support (restart required)</string>
                       </property>
                      </widget>
                     </item>
@@ -983,9 +1009,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-329</y>
-                <width>663</width>
-                <height>862</height>
+                <y>0</y>
+                <width>713</width>
+                <height>826</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_22">
@@ -1368,8 +1394,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>626</width>
-                <height>549</height>
+                <width>713</width>
+                <height>601</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -1638,7 +1664,60 @@
                   <item>
                    <widget class="QCheckBox" name="cbxCompileExpressions">
                     <property name="text">
-                     <string>Execute expressions on postgres server-side if possible (Experimental)</string>
+                     <string>Execute expressions on server-side if possible</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cbxAutoTransaction">
+                    <property name="text">
+                     <string>Create transaction groups automatically whenever possible (Experimental)</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QgsCollapsibleGroupBox" name="groupBox_28">
+                 <property name="title">
+                  <string>Hidden Browser Path</string>
+                 </property>
+                 <layout class="QGridLayout" name="_15">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="mSVGLabel_4">
+                    <property name="text">
+                     <string>Paths hidden from browser panel</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <spacer>
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>31</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="1" column="0" colspan="3">
+                   <widget class="QListWidget" name="mListHiddenBrowserPaths">
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>120</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QPushButton" name="mBtnRemoveHiddenPath">
+                    <property name="text">
+                     <string>Remove</string>
                     </property>
                    </widget>
                   </item>
@@ -1693,9 +1772,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-269</y>
-                <width>747</width>
-                <height>802</height>
+                <y>0</y>
+                <width>713</width>
+                <height>675</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_29">
@@ -1803,7 +1882,7 @@
                   <item>
                    <widget class="QgsCollapsibleGroupBox" name="mSimplifyDrawingGroupBox">
                     <property name="title">
-                     <string>Enable feature simplification by default for newly added layers</string>
+                     <string>Enable feature si&amp;mplification by default for newly added layers</string>
                     </property>
                     <property name="flat">
                      <bool>true</bool>
@@ -2414,8 +2493,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>626</width>
-                <height>549</height>
+                <width>730</width>
+                <height>582</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_46">
@@ -2519,8 +2598,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>626</width>
-                <height>549</height>
+                <width>618</width>
+                <height>582</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_25">
@@ -2857,8 +2936,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>692</width>
-                <height>602</height>
+                <width>618</width>
+                <height>582</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -3009,80 +3088,20 @@
                   <string>Measure tool</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_21">
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="textLabel1_10">
-                    <property name="text">
-                     <string>Rubberband color</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
+                  <item row="3" column="0">
                    <widget class="QLabel" name="textLabel1_11">
                     <property name="text">
-                     <string>Preferred measurements units</string>
+                     <string>Preferred distance units</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="1">
-                   <widget class="QRadioButton" name="radMeters">
-                    <property name="text">
-                     <string>Meters</string>
-                    </property>
-                   </widget>
+                  <item row="4" column="1" colspan="3">
+                   <widget class="QComboBox" name="mAreaUnitsComboBox"/>
                   </item>
-                  <item row="5" column="2">
-                   <widget class="QRadioButton" name="radFeet">
-                    <property name="text">
-                     <string>Feet</string>
-                    </property>
-                   </widget>
+                  <item row="3" column="1" colspan="3">
+                   <widget class="QComboBox" name="mDistanceUnitsComboBox"/>
                   </item>
-                  <item row="5" column="3">
-                   <widget class="QRadioButton" name="radNautical">
-                    <property name="text">
-                     <string>Nautical Miles</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="4">
-                   <widget class="QRadioButton" name="radDegrees">
-                    <property name="text">
-                     <string>Degrees</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0">
-                   <widget class="QLabel" name="mAngleUnitsLabel">
-                    <property name="text">
-                     <string>Preferred angle units</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="1">
-                   <widget class="QRadioButton" name="mDegreesRadioButton">
-                    <property name="text">
-                     <string>Degrees</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="2">
-                   <widget class="QRadioButton" name="mRadiansRadioButton">
-                    <property name="text">
-                     <string>Radians</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_12">
-                    <property name="text">
-                     <string>Decimal places</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QSpinBox" name="mDecimalPlacesSpinBox"/>
-                  </item>
-                  <item row="4" column="0">
+                  <item row="2" column="0">
                    <widget class="QLabel" name="label_13">
                     <property name="toolTip">
                      <string>If unchecked large numbers will be converted from m. to km. and from ft. to miles</string>
@@ -3092,21 +3111,24 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="1">
-                   <widget class="QCheckBox" name="mKeepBaseUnitCheckBox">
+                  <item row="1" column="1">
+                   <widget class="QSpinBox" name="mDecimalPlacesSpinBox"/>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_12">
                     <property name="text">
-                     <string/>
+                     <string>Decimal places</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="6" column="3">
-                   <widget class="QRadioButton" name="mGonRadioButton">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="textLabel1_10">
                     <property name="text">
-                     <string>Gon</string>
+                     <string>Rubberband color</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="2" colspan="3">
+                  <item row="0" column="2" colspan="2">
                    <spacer>
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
@@ -3119,7 +3141,31 @@
                     </property>
                    </spacer>
                   </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="textLabel1_14">
+                    <property name="text">
+                     <string>Preferred area units</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="2" column="1">
+                   <widget class="QCheckBox" name="mKeepBaseUnitCheckBox">
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="mAngleUnitsLabel">
+                    <property name="text">
+                     <string>Preferred angle units</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1" colspan="3">
+                   <widget class="QComboBox" name="mAngleUnitsComboBox"/>
+                  </item>
+                  <item row="0" column="1">
                    <widget class="QgsColorButtonV2" name="pbnMeasureColor">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -3352,14 +3398,11 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>626</width>
-                <height>549</height>
+                <width>618</width>
+                <height>582</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_39">
-               <property name="topMargin">
-                <number>9</number>
-               </property>
                <item>
                 <widget class="QgsCollapsibleGroupBox" name="groupBox_3">
                  <property name="enabled">
@@ -3512,6 +3555,59 @@
                 </widget>
                </item>
                <item>
+                <widget class="QgsCollapsibleGroupBox" name="groupBox_27">
+                 <property name="title">
+                  <string>Composer Paths</string>
+                 </property>
+                 <layout class="QGridLayout" name="_7">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="mSVGLabel_3">
+                    <property name="text">
+                     <string>Path(s) to search fo extra print templates</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <spacer>
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>31</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QPushButton" name="mBtnAddTemplatePath">
+                    <property name="text">
+                     <string>Add</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="3">
+                   <widget class="QPushButton" name="mBtnRemoveTemplatePath">
+                    <property name="text">
+                     <string>Remove</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" colspan="4">
+                   <widget class="QListWidget" name="mListComposerTemplatePaths">
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>120</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
                 <spacer name="verticalSpacer_10">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -3556,9 +3652,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-91</y>
-                <width>610</width>
-                <height>640</height>
+                <y>0</y>
+                <width>618</width>
+                <height>582</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -3630,6 +3726,32 @@
                   <string>Rubberband</string>
                  </property>
                  <layout class="QGridLayout" name="_9">
+                  <item row="0" column="9">
+                   <spacer name="horizontalSpacer_33">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="mLineWidthTextLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Line width</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="2">
                    <widget class="QLabel" name="mLineColorTextLabel">
                     <property name="sizePolicy">
@@ -3653,8 +3775,33 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="mLineWidthTextLabel">
+                  <item row="0" column="5">
+                   <widget class="QgsColorButtonV2" name="mFillColorToolButton">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>120</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>120</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="4">
+                   <widget class="QLabel" name="mSelectColorTextLabel">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -3662,22 +3809,9 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Line width</string>
+                     <string>Fill color</string>
                     </property>
                    </widget>
-                  </item>
-                  <item row="0" column="4">
-                   <spacer name="horizontalSpacer_33">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
                   </item>
                   <item row="0" column="3">
                    <widget class="QgsColorButtonV2" name="mLineColorToolButton">
@@ -3701,6 +3835,13 @@
                     </property>
                     <property name="text">
                      <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" colspan="7">
+                   <widget class="QCheckBox" name="mLineGhostCheckBox">
+                    <property name="text">
+                     <string>Don't update rubber band during node editing</string>
                     </property>
                    </widget>
                   </item>
@@ -4057,8 +4198,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>626</width>
-                <height>549</height>
+                <width>618</width>
+                <height>582</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -4195,9 +4336,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-98</y>
-                <width>610</width>
-                <height>647</height>
+                <y>0</y>
+                <width>601</width>
+                <height>595</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_15">
@@ -4239,7 +4380,7 @@
                   <item row="1" column="0">
                    <widget class="QRadioButton" name="radPromptForProjection">
                     <property name="text">
-                     <string>Prompt for &amp;CRS</string>
+                     <string>Pro&amp;mpt for CRS</string>
                     </property>
                    </widget>
                   </item>
@@ -4302,7 +4443,7 @@
                      <string>Automatically enable 'on the fly' reprojection if CRS of a new added layer differ from CRS of layer(s) already present. CRS of present layer(s) will be used.</string>
                     </property>
                     <property name="text">
-                     <string>Automatically enable 'on the fly' reprojection if layers have different CRS</string>
+                     <string>Automatically enable 'on the fly' reprojection if layers ha&amp;ve different CRS</string>
                     </property>
                    </widget>
                   </item>
@@ -4442,15 +4583,15 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>626</width>
-                <height>549</height>
+                <width>618</width>
+                <height>582</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_32">
                <item>
                 <widget class="QGroupBox" name="grpLocale">
                  <property name="title">
-                  <string>Override system locale</string>
+                  <string>O&amp;verride system locale</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -4469,7 +4610,7 @@
                   <item row="1" column="0" colspan="2">
                    <widget class="QLabel" name="label_7">
                     <property name="text">
-                     <string>&lt;b&gt;Note:&lt;/b&gt; Enabling / changing overide on local requires an application restart</string>
+                     <string>&lt;b&gt;Note:&lt;/b&gt; Enabling / changing override on local requires an application restart</string>
                     </property>
                     <property name="wordWrap">
                      <bool>true</bool>
@@ -4550,9 +4691,9 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-156</y>
-                <width>610</width>
-                <height>705</height>
+                <y>0</y>
+                <width>601</width>
+                <height>634</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_33">
@@ -4587,6 +4728,24 @@
                     </item>
                     <item>
                      <widget class="QSpinBox" name="mNetworkTimeoutSpinBox">
+                      <property name="maximum">
+                       <number>100000000</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_40">
+                    <item>
+                     <widget class="QLabel" name="label_45">
+                      <property name="text">
+                       <string>Default expiration period for WMS capabilities (hours)</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="mDefaultCapabilitiesExpirySpinBox">
                       <property name="maximum">
                        <number>100000000</number>
                       </property>
@@ -4693,7 +4852,7 @@
                <item>
                 <widget class="QgsCollapsibleGroupBox" name="grpProxy">
                  <property name="title">
-                  <string>Use proxy for web access</string>
+                  <string>Use pro&amp;xy for web access</string>
                  </property>
                  <property name="flat">
                   <bool>false</bool>
@@ -5013,12 +5172,6 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QgsProjectionSelectionWidget</class>
-   <extends>QWidget</extends>
-   <header>qgsprojectionselectionwidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>QgsCollapsibleGroupBox</class>
    <extends>QGroupBox</extends>
    <header>qgscollapsiblegroupbox.h</header>
@@ -5037,15 +5190,21 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>QgsScaleComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qgsscalecombobox.h</header>
-  </customwidget>
-  <customwidget>
    <class>QgsVariableEditorWidget</class>
    <extends>QWidget</extends>
    <header location="global">qgsvariableeditorwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QgsProjectionSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">qgsprojectionselectionwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QgsScaleComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgsscalecombobox.h</header>
   </customwidget>
   <customwidget>
    <class>QgsSettingsTree</class>
@@ -5117,6 +5276,9 @@
   <tabstop>cbxAddPostgisDC</tabstop>
   <tabstop>cbxAddOracleDC</tabstop>
   <tabstop>cbxCompileExpressions</tabstop>
+  <tabstop>cbxAutoTransaction</tabstop>
+  <tabstop>mBtnRemoveHiddenPath</tabstop>
+  <tabstop>mListHiddenBrowserPaths</tabstop>
   <tabstop>mOptionsScrollArea_04</tabstop>
   <tabstop>chkAddedVisibility</tabstop>
   <tabstop>chkUseRenderCaching</tabstop>
@@ -5165,13 +5327,9 @@
   <tabstop>pbnMeasureColor</tabstop>
   <tabstop>mDecimalPlacesSpinBox</tabstop>
   <tabstop>mKeepBaseUnitCheckBox</tabstop>
-  <tabstop>radMeters</tabstop>
-  <tabstop>radFeet</tabstop>
-  <tabstop>radNautical</tabstop>
-  <tabstop>radDegrees</tabstop>
-  <tabstop>mDegreesRadioButton</tabstop>
-  <tabstop>mRadiansRadioButton</tabstop>
-  <tabstop>mGonRadioButton</tabstop>
+  <tabstop>mDistanceUnitsComboBox</tabstop>
+  <tabstop>mAreaUnitsComboBox</tabstop>
+  <tabstop>mAngleUnitsComboBox</tabstop>
   <tabstop>cmbWheelAction</tabstop>
   <tabstop>spinZoomFactor</tabstop>
   <tabstop>mListGlobalScales</tabstop>
@@ -5194,6 +5352,8 @@
   <tabstop>mValidateGeometries</tabstop>
   <tabstop>mLineWidthSpinBox</tabstop>
   <tabstop>mLineColorToolButton</tabstop>
+  <tabstop>mFillColorToolButton</tabstop>
+  <tabstop>mLineGhostCheckBox</tabstop>
   <tabstop>cbxSnappingOptionsDocked</tabstop>
   <tabstop>mDefaultSnapModeComboBox</tabstop>
   <tabstop>mDefaultSnappingToleranceSpinBox</tabstop>
@@ -5231,6 +5391,7 @@
   <tabstop>mOptionsScrollArea_10</tabstop>
   <tabstop>leWmsSearch</tabstop>
   <tabstop>mNetworkTimeoutSpinBox</tabstop>
+  <tabstop>mDefaultCapabilitiesExpirySpinBox</tabstop>
   <tabstop>mDefaultTileExpirySpinBox</tabstop>
   <tabstop>mDefaultTileMaxRetrySpinBox</tabstop>
   <tabstop>leUserAgent</tabstop>
@@ -5248,6 +5409,7 @@
   <tabstop>mAddUrlPushButton</tabstop>
   <tabstop>mRemoveUrlPushButton</tabstop>
   <tabstop>mAdvancedSettingsEnableButton</tabstop>
+  <tabstop>cbxCheckVersion</tabstop>
  </tabstops>
  <resources>
   <include location="../../images/images.qrc"/>

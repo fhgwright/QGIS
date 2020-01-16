@@ -152,6 +152,15 @@ class QgsMapRenderer : QObject
     //! returns current extent
     QgsRectangle extent() const;
 
+    //! sets rotation
+    //! value in clockwise degrees
+    //! @note added in 2.8
+    void setRotation( double degrees );
+
+    //! returns current rotation in clockwise degrees
+    //! @note added in 2.8
+    double rotation() const;
+
     const QgsMapToPixel* coordinateTransform();
 
     //! Scale denominator
@@ -267,9 +276,9 @@ class QgsMapRenderer : QObject
     void setLabelingEngine( QgsLabelingEngineInterface* iface /Transfer/ );
 
     //! Returns a QPainter::CompositionMode corresponding to a BlendMode
-    static QPainter::CompositionMode getCompositionMode( const QgsMapRenderer::BlendMode &blendMode );
+    static QPainter::CompositionMode getCompositionMode( QgsMapRenderer::BlendMode blendMode );
     //! Returns a BlendMode corresponding to a QPainter::CompositionMode
-    static QgsMapRenderer::BlendMode getBlendModeEnum( const QPainter::CompositionMode &blendMode );
+    static QgsMapRenderer::BlendMode getBlendModeEnum( QPainter::CompositionMode blendMode );
 
     void addLayerCoordinateTransform( const QString& layerId, const QString& srcAuthId, const QString& destAuthId, int srcDatumTransform = -1, int destDatumTransform = -1 );
     void clearLayerCoordinateTransforms();
@@ -287,6 +296,12 @@ class QgsMapRenderer : QObject
      * also sets the contents of the r2 parameter
      */
     bool splitLayersExtent( QgsMapLayer* layer, QgsRectangle& extent /In,Out/, QgsRectangle& r2 /Out/ );
+
+    /** Set a feature filter provider to filter the features shown in the map.
+     * @param ffp the feature filter provider
+     * @note added in QGIS 2.14
+     */
+    void setFeatureFilterProvider( const QgsFeatureFilterProvider* ffp );
 
   signals:
 
@@ -323,8 +338,8 @@ class QgsMapRenderer : QObject
     void rotationChanged( double );
 
     //! Notifies higher level components to show the datum transform dialog and add a QgsLayerCoordinateTransformInfo for that layer
-    void datumTransformInfoRequested( const QgsMapLayer* ml, const QString& srcAuthId, const QString& destAuthId ) const;
-
+    //! @note not available in Python bindings
+    //void datumTransformInfoRequested( const QgsMapLayer* ml, const QString& srcAuthId, const QString& destAuthId ) const;
 
   public slots:
 

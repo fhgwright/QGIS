@@ -135,9 +135,12 @@ void QgsGrassFeatureIterator::setSelectionRect( const QgsRectangle& rect, bool u
   mSelection.fill( false );
 
   BOUND_BOX box;
-  box.N = rect.yMaximum(); box.S = rect.yMinimum();
-  box.E = rect.xMaximum(); box.W = rect.xMinimum();
-  box.T = PORT_DOUBLE_MAX; box.B = -PORT_DOUBLE_MAX;
+  box.N = rect.yMaximum();
+  box.S = rect.yMinimum();
+  box.E = rect.xMaximum();
+  box.W = rect.xMinimum();
+  box.T = PORT_DOUBLE_MAX;
+  box.B = -PORT_DOUBLE_MAX;
 
   // Init structures
   struct ilist * list = Vect_new_list();
@@ -411,6 +414,7 @@ bool QgsGrassFeatureIterator::fetchFeature( QgsFeature& feature )
       }
       else // standard layer
       {
+        QgsDebugMsgLevel( "standard layer", 3 );
         if ( mNextCidx >= mSource->mLayer->cidxFieldNumCats() )
         {
           break;
@@ -423,10 +427,16 @@ bool QgsGrassFeatureIterator::fetchFeature( QgsFeature& feature )
           QgsDebugMsg( QString( "cidxFieldIndex %1 out of range (0,%2)" ).arg( cidxFieldIndex ).arg( numFields - 1 ) );
           break;
         }
+#if 0
+        // debug
+        Vect_topo_dump( mSource->map(), stderr );
+        Vect_cidx_dump( mSource->map(), stderr );
+#endif
         Vect_cidx_get_cat_by_index( mSource->map(), cidxFieldIndex, mNextCidx++, &tmpCat, &tmpType, &tmpLid );
         // Warning: selection array is only of type line/area of current layer -> check type first
         if ( !( tmpType & mSource->mGrassType ) )
         {
+          QgsDebugMsgLevel( QString( "tmpType = %1 does not match mGrassType = %2" ).arg( tmpType ).arg( mSource->mGrassType ), 3 );
           continue;
         }
 
@@ -436,6 +446,8 @@ bool QgsGrassFeatureIterator::fetchFeature( QgsFeature& feature )
         lid = tmpLid;
         cat = tmpCat;
         type = tmpType;
+        QgsDebugMsgLevel( QString( "lid = %1 field = %2 cat = %3 type= %4" )
+                          .arg( lid ).arg( mSource->mLayer->field() ).arg( cat ).arg( type ), 3 );
         featureId = makeFeatureId( lid, cat );
       }
 
@@ -455,9 +467,11 @@ bool QgsGrassFeatureIterator::fetchFeature( QgsFeature& feature )
   }
   if ( !oldGeometry )
   {
-    if ( lid == 0 || lid > mSource->mLayer->map()->numLines() )
+    int numLinesOrAreas = ( mSource->mGrassType == GV_AREA && !mSource->mEditing ) ?
+                          mSource->mLayer->map()->numAreas() : mSource->mLayer->map()->numLines();
+    if ( lid == 0 || lid > numLinesOrAreas )
     {
-      QgsDebugMsg( QString( "lid = %1 -> close" ).arg( lid ) );
+      QgsDebugMsg( QString( "lid = %1 > numLinesOrAreas = %2 -> close" ).arg( lid ).arg( numLinesOrAreas ) );
       close();
       mSource->mLayer->map()->unlockReadWrite();
       return false; // No more features
@@ -515,7 +529,7 @@ bool QgsGrassFeatureIterator::fetchFeature( QgsFeature& feature )
     {
       feature.setAttribute( 1, QgsGrass::vectorTypeName( type ) );
 
-      int node1, node2;;
+      int node1, node2;
       Vect_get_line_nodes( mSource->map(), lid, &node1, &node2 );
       feature.setAttribute( 2, node1 );
       if ( mSource->mLayerType == QgsGrassProvider::TOPO_LINE )
@@ -540,7 +554,8 @@ bool QgsGrassFeatureIterator::fetchFeature( QgsFeature& feature )
       int nlines = Vect_get_node_n_lines( mSource->map(), lid );
       for ( int i = 0; i < nlines; i++ )
       {
-        int line = Vect_get_node_line( mSource->map(), lid, i );  QgsDebugMsg( "cancel" );
+        int line = Vect_get_node_line( mSource->map(), lid, i );
+        QgsDebugMsg( "cancel" );
         if ( i > 0 ) lines += ",";
         lines += QString::number( line );
       }
@@ -651,7 +666,15 @@ int QgsGrassFeatureIterator::catFromFid( QgsFeatureId fid )
 
 QVariant QgsGrassFeatureIterator::nonEditableValue( int layerNumber )
 {
-  return tr( "<not editable (layer %1)>" ).arg( layerNumber );
+  if ( layerNumber > 0 )
+  {
+    return tr( "<not editable (layer %1)>" ).arg( layerNumber );
+  }
+  else
+  {
+    // attributes of features without cat (layer = 0) may be edited -> cat created
+    return QVariant();
+  }
 }
 
 void QgsGrassFeatureIterator::setFeatureAttributes( int cat, QgsFeature *feature, QgsGrassVectorMap::TopoSymbol symbol )
@@ -711,7 +734,7 @@ void QgsGrassFeatureIterator::setFeatureAttributes( int cat, QgsFeature *feature
       {
         value = QVariant( cat );
       }
-      else
+      else if ( layerNumber > 0 )
       {
         value = nonEditableValue( layerNumber );
       }

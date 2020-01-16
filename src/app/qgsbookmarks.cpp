@@ -103,6 +103,8 @@ QgsBookmarks::QgsBookmarks( QWidget *parent ) : QDockWidget( parent )
 
 QgsBookmarks::~QgsBookmarks()
 {
+  delete lstBookmarks->model();
+  QSqlDatabase::removeDatabase( "bookmarks" );
   saveWindowLocation();
 }
 
@@ -179,7 +181,7 @@ void QgsBookmarks::deleteClicked()
     }
   }
 
-  if ( rows.size() == 0 )
+  if ( rows.isEmpty() )
     return;
 
   // make sure the user really wants to delete these bookmarks
@@ -239,7 +241,7 @@ void QgsBookmarks::importFromXML()
 {
   QSettings settings;
 
-  QString lastUsedDir = settings.value( "/Windows/Bookmarks/LastUsedDirectory", QVariant() ).toString();
+  QString lastUsedDir = settings.value( "/Windows/Bookmarks/LastUsedDirectory", QDir::homePath() ).toString();
   QString fileName = QFileDialog::getOpenFileName( this, tr( "Import Bookmarks" ), lastUsedDir,
                      tr( "XML files (*.xml *XML)" ) );
   if ( fileName.isEmpty() )
@@ -283,14 +285,14 @@ void QgsBookmarks::importFromXML()
                "  VALUES (NULL,"
                "'" + name.text() + "',"
                "'" + prjname.text() + "',"
-               + xmin.text() + ","
-               + ymin.text() + ","
-               + xmax.text() + ","
-               + ymax.text() + ","
+               + xmin.text() + ','
+               + ymin.text() + ','
+               + xmax.text() + ','
+               + ymax.text() + ','
                + srid.text() + ");";
   }
 
-  QStringList queriesList = queries.split( ";" );
+  QStringList queriesList = queries.split( ';' );
   QSqlQuery query( model->database() );
 
   Q_FOREACH ( const QString& queryTxt, queriesList )
@@ -315,7 +317,7 @@ void QgsBookmarks::exportToXML()
 {
   QSettings settings;
 
-  QString lastUsedDir = settings.value( "/Windows/Bookmarks/LastUsedDirectory", QVariant() ).toString();
+  QString lastUsedDir = settings.value( "/Windows/Bookmarks/LastUsedDirectory", QDir::homePath() ).toString();
   QString fileName = QFileDialog::getSaveFileName( this, tr( "Export bookmarks" ), lastUsedDir,
                      tr( "XML files( *.xml *.XML )" ) );
   if ( fileName.isEmpty() )
@@ -324,7 +326,7 @@ void QgsBookmarks::exportToXML()
   }
 
   // ensure the user never ommited the extension from the file name
-  if ( !fileName.toLower().endsWith( ".xml" ) )
+  if ( !fileName.endsWith( ".xml", Qt::CaseInsensitive ) )
   {
     fileName += ".xml";
   }

@@ -16,15 +16,15 @@ import qgis
 
 from qgis.core import QgsPoint
 
-from utilities import getQgisTestApp, TestCase, unittest
+from qgis.testing import start_app, unittest
 
-QGISAPP, CANVAS, IFACE, PARENT = getQgisTestApp()
+start_app()
 
 
-class TestQgsPoint(TestCase):
+class TestQgsPoint(unittest.TestCase):
 
     def __init__(self, methodName):
-        """Run once on class initialisation."""
+        """Run once on class initialization."""
         unittest.TestCase.__init__(self, methodName)
 
     def setUp(self):

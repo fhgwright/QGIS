@@ -20,11 +20,11 @@
 
 QgsClassificationWidgetWrapper::QgsClassificationWidgetWrapper( QgsVectorLayer* vl, int fieldIdx, QWidget* editor, QWidget* parent )
     :  QgsEditorWidgetWrapper( vl, fieldIdx, editor, parent )
-    , mComboBox( NULL )
+    , mComboBox( nullptr )
 {
 }
 
-QVariant QgsClassificationWidgetWrapper::value()
+QVariant QgsClassificationWidgetWrapper::value() const
 {
   return mComboBox->itemData( mComboBox->currentIndex() );
 }
@@ -59,7 +59,7 @@ void QgsClassificationWidgetWrapper::initWidget( QWidget* editor )
   }
 }
 
-bool QgsClassificationWidgetWrapper::valid()
+bool QgsClassificationWidgetWrapper::valid() const
 {
   return mComboBox;
 }

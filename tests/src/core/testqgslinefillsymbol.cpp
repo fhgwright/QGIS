@@ -116,7 +116,7 @@ void TestQgsLineFillSymbol::initTestCase()
   // and is more light weight
   //
   mMapSettings.setLayers( QStringList() << mpPolysLayer->id() );
-  mReport += "<h1>Gradient Renderer Tests</h1>\n";
+  mReport += "<h1>Line Fill Symbol Tests</h1>\n";
 
 }
 void TestQgsLineFillSymbol::cleanupTestCase()

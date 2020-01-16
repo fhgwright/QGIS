@@ -54,7 +54,7 @@ class APP_EXPORT QgsVectorLayerProperties : public QgsOptionsDialogBase, private
       DB,
     };
 
-    QgsVectorLayerProperties( QgsVectorLayer *lyr = 0, QWidget *parent = 0, Qt::WindowFlags fl = QgisGui::ModalDialogFlags );
+    QgsVectorLayerProperties( QgsVectorLayer *lyr = nullptr, QWidget *parent = nullptr, Qt::WindowFlags fl = QgisGui::ModalDialogFlags );
     ~QgsVectorLayerProperties();
     /** Returns the display name entered in the dialog*/
     QString displayName();
@@ -124,8 +124,8 @@ class APP_EXPORT QgsVectorLayerProperties : public QgsOptionsDialogBase, private
   signals:
 
     /** Emitted when changes to layer were saved to update legend */
-    void refreshLegend( QString layerID, bool expandItem );
-    void refreshLegend( QString layerID );
+    void refreshLegend( const QString& layerID, bool expandItem );
+    void refreshLegend( const QString& layerID );
 
     void toggleEditing( QgsMapLayer * );
 
@@ -145,6 +145,11 @@ class APP_EXPORT QgsVectorLayerProperties : public QgsOptionsDialogBase, private
      */
     void updateVariableEditor();
 
+    /**
+     * @brief updates the FieldsPropertiesDialog when syncing the layer properties
+     */
+    void updateFieldsPropertiesDialog();
+
   protected:
 
     void saveStyleAs( StyleType styleType );
@@ -157,6 +162,8 @@ class APP_EXPORT QgsVectorLayerProperties : public QgsOptionsDialogBase, private
     QgsVectorLayer *layer;
 
     bool mMetadataFilled;
+
+    QString mOriginalSubsetSQL;
 
     QMenu *mSaveAsMenu;
     QMenu *mLoadStyleMenu;

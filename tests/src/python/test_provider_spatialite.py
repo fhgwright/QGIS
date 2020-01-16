@@ -15,16 +15,15 @@ __revision__ = '$Format:%H$'
 import qgis
 import os
 import tempfile
-import sys
 
 from qgis.core import QgsVectorLayer, QgsPoint, QgsFeature
 
-from utilities import (unitTestDataPath,
-                       getQgisTestApp,
-                       TestCase,
-                       unittest
-                       )
+from qgis.testing import (start_app,
+                          unittest
+                          )
+from utilities import unitTestDataPath
 from providertestbase import ProviderTestCase
+from PyQt4.QtCore import QSettings
 
 try:
     from pyspatialite import dbapi2 as sqlite3
@@ -33,7 +32,7 @@ except ImportError:
     raise ImportError
 
 # Convenience instances in case you may need them
-QGISAPP, CANVAS, IFACE, PARENT = getQgisTestApp()
+start_app()
 TEST_DATA_DIR = unitTestDataPath()
 
 
@@ -41,15 +40,19 @@ def die(error_message):
     raise Exception(error_message)
 
 
-class TestQgsSpatialiteProvider(TestCase, ProviderTestCase):
+class TestQgsSpatialiteProvider(unittest.TestCase, ProviderTestCase):
 
     @classmethod
     def setUpClass(cls):
         """Run before all tests"""
         # setup provider for base tests
-        cls.vl = QgsVectorLayer('dbname=\'{}/provider/spatialite.db\' table="somedata" (geometry) sql='.format(TEST_DATA_DIR), 'test', 'spatialite')
+        cls.vl = QgsVectorLayer('dbname=\'{}/provider/spatialite.db\' table="somedata" (geom) sql='.format(TEST_DATA_DIR), 'test', 'spatialite')
         assert(cls.vl.isValid())
         cls.provider = cls.vl.dataProvider()
+
+        cls.vl_poly = QgsVectorLayer('dbname=\'{}/provider/spatialite.db\' table="somepolydata" (geom) sql='.format(TEST_DATA_DIR), 'test', 'spatialite')
+        assert(cls.vl_poly.isValid())
+        cls.poly_provider = cls.vl_poly.dataProvider()
 
         # create test db
         cls.dbname = os.path.join(tempfile.gettempdir(), "test.sqlite")
@@ -110,7 +113,7 @@ class TestQgsSpatialiteProvider(TestCase, ProviderTestCase):
     def tearDownClass(cls):
         """Run after all tests"""
         # for the time being, keep the file to check with qgis
-        #if os.path.exists(cls.dbname) :
+        # if os.path.exists(cls.dbname) :
         #    os.remove(cls.dbname)
         pass
 
@@ -121,6 +124,12 @@ class TestQgsSpatialiteProvider(TestCase, ProviderTestCase):
     def tearDown(self):
         """Run after each test."""
         pass
+
+    def enableCompiler(self):
+        QSettings().setValue(u'/qgis/compileExpressions', True)
+
+    def disableCompiler(self):
+        QSettings().setValue(u'/qgis/compileExpressions', False)
 
     def test_SplitFeature(self):
         """Create spatialite database"""

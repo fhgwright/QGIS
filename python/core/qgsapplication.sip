@@ -25,10 +25,15 @@ static char **qtgui_ArgvToC(PyObject *argvlist, int &argc)
         char *arg;
 
         // Get the argument and allocate memory for it.
+#if PYTHON2
         if ((arg = PyString_AsString(PyList_GET_ITEM(argvlist, a))) == NULL ||
             (argv[a] = (char *)sipMalloc(strlen(arg) + 1)) == NULL)
             return NULL;
-
+#else
+        if ((arg = PyBytes_AsString(PyList_GET_ITEM(argvlist, a))) == NULL ||
+            (argv[a] = (char *)sipMalloc(strlen(arg) + 1)) == NULL)
+            return NULL;
+#endif
         // Copy the argument and save a pointer to it.
         strcpy(argv[a], arg);
         argv[a + argc + 1] = argv[a];
@@ -58,6 +63,10 @@ static void qtgui_UpdatePyArgv(PyObject *argvlist, int argc, char **argv)
 
 
   public:
+    static const char* QGIS_ORGANIZATION_NAME;
+    static const char* QGIS_ORGANIZATION_DOMAIN;
+    static const char* QGIS_APPLICATION_NAME;
+
     //QgsApplication(int argc, char ** argv, bool GUIenabled);
     QgsApplication(SIP_PYLIST argv, bool GUIenabled, QString customConfigPath = QString() ) /PostHook=__pyQtQAppHook__/ [(int &argc, char **argv, bool GUIenabled, const QString& customConfigPath = QString() )];
 %MethodCode
@@ -82,6 +91,9 @@ static void qtgui_UpdatePyArgv(PyObject *argvlist, int argc, char **argv)
 %End
 
     virtual ~QgsApplication();
+
+    //! Set the FileOpen event receiver
+    static void setFileOpenEventReceiver( QObject * receiver );
 
     /** Set the active theme to the specified theme.
      * The theme name should be a single word e.g. 'default','classic'.
@@ -146,7 +158,7 @@ static void qtgui_UpdatePyArgv(PyObject *argvlist, int argc, char **argv)
 
     /*!
       Returns the path to the licence file.
-    */
+     */
     static QString licenceFilePath();
 
     //! Returns the path to the help application.
@@ -178,6 +190,9 @@ static void qtgui_UpdatePyArgv(PyObject *argvlist, int argc, char **argv)
 
     //! Returns the pathes to svg directories.
     static QStringList svgPaths();
+
+    //! Returns the pathes to composer template directories
+    static QStringList composerTemplatePaths();
 
     //! Returns the system environment variables passed to application.
     static QMap<QString, QString> systemEnvVars();
@@ -211,6 +226,33 @@ static void qtgui_UpdatePyArgv(PyObject *argvlist, int argc, char **argv)
 
     //! Returns the path to user's style.
     static QString userStyleV2Path();
+
+    //! Returns the short name regular expression for line edit validator
+    static QRegExp shortNameRegExp();
+
+    /** Returns the user's operating system login account name.
+     * @note added in QGIS 2.14
+     * @see userFullName()
+     */
+    static QString userLoginName();
+
+    /** Returns the user's operating system login account full display name.
+     * @note added in QGIS 2.14
+     * @see userLoginName()
+     */
+    static QString userFullName();
+
+    /** Returns a string name of the operating system QGIS is running on.
+     * @note added in QGIS 2.14
+     * @see platform()
+     */
+    static QString osName();
+
+    /** Returns the QGIS platform name, eg "desktop" or "server".
+     * @note added in QGIS 2.14
+     * @see osName()
+     */
+    static QString platform();
 
     //! Returns the path to user's themes folder
     static QString userThemesFolder();
@@ -249,10 +291,13 @@ static void qtgui_UpdatePyArgv(PyObject *argvlist, int argc, char **argv)
     static bool createDB( QString* errorMessage = 0 );
 
     //! Create the users theme folder
-    static bool createThemeFolder( );
+    static bool createThemeFolder();
 
     //! deletes provider registry and map layer registry
     static void exitQgis();
+
+    //! get application icon
+    static QString appIconPath();
 
     /** Constants for endian-ness */
     enum endian_t
@@ -287,9 +332,9 @@ static void qtgui_UpdatePyArgv(PyObject *argvlist, int argc, char **argv)
     static void registerOgrDrivers();
 
     /** Converts absolute path to path relative to target */
-    static QString absolutePathToRelativePath( QString apath, QString targetPath );
+    static QString absolutePathToRelativePath( const QString& apath, const QString& targetPath );
     /** Converts path relative to target to an absolute path */
-    static QString relativePathToAbsolutePath( QString rpath, QString targetPath );
+    static QString relativePathToAbsolutePath( const QString& rpath, const QString& targetPath );
 
     /** Indicates whether running from build directory (not installed) */
     static bool isRunningFromBuildDir();

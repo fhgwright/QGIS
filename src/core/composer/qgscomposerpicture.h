@@ -68,7 +68,7 @@ class CORE_EXPORT QgsComposerPicture: public QgsComposerItem
      * @see usePictureExpression
      * @see pictureFile
      * @deprecated use setPicturePath instead
-    */
+     */
     Q_DECL_DEPRECATED void setPictureFile( const QString& path );
 
     /** Returns the path of the source image file. Data defined picture source may override
@@ -77,7 +77,7 @@ class CORE_EXPORT QgsComposerPicture: public QgsComposerItem
      * @see usePictureExpression
      * @see setPictureFile
      * @deprecated use picturePath instead
-    */
+     */
     Q_DECL_DEPRECATED QString pictureFile() const;
 
     /** Sets the source path of the image (may be svg or a raster format). Data defined
@@ -87,7 +87,7 @@ class CORE_EXPORT QgsComposerPicture: public QgsComposerItem
      * @see usePictureExpression
      * @see picturePath
      * @note added in QGIS 2.5
-    */
+     */
     void setPicturePath( const QString& path );
 
     /** Returns the path of the source image. Data defined picture source may override
@@ -96,12 +96,12 @@ class CORE_EXPORT QgsComposerPicture: public QgsComposerItem
      * @see usePictureExpression
      * @see setPicturePath
      * @note added in QGIS 2.5
-    */
+     */
     QString picturePath() const;
 
     /** Sets this items bound in scene coordinates such that 1 item size units
      * corresponds to 1 scene size unit and resizes the svg symbol / image
-    */
+     */
     void setSceneRect( const QRectF& rectangle ) override;
 
     /** Stores state in Dom element
@@ -126,7 +126,7 @@ class CORE_EXPORT QgsComposerPicture: public QgsComposerItem
      * @note added in 2.2
      * @see setPictureRotation
      * @see rotationMap
-    */
+     */
     double pictureRotation() const { return mPictureRotation; }
 
     /** Sets the map object for rotation (by id). A value of -1 disables the map
@@ -272,21 +272,21 @@ class CORE_EXPORT QgsComposerPicture: public QgsComposerItem
      * @param context expression context for evaluating data defined picture sources
      * @note added in 2.3
      */
-    void refreshPicture( const QgsExpressionContext* context = 0 );
+    void refreshPicture( const QgsExpressionContext* context = nullptr );
 
     /** Prepares the picture's source expression after it is altered or the compositions
      * atlas coverage layer changes.
      * @note added in 2.3
      * @deprecated no longer required
      */
-    Q_DECL_DEPRECATED void updatePictureExpression() {};
+    Q_DECL_DEPRECATED void updatePictureExpression() {}
 
     /** Forces a recalculation of the picture's frame size
      * @note added in 2.3
      */
     void recalculateSize();
 
-    virtual void refreshDataDefinedProperty( const QgsComposerObject::DataDefinedProperty property = QgsComposerObject::AllProperties, const QgsExpressionContext *context = 0 ) override;
+    virtual void refreshDataDefinedProperty( const QgsComposerObject::DataDefinedProperty property = QgsComposerObject::AllProperties, const QgsExpressionContext *context = nullptr ) override;
 
   signals:
     /** Is emitted on picture rotation change*/
@@ -334,15 +334,15 @@ class CORE_EXPORT QgsComposerPicture: public QgsComposerItem
 
     /** Returns part of a raster image which will be shown, given current picture
      * anchor settings
-    */
+     */
     QRect clippedImageRect( double &boundRectWidthMM, double &boundRectHeightMM, QSize imageRectPixels );
 
     /** Loads a remote picture for the item
-    */
+     */
     void loadRemotePicture( const QString &url );
 
     /** Loads a local picture for the item
-    */
+     */
     void loadLocalPicture( const QString &path );
 
   private slots:

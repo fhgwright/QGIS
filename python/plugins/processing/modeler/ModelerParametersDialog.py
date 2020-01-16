@@ -131,7 +131,7 @@ class ModelerParametersDialog(QDialog):
             if output.hidden:
                 continue
             if isinstance(output, (OutputRaster, OutputVector, OutputTable,
-                          OutputHTML, OutputFile, OutputDirectory)):
+                                   OutputHTML, OutputFile, OutputDirectory)):
                 label = QLabel(output.description + '<'
                                + output.__class__.__name__ + '>')
                 item = QLineEdit()
@@ -277,10 +277,14 @@ class ModelerParametersDialog(QDialog):
             bools = self.getAvailableValuesOfType(ParameterBoolean, None)
             for b in bools:
                 item.addItem(self.resolveValueDescription(b), b)
+            if param.default:
+                item.setCurrentIndex(0)
+            else:
+                item.setCurrentIndex(1)
         elif isinstance(param, ParameterSelection):
             item = QComboBox()
             item.addItems(param.options)
-            item.setCurrentIndex(param.default)
+            item.setCurrentIndex(param.default or 1)
         elif isinstance(param, ParameterFixedTable):
             item = FixedTablePanel(param)
         elif isinstance(param, ParameterRange):
@@ -299,13 +303,13 @@ class ModelerParametersDialog(QDialog):
             options = [(self.resolveValueDescription(s), s) for s in strings]
             if param.multiline:
                 item = MultilineTextPanel(options)
-                item.setText(unicode(param.default))
+                item.setText(unicode(param.default or ""))
             else:
                 item = QComboBox()
                 item.setEditable(True)
                 for desc, val in options:
                     item.addItem(desc, val)
-                item.setEditText(unicode(param.default))
+                item.setEditText(unicode(param.default or ""))
         elif isinstance(param, ParameterTableField):
             item = QComboBox()
             item.setEditable(True)
@@ -552,10 +556,15 @@ class ModelerParametersDialog(QDialog):
     def setParamNumberValue(self, alg, param, widget):
         idx = widget.findText(widget.currentText())
         if idx < 0:
-            s = widget.currentText()
-            try:
-                value = float(s)
-            except:
+            s = widget.currentText().strip()
+            if s:
+                try:
+                    value = float(s)
+                except:
+                    return False
+            elif param.optional:
+                value = None
+            else:
                 return False
         else:
             value = widget.itemData(widget.currentIndex())
@@ -565,14 +574,19 @@ class ModelerParametersDialog(QDialog):
     def setParamExtentValue(self, alg, param, widget):
         idx = widget.findText(widget.currentText())
         if idx < 0:
-            s = unicode(widget.currentText())
-            try:
-                tokens = s.split(',')
-                if len(tokens) != 4:
+            s = unicode(widget.currentText()).strip()
+            if s:
+                try:
+                    tokens = s.split(',')
+                    if len(tokens) != 4:
+                        return False
+                    for token in tokens:
+                        float(token)
+                except:
                     return False
-                for token in tokens:
-                    float(token)
-            except:
+            elif param.optional:
+                s = None
+            else:
                 return False
             alg.params[param.name] = [s]
         else:
@@ -582,7 +596,7 @@ class ModelerParametersDialog(QDialog):
 
     def setParamValue(self, alg, param, widget):
         if isinstance(param, (ParameterRaster, ParameterVector,
-                      ParameterTable)):
+                              ParameterTable)):
             return self.setParamValueLayerOrTable(alg, param, widget)
         elif isinstance(param, ParameterBoolean):
             if widget.currentIndex() < 2:
@@ -607,13 +621,15 @@ class ModelerParametersDialog(QDialog):
             return True
         elif isinstance(param, ParameterCrs):
             authid = widget.getValue()
-            if authid is None:
-                alg.params[param.name] = None
-            else:
-                alg.params[param.name] = authid
+            if authid is None and not param.optional:
+                return False
+            alg.params[param.name] = authid
             return True
         elif isinstance(param, ParameterFixedTable):
-            alg.params[param.name] = ParameterFixedTable.tableToString(widget.table)
+            table = widget.table
+            if not bool(table) and not param.optional:
+                return False
+            alg.params[param.name] = ParameterFixedTable.tableToString(table)
             return True
         elif isinstance(param, ParameterTableField):
             return self.setParamTableFieldValue(alg, param, widget)

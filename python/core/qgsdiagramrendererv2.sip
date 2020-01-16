@@ -24,6 +24,7 @@ struct QgsDiagramLayerSettings
     };
 
     QgsDiagramLayerSettings();
+    QgsDiagramLayerSettings( const QgsDiagramLayerSettings& rh );
 
     ~QgsDiagramLayerSettings();
 
@@ -31,9 +32,19 @@ struct QgsDiagramLayerSettings
     Placement placement;
     unsigned int placementFlags;
     int priority; // 0 = low, 10 = high
+
+    //! Z-index of diagrams, where diagrams with a higher z-index are drawn on top of diagrams with a lower z-index
+    double zIndex;
+
     bool obstacle; // whether it's an obstacle
     double dist; // distance from the feature (in mm)
     QgsDiagramRendererV2* renderer; // if any renderer is assigned, it is owned by this class
+
+    //assigned when layer gets prepared
+    const QgsCoordinateTransform* ct;
+    const QgsMapToPixel* xform;
+    QgsFields fields;
+
     int xPosColumn; //attribute index for x coordinate (or -1 if position not data defined)
     int yPosColumn;//attribute index for y coordinate (or -1 if position not data defined)
     bool showAll;
@@ -105,6 +116,7 @@ class QgsDiagramSettings
      * @note added in 2.10
      */
     QList< QgsLayerTreeModelLegendNode* > legendItems( QgsLayerTreeLayer* nodeLayer ) const /Factory/;
+
 };
 
 //additional diagram settings for interpolated size rendering
@@ -137,7 +149,7 @@ class QgsDiagramRendererV2
 
     /** Returns new instance that is equivalent to this one
      * @note added in 2.4 */
-    virtual QgsDiagramRendererV2* clone() const = 0;
+    virtual QgsDiagramRendererV2* clone() const = 0 /Factory/;
 
     /** Returns size of the diagram for a feature in map units. Returns an invalid QSizeF in case of error*/
     virtual QSizeF sizeMapUnits( const QgsFeature& feature, const QgsRenderContext& c );
@@ -147,7 +159,7 @@ class QgsDiagramRendererV2
     /** Returns attribute indices needed for diagram rendering*/
     virtual QList<QString> diagramAttributes() const = 0;
 
-    void renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QPointF& pos );
+    void renderDiagram( const QgsFeature& feature, QgsRenderContext& c, QPointF pos );
 
     void setDiagram( QgsDiagram* d /Transfer/ );
     QgsDiagram* diagram() const;
@@ -198,7 +210,7 @@ class QgsSingleCategoryDiagramRenderer : QgsDiagramRendererV2
     QgsSingleCategoryDiagramRenderer();
     ~QgsSingleCategoryDiagramRenderer();
 
-    QgsDiagramRendererV2* clone() const;
+    virtual QgsSingleCategoryDiagramRenderer* clone() const /Factory/;
 
     QString rendererName() const;
 
@@ -229,7 +241,7 @@ class QgsLinearlyInterpolatedDiagramRenderer : QgsDiagramRendererV2
     QgsLinearlyInterpolatedDiagramRenderer();
     ~QgsLinearlyInterpolatedDiagramRenderer();
 
-    QgsDiagramRendererV2* clone() const;
+    virtual QgsLinearlyInterpolatedDiagramRenderer* clone() const /Factory/;
 
     /** Returns list with all diagram settings in the renderer*/
     QList<QgsDiagramSettings> diagramSettings() const;

@@ -290,7 +290,7 @@ struct QgsWmtsTheme
   QgsWmtsTheme *subTheme;
   QStringList layerRefs;
 
-  QgsWmtsTheme() : subTheme( 0 ) {}
+  QgsWmtsTheme() : subTheme( nullptr ) {}
   ~QgsWmtsTheme() { delete subTheme; }
 };
 
@@ -475,7 +475,7 @@ class QgsWmsSettings
 {
   public:
 
-    bool parseUri( QString uriString );
+    bool parseUri( const QString& uriString );
 
     QString baseUrl() const { return mBaseUrl; }
     QgsWmsAuthorization authorization() const { return mAuth; }
@@ -600,7 +600,7 @@ class QgsWmsCapabilities
     void parseCapability( QDomElement const & e, QgsWmsCapabilityProperty& capabilityProperty );
     void parseRequest( QDomElement const & e, QgsWmsRequestProperty& requestProperty );
     void parseLegendUrl( QDomElement const &e, QgsWmsLegendUrlProperty &legendUrlProperty );
-    void parseLayer( QDomElement const & e, QgsWmsLayerProperty& layerProperty, QgsWmsLayerProperty *parentProperty = 0 );
+    void parseLayer( QDomElement const & e, QgsWmsLayerProperty& layerProperty, QgsWmsLayerProperty *parentProperty = nullptr );
     void parseStyle( QDomElement const & e, QgsWmsStyleProperty& styleProperty );
 
     void parseOperationType( QDomElement const & e, QgsWmsOperationType& operationType );
@@ -614,7 +614,7 @@ class QgsWmsCapabilities
     void parseKeywords( const QDomNode &e, QStringList &keywords );
     void parseTheme( const QDomElement &e, QgsWmtsTheme &t );
 
-    QString nodeAttribute( const QDomElement &e, QString name, QString defValue = QString::null );
+    QString nodeAttribute( const QDomElement &e, const QString& name, const QString& defValue = QString::null );
 
     /**
      * In case no bounding box is present in WMTS capabilities, try to estimate it from tile matrix sets.
@@ -696,9 +696,9 @@ class QgsWmsCapabilitiesDownload : public QObject
     Q_OBJECT
 
   public:
-    explicit QgsWmsCapabilitiesDownload( QObject* parent = 0 );
+    explicit QgsWmsCapabilitiesDownload( bool forceRefresh, QObject* parent = nullptr );
 
-    QgsWmsCapabilitiesDownload( const QString& baseUrl, const QgsWmsAuthorization& auth, QObject* parent = 0 );
+    QgsWmsCapabilitiesDownload( const QString& baseUrl, const QgsWmsAuthorization& auth, bool forceRefresh, QObject* parent = nullptr );
 
     virtual ~QgsWmsCapabilitiesDownload();
 
@@ -751,6 +751,7 @@ class QgsWmsCapabilitiesDownload : public QObject
     QByteArray mHttpCapabilitiesResponse;
 
     bool mIsAborted;
+    bool mForceRefresh;
 
   private:
     void connectManager();

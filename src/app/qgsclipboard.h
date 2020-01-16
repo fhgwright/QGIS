@@ -55,8 +55,8 @@ class APP_EXPORT QgsClipboard : public QObject
     Q_OBJECT
   public:
     /**
-    * Constructor for the clipboard.
-    */
+     * Constructor for the clipboard.
+     */
     QgsClipboard();
 
     //! Destructor
@@ -112,7 +112,7 @@ class APP_EXPORT QgsClipboard : public QObject
     /*
      * Stores a MimeData together with a text into the system clipboard
      */
-    void setData( const QString& mimeType, const QByteArray& data, const QString* text = 0 );
+    void setData( const QString& mimeType, const QByteArray& data, const QString* text = nullptr );
     /*
      * Stores a MimeData together with a text into the system clipboard
      */

@@ -39,10 +39,10 @@ class CORE_EXPORT QgsHueSaturationFilter : public QgsRasterInterface
       GrayscaleAverage
     };
 
-    QgsHueSaturationFilter( QgsRasterInterface *input = 0 );
+    QgsHueSaturationFilter( QgsRasterInterface *input = nullptr );
     ~QgsHueSaturationFilter();
 
-    QgsRasterInterface * clone() const override;
+    QgsHueSaturationFilter * clone() const override;
 
     int bandCount() const override;
 

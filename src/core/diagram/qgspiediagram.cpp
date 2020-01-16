@@ -30,7 +30,7 @@ QgsPieDiagram::~QgsPieDiagram()
 {
 }
 
-QgsDiagram* QgsPieDiagram::clone() const
+QgsPieDiagram* QgsPieDiagram::clone() const
 {
   return new QgsPieDiagram( *this );
 }
@@ -90,7 +90,7 @@ QSizeF QgsPieDiagram::diagramSize( const QgsFeature& feature, const QgsRenderCon
   if ( size.width() <= s.minimumSize && size.height() <= s.minimumSize )
   {
     bool p = false; // preserve height == width
-    if ( size.width() == size.height() )
+    if ( qgsDoubleNear( size.width(), size.height() ) )
       p = true;
 
     size.scale( s.minimumSize, s.minimumSize, Qt::KeepAspectRatio );
@@ -112,7 +112,7 @@ QSizeF QgsPieDiagram::diagramSize( const QgsAttributes& attributes, const QgsRen
 
 int  QgsPieDiagram::sCount = 0;
 
-void QgsPieDiagram::renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QgsDiagramSettings& s, const QPointF& position )
+void QgsPieDiagram::renderDiagram( const QgsFeature& feature, QgsRenderContext& c, const QgsDiagramSettings& s, QPointF position )
 {
   QPainter* p = c.painter();
   if ( !p )

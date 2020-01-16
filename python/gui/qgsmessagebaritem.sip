@@ -31,7 +31,7 @@ class QgsMessageBarItem: QWidget
     QgsMessageBarItem *setDuration( int duration );
 
     //! returns the duration in second of the message
-    int duration();
+    int duration() const;
 
     //! returns the level
     QgsMessageBar::MessageLevel level();
@@ -41,6 +41,6 @@ class QgsMessageBarItem: QWidget
 
   signals:
     //! emitted when the message level has changed
-    void styleChanged( QString styleSheet );
+    void styleChanged( const QString& styleSheet );
 };
 

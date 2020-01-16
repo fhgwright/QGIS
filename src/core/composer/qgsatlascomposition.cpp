@@ -28,13 +28,14 @@
 #include "qgsproject.h"
 #include "qgsmessagelog.h"
 #include "qgsexpressioncontext.h"
+#include "qgscrscache.h"
 
 QgsAtlasComposition::QgsAtlasComposition( QgsComposition* composition )
     : mComposition( composition )
     , mEnabled( false )
     , mHideCoverage( false )
     , mFilenamePattern( "'output_'||@atlas_featurenumber" )
-    , mCoverageLayer( 0 )
+    , mCoverageLayer( nullptr )
     , mSingleFile( false )
     , mSortFeatures( false )
     , mSortAscending( true )
@@ -75,7 +76,7 @@ void QgsAtlasComposition::removeLayers( const QStringList& layers )
     if ( layerId == mCoverageLayer->id() )
     {
       //current coverage layer removed
-      mCoverageLayer = 0;
+      mCoverageLayer = nullptr;
       setEnabled( false );
       return;
     }
@@ -117,7 +118,7 @@ QgsComposerMap* QgsAtlasComposition::composerMap() const
     }
   }
 
-  return 0;
+  return nullptr;
 }
 
 void QgsAtlasComposition::setComposerMap( QgsComposerMap* map )
@@ -226,7 +227,7 @@ int QgsAtlasComposition::updateFeatures()
     nameExpression.reset( new QgsExpression( mPageNameExpression ) );
     if ( nameExpression->hasParserError() )
     {
-      nameExpression.reset( 0 );
+      nameExpression.reset( nullptr );
     }
     nameExpression->prepare( &expressionContext );
   }
@@ -262,7 +263,7 @@ int QgsAtlasComposition::updateFeatures()
   }
 
   // sort features, if asked for
-  if ( mFeatureKeys.count() )
+  if ( !mFeatureKeys.isEmpty() )
   {
     FieldSorter sorter( mFeatureKeys, mSortAscending );
     qSort( mFeatureIds.begin(), mFeatureIds.end(), sorter );
@@ -311,7 +312,7 @@ void QgsAtlasComposition::endRender()
     return;
   }
 
-  emit featureChanged( 0 );
+  emit featureChanged( nullptr );
 
   updateAtlasMaps();
 
@@ -407,7 +408,7 @@ bool QgsAtlasComposition::prepareForFeature( const int featureI, const bool upda
     return false;
   }
 
-  if ( mFeatureIds.size() == 0 )
+  if ( mFeatureIds.isEmpty() )
   {
     emit statusMsgChanged( tr( "No matching atlas features" ) );
     return false;
@@ -432,6 +433,7 @@ bool QgsAtlasComposition::prepareForFeature( const int featureI, const bool upda
     return false;
   }
 
+  mGeometryCache.clear();
   emit featureChanged( &mCurrentFeature );
   emit statusMsgChanged( QString( tr( "Atlas feature %1 of %2" ) ).arg( featureI + 1 ).arg( mFeatureIds.size() ) );
 
@@ -467,7 +469,7 @@ bool QgsAtlasComposition::prepareForFeature( const int featureI, const bool upda
     atlasMaps << currentMap;
   }
 
-  if ( atlasMaps.count() > 0 )
+  if ( !atlasMaps.isEmpty() )
   {
     //clear the transformed bounds of the previous feature
     mTransformedFeatureBounds = QgsRectangle();
@@ -498,22 +500,10 @@ bool QgsAtlasComposition::prepareForFeature( const int featureI, const bool upda
 
 void QgsAtlasComposition::computeExtent( QgsComposerMap* map )
 {
-  // compute the extent of the current feature, in the crs of the specified map
-  if ( !mCurrentFeature.constGeometry() )
-    return;
-
-  const QgsCoordinateReferenceSystem& coverage_crs = mCoverageLayer->crs();
-  // transformation needed for feature geometries
-  const QgsCoordinateReferenceSystem& destination_crs = map->composition()->mapSettings().destinationCrs();
-  mTransform.setSourceCrs( coverage_crs );
-  mTransform.setDestCRS( destination_crs );
-
   // QgsGeometry::boundingBox is expressed in the geometry"s native CRS
   // We have to transform the grometry to the destination CRS and ask for the bounding box
   // Note: we cannot directly take the transformation of the bounding box, since transformations are not linear
-  QgsGeometry tgeom( *mCurrentFeature.constGeometry() );
-  tgeom.transform( mTransform );
-  mTransformedFeatureBounds = tgeom.boundingBox();
+  mTransformedFeatureBounds = currentGeometry( map->composition()->mapSettings().destinationCrs() ).boundingBox();
 }
 
 void QgsAtlasComposition::prepareMap( QgsComposerMap* map )
@@ -644,7 +634,7 @@ void QgsAtlasComposition::prepareMap( QgsComposerMap* map )
   map->setNewAtlasFeatureExtent( newExtent );
 }
 
-const QString& QgsAtlasComposition::currentFilename() const
+QString QgsAtlasComposition::currentFilename() const
 {
   return mCurrentFilename;
 }
@@ -698,7 +688,7 @@ void QgsAtlasComposition::readXML( const QDomElement& atlasElem, const QDomDocum
   }
 
   // look for stored layer name
-  mCoverageLayer = 0;
+  mCoverageLayer = nullptr;
   QMap<QString, QgsMapLayer*> layers = QgsMapLayerRegistry::instance()->mapLayers();
   for ( QMap<QString, QgsMapLayer*>::const_iterator it = layers.begin(); it != layers.end(); ++it )
   {
@@ -748,7 +738,7 @@ void QgsAtlasComposition::readXMLMapSettings( const QDomElement &elem, const QDo
   Q_UNUSED( doc );
   //look for stored composer map, to upgrade pre 2.1 projects
   int composerMapNo = elem.attribute( "composerMap", "-1" ).toInt();
-  QgsComposerMap * composerMap = 0;
+  QgsComposerMap * composerMap = nullptr;
   if ( composerMapNo != -1 )
   {
     QList<QgsComposerMap*> maps;
@@ -766,7 +756,7 @@ void QgsAtlasComposition::readXMLMapSettings( const QDomElement &elem, const QDo
 
   //upgrade pre 2.1 projects
   double margin = elem.attribute( "margin", "0.0" ).toDouble();
-  if ( composerMap && margin != 0 )
+  if ( composerMap && !qgsDoubleNear( margin, 0.0 ) )
   {
     composerMap->setAtlasMargin( margin );
   }
@@ -822,7 +812,7 @@ bool QgsAtlasComposition::updateFilenameExpression()
 
   QgsExpressionContext expressionContext = createExpressionContext();
 
-  if ( mFilenamePattern.size() > 0 )
+  if ( !mFilenamePattern.isEmpty() )
   {
     mFilenameExpr.reset( new QgsExpression( mFilenamePattern ) );
     // expression used to evaluate each filename
@@ -848,7 +838,7 @@ bool QgsAtlasComposition::updateFilenameExpression()
 bool QgsAtlasComposition::evalFeatureFilename( const QgsExpressionContext &context )
 {
   //generate filename for current atlas feature
-  if ( mFilenamePattern.size() > 0 && !mFilenameExpr.isNull() )
+  if ( !mFilenamePattern.isEmpty() && !mFilenameExpr.isNull() )
   {
     QVariant filenameRes = mFilenameExpr->evaluate( &context );
     if ( mFilenameExpr->hasEvalError() )
@@ -915,6 +905,38 @@ void QgsAtlasComposition::setMargin( float margin )
     return;
   }
 
-  map->setAtlasMargin(( double ) margin );
+  map->setAtlasMargin( static_cast< double >( margin ) );
 }
+
+QgsGeometry QgsAtlasComposition::currentGeometry( const QgsCoordinateReferenceSystem& crs ) const
+{
+  if ( !mCoverageLayer || !mCurrentFeature.isValid() || !mCurrentFeature.constGeometry() )
+  {
+    return QgsGeometry();
+  }
+
+  if ( !crs.isValid() )
+  {
+    // no projection, return the native geometry
+    return *mCurrentFeature.constGeometry();
+  }
+
+  QMap<long, QgsGeometry>::const_iterator it = mGeometryCache.constFind( crs.srsid() );
+  if ( it != mGeometryCache.constEnd() )
+  {
+    // we have it in cache, return it
+    return it.value();
+  }
+
+  if ( mCoverageLayer->crs() == crs )
+  {
+    return *mCurrentFeature.constGeometry();
+  }
+
+  QgsGeometry transformed = *mCurrentFeature.constGeometry();
+  transformed.transform( *QgsCoordinateTransformCache::instance()->transform( mCoverageLayer->crs().authid(), crs.authid() ) );
+  mGeometryCache[crs.srsid()] = transformed;
+  return transformed;
+}
+
 Q_NOWARN_DEPRECATED_POP

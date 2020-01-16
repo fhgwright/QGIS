@@ -56,7 +56,7 @@ class CORE_EXPORT QgsSingleSymbolRendererV2 : public QgsFeatureRendererV2
 
     virtual QString dump() const override;
 
-    virtual QgsFeatureRendererV2* clone() const override;
+    virtual QgsSingleSymbolRendererV2* clone() const override;
 
     virtual void toSld( QDomDocument& doc, QDomElement &element ) const override;
     static QgsFeatureRendererV2* createFromSld( QDomElement& element, QGis::GeometryType geomType );
@@ -83,6 +83,8 @@ class CORE_EXPORT QgsSingleSymbolRendererV2 : public QgsFeatureRendererV2
     //! Return a list of symbology items for the legend. Better choice than legendSymbolItems().
     //! @note added in 2.6
     virtual QgsLegendSymbolListV2 legendSymbolItemsV2() const override;
+
+    virtual QSet< QString > legendKeysForFeature( QgsFeature& feature, QgsRenderContext& context ) override;
 
     //! creates a QgsSingleSymbolRendererV2 from an existing renderer.
     //! @note added in 2.5

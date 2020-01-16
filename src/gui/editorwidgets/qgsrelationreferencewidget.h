@@ -94,8 +94,7 @@ class GUI_EXPORT QgsRelationReferenceWidget : public QWidget
      *
      * @return True if filters are chained
      */
-    bool chainFilters() { return mChainFilters; }
-
+    bool chainFilters() const { return mChainFilters; }
 
     /**
      * Set if filters are chained.
@@ -125,7 +124,7 @@ class GUI_EXPORT QgsRelationReferenceWidget : public QWidget
     void init();
 
   signals:
-    void foreignKeyChanged( QVariant );
+    void foreignKeyChanged( const QVariant& );
 
   private slots:
     void highlightActionTriggered( QAction* action );
@@ -146,7 +145,9 @@ class GUI_EXPORT QgsRelationReferenceWidget : public QWidget
     QgsMessageBar* mMessageBar;
     QVariant mForeignKey;
     QgsFeature mFeature;
-    int mFkeyFieldIdx;
+    // Index of the referenced layer key
+    int mReferencedFieldIdx;
+    int mReferencingFieldIdx;
     bool mAllowNull;
     QgsHighlight* mHighlight;
     QgsMapToolIdentifyFeature* mMapTool;

@@ -33,7 +33,7 @@ QMap< QString, QStringList > QgsRasterFormatSaveOptionsWidget::mBuiltinProfiles;
 
 QgsRasterFormatSaveOptionsWidget::QgsRasterFormatSaveOptionsWidget( QWidget* parent, const QString& format,
     QgsRasterFormatSaveOptionsWidget::Type type, const QString& provider )
-    : QWidget( parent ), mFormat( format ), mProvider( provider ), mRasterLayer( 0 )
+    : QWidget( parent ), mFormat( format ), mProvider( provider ), mRasterLayer( nullptr )
     , mRasterFileName( QString() ), mPyramids( false )
     , mPyramidsFormat( QgsRaster::PyramidsGTiff )
 
@@ -157,7 +157,7 @@ void QgsRasterFormatSaveOptionsWidget::updateProfiles()
   {
     it.next();
     QString profileKey = it.key();
-    if ( ! profileKeys.contains( profileKey ) && it.value().count() > 0 )
+    if ( ! profileKeys.contains( profileKey ) && !it.value().isEmpty() )
     {
       // insert key if is for all formats or this format (GTiff)
       if ( it.value()[0] == "" ||  it.value()[0] == format )
@@ -203,14 +203,14 @@ void QgsRasterFormatSaveOptionsWidget::updateProfiles()
 void QgsRasterFormatSaveOptionsWidget::updateOptions()
 {
   QString myOptions = mOptionsMap.value( currentProfileKey() );
-  QStringList myOptionsList = myOptions.trimmed().split( " ", QString::SkipEmptyParts );
+  QStringList myOptionsList = myOptions.trimmed().split( ' ', QString::SkipEmptyParts );
 
   if ( mOptionsStackedWidget->currentIndex() == 0 )
   {
     mOptionsTable->setRowCount( 0 );
     for ( int i = 0; i < myOptionsList.count(); i++ )
     {
-      QStringList key_value = myOptionsList[i].split( "=" );
+      QStringList key_value = myOptionsList[i].split( '=' );
       if ( key_value.count() == 2 )
       {
         mOptionsTable->insertRow( i );
@@ -397,7 +397,7 @@ void QgsRasterFormatSaveOptionsWidget::optionsTableChanged()
     value = mOptionsTable->item( i, 1 );
     if ( ! value  || value->text().isEmpty() )
       continue;
-    options += key->text() + "=" + value->text() + " ";
+    options += key->text() + '=' + value->text() + ' ';
   }
   options = options.trimmed();
   mOptionsMap[ currentProfileKey()] = options;
@@ -493,7 +493,7 @@ QString QgsRasterFormatSaveOptionsWidget::currentProfileKey() const
 
 QStringList QgsRasterFormatSaveOptionsWidget::options() const
 {
-  return mOptionsMap.value( currentProfileKey() ).trimmed().split( " ", QString::SkipEmptyParts );
+  return mOptionsMap.value( currentProfileKey() ).trimmed().split( ' ', QString::SkipEmptyParts );
 }
 
 QString QgsRasterFormatSaveOptionsWidget::createOptions( const QString& profileName ) const
@@ -512,8 +512,8 @@ void QgsRasterFormatSaveOptionsWidget::setCreateOptions()
 {
   QSettings mySettings;
   QString myProfiles;
-  QMap< QString, QString >::iterator i = mOptionsMap.begin();
-  while ( i != mOptionsMap.end() )
+  QMap< QString, QString >::const_iterator i = mOptionsMap.constBegin();
+  while ( i != mOptionsMap.constEnd() )
   {
     setCreateOptions( i.key(), i.value() );
     myProfiles += i.key() + QLatin1String( " " );
@@ -539,7 +539,7 @@ void QgsRasterFormatSaveOptionsWidget::setCreateOptions( const QString& profileN
 QStringList QgsRasterFormatSaveOptionsWidget::profiles() const
 {
   QSettings mySettings;
-  return mySettings.value( mProvider + "/driverOptions/" + mFormat.toLower() + "/profiles", "" ).toString().trimmed().split( " ", QString::SkipEmptyParts );
+  return mySettings.value( mProvider + "/driverOptions/" + mFormat.toLower() + "/profiles", "" ).toString().trimmed().split( ' ', QString::SkipEmptyParts );
 }
 
 void QgsRasterFormatSaveOptionsWidget::swapOptionsUI( int newIndex )
@@ -582,7 +582,7 @@ bool QgsRasterFormatSaveOptionsWidget::eventFilter( QObject *obj, QEvent *event 
     QMouseEvent *mouseEvent = static_cast<QMouseEvent *>( event );
     if ( mouseEvent && ( mouseEvent->button() == Qt::RightButton ) )
     {
-      QMenu* menu = 0;
+      QMenu* menu = nullptr;
       QString text;
       if ( mOptionsStackedWidget->currentIndex() == 0 )
         text = tr( "Use simple interface" );

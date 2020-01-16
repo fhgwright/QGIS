@@ -14,9 +14,10 @@ __revision__ = '$Format:%H$'
 
 import qgis
 import os
-from utilities import unittest, TestCase, unitTestDataPath
+from qgis.testing import unittest
 from qgis.utils import qgsfunction
 from qgis.core import QgsNetworkContentFetcher
+from utilities import unitTestDataPath
 from PyQt4.QtCore import QUrl, QCoreApplication
 from PyQt4.QtNetwork import QNetworkReply
 import SocketServer
@@ -24,7 +25,7 @@ import threading
 import SimpleHTTPServer
 
 
-class TestQgsNetworkContentFetcher(TestCase):
+class TestQgsNetworkContentFetcher(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -40,7 +41,7 @@ class TestQgsNetworkContentFetcher(TestCase):
         cls.httpd_thread.start()
 
     def __init__(self, methodName):
-        """Run once on class initialisation."""
+        """Run once on class initialization."""
         unittest.TestCase.__init__(self, methodName)
 
         self.loaded = False

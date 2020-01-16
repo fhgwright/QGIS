@@ -34,17 +34,21 @@ from processing.core.parameters import ParameterNumber
 from processing.core.parameters import ParameterBoolean
 from processing.core.parameters import ParameterString
 from processing.core.outputs import OutputRaster
-from processing.algs.gdal.OgrAlgorithm import OgrAlgorithm
+
+from processing.algs.gdal.GdalAlgorithm import GdalAlgorithm
 from processing.algs.gdal.GdalUtils import GdalUtils
 
+from processing.tools.vector import ogrConnectionString, ogrLayerName
 
-class rasterize(OgrAlgorithm):
+
+class rasterize(GdalAlgorithm):
 
     INPUT = 'INPUT'
     FIELD = 'FIELD'
     DIMENSIONS = 'DIMENSIONS'
     WIDTH = 'WIDTH'
     HEIGHT = 'HEIGHT'
+    EXTRA = 'EXTRA'
     RTYPE = 'RTYPE'
     OUTPUT = 'OUTPUT'
     TYPE = ['Byte', 'Int16', 'UInt16', 'UInt32', 'Int32', 'Float32', 'Float64']
@@ -99,6 +103,8 @@ class rasterize(OgrAlgorithm):
                                          self.tr('Control whether the created file is a BigTIFF or a classic TIFF'), self.BIGTIFFTYPE, 0))
         self.addParameter(ParameterBoolean(self.TFW,
                                            self.tr('Force the generation of an associated ESRI world file (.tfw)'), False))
+        params.append(ParameterString(self.EXTRA,
+                                      self.tr('Additional creation parameters'), '', optional=True))
 
         for param in params:
             param.isAdvanced = True
@@ -109,7 +115,7 @@ class rasterize(OgrAlgorithm):
 
     def getConsoleCommands(self):
         inLayer = self.getParameterValue(self.INPUT)
-        ogrLayer = self.ogrConnectionString(inLayer)[1:-1]
+        ogrLayer = ogrConnectionString(inLayer)[1:-1]
         noData = unicode(self.getParameterValue(self.NO_DATA))
         jpegcompression = unicode(self.getParameterValue(self.JPEGCOMPRESSION))
         predictor = unicode(self.getParameterValue(self.PREDICTOR))
@@ -119,6 +125,7 @@ class rasterize(OgrAlgorithm):
         bigtiff = self.BIGTIFFTYPE[self.getParameterValue(self.BIGTIFF)]
         tfw = unicode(self.getParameterValue(self.TFW))
         out = self.getOutputValue(self.OUTPUT)
+        extra = unicode(self.getParameterValue(self.EXTRA))
 
         arguments = []
         arguments.append('-a')
@@ -127,6 +134,8 @@ class rasterize(OgrAlgorithm):
         arguments.append('-ot')
         arguments.append(self.TYPE[self.getParameterValue(self.RTYPE)])
         dimType = self.getParameterValue(self.DIMENSIONS)
+        arguments.append('-of')
+        arguments.append(GdalUtils.getFormatShortNameFromFilename(out))
         if dimType == 0:
             # size in pixels
             arguments.append('-ts')
@@ -156,8 +165,11 @@ class rasterize(OgrAlgorithm):
                 arguments.append("-co TFW=YES")
             if len(bigtiff) > 0:
                 arguments.append("-co BIGTIFF=" + bigtiff)
+        if len(extra) > 0:
+            arguments.append(extra)
         arguments.append('-l')
-        arguments.append(self.ogrLayerName(inLayer))
+
+        arguments.append(ogrLayerName(inLayer))
         arguments.append(ogrLayer)
 
         arguments.append(unicode(self.getOutputValue(self.OUTPUT)))

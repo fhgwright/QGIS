@@ -27,10 +27,14 @@
 #include "qgsgrass.h"
 #include "qgsgrassvectormap.h"
 #include "qgsgrassvectormaplayer.h"
+#include "qgsgrassundocommand.h"
 
 extern "C"
 {
 #include <grass/version.h>
+#if defined(_MSC_VER) && defined(M_PI_4)
+#undef M_PI_4 //avoid redefinition warning
+#endif
 #include <grass/gprojects.h>
 #include <grass/gis.h>
 #include <grass/dbmi.h>
@@ -313,6 +317,7 @@ bool QgsGrassVectorMap::closeEdit( bool newMap )
   mNewLids.clear();
   mOldGeometries.clear();
   mNewCats.clear();
+  clearUndoCommands();
 
   // Mapset must be set before Vect_close()
   QgsGrass::setMapset( mGrassObject.gisdbase(), mGrassObject.location(), mGrassObject.mapset() );
@@ -344,7 +349,8 @@ bool QgsGrassVectorMap::closeEdit( bool newMap )
 #endif
 
   mIsEdited = false;
-  QgsGrass::unlock();closeAllIterators(); // blocking
+  QgsGrass::unlock();
+  closeAllIterators(); // blocking
 
   closeMap();
   openMap();
@@ -355,6 +361,18 @@ bool QgsGrassVectorMap::closeEdit( bool newMap )
   emit dataChanged();
   QgsDebugMsg( "edit closed" );
   return mValid;
+}
+
+void QgsGrassVectorMap::clearUndoCommands()
+{
+  Q_FOREACH ( int index, mUndoCommands.keys() )
+  {
+    Q_FOREACH ( QgsGrassUndoCommand *command, mUndoCommands[index] )
+    {
+      delete command;
+    }
+  }
+  mUndoCommands.clear();
 }
 
 QgsGrassVectorMapLayer * QgsGrassVectorMap::openLayer( int field )
@@ -498,10 +516,9 @@ bool QgsGrassVectorMap::mapOutdated()
   return false;
 }
 
-bool QgsGrassVectorMap::attributesOutdated( )
+bool QgsGrassVectorMap::attributesOutdated()
 {
   QgsDebugMsg( "entered" );
-
 
   QString dp = mGrassObject.mapsetPath() + "/vector/" + mGrassObject.name() + "/dbln";
   QFileInfo di( dp );
@@ -520,6 +537,13 @@ int QgsGrassVectorMap::numLines()
   QgsDebugMsg( "entered" );
 
   return ( Vect_get_num_lines( mMap ) );
+}
+
+int QgsGrassVectorMap::numAreas()
+{
+  QgsDebugMsg( "entered" );
+
+  return ( Vect_get_num_areas( mMap ) );
 }
 
 QString QgsGrassVectorMap::toString()
@@ -617,7 +641,7 @@ QgsAbstractGeometryV2 * QgsGrassVectorMap::lineGeometry( int id )
     return 0;
   }
 
-  QList<QgsPointV2> pointList;
+  QgsPointSequenceV2 pointList;
   pointList.reserve( points->n_points );
   for ( int i = 0; i < points->n_points; i++ )
   {
@@ -669,7 +693,7 @@ QgsAbstractGeometryV2 * QgsGrassVectorMap::areaGeometry( int id )
   QgsGrass::lock();
   Vect_get_area_points( mMap, id, points );
 
-  QList<QgsPointV2> pointList;
+  QgsPointSequenceV2 pointList;
   pointList.reserve( points->n_points );
   for ( int i = 0; i < points->n_points; i++ )
   {

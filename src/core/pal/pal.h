@@ -27,10 +27,11 @@
  *
  */
 
-#ifndef _PAL_H
-#define _PAL_H
+#ifndef PAL_H
+#define PAL_H
 
 #include "qgsgeometry.h"
+#include "qgspallabeling.h"
 #include <QList>
 #include <iostream>
 #include <ctime>
@@ -40,14 +41,6 @@
 // TODO ${MAJOR} ${MINOR} etc instead of 0.2
 
 class QgsAbstractLabelProvider;
-
-/**
- *
- * \section intro_sec Introduction
- *
- * Pal is a labelling library released under the GPLv3 license
- *
- */
 
 namespace pal
 {
@@ -70,20 +63,6 @@ namespace pal
     FALP = 4 /** only initial solution */
   };
 
-  /** The way to arrange labels against spatial entities
-   *
-   * image html arrangement.png "Arrangement modes" width=7cm
-   * */
-  enum Arrangement
-  {
-    P_POINT = 0, /**< arranges candidates around a point (centroid for polygon)*/
-    P_POINT_OVER, /** arranges candidates over a point (centroid for polygon)*/
-    P_LINE, /**< Only for lines and polygons, arranges candidates over the line or the polygon perimeter */
-    P_CURVED, /** Only for lines, labels along the line */
-    P_HORIZ, /**< Only for polygon, arranges candidates horizontaly */
-    P_FREE /**< Only for polygon, arranges candidates with respect of polygon orientation */
-  };
-
   /** Enumeration line arrangement flags. Flags can be combined. */
   enum LineArrangementFlag
   {
@@ -94,19 +73,13 @@ namespace pal
   };
   Q_DECLARE_FLAGS( LineArrangementFlags, LineArrangementFlag )
 
-  enum ObstacleType
-  {
-    PolygonInterior,
-    PolygonBoundary
-  };
-
   /**
-   *  \brief Pal main class.
+   *  \brief Main Pal labelling class
    *
    *  A pal object will contains layers and global information such as which search method
    *  will be used.
-   *
-   *  \author Maxence Laurent (maxence _dot_ laurent _at_ heig-vd _dot_ ch)
+   *  \class pal::Pal
+   *  \note not available in Python bindings
    */
   class CORE_EXPORT Pal
   {
@@ -141,7 +114,7 @@ namespace pal
        *
        * @todo add symbolUnit
        */
-      Layer* addLayer( QgsAbstractLabelProvider* provider, const QString& layerName, Arrangement arrangement, double defaultPriority, bool active, bool toLabel, bool displayAll = false );
+      Layer* addLayer( QgsAbstractLabelProvider* provider, const QString& layerName, QgsPalLayerSettings::Placement arrangement, double defaultPriority, bool active, bool toLabel, bool displayAll = false );
 
       /**
        * \brief remove a layer
@@ -160,7 +133,7 @@ namespace pal
        *
        * @return A list of label to display on map
        */
-      std::list<LabelPosition*> *labeller( double bbox[4], PalStat **stats, bool displayAll );
+      QList<LabelPosition*> *labeller( double bbox[4], PalStat **stats, bool displayAll );
 
       typedef bool ( *FnIsCancelled )( void* ctx );
 
@@ -172,7 +145,7 @@ namespace pal
 
       Problem* extractProblem( double bbox[4] );
 
-      std::list<LabelPosition*>* solveProblem( Problem* prob, bool displayAll );
+      QList<LabelPosition*>* solveProblem( Problem* prob, bool displayAll );
 
       /**
        *\brief Set flag show partial label

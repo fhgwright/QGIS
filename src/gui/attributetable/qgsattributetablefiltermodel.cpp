@@ -80,15 +80,15 @@ bool QgsAttributeTableFilterModel::lessThan( const QModelIndex &left, const QMod
     case QVariant::Date:
       return leftData.toDate() < rightData.toDate();
 
+    case QVariant::Time:
+      return leftData.toTime() < rightData.toTime();
+
     case QVariant::DateTime:
       return leftData.toDateTime() < rightData.toDateTime();
 
     default:
       return leftData.toString().localeAwareCompare( rightData.toString() ) < 0;
   }
-
-  // Avoid warning. Will never reach this
-  return false;
 }
 
 void QgsAttributeTableFilterModel::sort( int column, Qt::SortOrder order )

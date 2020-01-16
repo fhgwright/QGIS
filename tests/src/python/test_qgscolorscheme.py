@@ -13,11 +13,11 @@ __copyright__ = 'Copyright 2014, The QGIS Project'
 __revision__ = '$Format:%H$'
 
 import qgis
-from utilities import unittest, TestCase
+from qgis.testing import unittest
 from qgis.core import QgsColorScheme
 from PyQt4.QtGui import QColor
 
-#Make a dummy color scheme for testing
+# Make a dummy color scheme for testing
 
 
 class DummyColorScheme(QgsColorScheme):
@@ -40,7 +40,7 @@ class DummyColorScheme(QgsColorScheme):
         return DummyColorScheme()
 
 
-class TestQgsColorScheme(TestCase):
+class TestQgsColorScheme(unittest.TestCase):
 
     def testCreateScheme(self):
         """Test creating a new color scheme"""
@@ -89,4 +89,4 @@ class TestQgsColorScheme(TestCase):
 
 
 if __name__ == "__main__":
-        unittest.main()
+    unittest.main()
