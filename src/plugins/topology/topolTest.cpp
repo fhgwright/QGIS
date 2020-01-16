@@ -391,7 +391,7 @@ ErrorList topolTest::checkDuplicates( double tolerance, QgsVectorLayer *layer1, 
       if ( mFeatureMap2[*cit].feature.id() == it->feature.id() )
         continue;
 
-      QgsGeometry* g2 = mFeatureMap2[*cit].feature.geometry();
+      const QgsGeometry* g2 = mFeatureMap2[*cit].feature.constGeometry();
       if ( !g2 )
       {
         QgsMessageLog::logMessage( tr( "Invalid second geometry in duplicate geometry test." ), tr( "Topology plugin" ) );
@@ -416,21 +416,21 @@ ErrorList topolTest::checkDuplicates( double tolerance, QgsVectorLayer *layer1, 
 
         QList<FeatureLayer> fls;
         fls << *it << *it;
-        QgsGeometry* conflict = new QgsGeometry( *g1 );
+        QScopedPointer<QgsGeometry> conflict( new QgsGeometry( *g1 ) );
 
         if ( isExtent )
         {
-          if ( canvasExtentPoly->disjoint( conflict ) )
+          if ( canvasExtentPoly->disjoint( conflict.data() ) )
           {
             continue;
           }
-          if ( canvasExtentPoly->crosses( conflict ) )
+          if ( canvasExtentPoly->crosses( conflict.data() ) )
           {
-            conflict = conflict->intersection( canvasExtentPoly );
+            conflict.reset( conflict->intersection( canvasExtentPoly ) );
           }
         }
 
-        TopolErrorDuplicates* err = new TopolErrorDuplicates( bb, conflict, fls );
+        TopolErrorDuplicates* err = new TopolErrorDuplicates( bb, conflict.take(), fls );
 
         errorList << err;
       }
@@ -512,7 +512,7 @@ ErrorList topolTest::checkOverlaps( double tolerance, QgsVectorLayer *layer1, Qg
       if ( mFeatureMap2[*cit].feature.id() == it->feature.id() )
         continue;
 
-      QgsGeometry* g2 = mFeatureMap2[*cit].feature.geometry();
+      const QgsGeometry* g2 = mFeatureMap2[*cit].feature.constGeometry();
       if ( !g2 )
       {
         QgsMessageLog::logMessage( tr( "Invalid second geometry in overlaps test." ), tr( "Topology plugin" ) );
@@ -543,21 +543,21 @@ ErrorList topolTest::checkOverlaps( double tolerance, QgsVectorLayer *layer1, Qg
       {
         QList<FeatureLayer> fls;
         fls << *it << *it;
-        QgsGeometry* conflictGeom = g1->intersection( g2 );
+        QScopedPointer< QgsGeometry > conflictGeom( g1->intersection( g2 ) );
 
         if ( isExtent )
         {
-          if ( canvasExtentPoly->disjoint( conflictGeom ) )
+          if ( canvasExtentPoly->disjoint( conflictGeom.data() ) )
           {
             continue;
           }
-          if ( canvasExtentPoly->crosses( conflictGeom ) )
+          if ( canvasExtentPoly->crosses( conflictGeom.data() ) )
           {
-            conflictGeom = conflictGeom->intersection( canvasExtentPoly );
+            conflictGeom.reset( conflictGeom->intersection( canvasExtentPoly ) );
           }
         }
 
-        TopolErrorOverlaps* err = new TopolErrorOverlaps( bb, conflictGeom, fls );
+        TopolErrorOverlaps* err = new TopolErrorOverlaps( bb, conflictGeom.take(), fls );
 
         errorList << err;
       }
@@ -637,6 +637,7 @@ ErrorList topolTest::checkGaps( double tolerance, QgsVectorLayer *layer1, QgsVec
         QgsGeometry* polyGeom = QgsGeometry::fromPolygon( polygon );
 
         geomList.push_back( GEOSGeom_clone_r( geosctxt, polyGeom->asGeos() ) );
+        delete polyGeom;
       }
 
     }
@@ -930,7 +931,7 @@ ErrorList topolTest::checkPointCoveredBySegment( double tolerance, QgsVectorLaye
     for ( ; cit != crossingIdsEnd; ++cit )
     {
       QgsFeature& f = mFeatureMap2[*cit].feature;
-      QgsGeometry* g2 = f.geometry();
+      const QgsGeometry* g2 = f.constGeometry();
 
       if ( !g2 )
       {
@@ -954,6 +955,7 @@ ErrorList topolTest::checkPointCoveredBySegment( double tolerance, QgsVectorLaye
       {
         if ( canvasExtentPoly->disjoint( conflictGeom ) )
         {
+          delete conflictGeom;
           continue;
         }
       }
@@ -1160,7 +1162,7 @@ ErrorList topolTest::checkOverlapWithLayer( double tolerance, QgsVectorLayer* la
     for ( ; cit != crossingIdsEnd; ++cit )
     {
       QgsFeature& f = mFeatureMap2[*cit].feature;
-      QgsGeometry* g2 = f.geometry();
+      const QgsGeometry* g2 = f.constGeometry();
 
       // skip itself, when invoked with the same layer
       if ( skipItself && f.id() == it->feature.id() )
@@ -1178,7 +1180,7 @@ ErrorList topolTest::checkOverlapWithLayer( double tolerance, QgsVectorLayer* la
         QgsRectangle r2 = g2->boundingBox();
         r.combineExtentWith( &r2 );
 
-        QgsGeometry* conflictGeom = g1->intersection( g2 );
+        QScopedPointer<QgsGeometry> conflictGeom( g1->intersection( g2 ) );
         // could this for some reason return NULL?
         if ( !conflictGeom )
         {
@@ -1187,13 +1189,13 @@ ErrorList topolTest::checkOverlapWithLayer( double tolerance, QgsVectorLayer* la
 
         if ( isExtent )
         {
-          if ( canvasExtentPoly->disjoint( conflictGeom ) )
+          if ( canvasExtentPoly->disjoint( conflictGeom.data() ) )
           {
             continue;
           }
-          if ( canvasExtentPoly->crosses( conflictGeom ) )
+          if ( canvasExtentPoly->crosses( conflictGeom.data() ) )
           {
-            conflictGeom = conflictGeom->intersection( canvasExtentPoly );
+            conflictGeom.reset( conflictGeom->intersection( canvasExtentPoly ) );
           }
         }
 
@@ -1204,7 +1206,7 @@ ErrorList topolTest::checkOverlapWithLayer( double tolerance, QgsVectorLayer* la
         fl.feature = f;
         fl.layer = layer2;
         fls << *it << fl;
-        TopolErrorIntersection* err = new TopolErrorIntersection( r, conflictGeom, fls );
+        TopolErrorIntersection* err = new TopolErrorIntersection( r, conflictGeom.take(), fls );
 
         errorList << err;
       }
@@ -1255,7 +1257,7 @@ ErrorList topolTest::checkPointCoveredByLineEnds( double tolerance, QgsVectorLay
     for ( ; cit != crossingIdsEnd; ++cit )
     {
       QgsFeature& f = mFeatureMap2[*cit].feature;
-      QgsGeometry* g2 = f.geometry();
+      const QgsGeometry* g2 = f.constGeometry();
       if ( !g2 || !g2->asGeos() )
       {
         QgsMessageLog::logMessage( tr( "Second geometry missing or GEOS import failed." ), tr( "Topology plugin" ) );
@@ -1279,6 +1281,7 @@ ErrorList topolTest::checkPointCoveredByLineEnds( double tolerance, QgsVectorLay
       {
         if ( canvasExtentPoly->disjoint( conflictGeom ) )
         {
+          delete conflictGeom;
           continue;
         }
       }
@@ -1342,7 +1345,7 @@ ErrorList topolTest::checkyLineEndsCoveredByPoints( double tolerance, QgsVectorL
     for ( ; cit != crossingIdsEnd; ++cit )
     {
       QgsFeature& f = mFeatureMap2[*cit].feature;
-      QgsGeometry* g2 = f.geometry();
+      const QgsGeometry* g2 = f.constGeometry();
       if ( !g2 || !g2->asGeos() )
       {
         QgsMessageLog::logMessage( tr( "Second geometry missing or GEOS import failed." ), tr( "Topology plugin" ) );
@@ -1372,25 +1375,24 @@ ErrorList topolTest::checkyLineEndsCoveredByPoints( double tolerance, QgsVectorL
 
     if ( !touched )
     {
-      QgsGeometry* conflictGeom = new QgsGeometry( *g1 );
+      QScopedPointer<QgsGeometry> conflictGeom( new QgsGeometry( *g1 ) );
 
       if ( isExtent )
       {
-        if ( canvasExtentPoly->disjoint( conflictGeom ) )
+        if ( canvasExtentPoly->disjoint( conflictGeom.data() ) )
         {
           continue;
         }
-        if ( canvasExtentPoly->crosses( conflictGeom ) )
+        if ( canvasExtentPoly->crosses( conflictGeom.data() ) )
         {
-          conflictGeom = conflictGeom->intersection( canvasExtentPoly );
+          conflictGeom.reset( conflictGeom->intersection( canvasExtentPoly ) );
         }
       }
       QList<FeatureLayer> fls;
       fls << *it << *it;
       //bb.scale(10);
 
-
-      TopolErrorLineEndsNotCoveredByPoints* err = new TopolErrorLineEndsNotCoveredByPoints( bb, conflictGeom, fls );
+      TopolErrorLineEndsNotCoveredByPoints* err = new TopolErrorLineEndsNotCoveredByPoints( bb, conflictGeom.take(), fls );
       errorList << err;
     }
   }
@@ -1436,7 +1438,7 @@ ErrorList topolTest::checkPointInPolygon( double tolerance, QgsVectorLayer *laye
     for ( ; cit != crossingIdsEnd; ++cit )
     {
       QgsFeature& f = mFeatureMap2[*cit].feature;
-      QgsGeometry* g2 = f.geometry();
+      const QgsGeometry* g2 = f.constGeometry();
       if ( !g2 || !g2->asGeos() )
       {
         QgsMessageLog::logMessage( tr( "Second geometry missing or GEOS import failed." ), tr( "Topology plugin" ) );
@@ -1456,6 +1458,7 @@ ErrorList topolTest::checkPointInPolygon( double tolerance, QgsVectorLayer *laye
       {
         if ( canvasExtentPoly->disjoint( conflictGeom ) )
         {
+          delete conflictGeom;
           continue;
         }
       }
@@ -1511,7 +1514,7 @@ ErrorList topolTest::checkPolygonContainsPoint( double tolerance, QgsVectorLayer
     for ( ; cit != crossingIdsEnd; ++cit )
     {
       QgsFeature& f = mFeatureMap2[*cit].feature;
-      QgsGeometry* g2 = f.geometry();
+      const QgsGeometry* g2 = f.constGeometry();
       if ( !g2 || !g2->asGeos() )
       {
         QgsMessageLog::logMessage( tr( "Second geometry missing or GEOS import failed." ), tr( "Topology plugin" ) );
@@ -1592,7 +1595,7 @@ void topolTest::fillFeatureMap( QgsVectorLayer* layer, QgsRectangle extent )
 
   while ( fit.nextFeature( f ) )
   {
-    if ( f.geometry() )
+    if ( f.constGeometry() )
     {
       mFeatureMap2[f.id()] = FeatureLayer( layer, f );
     }
@@ -1618,7 +1621,7 @@ void topolTest::fillFeatureList( QgsVectorLayer* layer, QgsRectangle extent )
 
   while ( fit.nextFeature( f ) )
   {
-    if ( f.geometry() )
+    if ( f.constGeometry() )
     {
       mFeatureList1 << FeatureLayer( layer, f );
     }
@@ -1657,7 +1660,7 @@ QgsSpatialIndex* topolTest::createIndex( QgsVectorLayer* layer, QgsRectangle ext
       return 0;
     }
 
-    if ( f.geometry() )
+    if ( f.constGeometry() )
     {
       index->insertFeature( f );
       mFeatureMap2[f.id()] = FeatureLayer( layer, f );

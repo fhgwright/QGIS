@@ -32,7 +32,7 @@ class QDomDocument;
 class QgsServerProjectParser
 {
   public:
-    /**Takes ownership of the document*/
+
     QgsServerProjectParser( QDomDocument* xmlDoc, const QString& filePath );
     ~QgsServerProjectParser();
 
@@ -126,6 +126,8 @@ class QgsServerProjectParser
 
     void serviceCapabilities( QDomElement& parentElement, QDomDocument& doc, const QString& service, bool sia2045 = false ) const;
 
+    QStringList customLayerOrder() const { return mCustomLayerOrder; }
+
   private:
 
     /**Content of project file*/
@@ -155,6 +157,8 @@ class QgsServerProjectParser
 
     /**Returns a complete string set with all the restricted layer names (layers/groups that are not to be published)*/
     QSet<QString> findRestrictedLayers() const;
+
+    QStringList mCustomLayerOrder;
 
     bool findUseLayerIDs() const;
 

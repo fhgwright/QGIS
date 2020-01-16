@@ -67,7 +67,7 @@ class HypsometricCurves(GeoAlgorithm):
             self.tr('Use % of area instead of absolute value'), False))
 
         self.addOutput(OutputDirectory(self.OUTPUT_DIRECTORY,
-            self.tr('Output directory')))
+            self.tr('Hypsometric curves')))
 
     def processAlgorithm(self, progress):
         rasterPath = self.getParameterValue(self.INPUT_DEM)
@@ -131,6 +131,12 @@ class HypsometricCurves(GeoAlgorithm):
 
             srcOffset = (startColumn, startRow, width, height)
             srcArray = rasterBand.ReadAsArray(*srcOffset)
+
+            if srcOffset[2] == 0 or srcOffset[3] == 0:
+                progress.setInfo(
+                    self.tr('Feature %d is smaller than raster '
+                            'cell size' % f.id()))
+                continue
 
             newGeoTransform = (
                 geoTransform[0] + srcOffset[0] * geoTransform[1],

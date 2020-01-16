@@ -714,7 +714,7 @@ void QgsPalLayerSettings::readFromLayer( QgsVectorLayer* layer )
 
   // NOTE: set defaults for newly added properties, for backwards compatibility
 
-  enabled = layer->customProperty( "labeling/enabled" ).toBool();
+  enabled = layer->labelsEnabled();
 
   // text style
   fieldName = layer->customProperty( "labeling/fieldName" ).toString();
@@ -1240,42 +1240,9 @@ bool QgsPalLayerSettings::dataDefinedUseExpression( DataDefinedProperties p ) co
   return useExpression;
 }
 
-bool QgsPalLayerSettings::checkMinimumSizeMM( const QgsRenderContext& ct, QgsGeometry* geom, double minSize ) const
+bool QgsPalLayerSettings::checkMinimumSizeMM( const QgsRenderContext& ct, const QgsGeometry* geom, double minSize ) const
 {
-  if ( minSize <= 0 )
-  {
-    return true;
-  }
-
-  if ( !geom )
-  {
-    return false;
-  }
-
-  QGis::GeometryType featureType = geom->type();
-  if ( featureType == QGis::Point ) //minimum size does not apply to point features
-  {
-    return true;
-  }
-
-  double mapUnitsPerMM = ct.mapToPixel().mapUnitsPerPixel() * ct.scaleFactor();
-  if ( featureType == QGis::Line )
-  {
-    double length = geom->length();
-    if ( length >= 0.0 )
-    {
-      return ( length >= ( minSize * mapUnitsPerMM ) );
-    }
-  }
-  else if ( featureType == QGis::Polygon )
-  {
-    double area = geom->area();
-    if ( area >= 0.0 )
-    {
-      return ( sqrt( area ) >= ( minSize * mapUnitsPerMM ) );
-    }
-  }
-  return true; //should never be reached. Return true in this case to label such geometries anyway.
+  return QgsPalLabeling::checkMinimumSizeMM( ct, geom, minSize );
 }
 
 void QgsPalLayerSettings::calculateLabelSize( const QFontMetricsF* fm, QString text, double& labelX, double& labelY, QgsFeature* f )
@@ -1405,12 +1372,12 @@ void QgsPalLayerSettings::calculateLabelSize( const QFontMetricsF* fm, QString t
     }
     else
     {
-      text.prepend( dirSym + wrapchr ); // SymbolAbove or SymbolBelow
+      text.prepend( dirSym + QString( "\n" ) ); // SymbolAbove or SymbolBelow
     }
   }
 
   double w = 0.0, h = 0.0;
-  QStringList multiLineSplit = text.split( wrapchr );
+  QStringList multiLineSplit = QgsPalLabeling::splitToLines( text, wrapchr );
   int lines = multiLineSplit.size();
 
   double labelHeight = fm->ascent() + fm->descent(); // ignore +1 for baseline
@@ -1723,42 +1690,6 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
     maxcharangleout = -( qAbs( maxcharangleout ) );
   }
 
-  QgsGeometry* geom = f.geometry();
-  if ( !geom )
-  {
-    return;
-  }
-
-  // reproject the geometry if necessary (but don't modify the features
-  // geometry so that geometry based expression keep working)
-  QScopedPointer<QgsGeometry> clonedGeometry;
-  if ( ct )
-  {
-    geom = new QgsGeometry( *geom );
-    clonedGeometry.reset( geom );
-
-    try
-    {
-      geom->transform( *ct );
-    }
-    catch ( QgsCsException &cse )
-    {
-      Q_UNUSED( cse );
-      QgsDebugMsgLevel( QString( "Ignoring feature %1 due transformation exception" ).arg( f.id() ), 4 );
-      return;
-    }
-  }
-
-  if ( !checkMinimumSizeMM( context, geom, minFeatureSize ) )
-  {
-    return;
-  }
-
-  // whether we're going to create a centroid for polygon
-  bool centroidPoly = (( placement == QgsPalLayerSettings::AroundPoint
-                         || placement == QgsPalLayerSettings::OverPoint )
-                       && geom->type() == QGis::Polygon );
-
   // data defined centroid whole or clipped?
   bool wholeCentroid = centroidWhole;
   if ( dataDefinedEvaluate( QgsPalLayerSettings::CentroidWhole, exprVal ) )
@@ -1779,51 +1710,44 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
     }
   }
 
-  if ( !geom->asGeos() )
-    return;  // there is something really wrong with the geometry
-
-  // fix invalid polygons
-  if ( geom->type() == QGis::Polygon && !geom->isGeosValid() )
+  const QgsGeometry* geom = f.constGeometry();
+  if ( !geom )
   {
-    QgsGeometry* bufferGeom = geom->buffer( 0, 0 );
-    if ( !bufferGeom )
-    {
-      return;
-    }
-    geom = bufferGeom;
-    clonedGeometry.reset( geom );
+    return;
   }
 
-  // Rotate the geometry if needed, before clipping
-  const QgsMapToPixel& m2p = context.mapToPixel();
-  if ( m2p.mapRotation() )
-  {
-    if ( geom->rotate( m2p.mapRotation(), context.extent().center() ) )
-    {
-      QgsDebugMsg( QString( "Error rotating geometry" ).arg( geom->exportToWkt() ) );
-      return; // really ?
-    }
-  }
+  // whether we're going to create a centroid for polygon
+  bool centroidPoly = (( placement == QgsPalLayerSettings::AroundPoint
+                         || placement == QgsPalLayerSettings::OverPoint )
+                       && geom->type() == QGis::Polygon );
 
   // CLIP the geometry if it is bigger than the extent
   // don't clip if centroid is requested for whole feature
-  bool do_clip = false;
+  bool doClip = false;
   if ( !centroidPoly || ( centroidPoly && !wholeCentroid ) )
   {
-    do_clip = !extentGeom->contains( geom );
-    if ( do_clip )
-    {
-      QgsGeometry* clipGeom = geom->intersection( extentGeom ); // creates new geometry
-      if ( !clipGeom )
-      {
-        return;
-      }
-      geom = clipGeom;
-      clonedGeometry.reset( geom );
-    }
+    doClip = true;
   }
 
-  const GEOSGeometry* geos_geom = geom->asGeos();
+  const GEOSGeometry* geos_geom = 0;
+  const QgsGeometry* preparedGeom = geom;
+  QScopedPointer<QgsGeometry> scpoedPreparedGeom;
+
+  if ( QgsPalLabeling::geometryRequiresPreparation( geom, context, ct, doClip ? extentGeom : 0 ) )
+  {
+    scpoedPreparedGeom.reset( QgsPalLabeling::prepareGeometry( geom, context, ct, doClip ? extentGeom : 0 ) );
+    if ( !scpoedPreparedGeom.data() )
+      return;
+    preparedGeom = scpoedPreparedGeom.data();
+    geos_geom = scpoedPreparedGeom.data()->asGeos();
+  }
+  else
+  {
+    geos_geom = geom->asGeos();
+  }
+
+  if ( minFeatureSize > 0 && !checkMinimumSizeMM( context, preparedGeom, minFeatureSize ) )
+    return;
 
   if ( geos_geom == NULL )
     return; // invalid geometry
@@ -1983,6 +1907,7 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
     angle = angleOffset * M_PI / 180; // convert to radians
   }
 
+  const QgsMapToPixel& m2p = context.mapToPixel();
   //data defined rotation?
   if ( dataDefinedEvaluate( QgsPalLayerSettings::Rotation, exprVal ) )
   {
@@ -2105,7 +2030,7 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
           QTransform t = QTransform::fromTranslate( center.x(), center.y() );
           t.rotate( -m2p.mapRotation() );
           t.translate( -center.x(), -center.y() );
-          double xPosR, yPosR;
+          qreal xPosR, yPosR;
           t.map( xPos, yPos, &xPosR, &yPosR );
           xPos = xPosR; yPos = yPosR;
         }
@@ -2145,9 +2070,7 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
   geometries.append( lbl );
 
   // store the label's calculated font for later use during painting
-#if QT_VERSION >= 0x040800
   QgsDebugMsgLevel( QString( "PAL font stored definedFont: %1, Style: %2" ).arg( labelFont.toString() ).arg( labelFont.styleName() ), 4 );
-#endif
   lbl->setDefinedFont( labelFont );
 
   // set repeat distance
@@ -2175,17 +2098,12 @@ void QgsPalLayerSettings::registerFeature( QgsFeature& f, const QgsRenderContext
     }
   }
 
-  if ( repeatDist != 0 )
+  if ( !qgsDoubleNear( repeatDist, 0.0 ) )
   {
-    if ( repeatdistinmapunit ) //convert distance from mm/map units to pixels
+    if ( !repeatdistinmapunit )
     {
-      repeatDist /= repeatDistanceMapUnitScale.computeMapUnitsPerPixel( context ) * context.scaleFactor();
+      repeatDist *= mapUntsPerMM; //convert repeat distance from mm to map units
     }
-    else //mm
-    {
-      repeatDist *= vectorScaleFactor;
-    }
-    repeatDist *= qAbs( ptOne.x() - ptZero.x() );
   }
 
   //  feature to the layer
@@ -2720,6 +2638,10 @@ void QgsPalLayerSettings::parseTextFormatting()
       {
         aligntype = QgsPalLayerSettings::MultiRight;
       }
+      else if ( str.compare( "Follow", Qt::CaseInsensitive ) == 0 )
+      {
+        aligntype = QgsPalLayerSettings::MultiFollowPlacement;
+      }
       dataDefinedValues.insert( QgsPalLayerSettings::MultiLineAlignment, QVariant(( int )aligntype ) );
     }
   }
@@ -3148,7 +3070,7 @@ bool QgsPalLabeling::staticWillUseLayer( QgsVectorLayer* layer )
   // don't do QgsPalLayerSettings::readFromLayer( layer ) if not needed
   bool enabled = false;
   if ( layer->customProperty( "labeling" ).toString() == QString( "pal" ) )
-    enabled = layer->customProperty( "labeling/enabled", QVariant( false ) ).toBool();
+    enabled = layer->labelsEnabled() || layer->diagramsEnabled();
 
   return enabled;
 }
@@ -3182,7 +3104,7 @@ int QgsPalLabeling::prepareLayer( QgsVectorLayer* layer, QStringList& attrNames,
 {
   Q_ASSERT( mMapSettings != NULL );
 
-  if ( !willUseLayer( layer ) )
+  if ( !willUseLayer( layer ) || !layer->labelsEnabled() )
   {
     return 0;
   }
@@ -3367,13 +3289,18 @@ int QgsPalLabeling::prepareLayer( QgsVectorLayer* layer, QStringList& attrNames,
 
   lyr.xform = &mMapSettings->mapToPixel();
   lyr.ct = 0;
-  if ( mMapSettings->hasCrsTransformEnabled() )
-    lyr.ct = new QgsCoordinateTransform( layer->crs(), mMapSettings->destinationCrs() );
+  if ( mMapSettings->hasCrsTransformEnabled() && ctx.coordinateTransform() )
+    lyr.ct = ctx.coordinateTransform()->clone();
   lyr.ptZero = lyr.xform->toMapCoordinates( 0, 0 );
   lyr.ptOne = lyr.xform->toMapCoordinates( 1, 0 );
 
   // rect for clipping
   lyr.extentGeom = QgsGeometry::fromRect( mMapSettings->visibleExtent() );
+  if ( !qgsDoubleNear( mMapSettings->rotation(), 0.0 ) )
+  {
+    //PAL features are prerotated, so extent also needs to be unrotated
+    lyr.extentGeom->rotate( -mMapSettings->rotation(), mMapSettings->visibleExtent().center() );
+  }
 
   lyr.mFeatsSendingToPal = 0;
 
@@ -3382,7 +3309,8 @@ int QgsPalLabeling::prepareLayer( QgsVectorLayer* layer, QStringList& attrNames,
 
 int QgsPalLabeling::addDiagramLayer( QgsVectorLayer* layer, const QgsDiagramLayerSettings *s )
 {
-  Layer* l = mPal->addLayer( layer->id().append( "d" ).toUtf8().data(), -1, -1, pal::Arrangement( s->placement ), METER, s->priority, s->obstacle, true, true );
+  double priority = 1 - s->priority / 10.0; // convert 0..10 --> 1..0
+  Layer* l = mPal->addLayer( layer->id().append( "d" ).toUtf8().data(), -1, -1, pal::Arrangement( s->placement ), METER, priority, s->obstacle, true, true );
   l->setArrangementFlags( s->placementFlags );
 
   mActiveDiagramLayers.insert( layer->id(), *s );
@@ -3409,6 +3337,186 @@ void QgsPalLabeling::registerFeature( const QString& layerID, QgsFeature& f, con
   lyr.registerFeature( f, context, dxfLayer );
 }
 
+bool QgsPalLabeling::geometryRequiresPreparation( const QgsGeometry* geometry, const QgsRenderContext& context, const QgsCoordinateTransform* ct, QgsGeometry* clipGeometry )
+{
+  if ( !geometry )
+  {
+    return false;
+  }
+
+  //requires reprojection
+  if ( ct )
+    return true;
+
+  //requires fixing
+  if ( geometry->type() == QGis::Polygon && !geometry->isGeosValid() )
+    return true;
+
+  //requires rotation
+  const QgsMapToPixel& m2p = context.mapToPixel();
+  if ( !qgsDoubleNear( m2p.mapRotation(), 0 ) )
+    return true;
+
+  //requires clip
+  if ( clipGeometry && !clipGeometry->contains( geometry ) )
+    return true;
+
+  return false;
+}
+
+QStringList QgsPalLabeling::splitToLines( const QString &text, const QString &wrapCharacter )
+{
+  QStringList multiLineSplit;
+  if ( !wrapCharacter.isEmpty() && wrapCharacter != QString( "\n" ) )
+  {
+    //wrap on both the wrapchr and new line characters
+    foreach ( QString line, text.split( wrapCharacter ) )
+    {
+      multiLineSplit.append( line.split( QString( "\n" ) ) );
+    }
+  }
+  else
+  {
+    multiLineSplit = text.split( "\n" );
+  }
+
+  return multiLineSplit;
+}
+
+QStringList QgsPalLabeling::splitToGraphemes( const QString &text )
+{
+  QStringList graphemes;
+  QTextBoundaryFinder boundaryFinder( QTextBoundaryFinder::Grapheme, text );
+  int currentBoundary = -1;
+  int previousBoundary = 0;
+  while (( currentBoundary = boundaryFinder.toNextBoundary() ) > 0 )
+  {
+    graphemes << text.mid( previousBoundary, currentBoundary - previousBoundary );
+    previousBoundary = currentBoundary;
+  }
+  return graphemes;
+}
+
+QgsGeometry* QgsPalLabeling::prepareGeometry( const QgsGeometry* geometry, const QgsRenderContext& context, const QgsCoordinateTransform* ct, QgsGeometry* clipGeometry )
+{
+  if ( !geometry )
+  {
+    return 0;
+  }
+
+  //don't modify the feature's geometry so that geometry based expressions keep working
+  QgsGeometry* geom = new QgsGeometry( *geometry );
+  QScopedPointer<QgsGeometry> clonedGeometry( geom );
+
+  //reproject the geometry if necessary
+  if ( ct )
+  {
+    try
+    {
+      geom->transform( *ct );
+    }
+    catch ( QgsCsException &cse )
+    {
+      Q_UNUSED( cse );
+      QgsDebugMsgLevel( QString( "Ignoring feature due to transformation exception" ), 4 );
+      return 0;
+    }
+  }
+
+  // Rotate the geometry if needed, before clipping
+  const QgsMapToPixel& m2p = context.mapToPixel();
+  if ( !qgsDoubleNear( m2p.mapRotation(), 0 ) )
+  {
+    QgsPoint center = context.extent().center();
+
+    if ( ct )
+    {
+      try
+      {
+        center = ct->transform( center );
+      }
+      catch ( QgsCsException &cse )
+      {
+        Q_UNUSED( cse );
+        QgsDebugMsgLevel( QString( "Ignoring feature due to transformation exception" ), 4 );
+        return 0;
+      }
+    }
+
+    if ( geom->rotate( m2p.mapRotation(), center ) )
+    {
+      QgsDebugMsg( QString( "Error rotating geometry" ).arg( geom->exportToWkt() ) );
+      return 0;
+    }
+  }
+
+  if ( !geom->asGeos() )
+    return 0;  // there is something really wrong with the geometry
+
+  // fix invalid polygons
+  if ( geom->type() == QGis::Polygon && !geom->isGeosValid() )
+  {
+    QgsGeometry* bufferGeom = geom->buffer( 0, 0 );
+    if ( !bufferGeom )
+    {
+      return 0;
+    }
+    geom = bufferGeom;
+    clonedGeometry.reset( geom );
+  }
+
+  if ( clipGeometry && !clipGeometry->contains( geom ) )
+  {
+    QgsGeometry* clipGeom = geom->intersection( clipGeometry ); // creates new geometry
+    if ( !clipGeom )
+    {
+      return 0;
+    }
+    geom = clipGeom;
+    clonedGeometry.reset( geom );
+  }
+
+  return clonedGeometry.take();
+}
+
+bool QgsPalLabeling::checkMinimumSizeMM( const QgsRenderContext& context, const QgsGeometry* geom, double minSize )
+{
+  if ( minSize <= 0 )
+  {
+    return true;
+  }
+
+  if ( !geom )
+  {
+    return false;
+  }
+
+  QGis::GeometryType featureType = geom->type();
+  if ( featureType == QGis::Point ) //minimum size does not apply to point features
+  {
+    return true;
+  }
+
+  double mapUnitsPerMM = context.mapToPixel().mapUnitsPerPixel() * context.scaleFactor();
+  if ( featureType == QGis::Line )
+  {
+    double length = geom->length();
+    if ( length >= 0.0 )
+    {
+      return ( length >= ( minSize * mapUnitsPerMM ) );
+    }
+  }
+  else if ( featureType == QGis::Polygon )
+  {
+    double area = geom->area();
+    if ( area >= 0.0 )
+    {
+      return ( sqrt( area ) >= ( minSize * mapUnitsPerMM ) );
+    }
+  }
+  return true; //should never be reached. Return true in this case to label such geometries anyway.
+}
+
 void QgsPalLabeling::registerDiagramFeature( const QString& layerID, QgsFeature& feat, const QgsRenderContext& context )
 {
   //get diagram layer settings, diagram renderer
@@ -3418,30 +3526,49 @@ void QgsPalLabeling::registerDiagramFeature( const QString& layerID, QgsFeature&
     return;
   }
 
-  //convert geom to geos
-  QgsGeometry* geom = feat.geometry();
-
-  // reproject the geometry if necessary (but don't modify the features
-  // geometry so that geometry based expression keep working)
-  QScopedPointer<QgsGeometry> clonedGeometry;
-  if ( layerIt.value().ct )
+  QgsDiagramRendererV2* dr = layerIt.value().renderer;
+  if ( dr )
   {
-    geom = new QgsGeometry( *geom );
-    clonedGeometry.reset( geom );
+    QList<QgsDiagramSettings> settingList = dr->diagramSettings();
+    if ( settingList.size() > 0 )
+    {
+      double minScale = settingList.at( 0 ).minScaleDenominator;
+      if ( minScale > 0 && context.rendererScale() < minScale )
+      {
+        return;
+      }
 
-    try
-    {
-      geom->transform( *( layerIt.value().ct ) );
-    }
-    catch ( QgsCsException &cse )
-    {
-      Q_UNUSED( cse );
-      QgsDebugMsgLevel( QString( "Ignoring feature %1 due transformation exception" ).arg( feat.id() ), 4 );
-      return;
+      double maxScale = settingList.at( 0 ).maxScaleDenominator;
+      if ( maxScale > 0 && context.rendererScale() > maxScale )
+      {
+        return;
+      }
     }
   }
 
-  const GEOSGeometry* geos_geom = geom->asGeos();
+  //convert geom to geos
+  const QgsGeometry* geom = feat.constGeometry();
+  QScopedPointer<QgsGeometry> extentGeom( QgsGeometry::fromRect( mMapSettings->visibleExtent() ) );
+  if ( !qgsDoubleNear( mMapSettings->rotation(), 0.0 ) )
+  {
+    //PAL features are prerotated, so extent also needs to be unrotated
+    extentGeom->rotate( -mMapSettings->rotation(), mMapSettings->visibleExtent().center() );
+  }
+
+  const GEOSGeometry* geos_geom = 0;
+  QScopedPointer<QgsGeometry> preparedGeom;
+  if ( QgsPalLabeling::geometryRequiresPreparation( geom, context, layerIt.value().ct, extentGeom.data() ) )
+  {
+    preparedGeom.reset( QgsPalLabeling::prepareGeometry( geom, context, layerIt.value().ct, extentGeom.data() ) );
+    if ( !preparedGeom.data() )
+      return;
+    geos_geom = preparedGeom.data()->asGeos();
+  }
+  else
+  {
+    geos_geom = geom->asGeos();
+  }
+
   if ( geos_geom == 0 )
   {
     return; // invalid geometry
@@ -3456,7 +3583,6 @@ void QgsPalLabeling::registerDiagramFeature( const QString& layerID, QgsFeature&
 
   double diagramWidth = 0;
   double diagramHeight = 0;
-  QgsDiagramRendererV2* dr = layerIt.value().renderer;
   if ( dr )
   {
     QSizeF diagSize = dr->sizeMapUnits( feat, context );
@@ -3471,6 +3597,7 @@ void QgsPalLabeling::registerDiagramFeature( const QString& layerID, QgsFeature&
   }
 
   //  feature to the layer
+  bool alwaysShow = layerIt.value().showAll;
   int ddColX = layerIt.value().xPosColumn;
   int ddColY = layerIt.value().yPosColumn;
   double ddPosX = 0.0;
@@ -3479,9 +3606,8 @@ void QgsPalLabeling::registerDiagramFeature( const QString& layerID, QgsFeature&
   if ( ddPos )
   {
     bool posXOk, posYOk;
-    //data defined diagram position is always centered
-    ddPosX = feat.attribute( ddColX ).toDouble( &posXOk ) - diagramWidth / 2.0;
-    ddPosY = feat.attribute( ddColY ).toDouble( &posYOk ) - diagramHeight / 2.0;
+    ddPosX = feat.attribute( ddColX ).toDouble( &posXOk );
+    ddPosY = feat.attribute( ddColY ).toDouble( &posYOk );
     if ( !posXOk || !posYOk )
     {
       ddPos = false;
@@ -3494,12 +3620,15 @@ void QgsPalLabeling::registerDiagramFeature( const QString& layerID, QgsFeature&
         double z = 0;
         ct->transformInPlace( ddPosX, ddPosY, z );
       }
+      //data defined diagram position is always centered
+      ddPosX -= diagramWidth / 2.0;
+      ddPosY -= diagramHeight / 2.0;
     }
   }
 
   try
   {
-    if ( !layerIt.value().palLayer->registerFeature( lbl->strId(), lbl, diagramWidth, diagramHeight, "", ddPosX, ddPosY, ddPos ) )
+    if ( !layerIt.value().palLayer->registerFeature( lbl->strId(), lbl, diagramWidth, diagramHeight, "", ddPosX, ddPosY, ddPos, 0.0, true, 0, 0, 0, 0, alwaysShow ) )
     {
       return;
     }
@@ -3899,7 +4028,16 @@ void QgsPalLabeling::drawLabeling( QgsRenderContext& context )
 {
   Q_ASSERT( mMapSettings != NULL );
   QPainter* painter = context.painter();
-  QgsRectangle extent = context.extent();
+
+  QgsGeometry* extentGeom( QgsGeometry::fromRect( mMapSettings->visibleExtent() ) );
+  if ( !qgsDoubleNear( mMapSettings->rotation(), 0.0 ) )
+  {
+    //PAL features are prerotated, so extent also needs to be unrotated
+    extentGeom->rotate( -mMapSettings->rotation(), mMapSettings->visibleExtent().center() );
+  }
+
+  QgsRectangle extent = extentGeom->boundingBox();
+  delete extentGeom;
 
   mPal->registerCancellationCallback( &_palIsCancelled, &context );
 
@@ -3911,8 +4049,7 @@ void QgsPalLabeling::drawLabeling( QgsRenderContext& context )
 
   // do the labeling itself
   double scale = mMapSettings->scale(); // scale denominator
-  QgsRectangle r = extent;
-  double bbox[] = { r.xMinimum(), r.yMinimum(), r.xMaximum(), r.yMaximum() };
+  double bbox[] = { extent.xMinimum(), extent.yMinimum(), extent.xMaximum(), extent.yMaximum() };
 
   std::list<LabelPosition*>* labels;
   pal::Problem* problem;
@@ -4001,10 +4138,25 @@ void QgsPalLabeling::drawLabeling( QgsRenderContext& context )
       {
         if ( QString( dit.key() + "d" ) == layerName )
         {
-          feature.setFields( &dit.value().fields );
+          feature.setFields( dit.value().fields );
           palGeometry->feature( feature );
-          QgsPoint outPt = xform.transform(( *it )->getX(), ( *it )->getY() );
-          dit.value().renderer->renderDiagram( feature, context, QPointF( outPt.x(), outPt.y() ) );
+
+          //calculate top-left point for diagram
+          //first, calculate the centroid of the label (accounts for PAL creating
+          //rotated labels when we do not want to draw the diagrams rotated)
+          double centerX = 0;
+          double centerY = 0;
+          for ( int i = 0; i < 4; ++i )
+          {
+            centerX += ( *it )->getX( i );
+            centerY += ( *it )->getY( i );
+          }
+          QgsPoint outPt( centerX / 4.0, centerY / 4.0 );
+          //then, calculate the top left point for the diagram with this center position
+          QgsPoint centerPt = xform.transform( outPt.x() - ( *it )->getWidth() / 2,
+                                               outPt.y() - ( *it )->getHeight() / 2 );
+
+          dit.value().renderer->renderDiagram( feature, context, centerPt.toQPointF() );
         }
       }
 
@@ -4014,7 +4166,7 @@ void QgsPalLabeling::drawLabeling( QgsRenderContext& context )
         //for diagrams, remove the additional 'd' at the end of the layer id
         QString layerId = layerName;
         layerId.chop( 1 );
-        mResults->mLabelSearchTree->insertLabel( *it, QString( palGeometry->strId() ).toInt(), QString( "" ), layerId, QFont(), true, false );
+        mResults->mLabelSearchTree->insertLabel( *it, QString( palGeometry->strId() ).toInt(), layerId, QString( "" ), QFont(), true, false );
       }
       continue;
     }
@@ -4031,12 +4183,32 @@ void QgsPalLabeling::drawLabeling( QgsRenderContext& context )
 
     //font
     QFont dFont = palGeometry->definedFont();
-    // following debug is >= Qt 4.8 only ( because of QFont::styleName() )
-#if QT_VERSION >= 0x040800
-    QgsDebugMsgLevel( QString( "PAL font tmpLyr: %1, Style: %2" ).arg( tmpLyr.textFont.toString() ).arg( QFontInfo( tmpLyr.textFont ).styleName() ), 4 );
+    QgsDebugMsgLevel( QString( "PAL font tmpLyr: %1, Style: %2" ).arg( tmpLyr.textFont.toString() ).arg( tmpLyr.textFont.styleName() ), 4 );
     QgsDebugMsgLevel( QString( "PAL font definedFont: %1, Style: %2" ).arg( dFont.toString() ).arg( dFont.styleName() ), 4 );
-#endif
     tmpLyr.textFont = dFont;
+
+    if ( tmpLyr.multilineAlign == QgsPalLayerSettings::MultiFollowPlacement )
+    {
+      //calculate font alignment based on label quadrant
+      switch (( *it )->getQuadrant() )
+      {
+        case LabelPosition::QuadrantAboveLeft:
+        case LabelPosition::QuadrantLeft:
+        case LabelPosition::QuadrantBelowLeft:
+          tmpLyr.multilineAlign = QgsPalLayerSettings::MultiRight;
+          break;
+        case LabelPosition::QuadrantAbove:
+        case LabelPosition::QuadrantOver:
+        case LabelPosition::QuadrantBelow:
+          tmpLyr.multilineAlign = QgsPalLayerSettings::MultiCenter;
+          break;
+        case LabelPosition::QuadrantAboveRight:
+        case LabelPosition::QuadrantRight:
+        case LabelPosition::QuadrantBelowRight:
+          tmpLyr.multilineAlign = QgsPalLayerSettings::MultiLeft;
+          break;
+      }
+    }
 
     // update tmpLyr with any data defined text style values
     dataDefinedTextStyle( tmpLyr, ddValues );
@@ -4285,11 +4457,8 @@ void QgsPalLabeling::drawLabel( pal::LabelPosition* label, QgsRenderContext& con
   {
 
     // TODO: optimize access :)
-    QString text = (( QgsPalGeometry* )label->getFeaturePart()->getUserGeometry() )->text();
-    QString txt = ( label->getPartId() == -1 ? text : QString( text[label->getPartId()] ) );
+    QString txt = (( QgsPalGeometry* )label->getFeaturePart()->getUserGeometry() )->text( label->getPartId() );
     QFontMetricsF* labelfm = (( QgsPalGeometry* )label->getFeaturePart()->getUserGeometry() )->getLabelFontMetrics();
-
-    QString wrapchr = !tmpLyr.wrapChar.isEmpty() ? tmpLyr.wrapChar : QString( "\n" );
 
     //add the direction symbol if needed
     if ( !txt.isEmpty() && tmpLyr.placement == QgsPalLayerSettings::Line &&
@@ -4321,12 +4490,12 @@ void QgsPalLabeling::drawLabel( pal::LabelPosition* label, QgsRenderContext& con
       if ( tmpLyr.placeDirectionSymbol == QgsPalLayerSettings::SymbolAbove )
       {
         prependSymb = true;
-        symb = symb + wrapchr;
+        symb = symb + QString( "\n" );
       }
       else if ( tmpLyr.placeDirectionSymbol == QgsPalLayerSettings::SymbolBelow )
       {
         prependSymb = false;
-        symb = wrapchr + symb;
+        symb = QString( "\n" ) + symb;
       }
 
       if ( prependSymb )
@@ -4340,8 +4509,7 @@ void QgsPalLabeling::drawLabel( pal::LabelPosition* label, QgsRenderContext& con
     }
 
     //QgsDebugMsgLevel( "drawLabel " + txt, 4 );
-
-    QStringList multiLineList = txt.split( wrapchr );
+    QStringList multiLineList = QgsPalLabeling::splitToLines( txt, tmpLyr.wrapChar );
     int lines = multiLineList.size();
 
     double labelWidest = 0.0;

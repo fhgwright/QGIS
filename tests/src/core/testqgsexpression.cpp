@@ -15,7 +15,6 @@
 #include <QtTest/QtTest>
 #include <QObject>
 #include <QString>
-#include <QObject>
 #include <QtConcurrentMap>
 #include <QSharedPointer>
 
@@ -26,11 +25,6 @@
 #include <qgsfeaturerequest.h>
 #include <qgsgeometry.h>
 #include <qgsrenderchecker.h>
-
-#if QT_VERSION < 0x40701
-// See http://hub.qgis.org/issues/4284
-Q_DECLARE_METATYPE( QVariant )
-#endif
 
 static void _parseAndEvalExpr( int arg )
 {
@@ -143,6 +137,43 @@ class TestQgsExpression: public QObject
 
       QVariant v = exp.evaluate();
       QCOMPARE( v.toDouble(), 5.79 );
+    }
+
+    void alias_data()
+    {
+      //test function aliases
+      QTest::addColumn<QString>( "string" );
+      QTest::addColumn<bool>( "evalError" );
+      QTest::addColumn<QString>( "dump" );
+      QTest::addColumn<QVariant>( "result" );
+
+      QTest::newRow( "toint alias" ) << "toint(3.2)" << false << "to_int(3.2)" << QVariant( 3 );
+      QTest::newRow( "int to double" ) << "toreal(3)" << false << "to_real(3)" << QVariant( 3. );
+      QTest::newRow( "int to text" ) << "tostring(6)" << false << "to_string(6)" << QVariant( "6" );
+    }
+
+    void alias()
+    {
+      QFETCH( QString, string );
+      QFETCH( bool, evalError );
+      QFETCH( QString, dump );
+      QFETCH( QVariant, result );
+
+      QgsExpression exp( string );
+      QCOMPARE( exp.hasParserError(), false );
+      if ( exp.hasParserError() )
+        qDebug() << exp.parserErrorString();
+
+      QVariant res = exp.evaluate();
+      if ( exp.hasEvalError() )
+        qDebug() << exp.evalErrorString();
+      if ( res.type() != result.type() )
+      {
+        qDebug() << "got " << res.typeName() << " instead of " << result.typeName();
+      }
+      QCOMPARE( exp.hasEvalError(), evalError );
+      QCOMPARE( res, result );
+      QCOMPARE( exp.dump(), dump );
     }
 
     void evaluation_data()
@@ -260,6 +291,7 @@ class TestQgsExpression: public QObject
       QTest::newRow( "concat numbers" ) << "1 || 2" << false << QVariant( "12" );
 
       // math functions
+      QTest::newRow( "pi" ) << "pi()" << false << QVariant( M_PI );
       QTest::newRow( "sqrt" ) << "sqrt(16)" << false << QVariant( 4. );
       QTest::newRow( "abs(0.1)" ) << "abs(0.1)" << false << QVariant( 0.1 );
       QTest::newRow( "abs(0)" ) << "abs(0)" << false << QVariant( 0. );
@@ -355,7 +387,8 @@ class TestQgsExpression: public QObject
       QTest::newRow( "wordwrap" ) << "wordwrap('university of qgis\nsupports many multiline',-5,' ')" << false << QVariant( "university\nof qgis\nsupports\nmany multiline" );
       QTest::newRow( "format" ) << "format('%1 %2 %3 %1', 'One', 'Two', 'Three')" << false << QVariant( "One Two Three One" );
       QTest::newRow( "concat" ) << "concat('a', 'b', 'c', 'd')" << false << QVariant( "abcd" );
-      QTest::newRow( "concat single" ) << "concat('a')" << false << QVariant( "a" );
+      QTest::newRow( "concat function single" ) << "concat('a')" << false << QVariant( "a" );
+      QTest::newRow( "concat function with NULL" ) << "concat(NULL,'a','b')" << false << QVariant( "ab" );
 
       // implicit conversions
       QTest::newRow( "implicit int->text" ) << "length(123)" << false << QVariant( 3 );
@@ -403,15 +436,16 @@ class TestQgsExpression: public QObject
       QTest::newRow( "color hsva" ) << "color_hsva(40,100,100,200)" << false << QVariant( "255,170,0,200" );
       QTest::newRow( "color cmyk" ) << "color_cmyk(100,50,33,10)" << false << QVariant( "0,115,154" );
       QTest::newRow( "color cmyka" ) << "color_cmyka(50,25,90,60,200)" << false << QVariant( "51,76,10,200" );
+
+      // Precedence and associativity
+      QTest::newRow( "multiplication first" ) << "1+2*3" << false << QVariant( 7 );
+      QTest::newRow( "brackets first" ) << "(1+2)*(3+4)" << false << QVariant( 21 );
+      QTest::newRow( "right associativity" ) << "(2^3)^2" << false << QVariant( 64. );
+      QTest::newRow( "left associativity" ) << "1-(2-1)" << false << QVariant( 0 );
     }
 
-    void evaluation()
+    void run_evaluation_test( QgsExpression& exp, bool evalError, QVariant& result )
     {
-      QFETCH( QString, string );
-      QFETCH( bool, evalError );
-      QFETCH( QVariant, result );
-
-      QgsExpression exp( string );
       QCOMPARE( exp.hasParserError(), false );
       if ( exp.hasParserError() )
         qDebug() << exp.parserErrorString();
@@ -469,19 +503,25 @@ class TestQgsExpression: public QObject
       }
     }
 
+    void evaluation()
+    {
+      QFETCH( QString, string );
+      QFETCH( bool, evalError );
+      QFETCH( QVariant, result );
+
+      QgsExpression exp( string );
+      run_evaluation_test( exp, evalError, result );
+      QgsExpression exp2( exp.dump() );
+      run_evaluation_test( exp2, evalError, result );
+      QgsExpression exp3( exp.expression() );
+      run_evaluation_test( exp3, evalError, result );
+    }
+
     void eval_precedence()
     {
       QCOMPARE( QgsExpression::BinaryOperatorText[QgsExpression::boDiv], "/" );
       QCOMPARE( QgsExpression::BinaryOperatorText[QgsExpression::boConcat], "||" );
 
-      QgsExpression e0( "1+2*3" );
-      QCOMPARE( e0.evaluate().toInt(), 7 );
-
-      QgsExpression e1( "(1+2)*(3+4)" );
-      QCOMPARE( e1.evaluate().toInt(), 21 );
-
-      QgsExpression e2( e1.dump() );
-      QCOMPARE( e2.evaluate().toInt(), 21 );
     }
 
     void eval_columns()
@@ -558,7 +598,7 @@ class TestQgsExpression: public QObject
       QgsFields fields;
       fields.append( QgsField( "col1" ) );
       fields.append( QgsField( "second_column", QVariant::Int ) );
-      f.setFields( &fields, true );
+      f.setFields( fields, true );
       f.setAttribute( QString( "col1" ), QString( "test value" ) );
       f.setAttribute( QString( "second_column" ), 5 );
       QgsExpression exp( "attribute($currentfeature,'col1')" );
@@ -763,19 +803,19 @@ class TestQgsExpression: public QObject
 
       QgsExpression exp1( "geomToWKT($geometry)" );
       QVariant vWktLine = exp1.evaluate( &fPolyline );
-      QCOMPARE( vWktLine.toString(), QString( "LINESTRING(0 0, 10 0)" ) );
+      QCOMPARE( vWktLine.toString(), QString( "LineString (0 0, 10 0)" ) );
 
       QgsExpression exp2( "geomToWKT($geometry)" );
       QVariant vWktPolygon = exp2.evaluate( &fPolygon );
-      QCOMPARE( vWktPolygon.toString(), QString( "POLYGON((2 1,10 1,10 6,2 6,2 1))" ) );
+      QCOMPARE( vWktPolygon.toString(), QString( "Polygon ((2 1, 10 1, 10 6, 2 6, 2 1))" ) );
 
       QgsExpression exp3( "geomToWKT($geometry)" );
       QVariant vWktPoint = exp3.evaluate( &fPoint );
-      QCOMPARE( vWktPoint.toString(), QString( "POINT(-1.23456789 9.87654321)" ) );
+      QCOMPARE( vWktPoint.toString(), QString( "Point (-1.23456789 9.87654321)" ) );
 
       QgsExpression exp4( "geomToWKT($geometry, 3)" );
       QVariant vWktPointSimplify = exp4.evaluate( &fPoint );
-      QCOMPARE( vWktPointSimplify.toString(), QString( "POINT(-1.235 9.877)" ) );
+      QCOMPARE( vWktPointSimplify.toString(), QString( "Point (-1.235 9.877)" ) );
     }
 
     void eval_geometry_constructor_data()
@@ -794,7 +834,7 @@ class TestQgsExpression: public QObject
       QgsPolygon polygon;
       polygon << polygon_ring;
 
-      QTest::newRow( "geomFromWKT Point" ) << "geomFromWKT('" + QgsGeometry::fromPoint( point )->exportToWkt() + "')" << ( void* ) QgsGeometry::fromPoint( point ) << false;
+      QTest::newRow( "geomFromWKT Point" ) << "geom_from_wkt('" + QgsGeometry::fromPoint( point )->exportToWkt() + "')" << ( void* ) QgsGeometry::fromPoint( point ) << false;
       QTest::newRow( "geomFromWKT Line" ) << "geomFromWKT('" + QgsGeometry::fromPolyline( line )->exportToWkt() + "')" << ( void* ) QgsGeometry::fromPolyline( line ) << false;
       QTest::newRow( "geomFromWKT Polyline" ) << "geomFromWKT('" + QgsGeometry::fromPolyline( polyline )->exportToWkt() + "')" << ( void* ) QgsGeometry::fromPolyline( polyline ) << false;
       QTest::newRow( "geomFromWKT Polygon" ) << "geomFromWKT('" + QgsGeometry::fromPolygon( polygon )->exportToWkt() + "')" << ( void* ) QgsGeometry::fromPolygon( polygon ) << false;
@@ -1099,9 +1139,18 @@ class TestQgsExpression: public QObject
       QCOMPARE( QgsExpression::evaluateToDouble( QString( "a" ), 9.0 ), 9.0 );
       QCOMPARE( QgsExpression::evaluateToDouble( QString(), 9.0 ), 9.0 );
     }
+
+    void eval_isField()
+    {
+      QCOMPARE( QgsExpression( "" ).isField(), false );
+      QCOMPARE( QgsExpression( "42" ).isField(), false );
+      QCOMPARE( QgsExpression( "foo" ).isField(), true );
+      QCOMPARE( QgsExpression( "\"foo bar\"" ).isField(), true );
+      QCOMPARE( QgsExpression( "sqrt(foo)" ).isField(), false );
+      QCOMPARE( QgsExpression( "foo + bar" ).isField(), false );
+    }
 };
 
 QTEST_MAIN( TestQgsExpression )
 
 #include "testqgsexpression.moc"
-

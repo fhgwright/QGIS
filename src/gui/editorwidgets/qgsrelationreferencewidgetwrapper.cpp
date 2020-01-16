@@ -55,6 +55,11 @@ void QgsRelationReferenceWidgetWrapper::initWidget( QWidget* editor )
   mWidget->setReadOnlySelector( readOnlyWidget );
   mWidget->setAllowMapIdentification( mapIdent );
   mWidget->setOrderByValue( orderByValue );
+  if ( config( "FilterFields", QVariant() ).isValid() )
+  {
+    mWidget->setFilterFields( config( "FilterFields" ).toStringList() );
+    mWidget->setChainFilters( config( "ChainFilters" ).toBool() );
+  }
 
   QgsRelation relation = QgsProject::instance()->relationManager()->relation( config( "Relation" ).toString() );
 
@@ -94,12 +99,12 @@ QVariant QgsRelationReferenceWidgetWrapper::value()
   }
 }
 
-void QgsRelationReferenceWidgetWrapper::setValue( const QVariant& value )
+void QgsRelationReferenceWidgetWrapper::setValue( const QVariant& val )
 {
-  if ( !mWidget )
+  if ( !mWidget || val == value() )
     return;
 
-  mWidget->setForeignKey( value );
+  mWidget->setForeignKey( val );
 }
 
 void QgsRelationReferenceWidgetWrapper::setEnabled( bool enabled )

@@ -3,7 +3,7 @@
 # Generates (or updates) a unit test image mask, which is used to specify whether
 # a pixel in the control image should be checked (black pixel in mask) or not (white
 # pixel in mask). For non black or white pixels, the pixels lightness is used to
-# specify a maximum delta for each color component 
+# specify a maximum delta for each color component
 
 import os
 import sys
@@ -11,11 +11,12 @@ import argparse
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import struct
+import urllib2
 
 def error ( msg ):
   print msg
   sys.exit( 1 )
-  
+
 def colorDiff( c1, c2 ):
   redDiff = abs( qRed( c1 ) - qRed( c2 ) )
   greenDiff = abs( qGreen( c1 ) - qGreen( c2 ) )
@@ -23,12 +24,22 @@ def colorDiff( c1, c2 ):
   alphaDiff = abs( qAlpha( c1 ) - qAlpha( c2 ) )
   return max( redDiff, greenDiff, blueDiff, alphaDiff )
 
+def imageFromPath(path):
+  if ( path[:7] == 'http://' ):
+    #fetch remote image
+    data = urllib2.urlopen(path).read()
+    image = QImage()
+    image.loadFromData(data)
+  else:
+    image = QImage( path )
+  return image
+
 def updateMask(control_image_path, rendered_image_path, mask_image_path):
-  control_image = QImage( control_image_path )
+  control_image = imageFromPath( control_image_path )
   if not control_image:
     error('Could not read control image {}'.format(control_image_path))
 
-  rendered_image = QImage( rendered_image_path )
+  rendered_image = imageFromPath( rendered_image_path )
   if not rendered_image:
     error('Could not read rendered image {}'.format(rendered_image_path))
   if not rendered_image.width() == control_image.width() or not rendered_image.height() == control_image.height():
@@ -36,9 +47,9 @@ def updateMask(control_image_path, rendered_image_path, mask_image_path):
                                                                                    control_image.height(),
                                                                                    rendered_image.width(),
                                                                                    rendered_image.height()))
-    
+
   #read current mask, if it exist
-  mask_image = QImage( mask_image_path )
+  mask_image = imageFromPath( mask_image_path )
   if mask_image.isNull():
     print 'Mask image does not exist, creating'
     mask_image = QImage( control_image.width(), control_image.height(), QImage.Format_ARGB32 )
@@ -69,18 +80,19 @@ def updateMask(control_image_path, rendered_image_path, mask_image_path):
         #update mask image
         mask_image.setPixel( x, y, qRgb( difference, difference, difference ) )
         mismatch_count += 1
-      
+
   if mismatch_count:
     #update mask
-    mask_image.save( mask_image_path, "png" );
+    mask_image.save( mask_image_path, "png" )
     print 'Updated {} pixels'.format( mismatch_count )
 
-parser = argparse.ArgumentParser() #OptionParser("usage: %prog control_image rendered_image mask_image")
+parser = argparse.ArgumentParser() # OptionParser("usage: %prog control_image rendered_image mask_image")
 parser.add_argument('control_image')
 parser.add_argument('rendered_image')
-parser.add_argument('mask_image')
+parser.add_argument('mask_image', nargs='?', default=None)
 args = parser.parse_args()
 
+if not args.mask_image:
+  args.mask_image = args.control_image[:-4] + '_mask.png'
 
 updateMask(args.control_image, args.rendered_image, args.mask_image)
-

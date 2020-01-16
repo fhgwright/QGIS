@@ -91,7 +91,6 @@ Copyright:                   Carl Anderson
                        2014, Michael Douchin
                        2014, Niccolo' Marchi <sciurusurbanus@hotmail.it>
                        2014, Radoslaw Guzinski <rmgu@dhi-gras.com>
-                       2015, Tom Kralidis <tomkralidis@gmail.com>
        2004-2006, 2009-2015, Radim Blazek <blazek@itc.it>
                   2005-2015, Martin Dobias <wonder.sk@gmail.com>
                   2012-2015, Victor Olaya <volayaf@gmail.com>
@@ -101,6 +100,7 @@ Copyright:                   Carl Anderson
                   2014-2015, Arnaud Morvan <arnaud.morvan@camptocamp.com>
                   2014-2015, Sandro Mani <manisandro@gmail.com>
                   2014-2015, Sandro Santilli <strk@keybit.net>
+                  2014-2015, Tom Kralidis <tomkralidis@gmail.com>
                        2015, Michael Kirk <michael.john.kirk@gmail.com>
 License: GPL-2+
 
@@ -293,22 +293,14 @@ Comment: The code is heavily based on Christopher Michaelis' DXF to
  Used for the Shapefile functionality.
 License: MIT
 
-Files: src/plugins/dxf2shp_converter/getInsertions.h
-Copyright: Christopher Michaelis
-License: GPL-2
-
-Files: src/plugins/dxf2shp_converter/getInsertions.cpp
-Copyright: Christopher Michaelis
-License: GPL-2+
-
 Files: src/plugins/dxf2shp_converter/shapelib-1.2.10/*
 Copyright: 1999, 2001-2002, Frank Warmerdam
 License: MIT or LGPL-2+
 
 Files: src/plugins/dxf2shp_converter/dxflib/src/*
-Copyright: 2001-2003, RibbonSoft
+Copyright: 2001-2013, RibbonSoft GmbH
                 2001, Robert J. Campbell Jr
-License: GPL-2 or dxflib-Commercial-License
+License: GPL-2+ or dxflib-Commercial-License
 
 Files: src/plugins/evis/*
 Copyright: 2007, American Museum of Natural History

@@ -223,7 +223,6 @@ QgsMapCanvas::QgsMapCanvas( QWidget * parent, const char *name )
 
   // create map canvas item which will show the map
   mMap = new QgsMapCanvasMap( this );
-  mScene->addItem( mMap );
 
   // project handling
   connect( QgsProject::instance(), SIGNAL( readProject( const QDomDocument & ) ),
@@ -418,6 +417,7 @@ void QgsMapCanvas::setLayerSet( QList<QgsMapCanvasLayer> &layers )
       if ( !currentLayer )
         continue;
       disconnect( currentLayer, SIGNAL( repaintRequested() ), this, SLOT( refresh() ) );
+      disconnect( currentLayer, SIGNAL( layerCrsChanged() ), this, SLOT( layerCrsChange() ) );
       QgsVectorLayer *isVectLyr = qobject_cast<QgsVectorLayer *>( currentLayer );
       if ( isVectLyr )
       {
@@ -433,6 +433,7 @@ void QgsMapCanvas::setLayerSet( QList<QgsMapCanvasLayer> &layers )
       // Ticket #811 - racicot
       QgsMapLayer *currentLayer = layer( i );
       connect( currentLayer, SIGNAL( repaintRequested() ), this, SLOT( refresh() ) );
+      connect( currentLayer, SIGNAL( layerCrsChanged() ), this, SLOT( layerCrsChange() ) );
       QgsVectorLayer *isVectLyr = qobject_cast<QgsVectorLayer *>( currentLayer );
       if ( isVectLyr )
       {
@@ -552,6 +553,12 @@ void QgsMapCanvas::setCachingEnabled( bool enabled )
 {
   if ( enabled == isCachingEnabled() )
     return;
+
+  if ( mJob && mJob->isActive() )
+  {
+    // wait for the current rendering to finish, before touching the cache
+    mJob->waitForFinished();
+  }
 
   if ( enabled )
   {
@@ -1579,6 +1586,15 @@ void QgsMapCanvas::layerStateChange()
 
 } // layerStateChange
 
+void QgsMapCanvas::layerCrsChange()
+{
+  // called when a layer's CRS has been changed
+  QObject *theSender = sender();
+  QgsMapLayer *layer = qobject_cast<QgsMapLayer *>( theSender );
+  QString destAuthId = mSettings.destinationCrs().authid();
+  getDatumTransformInfo( layer, layer->crs().authid(), destAuthId );
+
+} // layerCrsChange
 
 
 void QgsMapCanvas::freeze( bool frz )
@@ -1949,4 +1965,21 @@ bool QgsMapCanvas::rotationEnabled()
 void QgsMapCanvas::enableRotation( bool enable )
 {
   QSettings().setValue( "/qgis/canvasRotation", enable );
+}
+
+void QgsMapCanvas::refreshAllLayers()
+{
+  // reload all layers in canvas
+  for ( int i = 0; i < layerCount(); i++ )
+  {
+    QgsMapLayer *l = layer( i );
+    if ( l )
+      l->reload();
+  }
+
+  // clear the cache
+  clearCache();
+
+  // and then refresh
+  refresh();
 }

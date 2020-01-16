@@ -14,7 +14,7 @@ class QgsDataItem : QObject
     };
 
     /** Create new data item. */
-    QgsDataItem( QgsDataItem::Type type, QgsDataItem* parent, QString name, QString path );
+    QgsDataItem( QgsDataItem::Type type, QgsDataItem* parent /TransferThis/, QString name, QString path );
     virtual ~QgsDataItem();
 
     bool hasChildren();
@@ -32,10 +32,13 @@ class QgsDataItem : QObject
       Populated     //!< children created
     };
 
+    //! @note added in 2.8
     State state() const;
 
     /** Set item state. It also take care about starting/stopping loading icon animation.
-     * @param state */
+     * @param state
+     * @note added in 2.8
+     */
     virtual void setState( State state );
 
     //! @deprecated in 2.8, use state()
@@ -142,7 +145,6 @@ class QgsDataItem : QObject
     void emitDataChanged( );
     void emitStateChanged( QgsDataItem* item, QgsDataItem::State oldState );
     virtual void childrenCreated();
-    void setPopulatingIcon();
 
   signals:
     void beginInsertItems( QgsDataItem* parent, int first, int last );
@@ -170,7 +172,8 @@ class QgsLayerItem : QgsDataItem
       Polygon,
       TableLayer,
       Database,
-      Table
+      Table,
+      Plugin     //!< added in 2.10
     };
 
     QgsLayerItem( QgsDataItem* parent, QString name, QString path, QString uri, LayerType layerType, QString providerKey );

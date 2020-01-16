@@ -155,12 +155,16 @@ QgsRasterLayerSaveAsDialog::~QgsRasterLayerSaveAsDialog()
 void QgsRasterLayerSaveAsDialog::on_mBrowseButton_clicked()
 {
   QString fileName;
+
+  QSettings settings;
+  QString dirName = mSaveAsLineEdit->text().isEmpty() ? settings.value( "/UI/lastRasterFileDir", "." ).toString() : mSaveAsLineEdit->text();
+
   if ( mTileModeCheckBox->isChecked() )
   {
     while ( true )
     {
       // TODO: would not it be better to select .vrt file instead of directory?
-      fileName = QFileDialog::getExistingDirectory( this, tr( "Select output directory" ) );
+      fileName = QFileDialog::getExistingDirectory( this, tr( "Select output directory" ), dirName );
       //fileName = QFileDialog::getSaveFileName( this, tr( "Select output file" ), QString(), tr( "VRT" ) + " (*.vrt *.VRT)" );
 
       if ( fileName.isEmpty() ) break; // canceled
@@ -194,11 +198,16 @@ void QgsRasterLayerSaveAsDialog::on_mBrowseButton_clicked()
   }
   else
   {
-    fileName = QFileDialog::getSaveFileName( this, tr( "Select output file" ), QString(), tr( "GeoTIFF" ) + " (*.tif *.tiff *.TIF *.TIFF)" );
+    fileName = QFileDialog::getSaveFileName( this, tr( "Select output file" ), dirName, tr( "GeoTIFF" ) + " (*.tif *.tiff *.TIF *.TIFF)" );
   }
 
   if ( !fileName.isEmpty() )
   {
+    // ensure the user never ommited the extension from the file name
+    if ( !fileName.toLower().endsWith( ".tif" ) && !fileName.toLower().endsWith( ".tiff" ) )
+    {
+      fileName += ".tif";
+    }
     mSaveAsLineEdit->setText( fileName );
   }
 }
@@ -258,6 +267,11 @@ int QgsRasterLayerSaveAsDialog::maximumTileSizeY() const
 bool QgsRasterLayerSaveAsDialog::tileMode() const
 {
   return mTileModeCheckBox->isChecked();
+}
+
+bool QgsRasterLayerSaveAsDialog::addToCanvas() const
+{
+  return mAddToCanvas->isChecked();
 }
 
 QString QgsRasterLayerSaveAsDialog::outputFileName() const

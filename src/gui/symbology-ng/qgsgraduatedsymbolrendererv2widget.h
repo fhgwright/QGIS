@@ -49,7 +49,7 @@ class GUI_EXPORT QgsGraduatedSymbolRendererV2Model : public QAbstractItemModel
     void deleteRows( QList<int> rows );
     void removeAllRows();
     void sort( int column, Qt::SortOrder order = Qt::AscendingOrder ) override;
-    void updateSymbology();
+    void updateSymbology( bool resetModel = false );
     void updateLabels();
 
   signals:
@@ -86,6 +86,7 @@ class GUI_EXPORT QgsGraduatedSymbolRendererV2Widget : public QgsRendererV2Widget
     void graduatedColumnChanged( QString field );
     void classifyGraduated();
     void reapplyColorRamp();
+    void reapplySizes();
     void rangesDoubleClicked( const QModelIndex & idx );
     void rangesClicked( const QModelIndex & idx );
     void changeCurrentValue( QStandardItem * item );
@@ -108,6 +109,9 @@ class GUI_EXPORT QgsGraduatedSymbolRendererV2Widget : public QgsRendererV2Widget
 
     void rowsMoved();
     void modelDataChanged();
+    void on_mSizeUnitWidget_changed();
+    void on_methodComboBox_currentIndexChanged( int );
+    void refreshRanges( bool reset = false );
 
   protected:
     void updateUiFromRenderer( bool updateCount = true );

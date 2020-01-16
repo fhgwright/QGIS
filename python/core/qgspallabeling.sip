@@ -124,23 +124,25 @@ class QgsPalLayerSettings
 
     enum UpsideDownLabels
     {
-      Upright, // upside-down labels (90 <= angle < 270) are shown upright
-      ShowDefined, // show upside down when rotation is layer- or data-defined
-      ShowAll // show upside down for all labels, including dynamic ones
+      Upright, /*!< upside-down labels (90 <= angle < 270) are shown upright */
+      ShowDefined, /*!< show upside down when rotation is layer- or data-defined */
+      ShowAll /*!< show upside down for all labels, including dynamic ones */
     };
 
     enum DirectionSymbols
     {
-      SymbolLeftRight, // place direction symbols on left/right of label
-      SymbolAbove, // place direction symbols on above label
-      SymbolBelow // place direction symbols on below label
+      SymbolLeftRight, /*!< place direction symbols on left/right of label */
+      SymbolAbove, /*!< place direction symbols on above label */
+      SymbolBelow /*!< place direction symbols on below label */
     };
 
     enum MultiLineAlign
     {
       MultiLeft,
       MultiCenter,
-      MultiRight
+      MultiRight,
+      MultiFollowPlacement /*!< Alignment follows placement of label, eg labels to the left of a feature
+                               will be drawn with right alignment*/
     };
 
     enum ShapeType
@@ -721,15 +723,15 @@ class QgsPalLabeling : QgsLabelingEngineInterface
     // void drawLabel( pal::LabelPosition* label, QgsRenderContext& context, QgsPalLayerSettings& tmpLyr, DrawLabelType drawType );
 
     static void drawLabelBuffer( QgsRenderContext& context,
-                                 const QgsLabelComponent& component,
+                                 const QgsLabelComponent &component,
                                  const QgsPalLayerSettings& tmpLyr );
 
     static void drawLabelBackground( QgsRenderContext& context,
                                      QgsLabelComponent component,
                                      const QgsPalLayerSettings& tmpLyr );
 
-    static void drawLabelShadow( QgsRenderContext& context,
-                                 const QgsLabelComponent& component,
+    static void drawLabelShadow( QgsRenderContext &context,
+                                 const QgsLabelComponent &component,
                                  const QgsPalLayerSettings& tmpLyr );
 
     //! load/save engine settings to project file
@@ -740,6 +742,44 @@ class QgsPalLabeling : QgsLabelingEngineInterface
     bool isStoredWithProject() const /Deprecated/;
     //! @deprecated since 2.4 - settings are always stored in project
     void setStoredWithProject( bool store ) /Deprecated/;
+
+    /** Prepares a geometry for registration with PAL. Handles reprojection, rotation, clipping, etc.
+     * @param geometry geometry to prepare
+     * @param context render context
+     * @param ct coordinate transform
+     * @param clipGeometry geometry to clip features to, if applicable
+     * @returns prepared geometry
+     * @note added in QGIS 2.9
+     */
+    static QgsGeometry* prepareGeometry( const QgsGeometry *geometry, const QgsRenderContext &context, const QgsCoordinateTransform *ct, QgsGeometry *clipGeometry = 0 ) /Factory/;
+
+    /** Checks whether a geometry requires preparation before registration with PAL
+     * @param geometry geometry to prepare
+     * @param context render context
+     * @param ct coordinate transform
+     * @param clipGeometry geometry to clip features to, if applicable
+     * @returns true if geometry requires preparation
+     * @note added in QGIS 2.9
+     */
+    static bool geometryRequiresPreparation( const QgsGeometry *geometry, const QgsRenderContext &context, const QgsCoordinateTransform *ct, QgsGeometry *clipGeometry = 0 );
+
+    /** Splits a text string to a list of separate lines, using a specified wrap character.
+     * The text string will be split on either newline characters or the wrap character.
+     * @param text text string to split
+     * @param wrapCharacter additional character to wrap on
+     * @returns list of text split to lines
+     * @note added in QGIS 2.9
+     */
+    static QStringList splitToLines( const QString& text, const QString& wrapCharacter );
+
+    /** Splits a text string to a list of graphemes, which are the smallest allowable character
+     * divisions in the string. This accounts for scripts were individual characters are not
+     * allowed to be split apart (eg Arabic and Indic based scripts)
+     * @param text string to split
+     * @returns list of graphemes
+     * @note added in QGIS 2.10
+     */
+    static QStringList splitToGraphemes( const QString& text );
 
   protected:
     // update temporary QgsPalLayerSettings with any data defined text style values
@@ -763,4 +803,13 @@ class QgsPalLabeling : QgsLabelingEngineInterface
                                 const QMap< QgsPalLayerSettings::DataDefinedProperties, QVariant >& ddValues );
 
     void deleteTemporaryData();
+
+    /** Checks whether a geometry exceeds the minimum required size for a geometry to be labeled.
+     * @param context render context
+     * @param geom geometry
+     * @param minSize minimum size for geometry
+     * @returns true if geometry exceeds minimum size
+     * @note added in QGIS 2.9
+     */
+    static bool checkMinimumSizeMM( const QgsRenderContext &context, const QgsGeometry *geom, double minSize );
 };

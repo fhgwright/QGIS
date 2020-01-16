@@ -47,7 +47,12 @@
 
 extern "C"
 {
+#if GRASS_VERSION_MAJOR < 7
 #include <grass/Vect.h>
+#else
+#include <grass/vector.h>
+#define G_adjust_Cell_head(cellhd,row_flag,col_flag) (G_adjust_Cell_head(cellhd,row_flag,col_flag),0)
+#endif
 #include <grass/glocale.h>
 }
 
@@ -981,14 +986,14 @@ QStringList QgsGrassModuleStandardOptions::checkRegion()
     if ( !item )
       continue;
 
-    QgsGrass::MapType mapType = QgsGrass::Vector;
+    QgsGrassObject::Type mapType = QgsGrassObject::Vector;
     switch ( item->type() )
     {
       case QgsGrassModuleInput::Raster :
-        mapType = QgsGrass::Raster;
+        mapType = QgsGrassObject::Raster;
         break;
       case QgsGrassModuleInput::Vector :
-        mapType = QgsGrass::Vector;
+        mapType = QgsGrassObject::Vector;
         break;
     }
 
@@ -1160,15 +1165,15 @@ bool QgsGrassModuleStandardOptions::inputRegion( struct Cell_head *window, QgsCo
         if ( !all && !item->useRegion() )
           continue;
 
-        QgsGrass::MapType mapType = QgsGrass::Vector;
+        QgsGrassObject::Type mapType = QgsGrassObject::Vector;
 
         switch ( item->type() )
         {
           case QgsGrassModuleInput::Raster :
-            mapType = QgsGrass::Raster;
+            mapType = QgsGrassObject::Raster;
             break;
           case QgsGrassModuleInput::Vector :
-            mapType = QgsGrass::Vector;
+            mapType = QgsGrassObject::Vector;
             break;
         }
 
@@ -1625,7 +1630,7 @@ void QgsGrassModule::run()
     mOutputTextBrowser->clear();
 
     QProcessEnvironment environment = QProcessEnvironment::systemEnvironment();
-    environment.insert( "GRASS_HTML_BROWSER", QgsApplication::libexecPath() + "grass/bin/qgis.g.browser" );
+    environment.insert( "GRASS_HTML_BROWSER", QgsGrassUtils::htmlBrowserPath() );
 
     // Warning: it is not useful to write requested region to WIND file and
     //          reset then to original beacuse it is reset before
@@ -1901,10 +1906,19 @@ void QgsGrassModule::viewOutput()
     }
     else
     {
-      QStringList layers = QgsGrass::vectorLayers(
-                             QgsGrass::getDefaultGisdbase(),
-                             QgsGrass::getDefaultLocation(),
-                             QgsGrass::getDefaultMapset(), map );
+      QStringList layers;
+      try
+      {
+        layers = QgsGrass::vectorLayers(
+                   QgsGrass::getDefaultGisdbase(),
+                   QgsGrass::getDefaultLocation(),
+                   QgsGrass::getDefaultMapset(), map );
+      }
+      catch ( QgsGrass::Exception &e )
+      {
+        QgsDebugMsg( e.what() );
+        continue;
+      }
 
       // check whether there are 1_* layers
       // if so, 0_* layers won't be added
@@ -3269,8 +3283,8 @@ QgsGrassModuleItem::~QgsGrassModuleItem() {}
 QgsGrassModuleGroupBoxItem::QgsGrassModuleGroupBoxItem( QgsGrassModule *module, QString key,
     QDomElement &qdesc, QDomElement &gdesc, QDomNode &gnode,
     bool direct, QWidget * parent )
-    : QGroupBox( parent ),
-    QgsGrassModuleItem( module, key, qdesc, gdesc, gnode, direct )
+    : QGroupBox( parent )
+    , QgsGrassModuleItem( module, key, qdesc, gdesc, gnode, direct )
 {
   adjustTitle();
 
@@ -3579,8 +3593,8 @@ QgsGrassModuleField::QgsGrassModuleField(
   QgsGrassModule *module, QgsGrassModuleStandardOptions *options,
   QString key, QDomElement &qdesc,
   QDomElement &gdesc, QDomNode &gnode, bool direct, QWidget * parent )
-    :  QgsGrassModuleGroupBoxItem( module, key, qdesc, gdesc, gnode, direct, parent ),
-    mModuleStandardOptions( options ), mLayerInput( 0 )
+    : QgsGrassModuleGroupBoxItem( module, key, qdesc, gdesc, gnode, direct, parent )
+    , mModuleStandardOptions( options ), mLayerInput( 0 )
 {
   if ( mTitle.isEmpty() )
   {
@@ -3668,9 +3682,10 @@ QgsGrassModuleSelection::QgsGrassModuleSelection(
   QgsGrassModule *module, QgsGrassModuleStandardOptions *options,
   QString key, QDomElement &qdesc,
   QDomElement &gdesc, QDomNode &gnode, bool direct, QWidget * parent )
-    :  QgsGrassModuleGroupBoxItem( module, key, qdesc, gdesc, gnode, direct, parent ),
-    mModuleStandardOptions( options ), mLayerInput( 0 ),
-    mVectorLayer( 0 )
+    : QgsGrassModuleGroupBoxItem( module, key, qdesc, gdesc, gnode, direct, parent )
+    , mModuleStandardOptions( options )
+    , mLayerInput( 0 )
+    , mVectorLayer( 0 )
 {
   if ( mTitle.isEmpty() )
   {
@@ -3734,7 +3749,7 @@ void QgsGrassModuleSelection::updateSelection()
     if ( !selected.contains( feature.id() ) )
       continue;
 
-    const QgsAttributes& attr = feature.attributes();
+    QgsAttributes attr = feature.attributes();
     if ( attr.size() > keyField )
     {
       if ( i > 0 )
@@ -3780,8 +3795,8 @@ QgsGrassModuleFile::QgsGrassModuleFile(
   QgsGrassModule *module,
   QString key, QDomElement &qdesc,
   QDomElement &gdesc, QDomNode &gnode, bool direct, QWidget * parent )
-    :  QgsGrassModuleGroupBoxItem( module, key, qdesc, gdesc, gnode, direct, parent ),
-    mType( Old )
+    : QgsGrassModuleGroupBoxItem( module, key, qdesc, gdesc, gnode, direct, parent )
+    , mType( Old )
 {
   if ( mTitle.isEmpty() )
   {

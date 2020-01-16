@@ -138,12 +138,11 @@ int QgsTransectSample::createSample( QProgressDialog* pd )
       break;
     }
 
-
-    QgsGeometry* strataGeom = fet.geometry();
-    if ( !strataGeom )
+    if ( !fet.constGeometry() )
     {
       continue;
     }
+    const QgsGeometry* strataGeom = fet.constGeometry();
 
     //find baseline for strata
     QVariant strataId = fet.attribute( mStrataIdAttribute );
@@ -289,7 +288,9 @@ int QgsTransectSample::createSample( QProgressDialog* pd )
       outputPointWriter.addFeature( samplePointFeature );
 
       sIndex.insertFeature( sampleLineFeature );
+      Q_NOWARN_DEPRECATED_PUSH
       lineFeatureMap.insert( fid, sampleLineFeature.geometryAndOwnership() );
+      Q_NOWARN_DEPRECATED_POP
 
       delete lineFarAwayGeom;
       ++nTotalTransects;
@@ -337,7 +338,9 @@ QgsGeometry* QgsTransectSample::findBaselineGeometry( QVariant strataId )
   {
     if ( strataId == fet.attribute( mBaselineStrataId ) || mShareBaseline )
     {
+      Q_NOWARN_DEPRECATED_PUSH
       return fet.geometryAndOwnership();
+      Q_NOWARN_DEPRECATED_POP
     }
   }
   return 0;
@@ -515,7 +518,7 @@ QgsGeometry* QgsTransectSample::closestMultilineElement( const QgsPoint& pt, Qgs
   double minDist = DBL_MAX;
   double currentDist = 0;
   QgsGeometry* currentLine = 0;
-  QgsGeometry* closestLine = 0;
+  QScopedPointer<QgsGeometry> closestLine;
   QgsGeometry* pointGeom = QgsGeometry::fromPoint( pt );
 
   QgsMultiPolyline multiPolyline = multiLine->asMultiPolyline();
@@ -527,7 +530,7 @@ QgsGeometry* QgsTransectSample::closestMultilineElement( const QgsPoint& pt, Qgs
     if ( currentDist < minDist )
     {
       minDist = currentDist;
-      closestLine = currentLine;
+      closestLine.reset( currentLine );
     }
     else
     {
@@ -536,10 +539,10 @@ QgsGeometry* QgsTransectSample::closestMultilineElement( const QgsPoint& pt, Qgs
   }
 
   delete pointGeom;
-  return closestLine;
+  return closestLine.take();
 }
 
-QgsGeometry* QgsTransectSample::clipBufferLine( QgsGeometry* stratumGeom, QgsGeometry* clippedBaseline, double tolerance )
+QgsGeometry* QgsTransectSample::clipBufferLine( const QgsGeometry* stratumGeom, QgsGeometry* clippedBaseline, double tolerance )
 {
   if ( !stratumGeom || !clippedBaseline || clippedBaseline->wkbType() == QGis::WKBUnknown )
   {

@@ -24,7 +24,6 @@
 #include <QMenu>
 #include <QFile>
 #include <QTextStream>
-#include <QSettings>
 #include <QDir>
 #include <QComboBox>
 
@@ -81,6 +80,11 @@ QgsExpressionBuilderWidget::QgsExpressionBuilderWidget( QWidget *parent )
   {
     tab_2->setEnabled( false );
   }
+
+  // select the first item in the function list
+  // in order to avoid a blank help widget
+  QModelIndex firstItem = mProxyModel->index( 0, 0, QModelIndex() );
+  expressionTree->setCurrentIndex( firstItem );
 }
 
 
@@ -132,6 +136,8 @@ void QgsExpressionBuilderWidget::runPythonCode( QString code )
     QgsPythonRunner::run( pythontext );
   }
   updateFunctionTree();
+  loadFieldNames();
+  loadRecent( mRecentKey );
 }
 
 void QgsExpressionBuilderWidget::saveFunctionFile( QString fileName )
@@ -149,7 +155,7 @@ void QgsExpressionBuilderWidget::saveFunctionFile( QString fileName )
 
   fileName = mFunctionsPath + QDir::separator() + fileName;
   QFile myFile( fileName );
-  if ( myFile.open( QIODevice::WriteOnly | QIODevice::Text ) )
+  if ( myFile.open( QIODevice::WriteOnly ) )
   {
     QTextStream myFileStream( &myFile );
     myFileStream << txtPython->text() << endl;
@@ -347,6 +353,7 @@ void QgsExpressionBuilderWidget::saveToRecent( QString key )
 
 void QgsExpressionBuilderWidget::loadRecent( QString key )
 {
+  mRecentKey = key;
   QString name = tr( "Recent (%1)" ).arg( key );
   if ( mExpressionGroups.contains( name ) )
   {
@@ -409,6 +416,8 @@ void QgsExpressionBuilderWidget::updateFunctionTree()
       continue;
     if ( func->params() != 0 )
       name += "(";
+    else if ( !name.startsWith( "$" ) )
+      name += "()";
     registerItem( func->group(), func->name(), " " + name + " ", func->helptext() );
   }
 
@@ -467,7 +476,7 @@ void QgsExpressionBuilderWidget::on_txtExpressionString_textChanged()
     {
       QVariant value = exp.evaluate( &mFeature, mLayer->pendingFields() );
       if ( !exp.hasEvalError() )
-        lblPreview->setText( value.toString() );
+        lblPreview->setText( formatPreviewString( value.toString() ) );
     }
     else
     {
@@ -482,7 +491,7 @@ void QgsExpressionBuilderWidget::on_txtExpressionString_textChanged()
     QVariant value = exp.evaluate();
     if ( !exp.hasEvalError() )
     {
-      lblPreview->setText( value.toString() );
+      lblPreview->setText( formatPreviewString( value.toString() ) );
     }
   }
 
@@ -505,6 +514,18 @@ void QgsExpressionBuilderWidget::on_txtExpressionString_textChanged()
     txtExpressionString->setToolTip( "" );
     lblPreview->setToolTip( "" );
     emit expressionParsed( true );
+  }
+}
+
+QString QgsExpressionBuilderWidget::formatPreviewString( const QString& previewString ) const
+{
+  if ( previewString.length() > 63 )
+  {
+    return QString( tr( "%1..." ) ).arg( previewString.left( 60 ) );
+  }
+  else
+  {
+    return previewString;
   }
 }
 

@@ -85,9 +85,9 @@ QgsRuleBasedRendererV2Widget::QgsRuleBasedRendererV2Widget( QgsVectorLayer* laye
   btnRefineRule->setMenu( mRefineMenu );
   contextMenu->addMenu( mRefineMenu );
 
-  btnAddRule->setIcon( QIcon( QgsApplication::iconPath( "symbologyAdd.png" ) ) );
+  btnAddRule->setIcon( QIcon( QgsApplication::iconPath( "symbologyAdd.svg" ) ) );
   btnEditRule->setIcon( QIcon( QgsApplication::iconPath( "symbologyEdit.png" ) ) );
-  btnRemoveRule->setIcon( QIcon( QgsApplication::iconPath( "symbologyRemove.png" ) ) );
+  btnRemoveRule->setIcon( QIcon( QgsApplication::iconPath( "symbologyRemove.svg" ) ) );
 
   connect( viewRules, SIGNAL( doubleClicked( const QModelIndex & ) ), this, SLOT( editRule( const QModelIndex & ) ) );
 
@@ -211,7 +211,6 @@ void QgsRuleBasedRendererV2Widget::currentRuleChanged( const QModelIndex& curren
 #include "qgsexpressionbuilderdialog.h"
 #include <QDialogButtonBox>
 #include <QInputDialog>
-#include <QKeyEvent>
 #include <QClipboard>
 
 void QgsRuleBasedRendererV2Widget::refineRule( int type )
@@ -800,8 +799,8 @@ QVariant QgsRuleBasedRendererV2Model::data( const QModelIndex &index, int role )
     {
       case 0: return rule->label();
       case 1: return rule->filterExpression();
-      case 2: return rule->scaleMinDenom();
-      case 3: return rule->scaleMaxDenom();
+      case 2: return rule->scaleMaxDenom();
+      case 3: return rule->scaleMinDenom();
       default: return QVariant();
     }
   }
@@ -906,10 +905,10 @@ bool QgsRuleBasedRendererV2Model::setData( const QModelIndex & index, const QVar
       rule->setFilterExpression( value.toString() );
       break;
     case 2: // scale min
-      rule->setScaleMinDenom( value.toInt() );
+      rule->setScaleMaxDenom( value.toInt() );
       break;
     case 3: // scale max
-      rule->setScaleMaxDenom( value.toInt() );
+      rule->setScaleMinDenom( value.toInt() );
       break;
     default:
       return false;

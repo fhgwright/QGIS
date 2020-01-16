@@ -19,6 +19,7 @@
 #include "qgis.h"
 #include "qgsrectangle.h"
 #include "qgsrendercontext.h"
+#include "qgssymbolv2.h"
 
 #include <QList>
 #include <QString>
@@ -28,10 +29,10 @@
 #include <QDomDocument>
 #include <QDomElement>
 
-class QgsSymbolV2;
 class QgsFeature;
 class QgsFields;
 class QgsVectorLayer;
+class QgsPaintEffect;
 
 typedef QMap<QString, QString> QgsStringMap;
 
@@ -103,7 +104,7 @@ class CORE_EXPORT QgsFeatureRendererV2
 
     virtual QList<QString> usedAttributes() = 0;
 
-    virtual ~QgsFeatureRendererV2() {}
+    virtual ~QgsFeatureRendererV2();
 
     virtual QgsFeatureRendererV2* clone() const = 0;
 
@@ -218,6 +219,20 @@ class CORE_EXPORT QgsFeatureRendererV2
      */
     virtual void modifyRequestExtent( QgsRectangle& extent, QgsRenderContext& context ) { Q_UNUSED( extent ); Q_UNUSED( context ); }
 
+    /** Returns the current paint effect for the renderer.
+     * @returns paint effect
+     * @note added in QGIS 2.9
+     * @see setPaintEffect
+     */
+    QgsPaintEffect* paintEffect() const;
+
+    /** Sets the current paint effect for the renderer.
+     * @param effect paint effect. Ownership is transferred to the renderer.
+     * @note added in QGIS 2.9
+     * @see paintEffect
+     */
+    void setPaintEffect( QgsPaintEffect* effect );
+
   protected:
     QgsFeatureRendererV2( QString type );
 
@@ -236,10 +251,15 @@ class CORE_EXPORT QgsFeatureRendererV2
     void renderVertexMarkerPolygon( QPolygonF& pts, QList<QPolygonF>* rings, QgsRenderContext& context );
 
     static const unsigned char* _getPoint( QPointF& pt, QgsRenderContext& context, const unsigned char* wkb );
-    static const unsigned char* _getLineString( QPolygonF& pts, QgsRenderContext& context, const unsigned char* wkb );
-    static const unsigned char* _getPolygon( QPolygonF& pts, QList<QPolygonF>& holes, QgsRenderContext& context, const unsigned char* wkb );
+    static const unsigned char* _getLineString( QPolygonF& pts, QgsRenderContext& context, const unsigned char* wkb, bool clipToExtent = true );
+    static const unsigned char* _getPolygon( QPolygonF& pts, QList<QPolygonF>& holes, QgsRenderContext& context, const unsigned char* wkb, bool clipToExtent = true );
 
     void setScaleMethodToSymbol( QgsSymbolV2* symbol, int scaleMethod );
+
+    /** Copies paint effect of this renderer to another renderer
+     * @param destRenderer destination renderer for copied effect
+     */
+    void copyPaintEffect( QgsFeatureRendererV2 *destRenderer ) const;
 
     QString mType;
 
@@ -250,10 +270,23 @@ class CORE_EXPORT QgsFeatureRendererV2
     /** The current size of editing marker */
     int mCurrentVertexMarkerSize;
 
+    QgsPaintEffect* mPaintEffect;
+
+    /**@note this function is used to convert old sizeScale expresssions to symbol
+     * level DataDefined size
+     */
+    static void convertSymbolSizeScale( QgsSymbolV2 * symbol, QgsSymbolV2::ScaleMethod method, const QString & field );
+    /**@note this function is used to convert old rotations expresssions to symbol
+     * level DataDefined angle
+     */
+    static void convertSymbolRotation( QgsSymbolV2 * symbol, const QString & field );
+
   private:
     Q_DISABLE_COPY( QgsFeatureRendererV2 )
 };
 
-class QgsRendererV2Widget;  // why does SIP fail, when this isn't here
+// for some reason SIP compilation fails if these lines are not included:
+class QgsRendererV2Widget;
+class QgsPaintEffectWidget;
 
 #endif // QGSRENDERERV2_H

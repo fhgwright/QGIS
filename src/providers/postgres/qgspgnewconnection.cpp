@@ -105,7 +105,7 @@ void QgsPgNewConnection::accept()
   }
 
   // warn if entry was renamed to an existing connection
-  if (( mOriginalConnName.isNull() || mOriginalConnName != txtName->text() ) &&
+  if (( mOriginalConnName.isNull() || mOriginalConnName.compare( txtName->text(), Qt::CaseInsensitive ) != 0 ) &&
       ( settings.contains( baseKey + txtName->text() + "/service" ) ||
         settings.contains( baseKey + txtName->text() + "/host" ) ) &&
       QMessageBox::question( this,
@@ -119,8 +119,8 @@ void QgsPgNewConnection::accept()
   // on rename delete the original entry first
   if ( !mOriginalConnName.isNull() && mOriginalConnName != txtName->text() )
   {
-
     settings.remove( baseKey + mOriginalConnName );
+    settings.sync();
   }
 
   baseKey += txtName->text();
@@ -197,6 +197,6 @@ void QgsPgNewConnection::testConnection()
   {
     QMessageBox::information( this,
                               tr( "Test connection" ),
-                              tr( "Connection failed - Check settings and try again.\n\n" ) );
+                              tr( "Connection failed - consult message log for details.\n\n" ) );
   }
 }

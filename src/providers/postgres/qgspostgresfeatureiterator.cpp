@@ -12,16 +12,18 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#include "qgsgeometry.h"
+#include "qgspostgresconnpool.h"
+#include "qgspostgresexpressioncompiler.h"
 #include "qgspostgresfeatureiterator.h"
 #include "qgspostgresprovider.h"
-#include "qgspostgresconnpool.h"
 #include "qgspostgrestransaction.h"
-#include "qgsgeometry.h"
 
 #include "qgslogger.h"
 #include "qgsmessagelog.h"
 
 #include <QObject>
+#include <QSettings>
 
 
 const int QgsPostgresFeatureIterator::sFeatureQueueSize = 2000;
@@ -32,6 +34,7 @@ QgsPostgresFeatureIterator::QgsPostgresFeatureIterator( QgsPostgresFeatureSource
     , mFeatureQueueSize( sFeatureQueueSize )
     , mFetched( 0 )
     , mFetchGeometry( false )
+    , mExpressionCompiled( false )
 {
   if ( !source->mTransactionConnection )
   {
@@ -66,6 +69,17 @@ QgsPostgresFeatureIterator::QgsPostgresFeatureIterator( QgsPostgresFeatureSource
   else if ( request.filterType() == QgsFeatureRequest::FilterFids )
   {
     whereClause = QgsPostgresUtils::whereClause( mRequest.filterFids(), mSource->mFields, mConn, mSource->mPrimaryKeyType, mSource->mPrimaryKeyAttrs, mSource->mShared );
+  }
+  else if ( request.filterType() == QgsFeatureRequest::FilterExpression
+            && QSettings().value( "/qgis/postgres/compileExpressions", false ).toBool() )
+  {
+    QgsPostgresExpressionCompiler compiler = QgsPostgresExpressionCompiler( source );
+
+    if ( compiler.compile( request.filterExpression() ) == QgsPostgresExpressionCompiler::Complete )
+    {
+      whereClause = compiler.result();
+      mExpressionCompiled = true;
+    }
   }
 
   if ( !mSource->mSqlWhereClause.isEmpty() )
@@ -151,8 +165,9 @@ bool QgsPostgresFeatureIterator::fetchFeature( QgsFeature& feature )
   }
   else
   {
-    QgsGeometry* featureGeom = mFeatureQueue.front().geometryAndOwnership();
-    feature.setGeometry( featureGeom );
+    Q_NOWARN_DEPRECATED_PUSH
+    feature.setGeometry( mFeatureQueue.front().geometryAndOwnership() );
+    Q_NOWARN_DEPRECATED_POP
   }
   feature.setFeatureId( mFeatureQueue.front().id() );
   feature.setAttributes( mFeatureQueue.front().attributes() );
@@ -161,9 +176,17 @@ bool QgsPostgresFeatureIterator::fetchFeature( QgsFeature& feature )
   mFetched++;
 
   feature.setValid( true );
-  feature.setFields( &mSource->mFields ); // allow name-based attribute lookups
+  feature.setFields( mSource->mFields ); // allow name-based attribute lookups
 
   return true;
+}
+
+bool QgsPostgresFeatureIterator::nextFeatureFilterExpression( QgsFeature& f )
+{
+  if ( !mExpressionCompiled )
+    return QgsAbstractFeatureIterator::nextFeatureFilterExpression( f );
+  else
+    return fetchFeature( f );
 }
 
 bool QgsPostgresFeatureIterator::prepareSimplification( const QgsSimplifyMethod& simplifyMethod )
@@ -266,15 +289,24 @@ QString QgsPostgresFeatureIterator::whereClauseRect()
            .arg( mSource->mRequestedSrid.isEmpty() ? mSource->mDetectedSrid : mSource->mRequestedSrid );
   }
 
-  QString whereClause = QString( "%1 && %2" )
+  QString whereClause = QString( "%1%2 && %3" )
                         .arg( QgsPostgresConn::quotedIdentifier( mSource->mGeometryColumn ) )
+                        .arg( mSource->mSpatialColType == sctPcPatch ? "::geometry" : "" )
                         .arg( qBox );
+
+  bool castToGeometry = mSource->mSpatialColType == sctGeography ||
+                        mSource->mSpatialColType == sctPcPatch;
+
   if ( mRequest.flags() & QgsFeatureRequest::ExactIntersect )
   {
-    whereClause += QString( " AND %1(%2%3,%4)" )
+    QString curveToLineFn; // in postgis < 1.5 the st_curvetoline function does not exist
+    if ( mConn->majorVersion() >= 2 || ( mConn->majorVersion() == 1 && mConn->minorVersion() >= 5 ) )
+      curveToLineFn = "st_curvetoline"; // st_ prefix is always used
+    whereClause += QString( " AND %1(%2(%3%4),%5)" )
                    .arg( mConn->majorVersion() < 2 ? "intersects" : "st_intersects" )
+                   .arg( curveToLineFn )
                    .arg( QgsPostgresConn::quotedIdentifier( mSource->mGeometryColumn ) )
-                   .arg( mSource->mSpatialColType == sctGeography ? "::geometry" : "" )
+                   .arg( castToGeometry ? "::geometry" : "" )
                    .arg( qBox );
   }
 
@@ -283,13 +315,13 @@ QString QgsPostgresFeatureIterator::whereClauseRect()
     whereClause += QString( " AND %1(%2%3)=%4" )
                    .arg( mConn->majorVersion() < 2 ? "srid" : "st_srid" )
                    .arg( QgsPostgresConn::quotedIdentifier( mSource->mGeometryColumn ) )
-                   .arg( mSource->mSpatialColType == sctGeography ? "::geography" : "" )
+                   .arg( castToGeometry ? "::geometry" : "" )
                    .arg( mSource->mRequestedSrid );
   }
 
   if ( mSource->mRequestedGeomType != QGis::WKBUnknown && mSource->mRequestedGeomType != mSource->mDetectedGeomType )
   {
-    whereClause += QString( " AND %1" ).arg( QgsPostgresConn::postgisTypeFilter( mSource->mGeometryColumn, mSource->mRequestedGeomType, mSource->mSpatialColType == sctGeography ) );
+    whereClause += QString( " AND %1" ).arg( QgsPostgresConn::postgisTypeFilter( mSource->mGeometryColumn, ( QgsWKBTypes::Type )mSource->mRequestedGeomType, castToGeometry ) );
   }
 
   return whereClause;
@@ -316,13 +348,19 @@ bool QgsPostgresFeatureIterator::declareCursor( const QString& whereClause )
   {
     QString geom = QgsPostgresConn::quotedIdentifier( mSource->mGeometryColumn );
 
-    if ( mSource->mSpatialColType == sctGeography )
+    if ( mSource->mSpatialColType == sctGeography ||
+         mSource->mSpatialColType == sctPcPatch )
       geom += "::geometry";
 
     if ( mSource->mForce2d )
     {
       geom = QString( "%1(%2)" )
-             .arg( mConn->majorVersion() < 2 ? "force_2d" : "st_force_2d" )
+             // Force_2D before 2.0
+             .arg( mConn->majorVersion() < 2 ? "force_2d"
+                   // ST_Force2D since 2.1.0
+                   : mConn->majorVersion() > 2 || mConn->minorVersion() > 0 ? "st_force2d"
+                   // ST_Force_2D in 2.0.x
+                   : "st_force_2d" )
              .arg( geom );
     }
 
@@ -396,6 +434,7 @@ bool QgsPostgresFeatureIterator::declareCursor( const QString& whereClause )
 
   if ( !mConn->openCursor( mCursorName, query ) )
   {
+
     // reloading the fields might help next time around
     // TODO how to cleanly force reload of fields?  P->loadFields();
     close();
@@ -564,7 +603,6 @@ void QgsPostgresFeatureIterator::getFeatureAttribute( int idx, QgsPostgresResult
 QgsPostgresFeatureSource::QgsPostgresFeatureSource( const QgsPostgresProvider* p )
     : mConnInfo( p->mUri.connectionInfo() )
     , mGeometryColumn( p->mGeometryColumn )
-    , mSqlWhereClause( p->mSqlWhereClause )
     , mFields( p->mAttributeFields )
     , mSpatialColType( p->mSpatialColType )
     , mRequestedSrid( p->mRequestedSrid )
@@ -577,6 +615,11 @@ QgsPostgresFeatureSource::QgsPostgresFeatureSource( const QgsPostgresProvider* p
     , mQuery( p->mQuery )
     , mShared( p->mShared )
 {
+  mSqlWhereClause = p->filterWhereClause();
+
+  if ( mSqlWhereClause.startsWith( " WHERE " ) )
+    mSqlWhereClause = mSqlWhereClause.mid( 7 );
+
   if ( p->mTransaction )
   {
     mTransactionConnection = p->mTransaction->connection();

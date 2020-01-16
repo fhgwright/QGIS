@@ -286,7 +286,7 @@ void QgsComposerAttributeTableWidget::on_mHeaderFontPushButton_clicked()
 
   bool ok;
   QFont newFont = QgisGui::getFont( ok, mComposerTable->headerFont(), tr( "Select Font" ) );
-  if ( !ok )
+  if ( ok )
   {
     QgsComposition *composition = mComposerTable->composition();
     if ( composition )
@@ -369,7 +369,7 @@ void QgsComposerAttributeTableWidget::on_mGridStrokeWidthSpinBox_valueChanged( d
   QgsComposition* composition = mComposerTable->composition();
   if ( composition )
   {
-    composition->beginMultiFrameCommand( mComposerTable, tr( "Table grid stroke" ), QgsComposerMultiFrameMergeCommand::TableGridStrokeWidth );
+    composition->beginMultiFrameCommand( mComposerTable, tr( "Table grid line" ), QgsComposerMultiFrameMergeCommand::TableGridStrokeWidth );
   }
   mComposerTable->setGridStrokeWidth( d );
   if ( composition )

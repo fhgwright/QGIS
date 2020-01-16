@@ -44,7 +44,7 @@ class QgsVectorLayerTools;
 #include <QPair>
 #include <map>
 
-#include <qgis.h>
+#include "qgis.h"
 
 
 /** \ingroup gui
@@ -210,6 +210,9 @@ class GUI_EXPORT QgisInterface : public QObject
 
     /** Return the message bar of the main app */
     virtual QgsMessageBar * messageBar() = 0;
+
+    /** Adds a widget to the user input tool bar.*/
+    virtual void addUserInputWidget( QWidget* widget ) = 0;
 
     /** Return mainwindows / composer views of running composer instances (currently only one) */
     virtual QList<QgsComposerView*> activeComposers() = 0;
@@ -556,6 +559,11 @@ class GUI_EXPORT QgisInterface : public QObject
      * This signal is emitted before a new composer instance is going to be removed
      */
     void composerWillBeRemoved( QgsComposerView* v );
+
+    /** This signal is emitted when a composer instance has been removed
+       @note added in version 2.9 */
+    void composerRemoved( QgsComposerView* v );
+
     /**
      * This signal is emitted when the initialization is complete
      */
@@ -583,14 +591,5 @@ class GUI_EXPORT QgisInterface : public QObject
     */
     void layerSavedAs( QgsMapLayer* l, QString path );
 };
-
-// FIXME: also in core/qgis.h
-#ifndef QGISEXTERN
-#ifdef WIN32
-#  define QGISEXTERN extern "C" __declspec( dllexport )
-#else
-#  define QGISEXTERN extern "C"
-#endif
-#endif
 
 #endif //#ifndef QGISINTERFACE_H

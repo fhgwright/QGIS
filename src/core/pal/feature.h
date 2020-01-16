@@ -44,7 +44,7 @@
 
 #include "pointset.h"
 #include "util.h"
-
+#include "labelposition.h"
 
 namespace pal
 {
@@ -84,7 +84,7 @@ namespace pal
       friend class FeaturePart;
 
     public:
-      Feature( Layer* l, const char* id, PalGeometry* userG, double lx, double ly );
+      Feature( Layer* l, const char* geom_id, PalGeometry* userG, double lx, double ly );
       ~Feature();
 
       void setLabelInfo( LabelInfo* info ) { labelInfo = info; }
@@ -321,6 +321,9 @@ namespace pal
 
       void addSizePenalty( int nbp, LabelPosition** lPos, double bbx[4], double bby[4] );
 
+    private:
+
+      LabelPosition::Quadrant quadrantFromOffset() const;
   };
 
 } // end namespace pal

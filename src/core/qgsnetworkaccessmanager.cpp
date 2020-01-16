@@ -86,6 +86,15 @@ class QgsNetworkProxyFactory : public QNetworkProxyFactory
     }
 };
 
+//
+// Static calls to enforce singleton behaviour
+//
+QgsNetworkAccessManager* QgsNetworkAccessManager::instance()
+{
+  static QgsNetworkAccessManager* sInstance( new QgsNetworkAccessManager( QApplication::instance() ) );
+  return sInstance;
+}
+
 QgsNetworkAccessManager::QgsNetworkAccessManager( QObject *parent )
     : QNetworkAccessManager( parent )
     , mUseSystemProxy( false )
@@ -313,7 +322,6 @@ void QgsNetworkAccessManager::setupDefaultProxyAndCache()
     }
   }
 
-#if QT_VERSION >= 0x40500
   setFallbackProxyAndExcludes( proxy, excludes );
 
   QNetworkDiskCache *newcache = qobject_cast<QNetworkDiskCache*>( cache() );
@@ -331,8 +339,5 @@ void QgsNetworkAccessManager::setupDefaultProxyAndCache()
 
   if ( cache() != newcache )
     setCache( newcache );
-#else
-  setProxy( proxy );
-#endif
 }
 

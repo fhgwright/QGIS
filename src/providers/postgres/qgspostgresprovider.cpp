@@ -545,7 +545,7 @@ QString QgsPostgresUtils::whereClause( QgsFeatureIds featureIds, const QgsFields
     whereClauses << whereClause( featureId, fields, conn, pkType, pkAttrs, sharedData );
   }
 
-  return whereClauses.join( " OR " );
+  return whereClauses.isEmpty() ? "" : whereClauses.join( " OR " ).prepend( "(" ).append( ")" );
 }
 
 QString QgsPostgresProvider::filterWhereClause() const
@@ -571,7 +571,7 @@ QString QgsPostgresProvider::filterWhereClause() const
 
   if ( mRequestedGeomType != QGis::WKBUnknown && mRequestedGeomType != mDetectedGeomType )
   {
-    where += delim + QgsPostgresConn::postgisTypeFilter( mGeometryColumn, mRequestedGeomType, mSpatialColType == sctGeography );
+    where += delim + QgsPostgresConn::postgisTypeFilter( mGeometryColumn, ( QgsWKBTypes::Type )mRequestedGeomType, mSpatialColType == sctGeography );
     delim = " AND ";
   }
 
@@ -632,6 +632,15 @@ QString QgsPostgresProvider::endianString()
   }
 }
 
+
+struct PGTypeInfo
+{
+  QString typeName;
+  QString typeType;
+  QString typeElem;
+  int typeLen;
+};
+
 bool QgsPostgresProvider::loadFields()
 {
   if ( !mIsQuery )
@@ -656,10 +665,65 @@ bool QgsPostgresProvider::loadFields()
 
   QgsPostgresResult result = connectionRO()->PQexec( sql );
 
-  QSet<QString> fields;
+  // Collect type info
+  sql = "SELECT oid,typname,typtype,typelem,typlen FROM pg_type";
+  QgsPostgresResult typeResult = connectionRO()->PQexec( sql );
 
-  // The queries inside this loop could possibly be combined into one
-  // single query - this would make the code run faster.
+  QMap<int, PGTypeInfo> typeMap;
+  for ( int i = 0; i < typeResult.PQntuples(); ++i )
+  {
+    PGTypeInfo typeInfo =
+    {
+      /* typeName = */ typeResult.PQgetvalue( i, 1 ),
+      /* typeType = */ typeResult.PQgetvalue( i, 2 ),
+      /* typeElem = */ typeResult.PQgetvalue( i, 3 ),
+      /* typeLen = */ typeResult.PQgetvalue( i, 4 ).toInt()
+    };
+    typeMap.insert( typeResult.PQgetvalue( i, 0 ).toInt(), typeInfo );
+  }
+
+
+  QMap<int, QMap<int, QString> > fmtFieldTypeMap, descrMap, defValMap;
+  if ( result.PQnfields() > 0 )
+  {
+    // Collect table oids
+    QSet<int> tableoids;
+    for ( int i = 0; i < result.PQnfields(); i++ )
+    {
+      int tableoid = result.PQftable( i );
+      if ( tableoid > 0 )
+      {
+        tableoids.insert( tableoid );
+      }
+    }
+    QStringList tableoidsList;
+    foreach ( int tableoid, tableoids )
+    {
+      tableoidsList.append( QString::number( tableoid ) );
+    }
+
+    QString tableoidsFilter = "(" + tableoidsList.join( "," ) + ")";
+
+    // Collect formatted field types
+    sql = "SELECT attrelid, attnum, pg_catalog.format_type(atttypid,atttypmod), pg_catalog.col_description(attrelid,attnum), pg_catalog.pg_get_expr(adbin,adrelid)"
+          " FROM pg_attribute"
+          " LEFT OUTER JOIN pg_attrdef ON attrelid=adrelid AND attnum=adnum"
+          " WHERE attrelid IN " + tableoidsFilter;
+    QgsPostgresResult fmtFieldTypeResult = connectionRO()->PQexec( sql );
+    for ( int i = 0; i < fmtFieldTypeResult.PQntuples(); ++i )
+    {
+      int attrelid = fmtFieldTypeResult.PQgetvalue( i, 0 ).toInt();
+      int attnum = fmtFieldTypeResult.PQgetvalue( i, 1 ).toInt();
+      QString formatType = fmtFieldTypeResult.PQgetvalue( i, 2 );
+      QString descr = fmtFieldTypeResult.PQgetvalue( i, 3 );
+      QString defVal = fmtFieldTypeResult.PQgetvalue( i, 4 );
+      fmtFieldTypeMap[attrelid][attnum] = formatType;
+      descrMap[attrelid][attnum] = descr;
+      defValMap[attrelid][attnum] = defVal;
+    }
+  }
+
+  QSet<QString> fields;
   mAttributeFields.clear();
   for ( int i = 0; i < result.PQnfields(); i++ )
   {
@@ -668,40 +732,17 @@ bool QgsPostgresProvider::loadFields()
       continue;
 
     int fldtyp = result.PQftype( i );
-    QString typOid = QString().setNum( fldtyp );
     int fieldPrec = -1;
-    QString fieldComment( "" );
     int tableoid = result.PQftable( i );
     int attnum = result.PQftablecol( i );
 
-    sql = QString( "SELECT typname,typtype,typelem,typlen FROM pg_type WHERE oid=%1" ).arg( typOid );
-    // just oid; needs more work to support array type
-    //      "oid = (SELECT Distinct typelem FROM pg_type WHERE "  //needs DISTINCT to guard against 2 or more rows on int2
-    //      "typelem = " + typOid + " AND typlen = -1)";
+    const PGTypeInfo& typeInfo = typeMap.value( fldtyp );
+    QString fieldTypeName = typeInfo.typeName;
+    QString fieldTType = typeInfo.typeType;
+    int fieldSize = typeInfo.typeLen;
 
-    QgsPostgresResult oidResult = connectionRO()->PQexec( sql );
-    QString fieldTypeName = oidResult.PQgetvalue( 0, 0 );
-    QString fieldTType = oidResult.PQgetvalue( 0, 1 );
-    QString fieldElem = oidResult.PQgetvalue( 0, 2 );
-    int fieldSize = oidResult.PQgetvalue( 0, 3 ).toInt();
-
-    QString formattedFieldType;
-    if ( tableoid > 0 )
-    {
-      sql = QString( "SELECT pg_catalog.format_type(atttypid,atttypmod) FROM pg_attribute WHERE attrelid=%1 AND attnum=%2" )
-            .arg( tableoid ).arg( quotedValue( attnum ) );
-
-      QgsPostgresResult tresult = connectionRO()->PQexec( sql );
-      if ( tresult.PQntuples() > 0 )
-        formattedFieldType = tresult.PQgetvalue( 0, 0 );
-
-      sql = QString( "SELECT description FROM pg_description WHERE objoid=%1 AND objsubid=%2" )
-            .arg( tableoid ).arg( attnum );
-
-      tresult = connectionRO()->PQexec( sql );
-      if ( tresult.PQntuples() > 0 )
-        fieldComment = tresult.PQgetvalue( 0, 0 );
-    }
+    QString formattedFieldType = fmtFieldTypeMap[tableoid][attnum];
+    QString fieldComment = descrMap[tableoid][attnum];
 
     QVariant::Type fieldType;
 
@@ -864,6 +905,7 @@ bool QgsPostgresProvider::loadFields()
     fields << fieldName;
 
     mAttrPalIndexName.insert( i, fieldName );
+    mDefaultValues.insert( mAttributeFields.size(), defValMap[tableoid][attnum] );
     mAttributeFields.append( QgsField( fieldName, fieldType, fieldTypeName, fieldSize, fieldPrec, fieldComment ) );
   }
 
@@ -1103,6 +1145,9 @@ bool QgsPostgresProvider::determinePrimaryKey()
           if ( res.PQntuples() == 1 )
           {
             mPrimaryKeyType = pktTid;
+
+            QgsMessageLog::logMessage( tr( "Primary key is ctid - changing of existing features disabled (%1; %2)" ).arg( mGeometryColumn ).arg( mQuery ) );
+            mEnabledCapabilities &= ~( QgsVectorDataProvider::DeleteFeatures | QgsVectorDataProvider::ChangeAttributeValues | QgsVectorDataProvider::ChangeGeometries );
           }
           else
           {
@@ -1234,14 +1279,16 @@ QVariant QgsPostgresProvider::minimumValue( int index )
   {
     // get the field name
     const QgsField &fld = field( index );
-    QString sql = QString( "SELECT min(%1) FROM %2" )
-                  .arg( connectionRO()->fieldExpression( fld ) )
+    QString sql = QString( "SELECT min(%1) AS %1 FROM %2" )
+                  .arg( quotedIdentifier( fld.name() ) )
                   .arg( mQuery );
 
     if ( !mSqlWhereClause.isEmpty() )
     {
       sql += QString( " WHERE %1" ).arg( mSqlWhereClause );
     }
+
+    sql = QString( "SELECT %1 FROM (%2) foo" ).arg( connectionRO()->fieldExpression( fld ) ).arg( sql );
 
     QgsPostgresResult rmin = connectionRO()->PQexec( sql );
     return convertValue( fld.type(), rmin.PQgetvalue( 0, 0 ) );
@@ -1262,7 +1309,7 @@ void QgsPostgresProvider::uniqueValues( int index, QList<QVariant> &uniqueValues
     // get the field name
     const QgsField &fld = field( index );
     QString sql = QString( "SELECT DISTINCT %1 FROM %2" )
-                  .arg( connectionRO()->fieldExpression( fld ) )
+                  .arg( quotedIdentifier( fld.name() ) )
                   .arg( mQuery );
 
     if ( !mSqlWhereClause.isEmpty() )
@@ -1270,13 +1317,14 @@ void QgsPostgresProvider::uniqueValues( int index, QList<QVariant> &uniqueValues
       sql += QString( " WHERE %1" ).arg( mSqlWhereClause );
     }
 
-    sql +=  QString( " ORDER BY %1" )
-            .arg( quotedIdentifier( fld.name() ) );
+    sql +=  QString( " ORDER BY %1" ).arg( quotedIdentifier( fld.name() ) );
 
     if ( limit >= 0 )
     {
       sql += QString( " LIMIT %1" ).arg( limit );
     }
+
+    sql = QString( "SELECT %1 FROM (%2) foo" ).arg( connectionRO()->fieldExpression( fld ) ).arg( sql );
 
     QgsPostgresResult res = connectionRO()->PQexec( sql );
     if ( res.PQresultStatus() == PGRES_TUPLES_OK )
@@ -1407,14 +1455,16 @@ QVariant QgsPostgresProvider::maximumValue( int index )
   {
     // get the field name
     const QgsField &fld = field( index );
-    QString sql = QString( "SELECT max(%1) FROM %2" )
-                  .arg( connectionRO()->fieldExpression( fld ) )
+    QString sql = QString( "SELECT max(%1) AS %1 FROM %2" )
+                  .arg( quotedIdentifier( fld.name() ) )
                   .arg( mQuery );
 
     if ( !mSqlWhereClause.isEmpty() )
     {
       sql += QString( " WHERE %1" ).arg( mSqlWhereClause );
     }
+
+    sql = QString( "SELECT %1 FROM (%2) foo" ).arg( connectionRO()->fieldExpression( fld ) ).arg( sql );
 
     QgsPostgresResult rmax = connectionRO()->PQexec( sql );
     return convertValue( fld.type(), rmax.PQgetvalue( 0, 0 ) );
@@ -1431,44 +1481,9 @@ bool QgsPostgresProvider::isValid()
   return mValid;
 }
 
-QVariant QgsPostgresProvider::defaultValue( QString fieldName, QString tableName, QString schemaName )
-{
-  if ( schemaName.isNull() )
-    schemaName = mSchemaName;
-  if ( tableName.isNull() )
-    tableName = mTableName;
-
-  // Get the default column value from the Postgres information
-  // schema. If there is no default we return an empty string.
-
-  // Maintaining a cache of the results of this query would be quite
-  // simple and if this query is called lots, could save some time.
-
-  QString sql = QString( "SELECT column_default FROM information_schema.columns WHERE column_default IS NOT NULL AND table_schema=%1 AND table_name=%2 AND column_name=%3 " )
-                .arg( quotedValue( schemaName ) )
-                .arg( quotedValue( tableName ) )
-                .arg( quotedValue( fieldName ) );
-
-  QVariant defaultValue( QString::null );
-
-  QgsPostgresResult result = connectionRO()->PQexec( sql );
-
-  if ( result.PQntuples() == 1 )
-    defaultValue = result.PQgetvalue( 0, 0 );
-
-  return defaultValue;
-}
-
 QVariant QgsPostgresProvider::defaultValue( int fieldId )
 {
-  try
-  {
-    return defaultValue( field( fieldId ).name() );
-  }
-  catch ( PGFieldNotFound )
-  {
-    return QVariant( QString::null );
-  }
+  return mDefaultValues.value( fieldId, QString::null );
 }
 
 QString QgsPostgresProvider::paramValue( QString fieldValue, const QString &defaultValue ) const
@@ -1649,7 +1664,7 @@ bool QgsPostgresProvider::addFeatures( QgsFeatureList &flist )
       }
     }
 
-    const QgsAttributes &attributevec = flist[0].attributes();
+    QgsAttributes attributevec = flist[0].attributes();
 
     // look for unique attribute values to place in statement instead of passing as parameter
     // e.g. for defaults
@@ -1673,7 +1688,7 @@ bool QgsPostgresProvider::addFeatures( QgsFeatureList &flist )
       int i;
       for ( i = 1; i < flist.size(); i++ )
       {
-        const QgsAttributes &attrs2 = flist[i].attributes();
+        QgsAttributes attrs2 = flist[i].attributes();
         QVariant v2 = attrs2[idx];
 
         if ( v2 != v )
@@ -1753,33 +1768,34 @@ bool QgsPostgresProvider::addFeatures( QgsFeatureList &flist )
 
     for ( QgsFeatureList::iterator features = flist.begin(); features != flist.end(); ++features )
     {
-      const QgsAttributes &attrs = features->attributes();
+      QgsAttributes attrs = features->attributes();
 
       QStringList params;
       if ( !mGeometryColumn.isNull() )
       {
-        appendGeomParam( features->geometry(), params );
+        appendGeomParam( features->constGeometry(), params );
       }
 
       for ( int i = 0; i < fieldId.size(); i++ )
       {
-        QVariant value = attrs[ fieldId[i] ];
+        int attrIdx = fieldId[i];
+        QVariant value = attrs[ attrIdx ];
 
         QString v;
         if ( value.isNull() )
         {
-          const QgsField &fld = field( fieldId[i] );
-          v = paramValue( defaultValues[i], defaultValues[i] );
-          features->setAttribute( fieldId[i], convertValue( fld.type(), v ) );
+          const QgsField &fld = field( attrIdx );
+          v = paramValue( defaultValues[ attrIdx ], defaultValues[ attrIdx ] );
+          features->setAttribute( attrIdx, convertValue( fld.type(), v ) );
         }
         else
         {
-          v = paramValue( value.toString(), defaultValues[i] );
+          v = paramValue( value.toString(), defaultValues[ attrIdx ] );
 
           if ( v != value.toString() )
           {
-            const QgsField &fld = field( fieldId[i] );
-            features->setAttribute( fieldId[i], convertValue( fld.type(), v ) );
+            const QgsField &fld = field( attrIdx );
+            features->setAttribute( attrIdx, convertValue( fld.type(), v ) );
           }
         }
 
@@ -1802,7 +1818,7 @@ bool QgsPostgresProvider::addFeatures( QgsFeatureList &flist )
     {
       for ( QgsFeatureList::iterator features = flist.begin(); features != flist.end(); ++features )
       {
-        const QgsAttributes &attrs = features->attributes();
+        QgsAttributes attrs = features->attributes();
 
         if ( mPrimaryKeyType == pktInt )
         {
@@ -1885,7 +1901,7 @@ bool QgsPostgresProvider::deleteFeatures( const QgsFeatureIds & id )
       dropOrphanedTopoGeoms();
     }
 
-    mShared->addFeaturesCounted( id.size() );
+    mShared->addFeaturesCounted( -id.size() );
   }
   catch ( PGException &e )
   {
@@ -1916,6 +1932,8 @@ bool QgsPostgresProvider::addAttributes( const QList<QgsField> &attributes )
   {
     conn->begin();
 
+    QString delim = "";
+    QString sql = QString( "ALTER TABLE %1 " ).arg( mQuery );
     for ( QList<QgsField>::const_iterator iter = attributes.begin(); iter != attributes.end(); ++iter )
     {
       QString type = iter->typeName();
@@ -1929,18 +1947,17 @@ bool QgsPostgresProvider::addAttributes( const QList<QgsField> &attributes )
         if ( iter->length() > 0 && iter->precision() >= 0 )
           type = QString( "%1(%2,%3)" ).arg( type ).arg( iter->length() ).arg( iter->precision() );
       }
+      sql.append( QString( "%1ADD COLUMN %2 %3" ).arg( delim ).arg( quotedIdentifier( iter->name() ) ).arg( type ) );
+      delim = ",";
+    }
 
-      QString sql = QString( "ALTER TABLE %1 ADD COLUMN %2 %3" )
-                    .arg( mQuery )
-                    .arg( quotedIdentifier( iter->name() ) )
-                    .arg( type );
-      QgsDebugMsg( sql );
+    //send sql statement and do error handling
+    QgsPostgresResult result = conn->PQexec( sql );
+    if ( result.PQresultStatus() != PGRES_COMMAND_OK )
+      throw PGException( result );
 
-      //send sql statement and do error handling
-      QgsPostgresResult result = conn->PQexec( sql );
-      if ( result.PQresultStatus() != PGRES_COMMAND_OK )
-        throw PGException( result );
-
+    for ( QList<QgsField>::const_iterator iter = attributes.begin(); iter != attributes.end(); ++iter )
+    {
       if ( !iter->comment().isEmpty() )
       {
         sql = QString( "COMMENT ON COLUMN %1.%2 IS %3" )
@@ -2133,7 +2150,7 @@ bool QgsPostgresProvider::changeAttributeValues( const QgsChangedAttributesMap &
   return returnvalue;
 }
 
-void QgsPostgresProvider::appendGeomParam( QgsGeometry *geom, QStringList &params ) const
+void QgsPostgresProvider::appendGeomParam( const QgsGeometry *geom, QStringList &params ) const
 {
   if ( !geom )
   {
@@ -2470,8 +2487,8 @@ QgsRectangle QgsPostgresProvider::extent()
             sql = QString( "SELECT %1(%2,%3,%4)" )
                   .arg( connectionRO()->majorVersion() < 2 ? "estimated_extent" :
                         ( connectionRO()->majorVersion() == 2 && connectionRO()->minorVersion() < 1 ? "st_estimated_extent" : "st_estimatedextent" ) )
-                  .arg( quotedValue( mSchemaName ) )
-                  .arg( quotedValue( mTableName ) )
+                  .arg( quotedValue( quotedIdentifier( mSchemaName ) ) )
+                  .arg( quotedValue( quotedIdentifier( mTableName ) ) )
                   .arg( quotedValue( mGeometryColumn ) );
             result = mConnectionRO->PQexec( sql );
             if ( result.PQresultStatus() == PGRES_TUPLES_OK && result.PQntuples() == 1 && !result.PQgetisnull( 0, 0 ) )
@@ -2503,9 +2520,10 @@ QgsRectangle QgsPostgresProvider::extent()
 
     if ( ext.isEmpty() )
     {
-      sql = QString( "SELECT %1(%2) FROM %3%4" )
+      sql = QString( "SELECT %1(%2%3) FROM %4%5" )
             .arg( connectionRO()->majorVersion() < 2 ? "extent" : "st_extent" )
             .arg( quotedIdentifier( mGeometryColumn ) )
+            .arg( mSpatialColType == sctPcPatch ? "::geometry" : "" )
             .arg( mQuery )
             .arg( filterWhereClause() );
 
@@ -2599,6 +2617,8 @@ bool QgsPostgresProvider::getGeometryDetails()
               mSpatialColType = sctGeography;
             else if ( geomColType == "topogeometry" )
               mSpatialColType = sctTopoGeometry;
+            else if ( geomColType == "pcpatch" )
+              mSpatialColType = sctPcPatch;
             else
               mSpatialColType = sctNone;
           }
@@ -2704,6 +2724,30 @@ bool QgsPostgresProvider::getGeometryDetails()
       }
     }
 
+    if ( detectedType.isEmpty() && connectionRO()->hasPointcloud() )
+    {
+      // check pointcloud columns
+      sql = QString( "SELECT 'POLYGON',srid FROM pointcloud_columns WHERE \"table\"=%1 AND \"column\"=%2 AND \"schema\"=%3" )
+            .arg( quotedValue( tableName ) )
+            .arg( quotedValue( geomCol ) )
+            .arg( quotedValue( schemaName ) );
+
+      QgsDebugMsg( QString( "Getting pointcloud column: %1" ).arg( sql ) );
+      result = connectionRO()->PQexec( sql, false );
+      QgsDebugMsg( QString( "Pointcloud column query returned %1" ).arg( result.PQntuples() ) );
+
+      if ( result.PQntuples() == 1 )
+      {
+        detectedType = result.PQgetvalue( 0, 0 );
+        detectedSrid = result.PQgetvalue( 0, 1 );
+        mSpatialColType = sctPcPatch;
+      }
+      else
+      {
+        connectionRO()->PQexecNR( "COMMIT" );
+      }
+    }
+
     if ( mSpatialColType == sctNone )
     {
       sql = QString( "SELECT t.typname FROM "
@@ -2726,6 +2770,8 @@ bool QgsPostgresProvider::getGeometryDetails()
           mSpatialColType = sctGeography;
         else if ( geomColType == "topogeometry" )
           mSpatialColType = sctTopoGeometry;
+        else if ( geomColType == "pcpatch" )
+          mSpatialColType = sctPcPatch;
       }
       else
       {
@@ -2969,7 +3015,7 @@ QgsVectorLayerImport::ImportError QgsPostgresProvider::createEmptyLayer(
       {
         // it already exists, try again with a new name
         primaryKey = QString( "%1_%2" ).arg( pk ).arg( index++ );
-        fldIdx = 0;
+        fldIdx = -1; // it is incremented in the for loop, i.e. restarts at 0
       }
     }
   }
@@ -3395,10 +3441,10 @@ QGISEXTERN bool saveStyle( const QString& uri, const QString& qmlStyle, const QS
   {
     res = conn->PQexec( "CREATE TABLE layer_styles("
                         "id SERIAL PRIMARY KEY"
-                        ",f_table_catalog varchar(256)"
-                        ",f_table_schema varchar(256)"
-                        ",f_table_name varchar(256)"
-                        ",f_geometry_column varchar(256)"
+                        ",f_table_catalog varchar"
+                        ",f_table_schema varchar"
+                        ",f_table_name varchar"
+                        ",f_geometry_column varchar"
                         ",styleName varchar(30)"
                         ",styleQML xml"
                         ",styleSLD xml"
@@ -3536,6 +3582,12 @@ QGISEXTERN QString loadStyle( const QString& uri, QString& errCause )
     return "";
   }
 
+  QgsPostgresResult result = conn->PQexec( "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='layer_styles'" );
+  if ( result.PQgetvalue( 0, 0 ).toInt() == 0 )
+  {
+    return "";
+  }
+
   QString selectQmlQuery = QString( "SELECT styleQML"
                                     " FROM layer_styles"
                                     " WHERE f_table_catalog=%1"
@@ -3549,10 +3601,11 @@ QGISEXTERN QString loadStyle( const QString& uri, QString& errCause )
                            .arg( QgsPostgresConn::quotedValue( dsUri.table() ) )
                            .arg( QgsPostgresConn::quotedValue( dsUri.geometryColumn() ) );
 
-  QgsPostgresResult result = conn->PQexec( selectQmlQuery, false );
+  result = conn->PQexec( selectQmlQuery );
 
   QString style = result.PQntuples() == 1 ? result.PQgetvalue( 0, 0 ) : "";
   conn->unref();
+
   return style;
 }
 

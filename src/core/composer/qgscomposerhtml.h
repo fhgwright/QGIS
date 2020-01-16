@@ -35,14 +35,11 @@ class CORE_EXPORT QgsComposerHtml: public QgsComposerMultiFrame
     */
     enum ContentMode
     {
-      Url, /*< Using this mode item fetches its content via a url*/
-      ManualHtml /*< HTML content is manually set for the item*/
+      Url, /*!< Using this mode item fetches its content via a url*/
+      ManualHtml /*!< HTML content is manually set for the item*/
     };
 
     QgsComposerHtml( QgsComposition* c, bool createUndoCommands );
-
-    //should be private - fix for QGIS 3.0
-    QgsComposerHtml();
 
     ~QgsComposerHtml();
 

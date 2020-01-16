@@ -83,6 +83,7 @@ INCLUDE_DIRECTORIES(
   ../src/core/diagram
   ../src/core/effects
   ../src/core/dxf
+  ../src/core/geometry
   ../src/core/gps
   ../src/core/layertree
   ../src/core/raster
@@ -92,6 +93,7 @@ INCLUDE_DIRECTORIES(
   ../src/gui/attributetable
   ../src/gui/editorwidgets
   ../src/gui/editorwidgets/core
+  ../src/gui/effects
   ../src/gui/layertree
 
   ${CMAKE_BINARY_DIR}  # qgsconfig.h, qgsversion.h
@@ -144,6 +146,7 @@ ADD_SIP_PYTHON_MODULE(qgis._core core/core.sip qgis_core)
 INCLUDE_DIRECTORIES(
   ../src/gui
   ../src/gui/symbology-ng
+  ../src/gui/effects
   ../src/plugins
   ${CMAKE_BINARY_DIR}/src/gui
   ${CMAKE_BINARY_DIR}/src/ui

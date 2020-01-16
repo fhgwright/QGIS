@@ -84,6 +84,10 @@ class QgsMapCanvas : QGraphicsView
     //! @note added in 2.4
     void clearCache();
 
+    //! Reload all layers, clear the cache and refresh the canvas
+    //! @note added in 2.9
+    void refreshAllLayers();
+
     //! Set whether the layers are rendered in parallel or sequentially
     //! @note added in 2.4
     void setParallelRenderingEnabled( bool enabled );
@@ -339,6 +343,9 @@ class QgsMapCanvas : QGraphicsView
 
     //! This slot is connected to the visibility change of one or more layers
     void layerStateChange();
+
+    //! This slot is connected to the layer's CRS change
+    void layerCrsChange();
 
     //! Whether to suppress rendering or not
     void setRenderFlag( bool theFlag );

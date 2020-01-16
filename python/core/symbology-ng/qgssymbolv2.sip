@@ -130,6 +130,26 @@ class QgsSymbolV2
     void setRenderHints( int hints );
     int renderHints() const;
 
+    /**Sets whether features drawn by the symbol should be clipped to the render context's
+     * extent. If this option is enabled then features which are partially outside the extent
+     * will be clipped. This speeds up rendering of the feature, but may have undesirable
+     * side effects for certain symbol types.
+     * @param clipFeaturesToExtent set to true to enable clipping (defaults to true)
+     * @note added in QGIS 2.9
+     * @see clipFeaturesToExtent
+     */
+    void setClipFeaturesToExtent( bool clipFeaturesToExtent );
+
+    /**Returns whether features drawn by the symbol will be clipped to the render context's
+     * extent. If this option is enabled then features which are partially outside the extent
+     * will be clipped. This speeds up rendering of the feature, but may have undesirable
+     * side effects for certain symbol types.
+     * @returns true if features will be clipped
+     * @note added in QGIS 2.9
+     * @see setClipFeaturesToExtent
+     */
+    double clipFeaturesToExtent() const;
+
     QSet<QString> usedAttributes() const;
 
     void setLayer( const QgsVectorLayer* layer );
@@ -216,6 +236,14 @@ class QgsMarkerSymbolV2 : QgsSymbolV2
 
     void setAngle( double angle );
     double angle();
+
+    /** Sets the line angle modification for the symbol's angle. This angle is added to
+     * the marker's rotation and data defined rotation before rendering the symbol, and
+     * is usually used for orienting symbols to match a line's angle.
+     * @param lineangle Angle in degrees, valid values are between 0 and 360
+     * @note added in QGIS 2.9
+    */
+    void setLineAngle( double lineAngle );
 
     void setSize( double size );
     double size();

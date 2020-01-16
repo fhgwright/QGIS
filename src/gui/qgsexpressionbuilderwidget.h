@@ -33,7 +33,10 @@
 class QgsExpressionItemSearchProxy : public QSortFilterProxyModel
 {
   public:
-    QgsExpressionItemSearchProxy() { }
+    QgsExpressionItemSearchProxy()
+    {
+      setFilterCaseSensitivity( Qt::CaseInsensitive );
+    }
 
     bool filterAcceptsRow( int source_row, const QModelIndex &source_parent ) const override
     {
@@ -203,6 +206,12 @@ class GUI_EXPORT QgsExpressionBuilderWidget : public QWidget, private Ui::QgsExp
     void fillFieldValues( int fieldIndex, int countLimit );
     QString loadFunctionHelp( QgsExpressionItem* functionName );
 
+    /** Formats an expression preview result for display in the widget
+     * by truncating the string
+     * @param previewString expression preview result to format
+     */
+    QString formatPreviewString( const QString &previewString ) const;
+
     QString mFunctionsPath;
     QgsVectorLayer *mLayer;
     QStandardItemModel *mModel;
@@ -212,6 +221,8 @@ class GUI_EXPORT QgsExpressionBuilderWidget : public QWidget, private Ui::QgsExp
     QgsExpressionHighlighter* highlighter;
     bool mExpressionValid;
     QgsDistanceArea mDa;
+    QString mRecentKey;
+
 };
 
 #endif // QGSEXPRESSIONBUILDER_H

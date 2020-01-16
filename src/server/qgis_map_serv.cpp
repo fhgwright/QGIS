@@ -313,7 +313,7 @@ int main( int argc, char * argv[] )
   QScopedPointer< QgsMapRenderer > theMapRenderer( new QgsMapRenderer );
   theMapRenderer->setLabelingEngine( new QgsPalLabeling() );
 
-#ifdef QGSMSDEBUG
+#ifdef ENABLE_MS_TESTS
   QgsFontUtils::loadStandardTestFonts( QStringList() << "Roman" << "Bold" );
 #endif
 
@@ -391,6 +391,16 @@ int main( int argc, char * argv[] )
     QString configFilePath = configPath( defaultConfigFilePath, parameterMap );
     //Service parameter
     QString serviceString = theRequestHandler->parameter( "SERVICE" );
+
+    if ( serviceString.isEmpty() )
+    {
+      // SERVICE not mandatory for WMS 1.3.0 GetMap & GetFeatureInfo
+      QString requestString = theRequestHandler->parameter( "REQUEST" );
+      if ( requestString == "GetMap" || requestString == "GetFeatureInfo" )
+      {
+        serviceString = "WMS";
+      }
+    }
 
     // Enter core services main switch
     if ( !theRequestHandler->exceptionRaised() )

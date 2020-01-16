@@ -165,6 +165,9 @@ class QgisInterface : QObject
     /** Return the message bar of the main app */
     virtual QgsMessageBar * messageBar() = 0;
 
+    /** Adds a widget to the user input tool bar.*/
+    virtual void addUserInputWidget( QWidget* widget ) = 0;
+
     /** Return mainwindows / composer views of running composer instances (currently only one) */
     virtual QList<QgsComposerView*> activeComposers() = 0;
 
@@ -500,6 +503,11 @@ class QgisInterface : QObject
      * This signal is emitted before a new composer instance is going to be removed
      */
     void composerWillBeRemoved( QgsComposerView* v );
+
+    /** This signal is emitted when a composer instance has been removed
+       @note added in version 2.9 */
+    void composerRemoved( QgsComposerView* v );
+
     /**
      * This signal is emitted when the initialization is complete
      */

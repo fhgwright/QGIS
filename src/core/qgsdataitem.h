@@ -37,6 +37,38 @@ class QgsDataItem;
 
 typedef QgsDataItem * dataItem_t( QString, QgsDataItem* );
 
+/** Animated icon is keeping an animation running if there are listeners connected to frameChanged */
+class CORE_EXPORT QgsAnimatedIcon : public QObject
+{
+    Q_OBJECT
+  public:
+
+    /** Constructor
+     * @param iconPath path to a movie, e.g. animated GIF */
+    QgsAnimatedIcon( const QString & iconPath = QString::null );
+
+    QString iconPath() const;
+    void setIconPath( const QString & iconPath );
+    QIcon icon() const { return mIcon; }
+
+    /** Connect listener to frameChanged() signal */
+    void connectFrameChanged( const QObject * receiver, const char * method );
+    /** Disconnect listener from frameChanged() signal */
+    void disconnectFrameChanged( const QObject * receiver, const char * method );
+
+  public slots:
+    void onFrameChanged();
+
+  signals:
+    /** Emitted when icon changed */
+    void frameChanged();
+
+  private:
+    void resetMovie();
+    int mCount; // number of listeners
+    QMovie * mMovie;
+    QIcon mIcon;
+};
 
 /** Base class for all items in the model.
  *  Parent/children hierarchy is not based on QObject. */
@@ -74,10 +106,13 @@ class CORE_EXPORT QgsDataItem : public QObject
       Populated     //!< children created
     };
 
+    //! @note added in 2.8
     State state() const;
 
     /** Set item state. It also take care about starting/stopping loading icon animation.
-     * @param state */
+     * @param state
+     * @note added in 2.8
+     */
     virtual void setState( State state );
 
     //! @deprecated in 2.8, use state()
@@ -169,7 +204,6 @@ class CORE_EXPORT QgsDataItem : public QObject
   protected:
     virtual void populate( QVector<QgsDataItem*> children );
     virtual void refresh( QVector<QgsDataItem*> children );
-    QIcon populatingIcon() { return mPopulatingIcon; }
     /** The item is scheduled to be deleted. E.g. if deleteLater() is called when
      * item is in Populating state (createChildren() running in another thread),
      * the deferredDelete() returns true and item will be deleted once Populating finished.
@@ -207,7 +241,8 @@ class CORE_EXPORT QgsDataItem : public QObject
     virtual void deleteLater();
 
     // Populate children using children vector created by createChildren()
-    virtual void populate();
+    // @param foreground run createChildren in foreground
+    virtual void populate( bool foreground = false );
 
     /** Remove children recursively and set as not populated. This is used when refreshing collapsed items. */
     virtual void depopulate();
@@ -222,7 +257,6 @@ class CORE_EXPORT QgsDataItem : public QObject
     void emitDataChanged( );
     void emitStateChanged( QgsDataItem* item, QgsDataItem::State oldState );
     virtual void childrenCreated();
-    void setPopulatingIcon();
 
   signals:
     void beginInsertItems( QgsDataItem* parent, int first, int last );
@@ -239,9 +273,7 @@ class CORE_EXPORT QgsDataItem : public QObject
     bool mDeferredDelete;
     QFutureWatcher< QVector <QgsDataItem*> > *mFutureWatcher;
     // number of items currently in loading (populating) state
-    static int mPopulatingCount;
-    static QMovie * mPopulatingMovie;
-    static QIcon mPopulatingIcon;
+    static QgsAnimatedIcon * mPopulatingIcon;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS( QgsDataItem::Capabilities )
@@ -261,7 +293,8 @@ class CORE_EXPORT QgsLayerItem : public QgsDataItem
       Polygon,
       TableLayer,
       Database,
-      Table
+      Table,
+      Plugin     //!< added in 2.10
     };
 
     QgsLayerItem( QgsDataItem* parent, QString name, QString path, QString uri, LayerType layerType, QString providerKey );
@@ -362,7 +395,8 @@ class CORE_EXPORT QgsDirectoryItem : public QgsDataCollectionItem
 
     /* static QVector<QgsDataProvider*> mProviders; */
     //! @note not available via python bindings
-    static QVector<QLibrary*> mLibraries;
+    //! @note deprecated since 2.10 - use QgsDataItemProviderRegistry
+    Q_DECL_DEPRECATED static QVector<QLibrary*> mLibraries;
 
   public slots:
     virtual void childrenCreated() override;
