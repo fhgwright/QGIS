@@ -571,6 +571,8 @@ class CORE_EXPORT QgsImageFillSymbolLayer: public QgsFillSymbolLayerV2
     virtual QColor dxfColor( QgsSymbolV2RenderContext& context ) const override;
     virtual Qt::PenStyle dxfPenStyle() const override;
 
+    QSet<QString> usedAttributes() const override;
+
   protected:
     QBrush mBrush;
     double mNextAngle; // mAngle / data defined angle
@@ -844,7 +846,6 @@ class CORE_EXPORT QgsSVGFillSymbolLayer: public QgsImageFillSymbolLayer
 
     //param(fill), param(outline), param(outline-width) are going
     //to be replaced in memory
-    QColor mSvgFillColor;
     QColor mSvgOutlineColor;
     double mSvgOutlineWidth;
     QgsSymbolV2::OutputUnit mSvgOutlineWidthUnit;
