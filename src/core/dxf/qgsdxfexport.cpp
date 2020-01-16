@@ -524,6 +524,10 @@ int QgsDxfExport::writeToFile( QIODevice* d, const QString& encoding )
   mTextStream.setDevice( d );
   mTextStream.setCodec( encoding.toLocal8Bit() );
 
+  if ( mCrs >= 0 )
+    mMapSettings.setDestinationCrs( QgsCRSCache::instance()->crsBySrsId( mCrs ) );
+  mMapSettings.setCrsTransformEnabled( mCrs >= 0 );
+
   if ( mExtent.isEmpty() )
   {
     Q_FOREACH ( QString id, mMapSettings.layers() )
@@ -553,9 +557,6 @@ int QgsDxfExport::writeToFile( QIODevice* d, const QString& encoding )
   mFactor = 1000 * dpi / mSymbologyScaleDenominator / 25.4 * QgsUnitTypes::fromUnitToUnitFactor( mMapUnits, QGis::Meters );
   mMapSettings.setOutputSize( QSize( mExtent.width() * mFactor, mExtent.height() * mFactor ) );
   mMapSettings.setOutputDpi( dpi );
-  if ( mCrs >= 0 )
-    mMapSettings.setDestinationCrs( QgsCRSCache::instance()->crsBySrsId( mCrs ) );
-  mMapSettings.setCrsTransformEnabled( mCrs >= 0 );
 
   writeHeader( dxfEncoding( encoding ) );
   writeTables();
@@ -1002,7 +1003,7 @@ void QgsDxfExport::writeEntities()
     renderer->startRender( ctx, vl->fields() );
 
     QStringList attributes = renderer->usedAttributes();
-    int attrIdx = mLayerNameAttribute.value( vl->id(), 1 );
+    int attrIdx = mLayerNameAttribute.value( vl->id(), -1 );
     if ( vl->fields().exists( attrIdx ) )
     {
       QString layerAttr = vl->fields().at( attrIdx ).name();

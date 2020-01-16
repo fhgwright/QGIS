@@ -95,6 +95,8 @@ class QgsCPLErrorHandler
     }
 };
 
+static const QByteArray ORIG_OGC_FID = "orig_ogc_fid";
+
 
 bool QgsOgrProvider::convertField( QgsField &field, const QTextCodec &encoding )
 {
@@ -1030,7 +1032,11 @@ void QgsOgrProviderUtils::setRelevantFields( OGRLayerH ogrLayer, int fieldCount,
       if ( !fetchAttributes.contains( i ) )
       {
         // add to ignored fields
-        ignoredFields.append( OGR_Fld_GetNameRef( OGR_FD_GetFieldDefn( featDefn, firstAttrIsFid ? i - 1 : i ) ) );
+        const char *fieldName = OGR_Fld_GetNameRef( OGR_FD_GetFieldDefn( featDefn, firstAttrIsFid ? i - 1 : i ) );
+        if ( qstrcmp( fieldName, ORIG_OGC_FID ) != 0 )
+        {
+          ignoredFields.append( fieldName );
+        }
       }
     }
 
@@ -1174,7 +1180,7 @@ const QgsFields & QgsOgrProvider::fields() const
 }
 
 
-//TODO - add sanity check for shape file layers, to include cheking to
+//TODO - add sanity check for shape file layers, to include checking to
 //       see if the .shp, .dbf, .shx files are all present and the layer
 //       actually has features
 bool QgsOgrProvider::isValid()
@@ -2396,7 +2402,7 @@ QString createFilters( QString type )
       {
         myDirectoryDrivers += QObject::tr( "U.S. Census TIGER/Line" ) + ",TIGER;";
       }
-      else if ( driverName.startsWith( "VRT" ) )
+      else if ( driverName.contains( "VRT" ) ) // match both GDAL 1.x "VRT" and GDAL 2.x "OGR_VRT"
       {
         myFileFilters += createFileFilter_( QObject::tr( "VRT - Virtual Datasource" ),
                                             "*.vrt *.ovf" );
@@ -3443,34 +3449,60 @@ OGRLayerH QgsOgrProviderUtils::setSubsetString( OGRLayerH layer, OGRDataSourceH 
       layerName = encoding->fromUnicode( modifiedLayerName );
     }
   }
-  QByteArray sql;
-  if ( subsetString.startsWith( "SELECT ", Qt::CaseInsensitive ) )
-    sql = encoding->fromUnicode( subsetString );
+  OGRLayerH subsetLayer = 0;
+  if ( subsetString.startsWith( QLatin1String( "SELECT " ), Qt::CaseInsensitive ) )
+  {
+    QByteArray sql = encoding->fromUnicode( subsetString );
+
+    QgsDebugMsg( QString( "SQL: %1" ).arg( encoding->toUnicode( sql ) ) );
+    subsetLayer = OGR_DS_ExecuteSQL( ds, sql.constData(), nullptr, nullptr );
+  }
   else
   {
-    QByteArray fidColumn = OGR_L_GetFIDColumn( layer );
+    QByteArray sqlPart1 = "SELECT *";
+    QByteArray sqlPart3 = " FROM " + quotedIdentifier( layerName, ogrDriverName )
+                          + " WHERE " + encoding->fromUnicode( subsetString );
 
-    sql = QByteArray( "SELECT " );
-    if ( !fidColumn.isEmpty() )
+    origFidAddAttempted = true;
+
+    QByteArray fidColumn = OGR_L_GetFIDColumn( layer );
+    // Fallback to FID if OGR_L_GetFIDColumn returns nothing
+    if ( fidColumn.isEmpty() )
     {
-      sql += fidColumn + " as orig_ogc_fid, ";
-      origFidAddAttempted = true;
+      fidColumn = "FID";
     }
-    sql += "* FROM " + quotedIdentifier( layerName, ogrDriverName );
-    sql += " WHERE " + encoding->fromUnicode( subsetString );
+
+    QByteArray sql = sqlPart1 + ", " + fidColumn + " as " + ORIG_OGC_FID + sqlPart3;
+    QgsDebugMsg( QString( "SQL: %1" ).arg( encoding->toUnicode( sql ) ) );
+    subsetLayer = OGR_DS_ExecuteSQL( ds, sql.constData(), nullptr, nullptr );
+
+    // See https://lists.osgeo.org/pipermail/qgis-developer/2017-September/049802.html
+    // If execute SQL fails because it did not find the fidColumn, retry with hardcoded FID
+    if ( !subsetLayer )
+    {
+      QByteArray sql = sqlPart1 + ", " + "FID as " + ORIG_OGC_FID + sqlPart3;
+      QgsDebugMsg( QString( "SQL: %1" ).arg( encoding->toUnicode( sql ) ) );
+      subsetLayer = OGR_DS_ExecuteSQL( ds, sql.constData(), nullptr, nullptr );
+    }
+    // If that also fails, just continue without the orig_ogc_fid
+    if ( !subsetLayer )
+    {
+      QByteArray sql = sqlPart1 + sqlPart3;
+      QgsDebugMsg( QString( "SQL: %1" ).arg( encoding->toUnicode( sql ) ) );
+      subsetLayer = OGR_DS_ExecuteSQL( ds, sql.constData(), nullptr, nullptr );
+      origFidAddAttempted = false;
+    }
   }
 
-  QgsDebugMsg( QString( "SQL: %1" ).arg( encoding->toUnicode( sql ) ) );
-  OGRLayerH subsetLayer = OGR_DS_ExecuteSQL( ds, sql.constData(), nullptr, nullptr );
-
-  // Check if first column is orig_ogc_fid
+  // Check if last column is orig_ogc_fid
   if ( origFidAddAttempted && subsetLayer )
   {
     OGRFeatureDefnH fdef = OGR_L_GetLayerDefn( subsetLayer );
-    if ( OGR_FD_GetFieldCount( fdef ) > 0 )
+    int fieldCount = OGR_FD_GetFieldCount( fdef );
+    if ( fieldCount > 0 )
     {
-      OGRFieldDefnH fldDef = OGR_FD_GetFieldDefn( fdef, 0 );
-      origFidAdded = qstrcmp( OGR_Fld_GetNameRef( fldDef ), "orig_ogc_fid" ) == 0;
+      OGRFieldDefnH fldDef = OGR_FD_GetFieldDefn( fdef, fieldCount - 1 );
+      origFidAdded = qstrcmp( OGR_Fld_GetNameRef( fldDef ), ORIG_OGC_FID ) == 0;
     }
   }
 

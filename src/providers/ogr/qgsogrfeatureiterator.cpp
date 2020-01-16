@@ -152,6 +152,7 @@ QgsOgrFeatureIterator::QgsOgrFeatureIterator( QgsOgrFeatureSource* source, bool 
     OGR_L_SetAttributeFilter( ogrLayer, nullptr );
   }
 
+
   //start with first feature
   rewind();
 }
@@ -172,23 +173,28 @@ bool QgsOgrFeatureIterator::nextFeatureFilterExpression( QgsFeature& f )
 bool QgsOgrFeatureIterator::fetchFeatureWithId( QgsFeatureId id, QgsFeature& feature ) const
 {
   feature.setValid( false );
-  OGRFeatureH fet;
+  OGRFeatureH fet = 0;
   if ( mOrigFidAdded )
   {
     OGR_L_ResetReading( ogrLayer );
-    while (( fet = OGR_L_GetNextFeature( ogrLayer ) ) )
+    OGRFeatureDefnH fdef = OGR_L_GetLayerDefn( ogrLayer );
+    int lastField = OGR_FD_GetFieldCount( fdef ) - 1;
+    if ( lastField >= 0 )
     {
-      if (
-#if defined(GDAL_VERSION_NUM) && GDAL_VERSION_NUM >= 2000000
-        OGR_F_GetFieldAsInteger64
-#else
-        OGR_F_GetFieldAsInteger
-#endif
-        ( fet, 0 ) == FID_TO_NUMBER( id ) )
+      while (( fet = OGR_L_GetNextFeature( ogrLayer ) ) )
       {
-        break;
+        if (
+#if defined(GDAL_VERSION_NUM) && GDAL_VERSION_NUM >= 2000000
+          OGR_F_GetFieldAsInteger64
+#else
+          OGR_F_GetFieldAsInteger
+#endif
+          ( fet, lastField ) == FID_TO_NUMBER( id ) )
+        {
+          break;
+        }
+        OGR_F_Destroy( fet );
       }
-      OGR_F_Destroy( fet );
     }
   }
   else
@@ -322,11 +328,16 @@ bool QgsOgrFeatureIterator::readFeature( OGRFeatureH fet, QgsFeature& feature ) 
 {
   if ( mOrigFidAdded )
   {
+    OGRFeatureDefnH fdef = OGR_L_GetLayerDefn( ogrLayer );
+    int lastField = OGR_FD_GetFieldCount( fdef ) - 1;
+    if ( lastField >= 0 )
 #if defined(GDAL_VERSION_NUM) && GDAL_VERSION_NUM >= 2000000
-    feature.setFeatureId( OGR_F_GetFieldAsInteger64( fet, 0 ) );
+      feature.setFeatureId( OGR_F_GetFieldAsInteger64( fet, lastField ) );
 #else
-    feature.setFeatureId( OGR_F_GetFieldAsInteger( fet, 0 ) );
+      feature.setFeatureId( OGR_F_GetFieldAsInteger( fet, lastField ) );
 #endif
+    else
+      feature.setFeatureId( OGR_F_GetFID( fet ) );
   }
   else
   {
