@@ -5116,6 +5116,7 @@ void QgisApp::dxfExport()
     dxfExport.setSymbologyExport( d.symbologyMode() );
     dxfExport.setLayerTitleAsName( d.layerTitleAsName() );
     dxfExport.setDestinationCrs( d.crs() );
+    dxfExport.setForce2d( d.force2d() );
     if ( mapCanvas() )
     {
       dxfExport.setMapUnits( mapCanvas()->mapUnits() );
@@ -6329,7 +6330,7 @@ void QgisApp::saveAsVectorFileGeneral( QgsVectorLayer* vlayer, bool symbologyOpt
 
 void QgisApp::checkForDeprecatedLabelsInProject()
 {
-  bool ok;
+  bool ok = false;
   QgsProject::instance()->readBoolEntry( "DeprecatedLabels", "/Enabled", false, &ok );
   if ( ok ) // project already flagged (regardless of project property value)
   {
