@@ -1101,7 +1101,7 @@ bool QgsWFSProvider::describeFeatureType( QString& geometryAttribute, QgsFields&
 {
   fields.clear();
 
-  QgsWFSDescribeFeatureType describeFeatureType( mShared->mURI.uri( false ) );
+  QgsWFSDescribeFeatureType describeFeatureType( mShared->mURI.uri() );
   if ( !describeFeatureType.requestFeatureType( mShared->mWFSVersion,
        mShared->mURI.typeName() ) )
   {
@@ -1246,8 +1246,15 @@ bool QgsWFSProvider::readAttributesFromSchema( QDomDocument& schemaDoc,
   for ( int i = 0; i < attributeNodeList.size(); ++i )
   {
     QDomElement attributeElement = attributeNodeList.at( i ).toElement();
+
     //attribute name
     QString name = attributeElement.attribute( "name" );
+    // Some servers like http://ogi.state.ok.us/geoserver/wfs on layer ogi:doq_centroids
+    // return attribute names padded with spaces. See http://hub.qgis.org/issues/3426
+    // I'm not completely sure how legal this
+    // is but this validates with Xerces 3.1, and its schema analyzer does also the trimming.
+    name = name.trimmed();
+
     //attribute type
     QString type = attributeElement.attribute( "type" );
     if ( type.isEmpty() )
@@ -1330,7 +1337,7 @@ bool QgsWFSProvider::sendTransactionDocument( const QDomDocument& doc, QDomDocum
     return false;
   }
 
-  QgsWFSTransactionRequest request( mShared->mURI.uri( false ) );
+  QgsWFSTransactionRequest request( mShared->mURI.uri() );
   return request.send( doc, serverResponse );
 }
 
@@ -1433,8 +1440,10 @@ bool QgsWFSProvider::getCapabilities()
 
   if ( mShared->mCaps.version.isEmpty() )
   {
-    QgsWFSCapabilities getCapabilities( mShared->mURI.uri( false ) );
-    if ( !getCapabilities.requestCapabilities( true ) )
+    QgsWFSCapabilities getCapabilities( mShared->mURI.uri() );
+    const bool synchronous = true;
+    const bool forceRefresh = false;
+    if ( !getCapabilities.requestCapabilities( synchronous, forceRefresh ) )
     {
       QgsMessageLog::logMessage( tr( "GetCapabilities failed for url %1: %2" ).
                                  arg( dataSourceUri() ).arg( getCapabilities.errorMessage() ), tr( "WFS" ) );

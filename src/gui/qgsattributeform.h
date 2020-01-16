@@ -29,6 +29,7 @@ class QgsAttributeFormEditorWidget;
 class QgsMessageBar;
 class QgsMessageBarItem;
 class QgsWidgetWrapper;
+class QgsTabWidget;
 
 /** \ingroup gui
  * \class QgsAttributeForm
@@ -288,12 +289,14 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
           : widget( nullptr )
           , labelOnTop( false )
           , labelAlignRight( false )
+          , showLabel( true )
       {}
 
       QWidget* widget;
       QString labelText;
       bool labelOnTop;
       bool labelAlignRight;
+      bool showLabel;
     };
 
     WidgetInfo createWidgetFromDef( const QgsAttributeEditorElement* widgetDef, QWidget* parent, QgsVectorLayer* vl, QgsAttributeEditorContext& context );
@@ -336,12 +339,44 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
     QgsMessageBarItem* mMultiEditUnsavedMessageBarItem;
     QgsMessageBarItem* mMultiEditMessageBarItem;
     QLabel* mInvalidConstraintMessage;
+    QWidget* mTopMessageWidget;
     QList<QgsWidgetWrapper*> mWidgets;
     QgsAttributeEditorContext mContext;
     QDialogButtonBox* mButtonBox;
     QWidget* mSearchButtonBox;
     QList<QgsAttributeFormInterface*> mInterfaces;
     QMap< int, QgsAttributeFormEditorWidget* > mFormEditorWidgets;
+    QgsExpressionContext mExpressionContext;
+
+    struct ContainerInformation
+    {
+      ContainerInformation( QgsTabWidget* tabWidget, QWidget* widget, QgsExpression expression )
+          : tabWidget( tabWidget )
+          , widget( widget )
+          , expression( expression )
+          , isVisible( true )
+      {}
+
+      ContainerInformation( QWidget* widget, QgsExpression expression )
+          : tabWidget( nullptr )
+          , widget( widget )
+          , expression( expression )
+          , isVisible( true )
+      {}
+
+      QgsTabWidget* tabWidget;
+      QWidget* widget;
+      QgsExpression expression;
+      bool isVisible;
+
+      void apply( QgsExpressionContext* expressionContext );
+    };
+
+    void registerContainerInformation( ContainerInformation* info );
+
+    // Contains information about tabs and groupboxes, their visibility state visibility conditions
+    QVector<ContainerInformation*> mContainerVisibilityInformation;
+    QMap<QString, QVector<ContainerInformation*> > mContainerInformationDependency;
 
     // Variables below are used for python
     static int sFormCounter;

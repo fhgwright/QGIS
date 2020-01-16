@@ -14,11 +14,15 @@ __copyright__ = 'Copyright 2015, The QGIS Project'
 __revision__ = '$Format:%H$'
 
 import qgis  # NOQA
+import psycopg2
 
 import os
 
 from qgis.core import (
+    QgsGeometry,
+    QgsPoint,
     QgsVectorLayer,
+    QgsVectorLayerImport,
     QgsFeatureRequest,
     QgsFeature,
     QgsTransactionGroup,
@@ -48,10 +52,19 @@ class TestPyQgsPostgresProvider(unittest.TestCase, ProviderTestCase):
         cls.poly_vl = QgsVectorLayer(cls.dbconn + ' sslmode=disable key=\'pk\' srid=4326 type=POLYGON table="qgis_test"."some_poly_data" (geom) sql=', 'test', 'postgres')
         assert cls.poly_vl.isValid()
         cls.poly_provider = cls.poly_vl.dataProvider()
+        cls.con = psycopg2.connect(cls.dbconn)
 
     @classmethod
     def tearDownClass(cls):
         """Run after all tests"""
+
+    def execSQLCommand(self, sql):
+        self.assertTrue(self.con)
+        cur = self.con.cursor()
+        self.assertTrue(cur)
+        cur.execute(sql)
+        cur.close()
+        self.con.commit()
 
     def enableCompiler(self):
         QSettings().setValue(u'/qgis/compileExpressions', True)
@@ -311,6 +324,73 @@ class TestPyQgsPostgresProvider(unittest.TestCase, ProviderTestCase):
         fet = next(vl.getFeatures())
         self.assertEqual(fet.fields()[1].name(), 'newname2')
         self.assertEqual(fet.fields()[2].name(), 'another')
+
+    # See http://hub.qgis.org/issues/15188
+    def testNumericPrecision(self):
+        uri = 'point?field=f1:int'
+        uri += '&field=f2:double(6,4)'
+        uri += '&field=f3:string(20)'
+        lyr = QgsVectorLayer(uri, "x", "memory")
+        self.assertTrue(lyr.isValid())
+        f = QgsFeature(lyr.fields())
+        f['f1'] = 1
+        f['f2'] = 123.456
+        f['f3'] = '12345678.90123456789'
+        lyr.dataProvider().addFeatures([f])
+        uri = '%s table="qgis_test"."b18155" (g) key=\'f1\'' % (self.dbconn)
+        self.execSQLCommand('DROP TABLE IF EXISTS qgis_test.b18155')
+        err = QgsVectorLayerImport.importLayer(lyr, uri, "postgres", lyr.crs())
+        self.assertEqual(err[0], QgsVectorLayerImport.NoError,
+                         'unexpected import error {0}'.format(err))
+        lyr = QgsVectorLayer(uri, "y", "postgres")
+        self.assertTrue(lyr.isValid())
+        f = next(lyr.getFeatures())
+        self.assertEqual(f['f1'], 1)
+        self.assertEqual(f['f2'], 123.456)
+        self.assertEqual(f['f3'], '12345678.90123456789')
+
+    # See http://hub.qgis.org/issues/15226
+    def testImportKey(self):
+        uri = 'point?field=f1:int'
+        uri += '&field=F2:double(6,4)'
+        uri += '&field=f3:string(20)'
+        lyr = QgsVectorLayer(uri, "x", "memory")
+        self.assertTrue(lyr.isValid())
+
+        def testKey(lyr, key, kfnames):
+            self.execSQLCommand('DROP TABLE IF EXISTS qgis_test.import_test')
+            uri = '%s table="qgis_test"."import_test" (g)' % self.dbconn
+            if key is not None:
+                uri += ' key=\'%s\'' % key
+            err = QgsVectorLayerImport.importLayer(lyr, uri, "postgres", lyr.crs())
+            self.assertEqual(err[0], QgsVectorLayerImport.NoError,
+                             'unexpected import error {0}'.format(err))
+            olyr = QgsVectorLayer(uri, "y", "postgres")
+            self.assertTrue(olyr.isValid())
+            flds = lyr.fields()
+            oflds = olyr.fields()
+            if key is None:
+                # if the pkey was not given, it will create a pkey
+                self.assertEquals(oflds.size(), flds.size() + 1)
+                self.assertEquals(oflds[0].name(), kfnames[0])
+                for i in range(flds.size()):
+                    self.assertEqual(oflds[i + 1].name(), flds[i].name())
+            else:
+                # pkey was given, no extra field generated
+                self.assertEquals(oflds.size(), flds.size())
+                for i in range(oflds.size()):
+                    self.assertEqual(oflds[i].name(), flds[i].name())
+            pks = olyr.pkAttributeList()
+            self.assertEquals(len(pks), len(kfnames))
+            for i in range(0, len(kfnames)):
+                self.assertEqual(oflds[pks[i]].name(), kfnames[i])
+
+        testKey(lyr, 'f1', ['f1'])
+        testKey(lyr, '"f1"', ['f1'])
+        testKey(lyr, '"f1","F2"', ['f1', 'F2'])
+        testKey(lyr, '"f1","F2","f3"', ['f1', 'F2', 'f3'])
+        testKey(lyr, None, ['id'])
+
 
 if __name__ == '__main__':
     unittest.main()

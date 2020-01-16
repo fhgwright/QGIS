@@ -16,6 +16,7 @@
 
 #include "qgslogger.h"
 
+#include "qgsdataitemproviderregistry.h"
 #include "qgsdatasourceuri.h"
 #include "qgswmscapabilities.h"
 #include "qgswmsconnection.h"
@@ -23,6 +24,9 @@
 #include "qgsnewhttpconnection.h"
 #include "qgstilescalewidget.h"
 #include "qgscrscache.h"
+#include "qgsxyzconnection.h"
+
+#include <QInputDialog>
 
 // ---------------------------------------------------------------------------
 QgsWMSConnectionItem::QgsWMSConnectionItem( QgsDataItem* parent, QString name, QString path, QString uri )
@@ -131,46 +135,61 @@ QVector<QgsDataItem*> QgsWMSConnectionItem::createChildren()
       QgsDataItem *layerItem = l.styles.size() == 1 ? this : new QgsDataCollectionItem( this, title, mPath + '/' + l.identifier );
       if ( layerItem != this )
       {
+        layerItem->setCapabilities( layerItem->capabilities2() & ~QgsDataItem::Fertile );
+        layerItem->setState( QgsDataItem::Populated );
         layerItem->setToolTip( title );
-        addChildItem( layerItem );
+        children << layerItem;
       }
 
       Q_FOREACH ( const QgsWmtsStyle &style, l.styles )
       {
         QString styleName = style.title.isEmpty() ? style.identifier : style.title;
         if ( layerItem == this )
-          styleName.prepend( title + " - " );
+          styleName = title;  // just one style so no need to display it
 
         QgsDataItem *styleItem = l.setLinks.size() == 1 ? layerItem : new QgsDataCollectionItem( layerItem, styleName, layerItem->path() + '/' + style.identifier );
         if ( styleItem != layerItem )
         {
+          styleItem->setCapabilities( styleItem->capabilities2() & ~QgsDataItem::Fertile );
+          styleItem->setState( QgsDataItem::Populated );
           styleItem->setToolTip( styleName );
-          layerItem->addChildItem( styleItem );
+          if ( layerItem == this )
+            children << styleItem;
+          else
+            layerItem->addChildItem( styleItem );
         }
 
         Q_FOREACH ( const QgsWmtsTileMatrixSetLink &setLink, l.setLinks )
         {
           QString linkName = setLink.tileMatrixSet;
           if ( styleItem == layerItem )
-            linkName.prepend( styleName + " - " );
+            linkName = styleName;  // just one link so no need to display it
 
           QgsDataItem *linkItem = l.formats.size() == 1 ? styleItem : new QgsDataCollectionItem( styleItem, linkName, styleItem->path() + '/' + setLink.tileMatrixSet );
           if ( linkItem != styleItem )
           {
+            linkItem->setCapabilities( linkItem->capabilities2() & ~QgsDataItem::Fertile );
+            linkItem->setState( QgsDataItem::Populated );
             linkItem->setToolTip( linkName );
-            styleItem->addChildItem( linkItem );
+            if ( styleItem == this )
+              children << linkItem;
+            else
+              styleItem->addChildItem( linkItem );
           }
 
           Q_FOREACH ( const QString& format, l.formats )
           {
             QString name = format;
             if ( linkItem == styleItem )
-              name.prepend( linkName + " - " );
+              name = linkName;  // just one format so no need to display it
 
-            QgsDataItem *layerItem = new QgsWMTSLayerItem( linkItem, name, linkItem->path() + '/' + name, uri,
+            QgsDataItem *tileLayerItem = new QgsWMTSLayerItem( linkItem, name, linkItem->path() + '/' + name, uri,
                 l.identifier, format, style.identifier, setLink.tileMatrixSet, tileMatrixSets[ setLink.tileMatrixSet ].crs, title );
-            layerItem->setToolTip( name );
-            linkItem->addChildItem( layerItem );
+            tileLayerItem->setToolTip( name );
+            if ( linkItem == this )
+              children << tileLayerItem;
+            else
+              linkItem->addChildItem( tileLayerItem );
           }
         }
       }
@@ -424,12 +443,8 @@ QGISEXTERN QgsWMSSourceSelect * selectWidget( QWidget * parent, Qt::WindowFlags 
   return new QgsWMSSourceSelect( parent, fl );
 }
 
-QGISEXTERN int dataCapabilities()
-{
-  return  QgsDataProvider::Net;
-}
 
-QGISEXTERN QgsDataItem * dataItem( QString thePath, QgsDataItem* parentItem )
+QgsDataItem* QgsWmsDataItemProvider::createDataItem( const QString& thePath, QgsDataItem *parentItem )
 {
   QgsDebugMsg( "thePath = " + thePath );
   if ( thePath.isEmpty() )
@@ -451,3 +466,87 @@ QGISEXTERN QgsDataItem * dataItem( QString thePath, QgsDataItem* parentItem )
   return nullptr;
 }
 
+QGISEXTERN QList<QgsDataItemProvider*> dataItemProviders()
+{
+  return QList<QgsDataItemProvider*>()
+         << new QgsWmsDataItemProvider
+         << new QgsXyzTileDataItemProvider;
+}
+
+// ---------------------------------------------------------------------------
+
+
+QgsXyzTileRootItem::QgsXyzTileRootItem( QgsDataItem *parent, QString name, QString path )
+    : QgsDataCollectionItem( parent, name, path )
+{
+  mCapabilities |= Fast;
+  mIconName = "mIconWms.svg";
+  populate();
+}
+
+QVector<QgsDataItem *> QgsXyzTileRootItem::createChildren()
+{
+  QVector<QgsDataItem*> connections;
+  Q_FOREACH ( const QString& connName, QgsXyzConnectionUtils::connectionList() )
+  {
+    QgsXyzConnection connection( QgsXyzConnectionUtils::connection( connName ) );
+    QgsDataItem * conn = new QgsXyzLayerItem( this, connName, mPath + '/' + connName, connection.encodedUri() );
+    connections.append( conn );
+  }
+  return connections;
+}
+
+QList<QAction *> QgsXyzTileRootItem::actions()
+{
+  QAction* actionNew = new QAction( tr( "New Connection..." ), this );
+  connect( actionNew, SIGNAL( triggered() ), this, SLOT( newConnection() ) );
+  return QList<QAction*>() << actionNew;
+}
+
+void QgsXyzTileRootItem::newConnection()
+{
+  QString url = QInputDialog::getText( nullptr, tr( "New XYZ tile layer" ),
+                                       tr( "Please enter XYZ tile layer URL. {x}, {y}, {z} will be replaced by actual tile coordinates." ) );
+  if ( url.isEmpty() )
+    return;
+
+  QString name = QInputDialog::getText( nullptr, tr( "New XYZ tile layer" ),
+                                        tr( "Please enter name of the tile layer:" ) );
+  if ( name.isEmpty() )
+    return;
+
+  QgsXyzConnection conn;
+  conn.name = name;
+  conn.url = url;
+  QgsXyzConnectionUtils::addConnection( conn );
+
+  refresh();
+}
+
+
+// ---------------------------------------------------------------------------
+
+
+QgsXyzLayerItem::QgsXyzLayerItem( QgsDataItem *parent, QString name, QString path, const QString &encodedUri )
+    : QgsLayerItem( parent, name, path, encodedUri, QgsLayerItem::Raster, "wms" )
+{
+  setState( Populated );
+}
+
+QList<QAction *> QgsXyzLayerItem::actions()
+{
+  QList<QAction*> lst = QgsLayerItem::actions();
+
+  QAction* actionDelete = new QAction( tr( "Delete" ), this );
+  connect( actionDelete, SIGNAL( triggered() ), this, SLOT( deleteConnection() ) );
+  lst << actionDelete;
+
+  return lst;
+}
+
+void QgsXyzLayerItem::deleteConnection()
+{
+  QgsXyzConnectionUtils::deleteConnection( mName );
+
+  mParent->refresh();
+}

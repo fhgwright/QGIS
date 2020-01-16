@@ -1277,10 +1277,17 @@ void QgisApp::dragEnterEvent( QDragEnterEvent *event )
 
 void QgisApp::dropEvent( QDropEvent *event )
 {
-  mMapCanvas->freeze();
+  // dragging app is locked for the duration of dropEvent. This causes explorer windows to hang
+  // while large projects/layers are loaded. So instead we return from dropEvent as quickly as possible
+  // and do the actual handling of the drop after a very short timeout
+  QTimer* timer = new QTimer( this );
+  timer->setSingleShot( true );
+  timer->setInterval( 50 );
+
   // get the file list
   QList<QUrl>::iterator i;
   QList<QUrl>urls = event->mimeData()->urls();
+  QStringList files;
   for ( i = urls.begin(); i != urls.end(); ++i )
   {
     QString fileName = i->toLocalFile();
@@ -1333,13 +1340,37 @@ void QgisApp::dropEvent( QDropEvent *event )
     // so we test for length to make sure we have something
     if ( !fileName.isEmpty() )
     {
-      openFile( fileName );
+      files << fileName;
     }
   }
+  timer->setProperty( "files", files );
 
+  QgsMimeDataUtils::UriList lst;
   if ( QgsMimeDataUtils::isUriList( event->mimeData() ) )
   {
-    QgsMimeDataUtils::UriList lst = QgsMimeDataUtils::decodeUriList( event->mimeData() );
+    lst = QgsMimeDataUtils::decodeUriList( event->mimeData() );
+  }
+  timer->setProperty( "uris", QVariant::fromValue( lst ) );
+
+  connect( timer, SIGNAL( timeout() ), this, SLOT( dropEventTimeout() ) );
+
+  event->acceptProposedAction();
+  timer->start();
+}
+
+void QgisApp::dropEventTimeout()
+{
+  mMapCanvas->freeze();
+  QStringList files = sender()->property( "files" ).toStringList();
+
+  Q_FOREACH ( const QString& file, files )
+  {
+    openFile( file );
+  }
+
+  QgsMimeDataUtils::UriList lst = sender()->property( "uris" ).value<QgsMimeDataUtils::UriList>();
+  if ( !lst.isEmpty() )
+  {
     Q_FOREACH ( const QgsMimeDataUtils::Uri& u, lst )
     {
       QString uri = crsAndFormatAdjustedLayerUri( u.uri, u.supportedCrs, u.supportedFormats );
@@ -1358,9 +1389,10 @@ void QgisApp::dropEvent( QDropEvent *event )
       }
     }
   }
+  sender()->deleteLater();
+
   mMapCanvas->freeze( false );
   mMapCanvas->refresh();
-  event->acceptProposedAction();
 }
 
 bool QgisApp::event( QEvent * event )
@@ -2496,8 +2528,8 @@ void QgisApp::setTheme( const QString& theThemeName )
   mActionNewVectorLayer->setIcon( QgsApplication::getThemeIcon( "/mActionNewVectorLayer.svg" ) );
   mActionNewMemoryLayer->setIcon( QgsApplication::getThemeIcon( "/mActionCreateMemory.svg" ) );
   mActionAddAllToOverview->setIcon( QgsApplication::getThemeIcon( "/mActionAddAllToOverview.svg" ) );
-  mActionHideAllLayers->setIcon( QgsApplication::getThemeIcon( "/mActionHideAllLayers.png" ) );
-  mActionShowAllLayers->setIcon( QgsApplication::getThemeIcon( "/mActionShowAllLayers.png" ) );
+  mActionHideAllLayers->setIcon( QgsApplication::getThemeIcon( "/mActionHideAllLayers.svg" ) );
+  mActionShowAllLayers->setIcon( QgsApplication::getThemeIcon( "/mActionShowAllLayers.svg" ) );
   mActionHideSelectedLayers->setIcon( QgsApplication::getThemeIcon( "/mActionHideSelectedLayers.png" ) );
   mActionShowSelectedLayers->setIcon( QgsApplication::getThemeIcon( "/mActionShowSelectedLayers.png" ) );
   mActionRemoveAllFromOverview->setIcon( QgsApplication::getThemeIcon( "/mActionRemoveAllFromOverview.svg" ) );
@@ -2612,7 +2644,7 @@ void QgisApp::setTheme( const QString& theThemeName )
   mActionDecorationCopyright->setIcon( QgsApplication::getThemeIcon( "/copyright_label.png" ) );
   mActionDecorationNorthArrow->setIcon( QgsApplication::getThemeIcon( "/north_arrow.png" ) );
   mActionDecorationScaleBar->setIcon( QgsApplication::getThemeIcon( "/scale_bar.png" ) );
-  mActionDecorationGrid->setIcon( QgsApplication::getThemeIcon( "/transformed.png" ) );
+  mActionDecorationGrid->setIcon( QgsApplication::getThemeIcon( "/transformed.svg" ) );
 
   //change themes of all composers
   QSet<QgsComposer*>::const_iterator composerIt = mPrintComposers.constBegin();
@@ -3037,11 +3069,11 @@ void QgisApp::initLayerTreeView()
   QAction* actionExpandAll = new QAction( tr( "Expand All" ), this );
   actionExpandAll->setIcon( QgsApplication::getThemeIcon( "/mActionExpandTree.svg" ) );
   actionExpandAll->setToolTip( tr( "Expand All" ) );
-  connect( actionExpandAll, SIGNAL( triggered( bool ) ), mLayerTreeView, SLOT( expandAll() ) );
+  connect( actionExpandAll, SIGNAL( triggered( bool ) ), mLayerTreeView, SLOT( expandAllNodes() ) );
   QAction* actionCollapseAll = new QAction( tr( "Collapse All" ), this );
   actionCollapseAll->setIcon( QgsApplication::getThemeIcon( "/mActionCollapseTree.svg" ) );
   actionCollapseAll->setToolTip( tr( "Collapse All" ) );
-  connect( actionCollapseAll, SIGNAL( triggered( bool ) ), mLayerTreeView, SLOT( collapseAll() ) );
+  connect( actionCollapseAll, SIGNAL( triggered( bool ) ), mLayerTreeView, SLOT( collapseAllNodes() ) );
 
   QWidget* spacer = new QWidget();
   spacer->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
@@ -5068,13 +5100,15 @@ void QgisApp::dxfExport()
     dxfExport.setSymbologyScaleDenominator( d.symbologyScale() );
     dxfExport.setSymbologyExport( d.symbologyMode() );
     dxfExport.setLayerTitleAsName( d.layerTitleAsName() );
+    dxfExport.setDestinationCrs( d.crs() );
     if ( mapCanvas() )
     {
       dxfExport.setMapUnits( mapCanvas()->mapUnits() );
       //extent
       if ( d.exportMapExtent() )
       {
-        dxfExport.setExtent( mapCanvas()->extent() );
+        QgsCoordinateTransform t( mapCanvas()->mapSettings().destinationCrs(), QgsCoordinateReferenceSystem( d.crs(), QgsCoordinateReferenceSystem::InternalCrsId ) );
+        dxfExport.setExtent( t.transformBoundingBox( mapCanvas()->extent() ) );
       }
     }
 
@@ -7380,6 +7414,11 @@ void QgisApp::editPaste( QgsMapLayer *destinationLayer )
     remap.insert( idx, dst );
   }
 
+  QgsExpressionContext context;
+  context << QgsExpressionContextUtils::globalScope()
+  << QgsExpressionContextUtils::projectScope()
+  << QgsExpressionContextUtils::layerScope( pasteVectorLayer );
+
   int dstAttrCount = pasteVectorLayer->fields().count();
 
   QgsFeatureList::iterator featureIt = features.begin();
@@ -7391,8 +7430,18 @@ void QgisApp::editPaste( QgsMapLayer *destinationLayer )
     // pre-initialized with default values
     for ( int dst = 0; dst < dstAttr.count(); ++dst )
     {
-      QVariant defVal( pasteVectorLayer->dataProvider()->defaultValue( dst ) );
-      if ( !defVal.isNull() )
+      QVariant defVal;
+      if ( !pasteVectorLayer->defaultValueExpression( dst ).isEmpty() )
+      {
+        // client side default expression set - use this in preference to provider default
+        defVal = pasteVectorLayer->defaultValue( dst, *featureIt, &context );
+      }
+      else
+      {
+        defVal = pasteVectorLayer->dataProvider()->defaultValue( dst );
+      }
+
+      if ( defVal.isValid() && !defVal.isNull() )
       {
         dstAttr[ dst ] = defVal;
       }

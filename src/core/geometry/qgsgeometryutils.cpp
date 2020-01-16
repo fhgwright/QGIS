@@ -65,6 +65,7 @@ QgsPointV2 QgsGeometryUtils::closestVertex( const QgsAbstractGeometryV2& geom, c
   double minDist = std::numeric_limits<double>::max();
   double currentDist = 0;
   QgsPointV2 minDistPoint;
+  id = QgsVertexId(); // set as invalid
 
   QgsVertexId vertexId;
   QgsPointV2 vertex;
@@ -119,6 +120,51 @@ double QgsGeometryUtils::distanceToVertex( const QgsAbstractGeometryV2 &geom, co
   return -1;
 }
 
+bool QgsGeometryUtils::verticesAtDistance( const QgsAbstractGeometryV2& geometry, double distance, QgsVertexId& previousVertex, QgsVertexId& nextVertex )
+{
+  double currentDist = 0;
+  previousVertex = QgsVertexId();
+  nextVertex = QgsVertexId();
+
+  QgsPointV2 point;
+  QgsPointV2 previousPoint;
+
+  if ( qgsDoubleNear( distance, 0.0 ) )
+  {
+    geometry.nextVertex( previousVertex, point );
+    nextVertex = previousVertex;
+    return true;
+  }
+
+  bool first = true;
+  while ( currentDist < distance && geometry.nextVertex( nextVertex, point ) )
+  {
+    if ( !first )
+    {
+      currentDist += sqrt( QgsGeometryUtils::sqrDistance2D( previousPoint, point ) );
+    }
+
+    if ( qgsDoubleNear( currentDist, distance ) )
+    {
+      // exact hit!
+      previousVertex = nextVertex;
+      return true;
+    }
+
+    if ( currentDist > distance )
+    {
+      return true;
+    }
+
+    previousVertex = nextVertex;
+    previousPoint = point;
+    first = false;
+  }
+
+  //could not find target distance
+  return false;
+}
+
 void QgsGeometryUtils::adjacentVertices( const QgsAbstractGeometryV2& geom, QgsVertexId atVertex, QgsVertexId& beforeVertex, QgsVertexId& afterVertex )
 {
   bool polygonType = ( geom.dimension()  == 2 );
@@ -156,9 +202,16 @@ void QgsGeometryUtils::adjacentVertices( const QgsAbstractGeometryV2& geom, QgsV
   }
   else if ( atVertex.vertex == 0 )
   {
-    afterVertex.part = atVertex.part;
-    afterVertex.ring = atVertex.ring;
-    afterVertex.vertex = atVertex.vertex + 1;
+    if ( ring.size() > 1 )
+    {
+      afterVertex.part = atVertex.part;
+      afterVertex.ring = atVertex.ring;
+      afterVertex.vertex = atVertex.vertex + 1;
+    }
+    else
+    {
+      afterVertex = QgsVertexId(); //after vertex invalid
+    }
     if ( polygonType && ring.size() > 3 )
     {
       beforeVertex.part = atVertex.part;

@@ -201,6 +201,7 @@ QgsFeature QgsMapToolNodeTool::getFeatureAtPoint( QgsMapMouseEvent* e )
 
   QgsFeatureRequest request;
   request.setFilterRect( QgsRectangle( e->mapPoint().x(), e->mapPoint().y(), e->mapPoint().x(), e->mapPoint().y() ) );
+  request.setFlags( QgsFeatureRequest::ExactIntersect );
   QgsFeatureIterator features = vlayer->getFeatures( request );
   features.nextFeature( feature );
 
@@ -271,12 +272,11 @@ void QgsMapToolNodeTool::canvasPressEvent( QgsMapMouseEvent* e )
 
     // get geometry and find if snapping is near it
     int atVertex, beforeVertex, afterVertex;
-    double dist;
-    QgsPoint closestLayerVertex = mSelectedFeature->geometry()->closestVertex( layerCoordPoint, atVertex, beforeVertex, afterVertex, dist );
-    dist = sqrt( dist );
+    double sqrDist; // will be negative on error
+    QgsPoint closestLayerVertex = mSelectedFeature->geometry()->closestVertex( layerCoordPoint, atVertex, beforeVertex, afterVertex, sqrDist );
 
     mSnapper.snapToCurrentLayer( e->pos(), snapResults, QgsSnapper::SnapToVertex, tol );
-    if ( dist <= tol )
+    if ( sqrDist >= 0 && sqrt( sqrDist ) <= tol )
     {
       // some vertex selected
       mMoving = true;

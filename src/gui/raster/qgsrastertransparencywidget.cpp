@@ -64,10 +64,6 @@ QgsRasterTransparencyWidget::QgsRasterTransparencyWidget( QgsRasterLayer *layer,
 
 QgsRasterTransparencyWidget::~QgsRasterTransparencyWidget()
 {
-  if ( mPixelSelectorTool )
-  {
-    delete mPixelSelectorTool;
-  }
 }
 
 void QgsRasterTransparencyWidget::syncToLayer()
@@ -76,6 +72,13 @@ void QgsRasterTransparencyWidget::syncToLayer()
   QgsRasterRenderer* renderer = mRasterLayer->renderer();
   if ( provider )
   {
+    if ( provider->dataType( 1 ) == QGis::ARGB32
+         || provider->dataType( 1 ) == QGis::ARGB32_Premultiplied )
+    {
+      gboxNoDataValue->setEnabled( false );
+      gboxCustomTransparency->setEnabled( false );
+    }
+
     cboxTransparencyBand->addItem( tr( "None" ), -1 );
     int nBands = provider->bandCount();
     QString bandName;

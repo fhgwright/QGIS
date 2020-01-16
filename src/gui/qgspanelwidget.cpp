@@ -47,8 +47,31 @@ void QgsPanelWidget::setDockMode( bool dockMode )
   mDockMode = dockMode;
 }
 
+QgsPanelWidget*QgsPanelWidget::findParentPanel( QWidget* widget )
+{
+  QWidget* p = widget;
+  while ( p )
+  {
+    if ( QgsPanelWidget* panel = qobject_cast< QgsPanelWidget* >( p ) )
+      return panel;
+
+    if ( p->window() == p )
+    {
+      // break on encountering a window - eg a dialog opened from a panel should not inline
+      // widgets inside the parent panel
+      return nullptr;
+    }
+
+    p = p->parentWidget();
+  }
+  return nullptr;
+}
+
 void QgsPanelWidget::openPanel( QgsPanelWidget* panel )
 {
+  //panel dock mode inherits from this panel
+  panel->setDockMode( dockMode() );
+
   if ( mDockMode )
   {
     emit showPanel( panel );
@@ -68,7 +91,7 @@ void QgsPanelWidget::openPanel( QgsPanelWidget* panel )
     dlg->layout()->addWidget( buttonBox );
     dlg->exec();
     settings.setValue( key, dlg->saveGeometry() );
-    emit panelAccepted( panel );
+    panel->acceptPanel();
   }
 }
 

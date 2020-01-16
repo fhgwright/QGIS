@@ -115,6 +115,7 @@ SET(QGIS_APP_SRCS
   qgsrelationadddlg.cpp
   qgsselectbyformdialog.cpp
   qgsstatisticalsummarydockwidget.cpp
+  qgssubstitutionlistwidget.cpp
   qgstextannotationdialog.cpp
   qgssnappingdialog.cpp
   qgssvgannotationdialog.cpp
@@ -292,6 +293,7 @@ SET (QGIS_APP_MOC_HDRS
   qgssnappingdialog.h
   qgssponsors.h
   qgsstatisticalsummarydockwidget.h
+  qgssubstitutionlistwidget.h
   qgssvgannotationdialog.h
   qgstextannotationdialog.h
   qgstipgui.h
@@ -351,15 +353,18 @@ SET (WITH_QWTPOLAR TRUE CACHE BOOL "Determines whether QwtPolar should be built"
 
 IF (WITH_QWTPOLAR)
   ADD_DEFINITIONS(-DWITH_QWTPOLAR)
+
   # Try to find QwtPolar on the system
   FIND_PACKAGE(QwtPolar)
+
   # If not found on the system, offer the possibility to build QwtPolar
   # internally
-  IF(NOT FOUND_QwtPolar)
-    SET(DEFAULT_WITH_INTERNAL_QWTPOLAR TRUE)
-  ELSE(NOT FOUND_QwtPolar)
+  IF(QWTPOLAR_FOUND)
     SET(DEFAULT_WITH_INTERNAL_QWTPOLAR FALSE)
-  ENDIF(NOT FOUND_QwtPolar)
+  ELSE(QWTPOLAR_FOUND)
+    SET(DEFAULT_WITH_INTERNAL_QWTPOLAR TRUE)
+  ENDIF(QWTPOLAR_FOUND)
+
   SET (WITH_INTERNAL_QWTPOLAR DEFAULT_WITH_INTERNAL_QWTPOLAR CACHE BOOL "Use internal build of QwtPolar")
 
   IF(WITH_INTERNAL_QWTPOLAR)

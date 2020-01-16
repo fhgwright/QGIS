@@ -470,7 +470,7 @@ int QgsWFSServer::getFeature( QgsRequestHandler& request, const QString& format 
       }
 
       currentLayer = layerList.at( 0 );
-      QgsVectorLayer* layer = dynamic_cast<QgsVectorLayer*>( currentLayer );
+      QgsVectorLayer* layer = qobject_cast<QgsVectorLayer*>( currentLayer );
       if ( layer && wfsLayersId.contains( layer->id() ) )
       {
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
@@ -485,8 +485,8 @@ int QgsWFSServer::getFeature( QgsRequestHandler& request, const QString& format 
 
         //is there alias info for this vector layer?
         QMap< int, QString > layerAliasInfo;
-        const QMap< QString, QString >& aliasMap = layer->attributeAliases();
-        QMap< QString, QString >::const_iterator aliasIt = aliasMap.constBegin();
+        QgsStringMap aliasMap = layer->attributeAliases();
+        QgsStringMap::const_iterator aliasIt = aliasMap.constBegin();
         for ( ; aliasIt != aliasMap.constEnd(); ++aliasIt )
         {
           int attrIndex = layer->fieldNameIndex( aliasIt.key() );
@@ -865,15 +865,15 @@ int QgsWFSServer::getFeature( QgsRequestHandler& request, const QString& format 
 
     currentLayer = layerList.at( 0 );
 
-    QgsVectorLayer* layer = dynamic_cast<QgsVectorLayer*>( currentLayer );
+    QgsVectorLayer* layer = qobject_cast<QgsVectorLayer*>( currentLayer );
     if ( layer && wfsLayersId.contains( layer->id() ) )
     {
       expressionContext << QgsExpressionContextUtils::layerScope( layer );
 
       //is there alias info for this vector layer?
       QMap< int, QString > layerAliasInfo;
-      const QMap< QString, QString >& aliasMap = layer->attributeAliases();
-      QMap< QString, QString >::const_iterator aliasIt = aliasMap.constBegin();
+      QgsStringMap aliasMap = layer->attributeAliases();
+      QgsStringMap::const_iterator aliasIt = aliasMap.constBegin();
       for ( ; aliasIt != aliasMap.constEnd(); ++aliasIt )
       {
         int attrIndex = layer->fieldNameIndex( aliasIt.key() );

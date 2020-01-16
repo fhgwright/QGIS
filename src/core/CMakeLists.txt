@@ -81,6 +81,7 @@ SET(QGIS_CORE_SRCS
   qgsactionmanager.cpp
   qgsaggregatecalculator.cpp
   qgsattributetableconfig.cpp
+  qgsbearingutils.cpp
   qgsbrowsermodel.cpp
   qgscachedfeatureiterator.cpp
   qgscacheindex.cpp
@@ -163,6 +164,7 @@ SET(QGIS_CORE_SRCS
   qgsofflineediting.cpp
   qgsogcutils.cpp
   qgsogrutils.cpp
+  qgsoptionalexpression.cpp
   qgsowsconnection.cpp
   qgspaintenginehack.cpp
   qgspallabeling.cpp
@@ -460,6 +462,8 @@ SET(QGIS_CORE_MOC_HDRS
   qgsdataprovider.h
   qgsdbfilterproxymodel.h
   qgseditformconfig.h
+  qgsfeedback.h
+  qgsfield.h
   qgsgeometryvalidator.h
   qgsgml.h
   qgsgmlschema.h
@@ -610,6 +614,7 @@ SET(QGIS_CORE_HDRS
   qgsannotation.h
   qgsattributetableconfig.h
   qgsattributeaction.h
+  qgsbearingutils.h
   qgscachedfeatureiterator.h
   qgscacheindex.h
   qgscacheindexfeatureid.h
@@ -648,7 +653,6 @@ SET(QGIS_CORE_HDRS
   qgsfeatureiterator.h
   qgsfeaturerequest.h
   qgsfeaturestore.h
-  qgsfield.h
   qgsfield_p.h
   qgsfontutils.h
   qgsgeometrycache.h
@@ -677,6 +681,8 @@ SET(QGIS_CORE_HDRS
   qgsmultirenderchecker.h
   qgsobjectcustomproperties.h
   qgsogcutils.h
+  qgsoptional.h
+  qgsoptionalexpression.h
   qgsowsconnection.h
   qgspaintenginehack.h
   qgspallabeling.h

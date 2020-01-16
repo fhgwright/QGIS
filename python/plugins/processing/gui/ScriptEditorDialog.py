@@ -76,13 +76,13 @@ class ScriptEditorDialog(BASE, WIDGET):
             QIcon(os.path.join(pluginPath, 'images', 'edithelp.png')))
         self.btnRun.setIcon(
             QIcon(os.path.join(pluginPath, 'images', 'runalgorithm.png')))
-        self.btnCut.setIcon(QgsApplication.getThemeIcon('/mActionEditCut.png'))
+        self.btnCut.setIcon(QgsApplication.getThemeIcon('/mActionEditCut.svg'))
         self.btnCopy.setIcon(
-            QgsApplication.getThemeIcon('/mActionEditCopy.png'))
+            QgsApplication.getThemeIcon('/mActionEditCopy.svg'))
         self.btnPaste.setIcon(
-            QgsApplication.getThemeIcon('/mActionEditPaste.png'))
-        self.btnUndo.setIcon(QgsApplication.getThemeIcon('/mActionUndo.png'))
-        self.btnRedo.setIcon(QgsApplication.getThemeIcon('/mActionRedo.png'))
+            QgsApplication.getThemeIcon('/mActionEditPaste.svg'))
+        self.btnUndo.setIcon(QgsApplication.getThemeIcon('/mActionUndo.svg'))
+        self.btnRedo.setIcon(QgsApplication.getThemeIcon('/mActionRedo.svg'))
         self.btnSnippets.setIcon(QgsApplication.getThemeIcon('/mActionHelpAPI.png'))
 
         # Connect signals and slots
@@ -97,8 +97,8 @@ class ScriptEditorDialog(BASE, WIDGET):
         self.btnPaste.clicked.connect(self.editor.paste)
         self.btnUndo.clicked.connect(self.editor.undo)
         self.btnRedo.clicked.connect(self.editor.redo)
-        self.btnIncreaseFont.clicked.connect(self.increaseFontSize)
-        self.btnDecreaseFont.clicked.connect(self.decreaseFontSize)
+        self.btnIncreaseFont.clicked.connect(self.editor.zoomIn)
+        self.btnDecreaseFont.clicked.connect(self.editor.zoomOut)
         self.editor.textChanged.connect(lambda: self.setHasChanged(True))
 
         self.alg = alg
@@ -138,15 +138,6 @@ class ScriptEditorDialog(BASE, WIDGET):
 
         self.editor.setLexerType(self.algType)
 
-    def increaseFontSize(self):
-        font = self.editor.defaultFont
-        self.editor.setFonts(font.pointSize() + 1)
-        self.editor.initLexer()
-
-    def decreaseFontSize(self):
-        font = self.editor.defaultFont
-        self.editor.setFonts(font.pointSize() - 1)
-        self.editor.initLexer()
 
     def showSnippets(self, evt):
         popupmenu = QMenu()
@@ -200,7 +191,7 @@ class ScriptEditorDialog(BASE, WIDGET):
             filterName = self.tr('Processing R script (*.rsx)')
 
         self.filename = QFileDialog.getOpenFileName(
-            self, self.tr('Save script'), scriptDir, filterName)
+            self, self.tr('Open script'), scriptDir, filterName)
 
         if self.filename == '':
             return

@@ -21,6 +21,7 @@
 #include <QDialog>
 #include <QFontDatabase>
 #include <ui_qgslabelingguibase.h>
+#include "qgsstringutils.h"
 
 class QgsVectorLayer;
 class QgsMapCanvas;
@@ -95,6 +96,9 @@ class APP_EXPORT QgsLabelingGui : public QWidget, private Ui::QgsLabelingGuiBase
     void on_mDirectSymbLeftToolBtn_clicked();
     void on_mDirectSymbRightToolBtn_clicked();
     void on_mChkNoObstacle_toggled( bool active );
+    void on_chkLineOrientationDependent_toggled( bool active );
+
+    void on_mToolButtonConfigureSubstitutes_clicked();
 
   protected:
     void blockInitSignals( bool block );
@@ -135,6 +139,8 @@ class APP_EXPORT QgsLabelingGui : public QWidget, private Ui::QgsLabelingGuiBase
 
     bool mLoadSvgParams;
 
+    QgsStringReplacementCollection mSubstitutions;
+
     void enableDataDefinedAlignment( bool enable );
 
   private slots:
@@ -143,6 +149,7 @@ class APP_EXPORT QgsLabelingGui : public QWidget, private Ui::QgsLabelingGuiBase
     void showBackgroundPenStyle( bool show );
     void on_mShapeSVGPathLineEdit_textChanged( const QString& text );
     void updateLinePlacementOptions();
+    void onSubstitutionsChanged( const QgsStringReplacementCollection& substitutions );
 };
 
 #endif

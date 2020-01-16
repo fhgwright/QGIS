@@ -104,6 +104,8 @@ class QgsPointLocator_VisitorNearestVertex : public IVisitor
       int vertexIndex, beforeVertex, afterVertex;
       double sqrDist;
       QgsPoint pt = geom->closestVertex( mSrcPoint, vertexIndex, beforeVertex, afterVertex, sqrDist );
+      if ( sqrDist < 0 )
+        return;  // probably empty geometry
 
       QgsPointLocator::Match m( QgsPointLocator::Vertex, mLocator->mLayer, id, sqrt( sqrDist ), pt, vertexIndex );
       // in range queries the filter may reject some matches
@@ -859,6 +861,10 @@ QgsPointLocator::Match QgsPointLocator::nearestEdge( const QgsPoint& point, doub
       return Match();
   }
 
+  QGis::GeometryType geomType = mLayer->geometryType();
+  if ( geomType == QGis::Point )
+    return Match();
+
   Match m;
   QgsPointLocator_VisitorNearestEdge visitor( this, m, point, filter );
   QgsRectangle rect( point.x() - tolerance, point.y() - tolerance, point.x() + tolerance, point.y() + tolerance );
@@ -876,6 +882,10 @@ QgsPointLocator::MatchList QgsPointLocator::edgesInRect( const QgsRectangle& rec
     if ( !mRTree ) // still invalid?
       return MatchList();
   }
+
+  QGis::GeometryType geomType = mLayer->geometryType();
+  if ( geomType == QGis::Point )
+    return MatchList();
 
   MatchList lst;
   QgsPointLocator_VisitorEdgesInRect visitor( this, lst, rect, filter );
@@ -899,6 +909,10 @@ QgsPointLocator::MatchList QgsPointLocator::pointInPolygon( const QgsPoint& poin
     if ( !mRTree ) // still invalid?
       return MatchList();
   }
+
+  QGis::GeometryType geomType = mLayer->geometryType();
+  if ( geomType == QGis::Point || geomType == QGis::Line )
+    return MatchList();
 
   MatchList lst;
   QgsPointLocator_VisitorArea visitor( this, point, lst );

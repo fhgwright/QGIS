@@ -1679,6 +1679,25 @@ bool QgsVectorLayer::readXml( const QDomNode& layer_node )
 
   readStyleManager( layer_node );
 
+  // default expressions
+  mDefaultExpressionMap.clear();
+  QDomNode defaultsNode = layer_node.namedItem( "defaults" );
+  if ( !defaultsNode.isNull() )
+  {
+    QDomNodeList defaultNodeList = defaultsNode.toElement().elementsByTagName( "default" );
+    for ( int i = 0; i < defaultNodeList.size(); ++i )
+    {
+      QDomElement defaultElem = defaultNodeList.at( i ).toElement();
+
+      QString field = defaultElem.attribute( "field", QString() );
+      QString expression = defaultElem.attribute( "expression", QString() );
+      if ( field.isEmpty() || expression.isEmpty() )
+        continue;
+
+      mDefaultExpressionMap.insert( field, expression );
+    }
+  }
+  updateFields();
 
   setLegend( QgsMapLayerLegend::defaultVectorLegend( this ) );
 
@@ -1880,6 +1899,17 @@ bool QgsVectorLayer::writeXml( QDomNode & layer_node,
   // save expression fields
   mExpressionFieldBuffer->writeXml( layer_node, document );
 
+  //default expressions
+  QDomElement defaultsElem = document.createElement( "defaults" );
+  Q_FOREACH ( const QgsField& field, mUpdatedFields )
+  {
+    QDomElement defaultElem = document.createElement( "default" );
+    defaultElem.setAttribute( "field", field.name() );
+    defaultElem.setAttribute( "expression", field.defaultValueExpression() );
+    defaultsElem.appendChild( defaultElem );
+  }
+  layer_node.appendChild( defaultsElem );
+
   writeStyleManager( layer_node, document );
 
   // renderer specific settings
@@ -1890,6 +1920,8 @@ bool QgsVectorLayer::writeXml( QDomNode & layer_node,
 
 bool QgsVectorLayer::readSymbology( const QDomNode& node, QString& errorMessage )
 {
+  updateFields();
+
   readStyle( node, errorMessage );
 
   // process the attribute actions
@@ -1931,6 +1963,7 @@ bool QgsVectorLayer::readSymbology( const QDomNode& node, QString& errorMessage 
       mAttributeAliasMap.insert( field, aliasElem.attribute( "name" ) );
     }
   }
+  updateFields();
 
   //Attributes excluded from WMS and WFS
   mExcludeAttributesWMS.clear();
@@ -1960,6 +1993,8 @@ bool QgsVectorLayer::readSymbology( const QDomNode& node, QString& errorMessage 
   mAttributeTableConfig.readXml( node );
 
   mConditionalStyles->readXml( node );
+
+  readCustomProperties( node, "variable" );
 
   return true;
 }
@@ -2117,24 +2152,16 @@ bool QgsVectorLayer::writeSymbology( QDomNode& node, QDomDocument& doc, QString&
   node.appendChild( afField );
 
   //attribute aliases
-  if ( !mAttributeAliasMap.isEmpty() )
+  QDomElement aliasElem = doc.createElement( "aliases" );
+  Q_FOREACH ( const QgsField& field, mUpdatedFields )
   {
-    QDomElement aliasElem = doc.createElement( "aliases" );
-    QMap<QString, QString>::const_iterator a_it = mAttributeAliasMap.constBegin();
-    for ( ; a_it != mAttributeAliasMap.constEnd(); ++a_it )
-    {
-      int idx = fieldNameIndex( a_it.key() );
-      if ( idx < 0 )
-        continue;
-
-      QDomElement aliasEntryElem = doc.createElement( "alias" );
-      aliasEntryElem.setAttribute( "field", a_it.key() );
-      aliasEntryElem.setAttribute( "index", idx );
-      aliasEntryElem.setAttribute( "name", a_it.value() );
-      aliasElem.appendChild( aliasEntryElem );
-    }
-    node.appendChild( aliasElem );
+    QDomElement aliasEntryElem = doc.createElement( "alias" );
+    aliasEntryElem.setAttribute( "field", field.name() );
+    aliasEntryElem.setAttribute( "index", mUpdatedFields.indexFromName( field.name() ) );
+    aliasEntryElem.setAttribute( "name", field.alias() );
+    aliasElem.appendChild( aliasEntryElem );
   }
+  node.appendChild( aliasElem );
 
   //exclude attributes WMS
   QDomElement excludeWMSElem = doc.createElement( "excludeAttributesWMS" );
@@ -2371,19 +2398,52 @@ void QgsVectorLayer::remAttributeAlias( int attIndex )
     return;
 
   QString name = fields().at( attIndex ).name();
+  mUpdatedFields[ attIndex ].setAlias( QString() );
   if ( mAttributeAliasMap.contains( name ) )
   {
     mAttributeAliasMap.remove( name );
+    updateFields();
     emit layerModified();
   }
 }
 
-bool QgsVectorLayer::renameAttribute( int attIndex, const QString& newName )
+bool QgsVectorLayer::renameAttribute( int index, const QString& newName )
 {
-  if ( !mEditBuffer || !mDataProvider )
+  if ( index < 0 || index >= fields().count() )
     return false;
 
-  return mEditBuffer->renameAttribute( attIndex, newName );
+  switch ( mUpdatedFields.fieldOrigin( index ) )
+  {
+    case QgsFields::OriginExpression:
+    {
+      if ( mExpressionFieldBuffer )
+      {
+        int oi = mUpdatedFields.fieldOriginIndex( index );
+        mExpressionFieldBuffer->renameExpression( oi, newName );
+        updateFields();
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+
+    case QgsFields::OriginProvider:
+    case QgsFields::OriginEdit:
+
+      if ( !mEditBuffer || !mDataProvider )
+        return false;
+
+      return mEditBuffer->renameAttribute( index, newName );
+
+    case QgsFields::OriginJoin:
+    case QgsFields::OriginUnknown:
+      return false;
+
+  }
+
+  return false; //avoid warning
 }
 
 void QgsVectorLayer::addAttributeAlias( int attIndex, const QString& aliasString )
@@ -2394,6 +2454,7 @@ void QgsVectorLayer::addAttributeAlias( int attIndex, const QString& aliasString
   QString name = fields().at( attIndex ).name();
 
   mAttributeAliasMap.insert( name, aliasString );
+  mUpdatedFields[ attIndex ].setAlias( aliasString );
   emit layerModified(); // TODO[MD]: should have a different signal?
 }
 
@@ -2402,22 +2463,26 @@ QString QgsVectorLayer::attributeAlias( int attributeIndex ) const
   if ( attributeIndex < 0 || attributeIndex >= fields().count() )
     return QString();
 
-  QString name = fields().at( attributeIndex ).name();
-
-  return mAttributeAliasMap.value( name, QString() );
+  return fields().at( attributeIndex ).alias();
 }
 
 QString QgsVectorLayer::attributeDisplayName( int attributeIndex ) const
 {
-  QString displayName = attributeAlias( attributeIndex );
-  if ( displayName.isEmpty() )
+  if ( attributeIndex >= 0 && attributeIndex < mUpdatedFields.count() )
+    return mUpdatedFields.at( attributeIndex ).displayName();
+  else
+    return QString();
+}
+
+QgsStringMap QgsVectorLayer::attributeAliases() const
+{
+  QgsStringMap map;
+  Q_FOREACH ( const QgsField& field, fields() )
   {
-    if ( attributeIndex >= 0 && attributeIndex < mUpdatedFields.count() )
-    {
-      displayName = mUpdatedFields.at( attributeIndex ).name();
-    }
+    if ( !field.alias().isEmpty() )
+      map.insert( field.name(), field.alias() );
   }
-  return displayName;
+  return map;
 }
 
 bool QgsVectorLayer::deleteAttribute( int index )
@@ -2856,7 +2921,7 @@ void QgsVectorLayer::setCoordinateSystem()
 }
 
 
-const QString QgsVectorLayer::displayField() const
+QString QgsVectorLayer::displayField() const
 {
   return mDisplayField;
 }
@@ -2866,7 +2931,7 @@ void QgsVectorLayer::setDisplayExpression( const QString &displayExpression )
   mDisplayExpression = displayExpression;
 }
 
-const QString QgsVectorLayer::displayExpression()
+QString QgsVectorLayer::displayExpression() const
 {
   return mDisplayExpression;
 }
@@ -3127,6 +3192,25 @@ void QgsVectorLayer::updateFields()
   if ( mExpressionFieldBuffer )
     mExpressionFieldBuffer->updateFields( mUpdatedFields );
 
+  // set aliases and default values
+  QMap< QString, QString >::const_iterator aliasIt = mAttributeAliasMap.constBegin();
+  for ( ; aliasIt != mAttributeAliasMap.constEnd(); ++aliasIt )
+  {
+    int index = mUpdatedFields.fieldNameIndex( aliasIt.key() );
+    if ( index < 0 )
+      continue;
+
+    mUpdatedFields[ index ].setAlias( aliasIt.value() );
+  }
+  QMap< QString, QString >::const_iterator defaultIt = mDefaultExpressionMap.constBegin();
+  for ( ; defaultIt != mDefaultExpressionMap.constEnd(); ++defaultIt )
+  {
+    int index = mUpdatedFields.fieldNameIndex( defaultIt.key() );
+    if ( index < 0 )
+      continue;
+
+    mUpdatedFields[ index ].setDefaultValueExpression( defaultIt.value() );
+  }
   if ( oldFields != mUpdatedFields )
   {
     emit updatedFields();
@@ -3141,6 +3225,79 @@ void QgsVectorLayer::createJoinCaches()
   {
     mJoinBuffer->createJoinCaches();
   }
+}
+
+QVariant QgsVectorLayer::defaultValue( int index, const QgsFeature& feature, QgsExpressionContext* context ) const
+{
+  if ( index < 0 || index >= mUpdatedFields.count() )
+    return QVariant();
+
+  QString expression = mUpdatedFields.at( index ).defaultValueExpression();
+  if ( expression.isEmpty() )
+    return mDataProvider->defaultValue( index );
+
+  QgsExpressionContext* evalContext = context;
+  QScopedPointer< QgsExpressionContext > tempContext;
+  if ( !evalContext )
+  {
+    // no context passed, so we create a default one
+    tempContext.reset( new QgsExpressionContext() );
+    tempContext->appendScope( QgsExpressionContextUtils::globalScope() );
+    tempContext->appendScope( QgsExpressionContextUtils::projectScope() );
+    tempContext->appendScope( QgsExpressionContextUtils::layerScope( this ) );
+    evalContext = tempContext.data();
+  }
+
+  if ( feature.isValid() )
+  {
+    QgsExpressionContextScope* featScope = new QgsExpressionContextScope();
+    featScope->setFeature( feature );
+    featScope->setFields( *feature.fields() );
+    evalContext->appendScope( featScope );
+  }
+
+  QVariant val;
+  QgsExpression exp( expression );
+  exp.prepare( evalContext );
+  if ( exp.hasEvalError() )
+  {
+    QgsLogger::warning( "Error evaluating default value: " + exp.evalErrorString() );
+  }
+  else
+  {
+    val = exp.evaluate( evalContext );
+  }
+
+  if ( feature.isValid() )
+  {
+    delete evalContext->popScope();
+  }
+
+  return val;
+}
+
+void QgsVectorLayer::setDefaultValueExpression( int index, const QString& expression )
+{
+  if ( index < 0 || index >= mUpdatedFields.count() )
+    return;
+
+  if ( expression.isEmpty() )
+  {
+    mDefaultExpressionMap.remove( mUpdatedFields.at( index ).name() );
+  }
+  else
+  {
+    mDefaultExpressionMap.insert( mUpdatedFields.at( index ).name(), expression );
+  }
+  updateFields();
+}
+
+QString QgsVectorLayer::defaultValueExpression( int index ) const
+{
+  if ( index < 0 || index >= mUpdatedFields.count() )
+    return QString();
+  else
+    return mUpdatedFields.at( index ).defaultValueExpression();
 }
 
 void QgsVectorLayer::uniqueValues( int index, QList<QVariant> &uniqueValues, int limit )
@@ -4144,60 +4301,6 @@ QList<QgsRelation> QgsVectorLayer::referencingRelations( int idx )
   return QgsProject::instance()->relationManager()->referencingRelations( this, idx );
 }
 
-QDomElement QgsAttributeEditorContainer::toDomElement( QDomDocument& doc ) const
-{
-  QDomElement elem = doc.createElement( "attributeEditorContainer" );
-  elem.setAttribute( "name", mName );
-  elem.setAttribute( "columnCount", mColumnCount );
-  elem.setAttribute( "groupBox", mIsGroupBox ? 1 : 0 );
-
-  Q_FOREACH ( QgsAttributeEditorElement* child, mChildren )
-  {
-    elem.appendChild( child->toDomElement( doc ) );
-  }
-  return elem;
-}
-
-void QgsAttributeEditorContainer::addChildElement( QgsAttributeEditorElement *widget )
-{
-  mChildren.append( widget );
-}
-
-void QgsAttributeEditorContainer::setName( const QString& name )
-{
-  mName = name;
-}
-
-QList<QgsAttributeEditorElement*> QgsAttributeEditorContainer::findElements( QgsAttributeEditorElement::AttributeEditorType type ) const
-{
-  QList<QgsAttributeEditorElement*> results;
-
-  Q_FOREACH ( QgsAttributeEditorElement* elem, mChildren )
-  {
-    if ( elem->type() == type )
-    {
-      results.append( elem );
-    }
-
-    if ( elem->type() == AeTypeContainer )
-    {
-      QgsAttributeEditorContainer* cont = dynamic_cast<QgsAttributeEditorContainer*>( elem );
-      if ( cont )
-        results += cont->findElements( type );
-    }
-  }
-
-  return results;
-}
-
-QDomElement QgsAttributeEditorField::toDomElement( QDomDocument& doc ) const
-{
-  QDomElement elem = doc.createElement( "attributeEditorField" );
-  elem.setAttribute( "name", mName );
-  elem.setAttribute( "index", mIdx );
-  return elem;
-}
-
 int QgsVectorLayer::listStylesInDatabase( QStringList &ids, QStringList &names, QStringList &descriptions, QString &msgError )
 {
   QgsProviderRegistry * pReg = QgsProviderRegistry::instance();
@@ -4322,21 +4425,6 @@ bool QgsVectorLayer::applyNamedStyle( const QString& namedStyle, QString& errorM
   myDocument.setContent( namedStyle );
 
   return importNamedStyle( myDocument, errorMsg );
-}
-
-
-QDomElement QgsAttributeEditorRelation::toDomElement( QDomDocument& doc ) const
-{
-  QDomElement elem = doc.createElement( "attributeEditorRelation" );
-  elem.setAttribute( "name", mName );
-  elem.setAttribute( "relation", mRelation.id() );
-  return elem;
-}
-
-bool QgsAttributeEditorRelation::init( QgsRelationManager* relationManager )
-{
-  mRelation = relationManager->relation( mRelationId );
-  return mRelation.isValid();
 }
 
 QSet<QString> QgsVectorLayer::layerDependencies() const

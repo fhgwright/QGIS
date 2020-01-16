@@ -1039,7 +1039,7 @@ void QgsRasterLayer::setDrawingStyle( QString const & theDrawingStyleQString )
   {
     QgsDebugMsgLevel( "Setting drawingStyle to SingleBandColorDataStyle " + QString::number( QgsRaster::SingleBandColorDataStyle ), 4 );
     drawingStyle = QgsRaster::SingleBandColorDataStyle;
-    QgsDebugMsgLevel( "Setted drawingStyle to " + QString::number( drawingStyle ), 4 );
+    QgsDebugMsgLevel( "drawingStyle set to " + QString::number( drawingStyle ), 4 );
   }
   else
   {
@@ -1308,6 +1308,8 @@ bool QgsRasterLayer::readSymbology( const QDomNode& layer_node, QString& errorMe
     QDomElement e = blendModeNode.toElement();
     setBlendMode( QgsMapRenderer::getCompositionMode( static_cast< QgsMapRenderer::BlendMode >( e.text().toInt() ) ) );
   }
+
+  readCustomProperties( layer_node );
 
   return true;
 }

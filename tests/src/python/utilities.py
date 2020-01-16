@@ -18,6 +18,10 @@ import sys
 import glob
 import platform
 import tempfile
+try:
+    from urllib2 import urlopen, HTTPError
+except ImportError:
+    from urllib.request import urlopen, HTTPError
 
 from qgis.PyQt.QtCore import QDir
 
@@ -530,12 +534,15 @@ class DoxygenParser():
         # test for "added in QGIS xxx" string
         d = e.find('detaileddescription')
         found_version_added = False
-        if d.find('para'):
-            for s in d.find('para').getiterator('simplesect'):
+        for para in d.getiterator('para'):
+            for s in para.getiterator('simplesect'):
                 if s.get('kind') == 'note':
                     for p in s.getiterator('para'):
                         if p.text and p.text.lower().startswith('added in'):
                             found_version_added = True
+                            break
+            if found_version_added:
+                break
 
         return documentable_members, documented_members, undocumented_members, bindable_members, found_version_added
 
@@ -812,3 +819,22 @@ class DoxygenParser():
             if doc is not None and list(doc):
                 return True
         return False
+
+
+def waitServer(url, timeout=10):
+    """ Wait for a server to be online and to respond
+        HTTP errors are ignored
+        @param timeout: in seconds
+        @return: True of False
+    """
+    from time import time as now
+    end = now() + timeout
+    while True:
+        try:
+            urlopen(url, timeout=1)
+            return True
+        except HTTPError:
+            return True
+        except Exception as e:
+            if now() > end:
+                return False

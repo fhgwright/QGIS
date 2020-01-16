@@ -89,6 +89,10 @@ void TestQgisAppPython::evalString()
   QVERIFY( mQgisApp->mPythonUtils->evalString( "1+1", result ) );
   QCOMPARE( result, QString( "2" ) );
 
+  // unicode handling test
+  QVERIFY( mQgisApp->mPythonUtils->evalString( QString::fromUtf8( "'čerešne'" ), result ) );
+  QCOMPARE( result, QString::fromUtf8( "čerešne" ) );
+
   //bad string
   QVERIFY( !mQgisApp->mPythonUtils->evalString( "1+", result ) );
 }

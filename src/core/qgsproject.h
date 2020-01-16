@@ -72,6 +72,8 @@ class CORE_EXPORT QgsProject : public QObject
 {
     Q_OBJECT
     Q_PROPERTY( QStringList nonIdentifiableLayers READ nonIdentifiableLayers WRITE setNonIdentifiableLayers NOTIFY nonIdentifiableLayersChanged )
+    Q_PROPERTY( QString fileName READ fileName WRITE setFileName NOTIFY fileNameChanged )
+    Q_PROPERTY( QString homePath READ homePath NOTIFY homePathChanged )
 
   public:
 
@@ -455,8 +457,14 @@ class CORE_EXPORT QgsProject : public QObject
     //! Emitted when the list of layer which are excluded from map identification changes
     void nonIdentifiableLayersChanged( QStringList nonIdentifiableLayers );
 
+    //! Emitted when the file name of the project changes
+    void fileNameChanged();
+
+    //! Emitted when the home path of the project changes
+    void homePathChanged();
+
     /** Emitted whenever the expression variables stored in the project have been changed.
-     * @note added in QGIS 3.0
+     * @note added in QGIS 2.18
      */
     void variablesChanged();
 
@@ -474,7 +482,7 @@ class CORE_EXPORT QgsProject : public QObject
     /** Causes the project to emit the variablesChanged() signal. This should
      * be called whenever expression variables related to the project are changed.
      * @see variablesChanged()
-     * @note added in QGIS 3.0
+     * @note added in QGIS 2.18
      */
     void emitVariablesChanged();
 

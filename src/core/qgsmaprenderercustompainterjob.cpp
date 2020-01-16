@@ -15,6 +15,7 @@
 
 #include "qgsmaprenderercustompainterjob.h"
 
+#include "qgsfeedback.h"
 #include "qgslabelingenginev2.h"
 #include "qgslogger.h"
 #include "qgsmaplayerregistry.h"
@@ -74,7 +75,7 @@ void QgsMapRendererCustomPainterJob::start()
 #ifndef QT_NO_DEBUG
   QPaintDevice* thePaintDevice = mPainter->device();
   QString errMsg = QString( "pre-set DPI not equal to painter's DPI (%1 vs %2)" ).arg( thePaintDevice->logicalDpiX() ).arg( mSettings.outputDpi() );
-  Q_ASSERT_X( qgsDoubleNear( thePaintDevice->logicalDpiX(), mSettings.outputDpi() ), "Job::startRender()", errMsg.toAscii().data() );
+  Q_ASSERT_X( thePaintDevice->logicalDpiX() == round( mSettings.outputDpi() ), "Job::startRender()", errMsg.toAscii().data() );
 #endif
 
   delete mLabelingEngine;
@@ -97,14 +98,6 @@ void QgsMapRendererCustomPainterJob::start()
   }
 
   mLayerJobs = prepareJobs( mPainter, mLabelingEngine, mLabelingEngineV2 );
-  // prepareJobs calls mapLayer->createMapRenderer may involve cloning a RasterDataProvider,
-  // whose constructor may need to download some data (i.e. WMS, AMS) and doing so runs a
-  // QEventLoop waiting for the network request to complete. If unluckily someone calls
-  // mapCanvas->refresh() while this is happening, QgsMapRendererCustomPainterJob::cancel is
-  // called, deleting the QgsMapRendererCustomPainterJob while this function is running.
-  // Hence we need to check whether the job is still active before proceeding
-  if ( !isActive() )
-    return;
 
   QgsDebugMsg( "Rendering prepared in (seconds): " + QString( "%1" ).arg( prepareTime.elapsed() / 1000.0 ) );
 
@@ -138,6 +131,8 @@ void QgsMapRendererCustomPainterJob::cancel()
   for ( LayerRenderJobs::iterator it = mLayerJobs.begin(); it != mLayerJobs.end(); ++it )
   {
     it->context.setRenderingStopped( true );
+    if ( it->renderer && it->renderer->feedback() )
+      it->renderer->feedback()->cancel();
   }
 
   QTime t;
@@ -273,7 +268,9 @@ void QgsMapRendererCustomPainterJob::doRender()
     if ( job.img )
     {
       // If we flattened this layer for alternate blend modes, composite it now
+      mPainter->setOpacity( job.opacity );
       mPainter->drawImage( 0, 0, *job.img );
+      mPainter->setOpacity( 1.0 );
     }
 
   }
@@ -407,6 +404,12 @@ bool QgsMapRendererJob::needTemporaryImage( QgsMapLayer* ml )
       //layer properties require rasterisation
       return true;
     }
+  }
+  else if ( ml->type() == QgsMapLayer::RasterLayer )
+  {
+    // preview of intermediate raster rendering results requires a temporary output image
+    if ( mSettings.testFlag( QgsMapSettings::RenderPartialOutput ) )
+      return true;
   }
 
   return false;

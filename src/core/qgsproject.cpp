@@ -419,7 +419,17 @@ void QgsProject::emitVariablesChanged()
 
 void QgsProject::setFileName( const QString& name )
 {
+  if ( name == imp_->file.fileName() )
+    return;
+
+  QString oldHomePath = homePath();
+
   imp_->file.setFileName( name );
+  emit fileNameChanged();
+
+  QString newHomePath = homePath();
+  if ( newHomePath != oldHomePath )
+    emit homePathChanged();
 
   setDirty( true );
 }

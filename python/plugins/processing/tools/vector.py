@@ -34,10 +34,13 @@ import cStringIO
 
 import psycopg2
 
+from osgeo import ogr
+
 from qgis.PyQt.QtCore import QVariant, QSettings
 from qgis.core import (QGis, QgsFields, QgsField, QgsGeometry, QgsRectangle,
                        QgsSpatialIndex, QgsMapLayerRegistry, QgsMapLayer, QgsVectorLayer,
-                       QgsVectorFileWriter, QgsDistanceArea, QgsDataSourceURI, QgsCredentials)
+                       QgsVectorFileWriter, QgsDistanceArea, QgsDataSourceURI, QgsCredentials,
+                       QgsFeatureRequest)
 
 from processing.core.ProcessingConfig import ProcessingConfig
 from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecutionException
@@ -86,7 +89,7 @@ TYPE_MAP_SPATIALITE_LAYER = {
 }
 
 
-def features(layer):
+def features(layer, request=QgsFeatureRequest()):
     """This returns an iterator over features in a vector layer,
     considering the selection that might exist in the layer, and the
     configuration that indicates whether to use only selected feature
@@ -97,15 +100,15 @@ def features(layer):
     """
     class Features:
 
-        def __init__(self, layer):
+        def __init__(self, layer, request):
             self.layer = layer
             self.selection = False
-            self.iter = layer.getFeatures()
-            if ProcessingConfig.getSetting(ProcessingConfig.USE_SELECTED):
-                selected = layer.selectedFeatures()
-                if len(selected) > 0:
-                    self.selection = True
-                    self.iter = iter(selected)
+            if ProcessingConfig.getSetting(ProcessingConfig.USE_SELECTED)\
+                    and layer.selectedFeatureCount() > 0:
+                self.iter = layer.selectedFeaturesIterator(request)
+                self.selection = True
+            else:
+                self.iter = layer.getFeatures(request)
 
         def __iter__(self):
             return self.iter
@@ -116,7 +119,7 @@ def features(layer):
             else:
                 return int(self.layer.featureCount())
 
-    return Features(layer)
+    return Features(layer, request)
 
 
 def uniqueValues(layer, attribute):
@@ -199,7 +202,13 @@ def testForUniqueness(fieldList1, fieldList2):
 def spatialindex(layer):
     """Creates a spatial index for the passed vector layer.
     """
-    idx = QgsSpatialIndex(layer.getFeatures())
+    request = QgsFeatureRequest()
+    request.setSubsetOfAttributes([])
+    if ProcessingConfig.getSetting(ProcessingConfig.USE_SELECTED) \
+            and layer.selectedFeatureCount() > 0:
+        idx = QgsSpatialIndex(layer.selectedFeaturesIterator(request))
+    else:
+        idx = QgsSpatialIndex(layer.getFeatures(request))
     return idx
 
 
@@ -508,21 +517,67 @@ def ogrConnectionString(uri):
     return '"' + ogrstr + '"'
 
 
+#
+# The uri parameter is an URI from any QGIS provider,
+# so could have different formats.
+# Example formats:
+#
+# -- PostgreSQL provider
+# port=5493 sslmode=disable key='edge_id' srid=0 type=LineString table="city_data"."edge" (geom) sql=
+#
+# -- Spatialite provider
+# dbname='/tmp/x.sqlite' table="t" (geometry) sql='
+#
+# -- OGR provider (single-layer directory)
+# /tmp/x.gdb
+#
+# -- OGR provider (multi-layer directory)
+# /tmp/x.gdb|layerid=1
+#
+# -- OGR provider (multi-layer directory)
+# /tmp/x.gdb|layername=thelayer
+#
 def ogrLayerName(uri):
-    if 'host' in uri:
-        regex = re.compile('(table=")(.+?)(\.)(.+?)"')
-        r = regex.search(uri)
-        return '"' + r.groups()[1] + '.' + r.groups()[3] + '"'
-    elif 'dbname' in uri:
-        regex = re.compile('(table=")(.+?)"')
+
+    # handle URIs of database providers
+    if ' table=' in uri:
+        # Matches table="schema"."table"
+        re_table_schema = re.compile(' table="([^"]*)"\."([^"]*)"')
+        r = re_table_schema.search(uri)
+        if r:
+            return r.groups()[0] + '.' + r.groups()[1]
+        # Matches table="table"
+        re_table = re.compile(' table="([^"]*)"')
+        r = re_table.search(uri)
+        if r:
+            return r.groups()[0]
+
+    # handle URIs of OGR provider with explicit layername
+    if 'layername' in uri:
+        regex = re.compile('(layername=)([^|]*)')
         r = regex.search(uri)
         return r.groups()[1]
-    elif 'layername' in uri:
-        regex = re.compile('(layername=)(.*)')
-        r = regex.search(uri)
-        return r.groups()[1]
-    else:
-        return os.path.basename(os.path.splitext(uri)[0])
+
+    fields = uri.split('|')
+    ogruri = fields[0]
+    fields = fields[1:]
+    layerid = 0
+    for f in fields:
+        if f.startswith('layername='):
+            # Name encoded in uri, nothing more needed
+            return f.split('=')[1]
+        if f.startswith('layerid='):
+            layerid = int(f.split('=')[1])
+            # Last layerid= takes precedence, to allow of layername to
+            # take precedence
+    ds = ogr.Open(ogruri)
+    if not ds:
+        return "invalid-uri"
+    ly = ds.GetLayer(layerid)
+    if not ly:
+        return "invalid-layerid"
+    name = ly.GetName()
+    return name
 
 
 class VectorWriter:

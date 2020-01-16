@@ -16,8 +16,6 @@
 *                                                                         *
 ***************************************************************************
 """
-from processing.tools import dataobjects
-
 
 __author__ = 'Victor Olaya'
 __date__ = 'August 2012'
@@ -35,6 +33,7 @@ from qgis.PyQt.QtGui import QIcon
 from processing.core.GeoAlgorithm import GeoAlgorithm
 from processing.algs.gdal.GdalAlgorithmDialog import GdalAlgorithmDialog
 from processing.algs.gdal.GdalUtils import GdalUtils
+from processing.tools import dataobjects
 
 pluginPath = os.path.normpath(os.path.join(
     os.path.split(os.path.dirname(__file__))[0], os.pardir))

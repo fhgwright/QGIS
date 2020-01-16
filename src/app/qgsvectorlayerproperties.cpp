@@ -245,7 +245,7 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
 
   QVBoxLayout* diagLayout = new QVBoxLayout( mDiagramFrame );
   diagLayout->setMargin( 0 );
-  diagramPropertiesDialog = new QgsDiagramProperties( mLayer, mDiagramFrame, nullptr );
+  diagramPropertiesDialog = new QgsDiagramProperties( mLayer, mDiagramFrame, QgisApp::instance()->mapCanvas() );
   diagramPropertiesDialog->layout()->setContentsMargins( -1, 0, -1, 0 );
   diagLayout->addWidget( diagramPropertiesDialog );
   mDiagramFrame->setLayout( diagLayout );
@@ -562,8 +562,8 @@ void QgsVectorLayerProperties::apply()
   // set up the scale based layer visibility stuff....
   mLayer->setScaleBasedVisibility( mScaleVisibilityGroupBox->isChecked() );
   // caution: layer uses scale denoms, widget uses true scales
-  mLayer->setMaximumScale( 1.0 / mScaleRangeWidget->minimumScale() );
-  mLayer->setMinimumScale( 1.0 / mScaleRangeWidget->maximumScale() );
+  mLayer->setMaximumScale( mScaleRangeWidget->maximumScaleDenom() );
+  mLayer->setMinimumScale( mScaleRangeWidget->minimumScaleDenom() );
 
   // provider-specific options
   if ( mLayer->dataProvider() )

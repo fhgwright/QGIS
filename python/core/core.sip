@@ -25,6 +25,7 @@
 %Include qgsaggregatecalculator.sip
 %Include qgsattributeaction.sip
 %Include qgsattributetableconfig.sip
+%Include qgsbearingutils.sip
 %Include qgsbrowsermodel.sip
 %Include qgsclipper.sip
 %Include qgscolorscheme.sip
@@ -54,6 +55,7 @@
 %Include qgsfeaturefilterprovider.sip
 %Include qgsfeatureiterator.sip
 %Include qgsfeaturerequest.sip
+%Include qgsfeedback.sip
 %Include qgsfield.sip
 %Include qgsgeometrysimplifier.sip
 %Include qgsgeometryvalidator.sip
@@ -101,6 +103,7 @@
 %Include qgsobjectcustomproperties.sip
 %Include qgsofflineediting.sip
 %Include qgsogcutils.sip
+%Include qgsoptionalexpression.sip
 %Include qgsowsconnection.sip
 %Include qgspaintenginehack.sip
 %Include qgspallabeling.sip

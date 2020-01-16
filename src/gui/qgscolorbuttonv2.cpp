@@ -94,6 +94,18 @@ const QPixmap& QgsColorButtonV2::transparentBackground()
 
 void QgsColorButtonV2::showColorDialog()
 {
+  if ( QgsPanelWidget* panel = QgsPanelWidget::findParentPanel( this ) )
+  {
+    QgsCompoundColorWidget* colorWidget = new QgsCompoundColorWidget( panel, color(), panel->dockMode() ? QgsCompoundColorWidget::LayoutVertical :
+        QgsCompoundColorWidget::LayoutDefault );
+    colorWidget->setPanelTitle( mColorDialogTitle );
+    colorWidget->setAllowAlpha( mAllowAlpha );
+    connect( colorWidget, SIGNAL( currentColorChanged( QColor ) ), this, SLOT( setValidTemporaryColor( QColor ) ) );
+    connect( colorWidget, SIGNAL( panelAccepted( QgsPanelWidget* ) ), this, SLOT( panelAccepted( QgsPanelWidget* ) ) );
+    panel->openPanel( colorWidget );
+    return;
+  }
+
   QColor newColor;
   QSettings settings;
 
@@ -171,9 +183,9 @@ bool QgsColorButtonV2::event( QEvent *e )
     int saturation = this->color().saturation();
     QString info = QString( "HEX: %1 \n"
                             "RGB: %2 \n"
-                            "HSV: %3,%4,%4" ).arg( name )
+                            "HSV: %3,%4,%5" ).arg( name )
                    .arg( QgsSymbolLayerV2Utils::encodeColor( this->color() ) )
-                   .arg( hue ).arg( value ).arg( saturation );
+                   .arg( hue ).arg( saturation ).arg( value );
     setToolTip( info );
   }
   return QToolButton::event( e );
@@ -365,6 +377,22 @@ void QgsColorButtonV2::setValidColor( const QColor& newColor )
   {
     setColor( newColor );
     addRecentColor( newColor );
+  }
+}
+
+void QgsColorButtonV2::setValidTemporaryColor( const QColor& newColor )
+{
+  if ( newColor.isValid() )
+  {
+    setColor( newColor );
+  }
+}
+
+void QgsColorButtonV2::panelAccepted( QgsPanelWidget* widget )
+{
+  if ( QgsCompoundColorWidget* colorWidget = qobject_cast< QgsCompoundColorWidget* >( widget ) )
+  {
+    addRecentColor( colorWidget->color() );
   }
 }
 

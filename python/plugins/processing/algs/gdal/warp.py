@@ -87,11 +87,11 @@ class warp(GdalAlgorithm):
                                           0.0, None, 0.0))
         self.addParameter(ParameterSelection(self.METHOD,
                                              self.tr('Resampling method'), self.METHOD_OPTIONS))
-        self.addParameter(ParameterExtent(self.RAST_EXT, self.tr('Raster extent')))
+        self.addParameter(ParameterExtent(self.RAST_EXT, self.tr('Raster extent'), optional=True))
 
-        if GdalUtils.version() > 2000000:
+        if GdalUtils.version() >= 2000000:
             self.addParameter(ParameterCrs(self.EXT_CRS,
-                                           self.tr('CRS of the raster extent'), ''))
+                                           self.tr('CRS of the raster extent'), '', optional=True))
 
         params = []
         params.append(ParameterSelection(self.RTYPE,
@@ -176,9 +176,10 @@ class warp(GdalAlgorithm):
         if rastext:
             arguments.extend(rastext)
 
-        if rastext and len(rastext_crs) > 0:
-            arguments.append('-te_srs')
-            arguments.append(rastext_crs)
+        if GdalUtils.version() >= 2000000:
+            if rastext and rastext_crs is not None:
+                arguments.append('-te_srs')
+                arguments.append(rastext_crs)
 
         if extra and len(extra) > 0:
             arguments.append(extra)

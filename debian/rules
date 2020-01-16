@@ -34,7 +34,7 @@ ifneq (,$(findstring -oracle,$(DISTRIBUTION)))
 	WITH_ORACLE=1
 endif
 
-ifneq ($(DISTRIBUTION),$(findstring $(DISTRIBUTION),"jessie stretch precise trusty xenial"))
+ifneq ($(DISTRIBUTION),$(findstring $(DISTRIBUTION),"jessie stretch precise trusty xenial yakkety"))
 	DISTRIBUTION := sid
 endif
 
@@ -53,7 +53,7 @@ QGIS_ABI=$(QGIS_MAJOR).$(QGIS_MINOR).$(QGIS_PATCH)
 GRASS=grass$(subst .,,$(shell pkg-config --modversion grass|cut -d. -f1,2))
 GRASSVER=$(subst .,,$(shell pkg-config --modversion grass|cut -d. -f1))
 
-WITH_GLOBE=$(shell dpkg --compare-versions "$$(dpkg-query -W --showformat='$${Version}' libosgearth-dev)" ge 2.7 && echo 1)
+WITH_GLOBE=$(shell dpkg --compare-versions "$$(dpkg-query -W --showformat='$${Version}' libosgearth-dev)" ge 2.7 && dpkg --compare-versions "$$(dpkg-query -W --showformat='$${Version}' libosgearth-dev)" lt 2.8 && echo 1)
 
 CMAKE_OPTS := \
 	-DBUILDNAME=$(DEB_BUILD_NAME) \
@@ -107,7 +107,7 @@ else
 	CMAKE_OPTS += -DWITH_INTERNAL_NOSE2=FALSE -DWITH_INTERNAL_SIX=FALSE
 endif
 
-ifeq (,$(findstring $(DISTRIBUTION),"stretch sid xenial"))
+ifeq (,$(findstring $(DISTRIBUTION),"stretch sid xenial yakkety"))
 	CMAKE_OPTS += -DWITH_INTERNAL_FUTURE=TRUE
 else
 	CMAKE_OPTS += -DWITH_INTERNAL_FUTURE=FALSE
@@ -133,7 +133,7 @@ ifneq (,$(findstring $(DISTRIBUTION),"sid"))
 	CMAKE_OPTS += -DGEOS_LIBRARY=/usr/lib/$(DEB_BUILD_MULTIARCH)/libgeos_c.so
 endif
 
-ifneq (,$(findstring $(DISTRIBUTION),"jessie stretch trusty xenial sid"))
+ifneq (,$(findstring $(DISTRIBUTION),"jessie stretch trusty xenial yakkety sid"))
 	CMAKE_OPTS += -DPYTHON_LIBRARY=/usr/lib/$(DEB_BUILD_MULTIARCH)/libpython2.7.so
 endif
 

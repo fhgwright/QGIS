@@ -130,6 +130,13 @@ class QgsAbstractGeometryV2
      */
     bool isMeasure() const;
 
+    /** Returns the closure of the combinatorial boundary of the geometry (ie the topological boundary of the geometry).
+     * For instance, a polygon geometry will have a boundary consisting of the linestrings for each ring in the polygon.
+     * @returns boundary for geometry. May be null for some geometry types.
+     * @note added in QGIS 2.18
+     */
+    virtual QgsAbstractGeometryV2* boundary() const = 0;
+
     //import
 
     /** Sets the geometry from a WKB string.
@@ -254,7 +261,7 @@ class QgsAbstractGeometryV2
      * @param leftOf returns whether the point lies on the left side of the nearest segment (true if point is to left of segment,
      * false if point is to right of segment)
      * @param epsilon epsilon for segment snapping
-     * @returns squared distance to closest segment
+     * @returns squared distance to closest segment or negative value on error
      */
     virtual double closestSegment( const QgsPointV2& pt, QgsPointV2& segmentPt, QgsVertexId& vertexAfter, bool* leftOf, double epsilon ) const = 0;
 

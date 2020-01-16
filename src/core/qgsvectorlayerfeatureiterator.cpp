@@ -175,6 +175,28 @@ QgsVectorLayerFeatureIterator::QgsVectorLayerFeatureIterator( QgsVectorLayerFeat
       changedIds << attIt.key();
     }
     mChangedFeaturesRequest.setFilterFids( changedIds );
+
+    if ( mChangedFeaturesRequest.limit() > 0 )
+    {
+      int providerLimit = mProviderRequest.limit();
+
+      // features may be deleted in buffer, so increase limit sent to provider
+      providerLimit += mSource->mDeletedFeatureIds.size();
+
+      if ( mProviderRequest.filterType() == QgsFeatureRequest::FilterExpression )
+      {
+        // attribute changes may mean some features no longer match expression, so increase limit sent to provider
+        providerLimit += mSource->mChangedAttributeValues.size();
+      }
+
+      if ( mProviderRequest.filterType() == QgsFeatureRequest::FilterExpression || mProviderRequest.filterType() == QgsFeatureRequest::FilterRect )
+      {
+        // geometry changes may mean some features no longer match expression or rect, so increase limit sent to provider
+        providerLimit += mSource->mChangedGeometries.size();
+      }
+
+      mProviderRequest.setLimit( providerLimit );
+    }
   }
 
   if ( request.filterType() == QgsFeatureRequest::FilterFid )
@@ -538,14 +560,14 @@ void QgsVectorLayerFeatureIterator::prepareExpression( int fieldIdx )
 
   Q_FOREACH ( const QString& col, exp->referencedColumns() )
   {
-    int dependantFieldIdx = mSource->mFields.fieldNameIndex( col );
+    int dependentFieldIdx = mSource->mFields.fieldNameIndex( col );
     if ( mRequest.flags() & QgsFeatureRequest::SubsetOfAttributes )
     {
-      mRequest.setSubsetOfAttributes( mRequest.subsetOfAttributes() << dependantFieldIdx );
+      mRequest.setSubsetOfAttributes( mRequest.subsetOfAttributes() << dependentFieldIdx );
     }
-    // also need to fetch this dependant field
-    if ( !mPreparedFields.contains( dependantFieldIdx ) && !mFieldsToPrepare.contains( dependantFieldIdx ) )
-      mFieldsToPrepare << dependantFieldIdx;
+    // also need to fetch this dependent field
+    if ( !mPreparedFields.contains( dependentFieldIdx ) && !mFieldsToPrepare.contains( dependentFieldIdx ) )
+      mFieldsToPrepare << dependentFieldIdx;
   }
 
   if ( exp->needsGeometry() )

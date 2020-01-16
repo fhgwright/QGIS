@@ -113,7 +113,7 @@ class CORE_EXPORT QgsExpression
     /**
      * Creates a new expression based on the provided string.
      * The string will immediately be parsed. For optimization
-     * {@link prepare()} should alwys be called before every
+     * {@link prepare()} should always be called before every
      * loop in which this expression is used.
      */
     QgsExpression( const QString& expr );
@@ -124,13 +124,38 @@ class CORE_EXPORT QgsExpression
      * it does not need to be re-parsed.
      */
     QgsExpression( const QgsExpression& other );
+
     /**
      * Create a copy of this expression. This is preferred
      * over recreating an expression from a string since
      * it does not need to be re-parsed.
      */
     QgsExpression& operator=( const QgsExpression& other );
+
+    /**
+     * Create an empty expression.
+     *
+     * @note Added in QGIS 2.18
+     */
+    QgsExpression();
+
     ~QgsExpression();
+
+    /**
+     * Compares two expressions. The operator returns true
+     * if the expression string is equal.
+     *
+     * @note Added in QGIS 2.18
+     */
+    bool operator==( const QgsExpression& other ) const;
+
+    /**
+     * Checks if this expression is valid.
+     * A valid expression could be parsed but does not necessarily evaluate properly.
+     *
+     * @note Added in QGIS 2.18
+     */
+    bool isValid() const;
 
     //! Returns true if an error occurred when parsing the input expression
     bool hasParserError() const;
@@ -154,7 +179,8 @@ class CORE_EXPORT QgsExpression
 
     /**
      * Get list of columns referenced by the expression.
-     * @note if the returned list contains the QgsFeatureRequest::AllAttributes constant then
+     *
+     * @note If the returned list contains the QgsFeatureRequest::AllAttributes constant then
      * all attributes from the layer are required for evaluation of the expression.
      * QgsFeatureRequest::setSubsetOfAttributes automatically handles this case.
      *
@@ -250,6 +276,13 @@ class CORE_EXPORT QgsExpression
      * @note added in QGIS 2.12
      */
     static bool isValid( const QString& text, const QgsExpressionContext* context, QString &errorMessage );
+
+    /**
+     * Set the expression string, will reset the whole internal structure.
+     *
+     * @note Added in QGIS 2.18
+     */
+    void setExpression( const QString& expression );
 
     void setScale( double scale );
 
@@ -497,7 +530,31 @@ class CORE_EXPORT QgsExpression
             : mName( fnname )
             , mParams( params )
             , mUsesGeometry( usesGeometry )
-            , mGroup( group )
+            , mGroups( group.isEmpty() ? QStringList() : QStringList() << group )
+            , mHelpText( helpText )
+            , mReferencedColumns( referencedColumns )
+            , mLazyEval( lazyEval )
+            , mHandlesNull( handlesNull )
+            , mIsContextual( isContextual )
+        {
+        }
+
+        /** Constructor for function which uses unnamed parameters and group list
+         * @note added in QGIS 3.0
+         */
+        Function( const QString& fnname,
+                  int params,
+                  const QStringList& groups,
+                  const QString& helpText = QString(),
+                  bool usesGeometry = false,
+                  const QStringList& referencedColumns = QStringList(),
+                  bool lazyEval = false,
+                  bool handlesNull = false,
+                  bool isContextual = false )
+            : mName( fnname )
+            , mParams( params )
+            , mUsesGeometry( usesGeometry )
+            , mGroups( groups )
             , mHelpText( helpText )
             , mReferencedColumns( referencedColumns )
             , mLazyEval( lazyEval )
@@ -522,13 +579,38 @@ class CORE_EXPORT QgsExpression
             , mParams( 0 )
             , mParameterList( params )
             , mUsesGeometry( usesGeometry )
-            , mGroup( group )
+            , mGroups( group.isEmpty() ? QStringList() : QStringList() << group )
             , mHelpText( helpText )
             , mReferencedColumns( referencedColumns )
             , mLazyEval( lazyEval )
             , mHandlesNull( handlesNull )
             , mIsContextual( isContextual )
         {}
+
+        /** Constructor for function which uses named parameter list and group list.
+         * @note added in QGIS 3.0
+         */
+        Function( const QString& fnname,
+                  const ParameterList& params,
+                  const QStringList& groups,
+                  const QString& helpText = QString(),
+                  bool usesGeometry = false,
+                  const QStringList& referencedColumns = QStringList(),
+                  bool lazyEval = false,
+                  bool handlesNull = false,
+                  bool isContextual = false )
+            : mName( fnname )
+            , mParams( 0 )
+            , mParameterList( params )
+            , mUsesGeometry( usesGeometry )
+            , mGroups( groups )
+            , mHelpText( helpText )
+            , mReferencedColumns( referencedColumns )
+            , mLazyEval( lazyEval )
+            , mHandlesNull( handlesNull )
+            , mIsContextual( isContextual )
+        {}
+
 
         virtual ~Function() {}
 
@@ -581,8 +663,23 @@ class CORE_EXPORT QgsExpression
          */
         bool isContextual() const { return mIsContextual; }
 
-        /** The group the function belongs to. */
-        QString group() const { return mGroup; }
+        /** Returns true if the function is deprecated and should not be presented as a valid option
+         * to users in expression builders.
+         * @note added in QGIS 3.0
+         */
+        virtual bool isDeprecated() const { return mGroups.isEmpty() ? false : mGroups.contains( "deprecated" ); }
+
+        /** Returns the first group which the function belongs to.
+         * @note consider using groups() instead, as some functions naturally belong in multiple groups
+        */
+        QString group() const { return mGroups.isEmpty() ? QString() : mGroups.at( 0 ); }
+
+        /** Returns a list of the groups the function belongs to.
+         * @note added in QGIS 3.0
+         * @see group()
+        */
+        QStringList groups() const { return mGroups; }
+
         /** The help text for the function. */
         //TODO QGIS 3.0 - rename to helpText()
         const QString helptext() const { return mHelpText.isEmpty() ? QgsExpression::helptext( mName ) : mHelpText; }
@@ -615,7 +712,7 @@ class CORE_EXPORT QgsExpression
         int mParams;
         ParameterList mParameterList;
         bool mUsesGeometry;
-        QString mGroup;
+        QStringList mGroups;
         QString mHelpText;
         QStringList mReferencedColumns;
         bool mLazyEval;
@@ -680,6 +777,25 @@ class CORE_EXPORT QgsExpression
                         const QStringList& aliases = QStringList(),
                         bool handlesNull = false )
             : Function( fnname, params, group, helpText, usesGeometry, referencedColumns, lazyEval, handlesNull )
+            , mFnc( nullptr )
+            , mContextFnc( fcn )
+            , mAliases( aliases )
+        {}
+
+        /** Static function for evaluation against a QgsExpressionContext, using a named list of parameter values and list
+                  * of groups.
+                  */
+        StaticFunction( const QString& fnname,
+                        const ParameterList& params,
+                        FcnEvalContext fcn,
+                        const QStringList& groups,
+                        const QString& helpText = QString(),
+                        bool usesGeometry = false,
+                        const QStringList& referencedColumns = QStringList(),
+                        bool lazyEval = false,
+                        const QStringList& aliases = QStringList(),
+                        bool handlesNull = false )
+            : Function( fnname, params, groups, helpText, usesGeometry, referencedColumns, lazyEval, handlesNull )
             , mFnc( nullptr )
             , mContextFnc( fcn )
             , mAliases( aliases )
@@ -1371,11 +1487,6 @@ class CORE_EXPORT QgsExpression
     static QString formatPreviewString( const QVariant& value );
 
   protected:
-    /**
-     * Used by QgsOgcUtils to create an empty
-     */
-    QgsExpression();
-
     void initGeomCalculator();
 
     static QMap<QString, QVariant> gmSpecialColumns;

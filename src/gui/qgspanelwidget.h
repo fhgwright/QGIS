@@ -79,7 +79,7 @@ class GUI_EXPORT QgsPanelWidget : public QWidget
 
     /**
      * The the auto delete property on the widget. True by default.
-     * When auto delete is enabeld when a panel is removed from the stack
+     * When auto delete is enabled when a panel is removed from the stack
      * it will be deleted.
      * @param autoDelete Enable or disable auto delete on the panel.
      */
@@ -87,11 +87,19 @@ class GUI_EXPORT QgsPanelWidget : public QWidget
 
     /**
      * The the auto delete property on the widget. True by default.
-     * When auto delete is enabeld when a panel is removed from the stack
+     * When auto delete is enabled when a panel is removed from the stack
      * it will be deleted.
      * @returns The auto delete value for the widget.
      */
     bool autoDelete() { return mAutoDelete; }
+
+    /** Traces through the parents of a widget to find if it is contained within a QgsPanelWidget
+     * widget.
+     * @param widget widget which may be contained within a panel widget
+     * @returns parent panel widget if found, otherwise nullptr
+     * @note added in QGIS 2.18
+     */
+    static QgsPanelWidget* findParentPanel( QWidget* widget );
 
   signals:
 
@@ -100,6 +108,9 @@ class GUI_EXPORT QgsPanelWidget : public QWidget
      * @param panel The panel widget that was accepted.
      * @note This argument is normally raised with emit panelAccepted(this)
      * so that callers can retrive the widget easier in calling code.
+     * @note this is emitted only when this panel is accepted, and is not emitted for
+     * child panels. Eg, if this panel opens a second stacked panel, then this panel
+     * will not emit panelAccepted when the second panel is accepted.
      */
     void panelAccepted( QgsPanelWidget* panel );
 

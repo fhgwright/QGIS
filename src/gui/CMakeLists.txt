@@ -209,6 +209,7 @@ SET(QGIS_GUI_SRCS
   qgsexpressionbuilderdialog.cpp
   qgsexpressionbuilderwidget.cpp
   qgsexpressionhighlighter.cpp
+  qgsexpressionlineedit.cpp
   qgsexpressionselectiondialog.cpp
   qgsextentgroupbox.cpp
   qgsexternalresourcewidget.cpp
@@ -298,6 +299,7 @@ SET(QGIS_GUI_SRCS
   qgssublayersdialog.cpp
   qgssqlcomposerdialog.cpp
   qgssvgannotationitem.cpp
+  qgstabwidget.cpp
   qgstablewidgetitem.cpp
   qgstextannotationitem.cpp
   qgstrackedvectorlayertools.cpp
@@ -367,6 +369,7 @@ SET(QGIS_GUI_MOC_HDRS
   qgsexpressionbuilderdialog.h
   qgsexpressionbuilderwidget.h
   qgsexpressionhighlighter.h
+  qgsexpressionlineedit.h
   qgsexpressionselectiondialog.h
   qgsextentgroupbox.h
   qgsexternalresourcewidget.h
@@ -447,6 +450,7 @@ SET(QGIS_GUI_MOC_HDRS
   qgsslider.h
   qgssqlcomposerdialog.h
   qgssublayersdialog.h
+  qgstabwidget.h
   qgsunitselectionwidget.h
   qgsuserinputdockwidget.h
   qgsvariableeditorwidget.h
@@ -708,25 +712,6 @@ IF (WITH_TOUCH)
 ENDIF (WITH_TOUCH)
 
 SET(QGIS_GUI_UI_HDRS
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthauthoritieseditor.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthcertificateinfo.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthcertificatemanager.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthconfigedit.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthconfigeditor.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthconfigidedit.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthconfigselect.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthconfiguriedit.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsautheditorwidgets.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthidentitieseditor.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthimportcertdialog.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthimportidentitydialog.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthmethodplugins.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthserverseditor.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthsslconfigwidget.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthsslerrorsdialog.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthsslimportdialog.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthsslimporterrors.h
-  ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsauthtrustedcasdialog.h
   ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgscredentialdialog.h
   ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsdetaileditemwidgetbase.h
   ${CMAKE_CURRENT_BINARY_DIR}/../ui/ui_qgsexpressionbuilderdialogbase.h

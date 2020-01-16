@@ -740,17 +740,17 @@ class ParameterString(Parameter):
     NEWLINE = '\n'
     ESCAPED_NEWLINE = '\\n'
 
-    def __init__(self, name='', description='', default=None, multiline=False,
+    def __init__(self, name='', description='', default='', multiline=False,
                  optional=False, evaluateExpressions=False):
         Parameter.__init__(self, name, description, default, optional)
         self.multiline = parseBool(multiline)
         self.evaluateExpressions = parseBool(evaluateExpressions)
 
     def setValue(self, obj):
-        if obj is None:
+        if not bool(obj):
             if not self.optional:
                 return False
-            self.value = None
+            self.value = ''
             return True
 
         self.value = unicode(obj).replace(

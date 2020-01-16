@@ -35,6 +35,7 @@
 #include "qgssvgselectorwidget.h"
 #include "qgsvectorlayerlabeling.h"
 #include "qgslogger.h"
+#include "qgssubstitutionlistwidget.h"
 
 #include <QCheckBox>
 #include <QSettings>
@@ -139,6 +140,7 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   connect( mShadowTranspSlider, SIGNAL( valueChanged( int ) ), mShadowTranspSpnBx, SLOT( setValue( int ) ) );
   connect( mShadowTranspSpnBx, SIGNAL( valueChanged( int ) ), mShadowTranspSlider, SLOT( setValue( int ) ) );
   connect( mLimitLabelChkBox, SIGNAL( toggled( bool ) ), mLimitLabelSpinBox, SLOT( setEnabled( bool ) ) );
+  connect( mCheckBoxSubstituteText, SIGNAL( toggled( bool ) ), mToolButtonConfigureSubstitutes, SLOT( setEnabled( bool ) ) );
 
   //connections to prevent users removing all line placement positions
   connect( chkLineAbove, SIGNAL( toggled( bool ) ), this, SLOT( updateLinePlacementOptions() ) );
@@ -220,6 +222,7 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   mPlacePolygonBtnGrp->addButton( radPolygonHorizontal, ( int )QgsPalLayerSettings::Horizontal );
   mPlacePolygonBtnGrp->addButton( radPolygonFree, ( int )QgsPalLayerSettings::Free );
   mPlacePolygonBtnGrp->addButton( radPolygonPerimeter, ( int )QgsPalLayerSettings::Line );
+  mPlacePolygonBtnGrp->addButton( radPolygonPerimeterCurved, ( int )QgsPalLayerSettings::PerimeterCurved );
   mPlacePolygonBtnGrp->setExclusive( true );
   connect( mPlacePolygonBtnGrp, SIGNAL( buttonClicked( int ) ), this, SLOT( updatePlacementWidgets() ) );
 
@@ -351,6 +354,7 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   << mLineDistanceDDBtn
   << mLineDistanceSpnBx
   << mLineDistanceUnitDDBtn
+  << mLineDistanceUnitWidget
   << mMaxCharAngleDDBtn
   << mMaxCharAngleInDSpinBox
   << mMaxCharAngleOutDSpinBox
@@ -364,6 +368,7 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   << mPointAngleSpinBox
   << mPointOffsetDDBtn
   << mPointOffsetUnitsDDBtn
+  << mPointOffsetUnitWidget
   << mPointOffsetXSpinBox
   << mPointOffsetYSpinBox
   << mPointPositionOrderDDBtn
@@ -375,6 +380,7 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   << mRepeatDistanceDDBtn
   << mRepeatDistanceSpinBox
   << mRepeatDistanceUnitDDBtn
+  << mRepeatDistanceUnitWidget
   << mScaleBasedVisibilityChkBx
   << mScaleBasedVisibilityDDBtn
   << mScaleBasedVisibilityMaxDDBtn
@@ -393,10 +399,12 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   << mShadowOffsetGlobalChkBx
   << mShadowOffsetSpnBx
   << mShadowOffsetUnitsDDBtn
+  << mShadowOffsetUnitWidget
   << mShadowRadiusAlphaChkBx
   << mShadowRadiusDDBtn
   << mShadowRadiusDblSpnBx
   << mShadowRadiusUnitsDDBtn
+  << mShadowRadiusUnitWidget
   << mShadowScaleDDBtn
   << mShadowScaleSpnBx
   << mShadowTranspDDBtn
@@ -410,6 +418,7 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   << mShapeBorderUnitsDDBtn
   << mShapeBorderWidthDDBtn
   << mShapeBorderWidthSpnBx
+  << mShapeBorderWidthUnitWidget
   << mShapeDrawChkBx
   << mShapeDrawDDBtn
   << mShapeFillColorBtn
@@ -418,6 +427,7 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   << mShapeOffsetUnitsDDBtn
   << mShapeOffsetXSpnBx
   << mShapeOffsetYSpnBx
+  << mShapeOffsetUnitWidget
   << mShapePenStyleCmbBx
   << mShapePenStyleDDBtn
   << mShapeRadiusDDBtn
@@ -428,11 +438,13 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   << mShapeRotationDDBtn
   << mShapeRotationDblSpnBx
   << mShapeRotationTypeDDBtn
+  << mShapeRadiusUnitWidget
   << mShapeSVGPathDDBtn
   << mShapeSVGPathLineEdit
   << mShapeSizeCmbBx
   << mShapeSizeTypeDDBtn
   << mShapeSizeUnitsDDBtn
+  << mShapeSizeUnitWidget
   << mShapeSizeXDDBtn
   << mShapeSizeXSpnBx
   << mShapeSizeYDDBtn
@@ -465,8 +477,10 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   << radPolygonFree
   << radPolygonHorizontal
   << radPolygonPerimeter
+  << radPolygonPerimeterCurved
   << radPredefinedOrder
-  << mFieldExpressionWidget;
+  << mFieldExpressionWidget
+  << mCheckBoxSubstituteText;
   connectValueChanged( widgets, SLOT( updatePreview() ) );
 
   connect( mQuadrantBtnGrp, SIGNAL( buttonClicked( int ) ), this, SLOT( updatePreview() ) );
@@ -503,6 +517,10 @@ void QgsLabelingGui::connectValueChanged( QList<QWidget *> widgets, const char *
     else if ( QgsFieldExpressionWidget* w = qobject_cast<QgsFieldExpressionWidget*>( widget ) )
     {
       connect( w, SIGNAL( fieldChanged( QString ) ), this,  slot );
+    }
+    else if ( QgsUnitSelectionWidget* w = qobject_cast<QgsUnitSelectionWidget*>( widget ) )
+    {
+      connect( w, SIGNAL( changed() ), this,  slot );
     }
     else if ( QComboBox* w = qobject_cast<QComboBox*>( widget ) )
     {
@@ -623,6 +641,8 @@ void QgsLabelingGui::init()
   // set the current field or add the current expression to the bottom of the list
   mFieldExpressionWidget->setRow( -1 );
   mFieldExpressionWidget->setField( lyr.fieldName );
+  mCheckBoxSubstituteText->setChecked( lyr.useSubstitutions );
+  mSubstitutions = lyr.substitutions;
 
   // populate placement options
   mCentroidRadioWhole->setChecked( lyr.centroidWhole );
@@ -641,8 +661,7 @@ void QgsLabelingGui::init()
   chkLineAbove->setChecked( lyr.placementFlags & QgsPalLayerSettings::AboveLine );
   chkLineBelow->setChecked( lyr.placementFlags & QgsPalLayerSettings::BelowLine );
   chkLineOn->setChecked( lyr.placementFlags & QgsPalLayerSettings::OnLine );
-  if ( !( lyr.placementFlags & QgsPalLayerSettings::MapOrientation ) )
-    chkLineOrientationDependent->setChecked( true );
+  chkLineOrientationDependent->setChecked( !( lyr.placementFlags & QgsPalLayerSettings::MapOrientation ) );
 
   switch ( lyr.placement )
   {
@@ -671,6 +690,9 @@ void QgsLabelingGui::init()
       break;
     case QgsPalLayerSettings::Free:
       radPolygonFree->setChecked( true );
+      break;
+    case QgsPalLayerSettings::PerimeterCurved:
+      radPolygonPerimeterCurved->setChecked( true );
       break;
   }
 
@@ -962,11 +984,17 @@ QgsPalLayerSettings QgsLabelingGui::layerSettings()
     lyr.placement = QgsPalLayerSettings::OrderedPositionsAroundPoint;
   }
   else if (( curPlacementWdgt == pageLine && radLineParallel->isChecked() )
-           || ( curPlacementWdgt == pagePolygon && radPolygonPerimeter->isChecked() )
-           || ( curPlacementWdgt == pageLine && radLineCurved->isChecked() ) )
+           || ( curPlacementWdgt == pagePolygon && radPolygonPerimeter->isChecked() ) )
   {
-    bool curved = ( curPlacementWdgt == pageLine && radLineCurved->isChecked() );
-    lyr.placement = ( curved ? QgsPalLayerSettings::Curved : QgsPalLayerSettings::Line );
+    lyr.placement = QgsPalLayerSettings::Line;
+  }
+  else if ( curPlacementWdgt == pageLine && radLineCurved->isChecked() )
+  {
+    lyr.placement = QgsPalLayerSettings::Curved;
+  }
+  else if ( curPlacementWdgt == pagePolygon && radPolygonPerimeterCurved->isChecked() )
+  {
+    lyr.placement = QgsPalLayerSettings::PerimeterCurved;
   }
   else if (( curPlacementWdgt == pageLine && radLineHorizontal->isChecked() )
            || ( curPlacementWdgt == pagePolygon && radPolygonHorizontal->isChecked() ) )
@@ -1004,6 +1032,8 @@ QgsPalLayerSettings QgsLabelingGui::layerSettings()
   lyr.scaleVisibility = mScaleBasedVisibilityChkBx->isChecked();
   lyr.scaleMin = mScaleBasedVisibilityMinSpnBx->value();
   lyr.scaleMax = mScaleBasedVisibilityMaxSpnBx->value();
+  lyr.useSubstitutions = mCheckBoxSubstituteText->isChecked();
+  lyr.substitutions = mSubstitutions;
 
   // buffer
   lyr.bufferDraw = mBufferDrawChkBx->isChecked();
@@ -1707,7 +1737,8 @@ void QgsLabelingGui::updatePlacementWidgets()
   }
   else if (( curWdgt == pageLine && radLineParallel->isChecked() )
            || ( curWdgt == pagePolygon && radPolygonPerimeter->isChecked() )
-           || ( curWdgt == pageLine && radLineCurved->isChecked() ) )
+           || ( curWdgt == pageLine && radLineCurved->isChecked() )
+           || ( curWdgt == pagePolygon && radPolygonPerimeterCurved->isChecked() ) )
   {
     showLineFrame = true;
     showDistanceFrame = true;
@@ -1717,9 +1748,11 @@ void QgsLabelingGui::updatePlacementWidgets()
     chkLineOrientationDependent->setEnabled( offline );
     mPlacementDistanceFrame->setEnabled( offline );
 
-    showMaxCharAngleFrame = ( curWdgt == pageLine && radLineCurved->isChecked() );
+    bool isCurved = ( curWdgt == pageLine && radLineCurved->isChecked() )
+                    || ( curWdgt == pagePolygon && radPolygonPerimeterCurved->isChecked() );
+    showMaxCharAngleFrame = isCurved;
     // TODO: enable mMultiLinesFrame when supported for curved labels
-    enableMultiLinesFrame = !( curWdgt == pageLine && radLineCurved->isChecked() );
+    enableMultiLinesFrame = !isCurved;
   }
 
   mPlacementLineFrame->setVisible( showLineFrame );
@@ -1731,7 +1764,8 @@ void QgsLabelingGui::updatePlacementWidgets()
   mPlacementDistanceFrame->setVisible( showDistanceFrame );
   mPlacementOffsetTypeFrame->setVisible( showOffsetTypeFrame );
   mPlacementRotationFrame->setVisible( showRotationFrame );
-  mPlacementRepeatDistanceFrame->setVisible( curWdgt == pageLine || ( curWdgt == pagePolygon && radPolygonPerimeter->isChecked() ) );
+  mPlacementRepeatDistanceFrame->setVisible( curWdgt == pageLine || ( curWdgt == pagePolygon &&
+      ( radPolygonPerimeter->isChecked() || radPolygonPerimeterCurved->isChecked() ) ) );
   mPlacementMaxCharAngleFrame->setVisible( showMaxCharAngleFrame );
 
   mMultiLinesFrame->setEnabled( enableMultiLinesFrame );
@@ -1960,6 +1994,12 @@ void QgsLabelingGui::updateLinePlacementOptions()
   }
 }
 
+void QgsLabelingGui::onSubstitutionsChanged( const QgsStringReplacementCollection& substitutions )
+{
+  mSubstitutions = substitutions;
+  emit widgetChanged();
+}
+
 void QgsLabelingGui::updateSvgWidgets( const QString& svgPath )
 {
   if ( mShapeSVGPathLineEdit->text() != svgPath )
@@ -2084,6 +2124,42 @@ void QgsLabelingGui::on_mChkNoObstacle_toggled( bool active )
 {
   mPolygonObstacleTypeFrame->setEnabled( active );
   mObstaclePriorityFrame->setEnabled( active );
+}
+
+void QgsLabelingGui::on_chkLineOrientationDependent_toggled( bool active )
+{
+  if ( active )
+  {
+    chkLineAbove->setText( tr( "Left of line" ) );
+    chkLineBelow->setText( tr( "Right of line" ) );
+  }
+  else
+  {
+    chkLineAbove->setText( tr( "Above line" ) );
+    chkLineBelow->setText( tr( "Below line" ) );
+  }
+}
+
+void QgsLabelingGui::on_mToolButtonConfigureSubstitutes_clicked()
+{
+  QgsPanelWidget* panel = QgsPanelWidget::findParentPanel( this );
+  if ( panel && panel->dockMode() )
+  {
+    QgsSubstitutionListWidget* widget = new QgsSubstitutionListWidget( panel );
+    widget->setPanelTitle( tr( "Substitutions" ) );
+    widget->setSubstitutions( mSubstitutions );
+    connect( widget, SIGNAL( substitutionsChanged( QgsStringReplacementCollection ) ), this, SLOT( onSubstitutionsChanged( QgsStringReplacementCollection ) ) );
+    panel->openPanel( widget );
+    return;
+  }
+
+  QgsSubstitutionListDialog dlg( this );
+  dlg.setSubstitutions( mSubstitutions );
+  if ( dlg.exec() == QDialog::Accepted )
+  {
+    mSubstitutions = dlg.substitutions();
+    emit widgetChanged();
+  }
 }
 
 void QgsLabelingGui::showBackgroundRadius( bool show )

@@ -218,7 +218,7 @@ protected:
  * - version=auto/1.0.0/1.1.0/2.0.0
  *  -sql=string: full SELECT SQL statement with optional WHERE, ORDER BY and possibly with JOIN if supported on server
  * - filter=string: QGIS expression or OGC/FES filter
- * - retrictToRequestBBOX=1: to download only features in the view extent (or more generally
+ * - restrictToRequestBBOX=1: to download only features in the view extent (or more generally
  *   in the bounding box of the feature iterator)
  * - maxNumFeatures=number
  * - IgnoreAxisOrientation=1: to ignore EPSG axis order for WFS 1.1 or 2.0
@@ -556,7 +556,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
     void setDisplayField( const QString& fldName = "" );
 
     /** Returns the primary display field name used in the identify results dialog */
-    const QString displayField() const;
+    QString displayField() const;
 
     /** Set the preview expression, used to create a human readable preview string.
      *  Used e.g. in the attribute table feature list. Uses { @link QgsExpression }.
@@ -572,7 +572,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
      *
      *  @return The expression which will be used to preview features for this layer
      */
-    const QString displayExpression();
+    QString displayExpression() const;
 
     /** Returns the data provider */
     QgsVectorDataProvider* dataProvider();
@@ -597,6 +597,11 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
       @returns true if join was found and successfully removed */
     bool removeJoin( const QString& joinLayerId );
 
+    /**
+     * Acccessor to the join buffer object
+     * @note added 2.14.7
+     */
+    QgsVectorLayerJoinBuffer* joinBuffer() { return mJoinBuffer; }
     const QList<QgsVectorJoinInfo> vectorJoins() const;
 
     /**
@@ -1448,7 +1453,8 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
     /** Convenience function that returns the attribute alias if defined or the field name else */
     QString attributeDisplayName( int attributeIndex ) const;
 
-    const QMap< QString, QString >& attributeAliases() const { return mAttributeAliasMap; }
+    //! Returns a map of field name to attribute alias
+    QgsStringMap attributeAliases() const;
 
     const QSet<QString>& excludeAttributesWMS() const { return mExcludeAttributesWMS; }
     void setExcludeAttributesWMS( const QSet<QString>& att ) { mExcludeAttributesWMS = att; }
@@ -1732,6 +1738,42 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
 
     /** Caches joined attributes if required (and not already done) */
     void createJoinCaches();
+
+    /** Returns the calculated default value for the specified field index. The default
+     * value may be taken from a client side default value expression (see setDefaultValueExpression())
+     * or taken from the underlying data provider.
+     * @param index field index
+     * @param feature optional feature to use for default value evaluation. If passed,
+     * then properties from the feature (such as geometry) can be used when calculating
+     * the default value.
+     * @param context optional expression context to evaluate expressions again. If not
+     * specified, a default context will be created
+     * @return calculated default value
+     * @note added in QGIS 2.18
+     * @see setDefaultValueExpression()
+     */
+    QVariant defaultValue( int index, const QgsFeature& feature = QgsFeature(),
+                           QgsExpressionContext* context = nullptr ) const;
+
+    /** Sets an expression to use when calculating the default value for a field.
+     * @param index field index
+     * @param expression expression to evaluate when calculating default values for field. Pass
+     * an empty expression to clear the default.
+     * @note added in QGIS 2.18
+     * @see defaultValue()
+     * @see defaultValueExpression()
+     */
+    void setDefaultValueExpression( int index, const QString& expression );
+
+    /** Returns the expression used when calculating the default value for a field.
+     * @param index field index
+     * @returns expression evaluated when calculating default values for field, or an
+     * empty string if no default is set
+     * @note added in QGIS 2.18
+     * @see defaultValue()
+     * @see setDefaultValueExpression()
+     */
+    QString defaultValueExpression( int index ) const;
 
     /** Calculates a list of unique values contained within an attribute in the layer. Note that
      * in some circumstances when unsaved changes are present for the layer then the returned list
@@ -2197,7 +2239,10 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
     QgsFields mUpdatedFields;
 
     /** Map that stores the aliases for attributes. Key is the attribute name and value the alias for that attribute*/
-    QMap< QString, QString > mAttributeAliasMap;
+    QgsStringMap mAttributeAliasMap;
+
+    //! Map which stores default value expressions for fields
+    QgsStringMap mDefaultExpressionMap;
 
     /** Holds the configuration for the edit form */
     QgsEditFormConfig* mEditFormConfig;

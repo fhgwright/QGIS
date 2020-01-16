@@ -15,7 +15,7 @@
  *                                                                         *
  ***************************************************************************/
 
-class QgsAttributeEditorElement : QObject
+class QgsAttributeEditorElement : QObject /Abstract/
 {
 %TypeHeaderCode
 #include "qgsvectorlayer.h"
@@ -74,13 +74,28 @@ class QgsAttributeEditorElement : QObject
     AttributeEditorType type() const;
 
     /**
-     * Is reimplemented in classes inheriting from this to serialize it.
+     * Get the XML Dom element to save this element.
      *
      * @param doc The QDomDocument which is used to create new XML elements
      *
-     * @return An DOM element which represents this element
+     * @return A DOM element to serialize this element
      */
-    virtual QDomElement toDomElement( QDomDocument& doc ) const = 0;
+    QDomElement toDomElement( QDomDocument& doc ) const;
+
+    /**
+     * Controls if this element should be labeled with a title (field, relation or groupname).
+     *
+     * @note Added in QGIS 2.18
+     */
+    bool showLabel() const;
+
+    /**
+     * Controls if this element should be labeled with a title (field, relation or groupname).
+     *
+     * @note Added in QGIS 2.18
+     */
+    void setShowLabel(bool showLabel);
+
 };
 
 class QgsAttributeEditorContainer : QgsAttributeEditorElement
@@ -149,8 +164,6 @@ class QgsAttributeEditorContainer : QgsAttributeEditorElement
 
     /**
      * Change the name of this container
-     *
-     * @param name
      */
     void setName( const QString& name );
 
@@ -163,6 +176,20 @@ class QgsAttributeEditorContainer : QgsAttributeEditorElement
      * Set the number of columns in this group
      */
     void setColumnCount( int columnCount );
+
+    /**
+     * An expression that controls the visibility of this container.
+     *
+     * @note Added in QGIS 2.18
+     */
+    QgsOptionalExpression visibilityExpression() const;
+
+    /**
+     * An expression that controls the visibility of this container.
+     *
+     * @note Added in QGIS 2.18
+     */
+    void setVisibilityExpression( const QgsOptionalExpression& visibilityExpression );
 
 };
 
@@ -255,6 +282,32 @@ class QgsAttributeEditorRelation : QgsAttributeEditorElement
      * @return true if the relation was found in the relationmanager
      */
     bool init( QgsRelationManager *relManager );
+
+    /**
+     * Determines if the "link feature" button should be shown
+     *
+     * @note Added in QGIS 2.18
+     */
+    bool showLinkButton() const;
+    /**
+     * Determines if the "link feature" button should be shown
+     *
+     * @note Added in QGIS 2.18
+     */
+    void setShowLinkButton( bool showLinkButton );
+
+    /**
+     * Determines if the "unlink feature" button should be shown
+     *
+     * @note Added in QGIS 2.18
+     */
+    bool showUnlinkButton() const;
+    /**
+     * Determines if the "unlink feature" button should be shown
+     *
+     * @note Added in QGIS 2.18
+     */
+    void setShowUnlinkButton( bool showUnlinkButton );
 };
 
 class QgsEditFormConfig : QObject

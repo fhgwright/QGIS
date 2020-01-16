@@ -26,6 +26,7 @@
 #include "qgsattributeformeditorwidget.h"
 #include "qgsmessagebar.h"
 #include "qgsmessagebaritem.h"
+#include "qgstabwidget.h"
 
 #include <QDir>
 #include <QTextStream>
@@ -38,12 +39,12 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QScrollArea>
-#include <QTabWidget>
 #include <QUiLoader>
 #include <QMessageBox>
 #include <QSettings>
 #include <QToolButton>
 #include <QMenu>
+#include <QSvgWidget>
 
 int QgsAttributeForm::sFormCounter = 0;
 
@@ -185,20 +186,17 @@ void QgsAttributeForm::setMode( QgsAttributeForm::Mode mode )
     case QgsAttributeForm::SingleEditMode:
       setFeature( mFeature );
       mSearchButtonBox->setVisible( false );
-      mInvalidConstraintMessage->show();
       break;
 
     case QgsAttributeForm::AddFeatureMode:
       synchronizeEnabledState();
       mSearchButtonBox->setVisible( false );
-      mInvalidConstraintMessage->show();
       break;
 
     case QgsAttributeForm::MultiEditMode:
       resetMultiEdit( false );
       synchronizeEnabledState();
       mSearchButtonBox->setVisible( false );
-      mInvalidConstraintMessage->show();
       break;
 
     case QgsAttributeForm::SearchMode:
@@ -211,7 +209,7 @@ void QgsAttributeForm::setMode( QgsAttributeForm::Mode mode )
       }
       else
       {
-        mInvalidConstraintMessage->hide();
+        mTopMessageWidget->hide();
       }
       break;
   }
@@ -744,6 +742,14 @@ void QgsAttributeForm::updateConstraints( QgsEditorWidgetWrapper *eww )
 
     // sync ok button status
     synchronizeEnabledState();
+
+    mExpressionContext.setFeature( ft );
+
+    // Recheck visibility for all containers which are controlled by this value
+    Q_FOREACH ( ContainerInformation* info, mContainerInformationDependency.value( eww->field().name() ) )
+    {
+      info->apply( &mExpressionContext );
+    }
   }
 }
 
@@ -757,7 +763,11 @@ bool QgsAttributeForm::currentFormFeature( QgsFeature &feature )
   Q_FOREACH ( QgsWidgetWrapper* ww, mWidgets )
   {
     QgsEditorWidgetWrapper* eww = qobject_cast<QgsEditorWidgetWrapper*>( ww );
-    if ( eww && dst.count() > eww->fieldIdx() )
+
+    if ( !eww )
+      continue;
+
+    if ( dst.count() > eww->fieldIdx() )
     {
       QVariant dstVar = dst.at( eww->fieldIdx() );
       QVariant srcVar = eww->value();
@@ -780,9 +790,8 @@ bool QgsAttributeForm::currentFormFeature( QgsFeature &feature )
 
 void QgsAttributeForm::clearInvalidConstraintsMessage()
 {
-  mInvalidConstraintMessage->hide();
+  mTopMessageWidget->hide();
   mInvalidConstraintMessage->clear();
-  mInvalidConstraintMessage->setStyleSheet( QString() );
 }
 
 void QgsAttributeForm::displayInvalidConstraintMessage( const QStringList& f,
@@ -797,14 +806,19 @@ void QgsAttributeForm::displayInvalidConstraintMessage( const QStringList& f,
   for ( int i = 0; i < size; i++ )
     descriptions += QString( "<li>%1: <i>%2</i></li>" ).arg( f[i] ).arg( d[i] );
 
-  QString icPath = QgsApplication::iconPath( "/mIconWarn.png" );
+  QString msg = QString( "<b>%1</b><ul>%2</ul>" ).arg( tr( "Invalid fields" ) ).arg( descriptions ) ;
 
-  QString title = QString( "<img src=\"%1\">     <b>%2:" ).arg( icPath ).arg( tr( "Invalid fields" ) );
-  QString msg = QString( "%1</b><ul>%2</ul>" ).arg( title ).arg( descriptions ) ;
-
-  mInvalidConstraintMessage->show();
   mInvalidConstraintMessage->setText( msg );
-  mInvalidConstraintMessage->setStyleSheet( "QLabel { background-color : #ffc800; }" );
+  mTopMessageWidget->show();
+}
+
+void QgsAttributeForm::registerContainerInformation( QgsAttributeForm::ContainerInformation* info )
+{
+  mContainerVisibilityInformation.append( info );
+  Q_FOREACH ( const QString& col, info->expression.referencedColumns() )
+  {
+    mContainerInformationDependency[ col ].append( info );
+  }
 }
 
 bool QgsAttributeForm::currentFormValidConstraints( QStringList &invalidFields,
@@ -1049,9 +1063,18 @@ void QgsAttributeForm::init()
   mMessageBar->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
   vl->addWidget( mMessageBar );
 
+  mTopMessageWidget = new QWidget();
+  mTopMessageWidget->hide();
+  mTopMessageWidget->setLayout( new QHBoxLayout() );
+
+  QSvgWidget* warningIcon = new QSvgWidget( QgsApplication::iconPath( "/mIconWarning.svg" ) );
+  warningIcon->setFixedSize( 48, 48 );
+  mTopMessageWidget->layout()->addWidget( warningIcon );
   mInvalidConstraintMessage = new QLabel( this );
-  mInvalidConstraintMessage->hide();
-  vl->addWidget( mInvalidConstraintMessage );
+  mTopMessageWidget->layout()->addWidget( mInvalidConstraintMessage );
+  mTopMessageWidget->hide();
+
+  vl->addWidget( mTopMessageWidget );
 
   setLayout( vl );
 
@@ -1090,7 +1113,7 @@ void QgsAttributeForm::init()
     }
   }
 
-  QTabWidget* tabWidget = nullptr;
+  QgsTabWidget* tabWidget = nullptr;
 
   // Tab layout
   if ( !formWidget && mLayer->editFormConfig()->layout() == QgsEditFormConfig::TabLayout )
@@ -1112,13 +1135,14 @@ void QgsAttributeForm::init()
           tabWidget = nullptr;
           WidgetInfo widgetInfo = createWidgetFromDef( widgDef, formWidget, mLayer, mContext );
           layout->addWidget( widgetInfo.widget, row, column, 1, 2 );
+          registerContainerInformation( new ContainerInformation( widgetInfo.widget, containerDef->visibilityExpression().data() ) );
           column += 2;
         }
         else
         {
           if ( !tabWidget )
           {
-            tabWidget = new QTabWidget();
+            tabWidget = new QgsTabWidget();
             layout->addWidget( tabWidget, row, column, 1, 2 );
             column += 2;
           }
@@ -1126,6 +1150,11 @@ void QgsAttributeForm::init()
           QWidget* tabPage = new QWidget( tabWidget );
 
           tabWidget->addTab( tabPage, widgDef->name() );
+
+          if ( containerDef->visibilityExpression().enabled() )
+          {
+            registerContainerInformation( new ContainerInformation( tabWidget, tabPage, containerDef->visibilityExpression().data() ) );
+          }
           QGridLayout* tabPageLayout = new QGridLayout();
           tabPage->setLayout( tabPageLayout );
 
@@ -1145,7 +1174,15 @@ void QgsAttributeForm::init()
 
         label->setBuddy( widgetInfo.widget );
 
-        if ( widgetInfo.labelOnTop )
+        if ( !widgetInfo.showLabel )
+        {
+          QVBoxLayout* c = new QVBoxLayout();
+          label->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
+          c->addWidget( widgetInfo.widget );
+          layout->addLayout( c, row, column, 1, 2 );
+          column += 2;
+        }
+        else if ( widgetInfo.labelOnTop )
         {
           QVBoxLayout* c = new QVBoxLayout();
           label->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
@@ -1511,19 +1548,23 @@ QgsAttributeForm::WidgetInfo QgsAttributeForm::createWidgetFromDef( const QgsAtt
 
       newWidgetInfo.labelOnTop = mLayer->editFormConfig()->labelOnTop( fieldDef->idx() );
       newWidgetInfo.labelText = mLayer->attributeDisplayName( fieldDef->idx() );
+      newWidgetInfo.showLabel = widgetDef->showLabel();
 
       break;
     }
 
     case QgsAttributeEditorElement::AeTypeRelation:
     {
-      const QgsAttributeEditorRelation* relDef = dynamic_cast<const QgsAttributeEditorRelation*>( widgetDef );
+      const QgsAttributeEditorRelation* relDef = static_cast<const QgsAttributeEditorRelation*>( widgetDef );
 
       QgsRelationWidgetWrapper* rww = new QgsRelationWidgetWrapper( mLayer, relDef->relation(), nullptr, this );
       QgsEditorWidgetConfig cfg = mLayer->editFormConfig()->widgetConfig( relDef->relation().id() );
       rww->setConfig( cfg );
       rww->setContext( context );
       newWidgetInfo.widget = rww->widget();
+      rww->setShowLabel( relDef->showLabel() );
+      rww->setShowLinkButton( relDef->showLinkButton() );
+      rww->setShowUnlinkButton( relDef->showUnlinkButton() );
       mWidgets.append( rww );
       newWidgetInfo.labelText = QString::null;
       newWidgetInfo.labelOnTop = true;
@@ -1545,7 +1586,8 @@ QgsAttributeForm::WidgetInfo QgsAttributeForm::createWidgetFromDef( const QgsAtt
       if ( container->isGroupBox() )
       {
         QGroupBox* groupBox = new QGroupBox( parent );
-        groupBox->setTitle( container->name() );
+        if ( container->showLabel() )
+          groupBox->setTitle( container->name() );
         myContainer = groupBox;
         newWidgetInfo.widget = myContainer;
       }
@@ -1580,6 +1622,12 @@ QgsAttributeForm::WidgetInfo QgsAttributeForm::createWidgetFromDef( const QgsAtt
       Q_FOREACH ( QgsAttributeEditorElement* childDef, children )
       {
         WidgetInfo widgetInfo = createWidgetFromDef( childDef, myContainer, vl, context );
+
+        if ( childDef->type() == QgsAttributeEditorElement::AeTypeContainer )
+        {
+          QgsAttributeEditorContainer* containerDef = static_cast<QgsAttributeEditorContainer*>( childDef );
+          registerContainerInformation( new ContainerInformation( widgetInfo.widget, containerDef->visibilityExpression().data() ) );
+        }
 
         if ( widgetInfo.labelText.isNull() )
         {
@@ -1632,6 +1680,8 @@ QgsAttributeForm::WidgetInfo QgsAttributeForm::createWidgetFromDef( const QgsAtt
       QgsDebugMsg( "Unknown attribute editor widget type encountered..." );
       break;
   }
+
+  newWidgetInfo.showLabel = widgetDef->showLabel();
 
   return newWidgetInfo;
 }
@@ -1859,4 +1909,23 @@ int QgsAttributeForm::messageTimeout()
 {
   QSettings settings;
   return settings.value( "/qgis/messageTimeout", 5 ).toInt();
+}
+
+void QgsAttributeForm::ContainerInformation::apply( QgsExpressionContext* expressionContext )
+{
+  bool newVisibility = expression.evaluate( expressionContext ).toBool();
+
+  if ( newVisibility != isVisible )
+  {
+    if ( tabWidget )
+    {
+      tabWidget->setTabVisible( widget, newVisibility );
+    }
+    else
+    {
+      widget->setVisible( newVisibility );
+    }
+
+    isVisible = newVisibility;
+  }
 }

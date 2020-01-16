@@ -19,13 +19,16 @@ import urllib
 from mimetools import Message
 from StringIO import StringIO
 from qgis.server import QgsServer
-from qgis.core import QgsMessageLog
+from qgis.core import QgsMessageLog, QgsRenderChecker
 from qgis.testing import unittest
+from qgis.PyQt.QtCore import QSize
 from utilities import unitTestDataPath
 import osgeo.gdal
+import tempfile
+import base64
 
 # Strip path and content length because path may vary
-RE_STRIP_PATH = r'MAP=[^&]+|Content-Length: \d+'
+RE_STRIP_PATH = r'MAP=[^&]+|Content-Length: \d+|<Attribute typeName="[^>]+'
 
 
 class TestQgsServer(unittest.TestCase):
@@ -150,7 +153,7 @@ class TestQgsServer(unittest.TestCase):
 
     # WMS tests
     def wms_request_compare(self, request, extra=None, reference_file=None):
-        project = self.testdata_path + "test+project.qgs"
+        project = self.testdata_path + "test_project.qgs"
         assert os.path.exists(project), "Project file not found: " + project
 
         query_string = 'MAP=%s&SERVICE=WMS&VERSION=1.3&REQUEST=%s' % (urllib.quote(project), request)
@@ -158,20 +161,25 @@ class TestQgsServer(unittest.TestCase):
             query_string += extra
         header, body = [str(_v) for _v in self.server.handleRequest(query_string)]
         response = header + body
-        f = open(self.testdata_path + (request.lower() if not reference_file else reference_file) + '.txt')
+        reference_path = self.testdata_path + (request.lower() if not reference_file else reference_file) + '.txt'
+        f = open(reference_path)
         expected = f.read()
         f.close()
         # Store the output for debug or to regenerate the reference documents:
         """
+        f = open(reference_path, 'wb+')
+        f.write(response)
+        f.close()
+
         f = open(os.path.dirname(__file__) + '/expected.txt', 'w+')
         f.write(expected)
         f.close()
         f = open(os.path.dirname(__file__) + '/response.txt', 'w+')
         f.write(response)
         f.close()
-        #"""
-        response = re.sub(RE_STRIP_PATH, '', response)
-        expected = re.sub(RE_STRIP_PATH, '', expected)
+        """
+        response = re.sub(RE_STRIP_PATH, '*****', response)
+        expected = re.sub(RE_STRIP_PATH, '*****', expected)
 
         # for older GDAL versions (<2.0), id field will be integer type
         if int(osgeo.gdal.VersionInfo()[:1]) < 2:
@@ -214,7 +222,7 @@ class TestQgsServer(unittest.TestCase):
 
     def wms_inspire_request_compare(self, request):
         """WMS INSPIRE tests"""
-        project = self.testdata_path + "test+project_inspire.qgs"
+        project = self.testdata_path + "test_project_inspire.qgs"
         assert os.path.exists(project), "Project file not found: " + project
 
         query_string = 'MAP=%s&SERVICE=WMS&VERSION=1.3.0&REQUEST=%s' % (urllib.quote(project), request)
@@ -243,7 +251,7 @@ class TestQgsServer(unittest.TestCase):
 
     # WFS tests
     def wfs_request_compare(self, request):
-        project = self.testdata_path + "test+project_wfs.qgs"
+        project = self.testdata_path + "test_project_wfs.qgs"
         assert os.path.exists(project), "Project file not found: " + project
 
         query_string = 'MAP=%s&SERVICE=WFS&VERSION=1.0.0&REQUEST=%s' % (urllib.quote(project), request)
@@ -277,7 +285,7 @@ class TestQgsServer(unittest.TestCase):
             self.wfs_request_compare(request)
 
     def wfs_getfeature_compare(self, requestid, request):
-        project = self.testdata_path + "test+project_wfs.qgs"
+        project = self.testdata_path + "test_project_wfs.qgs"
         assert os.path.exists(project), "Project file not found: " + project
 
         query_string = 'MAP=%s&SERVICE=WFS&VERSION=1.0.0&REQUEST=%s' % (urllib.quote(project), request)
@@ -324,7 +332,7 @@ class TestQgsServer(unittest.TestCase):
             self.wfs_getfeature_compare(id, req)
 
     def wfs_getfeature_post_compare(self, requestid, request):
-        project = self.testdata_path + "test+project_wfs.qgs"
+        project = self.testdata_path + "test_project_wfs.qgs"
         assert os.path.exists(project), "Project file not found: " + project
 
         query_string = 'MAP={}'.format(urllib.quote(project))
@@ -369,7 +377,7 @@ class TestQgsServer(unittest.TestCase):
     def test_getLegendGraphics(self):
         """Test that does not return an exception but an image"""
         parms = {
-            'MAP': self.testdata_path + "test%2Bproject.qgs",
+            'MAP': self.testdata_path + "test_project.qgs",
             'SERVICE': 'WMS',
             'VERSION': '1.0.0',
             'REQUEST': 'GetLegendGraphic',
@@ -383,6 +391,81 @@ class TestQgsServer(unittest.TestCase):
         self.assertEqual(-1, h.find('Content-Type: text/xml; charset=utf-8'), "Header: %s\nResponse:\n%s" % (h, r))
         self.assertNotEquals(-1, h.find('Content-Type: image/png'), "Header: %s\nResponse:\n%s" % (h, r))
 
+    def test_getLegendGraphics_layertitle(self):
+        """Test that does not return an exception but an image"""
+        parms = {
+            'MAP': self.testdata_path + "test_project.qgs",
+            'SERVICE': 'WMS',
+            'VERSION': '1.3.0',
+            'REQUEST': 'GetLegendGraphic',
+            'FORMAT': 'image/png',
+            #'WIDTH': '20', # optional
+            #'HEIGHT': '20', # optional
+            'LAYER': u'testlayer%20èé',
+            'LAYERTITLE': 'TRUE',
+        }
+        qs = '&'.join([u"%s=%s" % (k, v) for k, v in parms.items()])
+        r, h = self._result(self.server.handleRequest(qs))
+        self._img_diff_error(r, h, "WMS_GetLegendGraphic_test", 250, QSize(10, 10))
+
+        parms = {
+            'MAP': self.testdata_path + "test_project.qgs",
+            'SERVICE': 'WMS',
+            'VERSION': '1.3.0',
+            'REQUEST': 'GetLegendGraphic',
+            'FORMAT': 'image/png',
+            #'WIDTH': '20', # optional
+            #'HEIGHT': '20', # optional
+            'LAYER': u'testlayer%20èé',
+            'LAYERTITLE': 'FALSE',
+        }
+        qs = '&'.join([u"%s=%s" % (k, v) for k, v in parms.items()])
+        r, h = self._result(self.server.handleRequest(qs))
+        self._img_diff_error(r, h, "WMS_GetLegendGraphic_test_layertitle_false", 250, QSize(10, 10))
+
+    def _result(self, data):
+        headers = {}
+        for line in data[0].decode('UTF-8').split("\n"):
+            if line != "":
+                header = line.split(":")
+                self.assertEqual(len(header), 2, line)
+                headers[str(header[0])] = str(header[1]).strip()
+
+        return data[1], headers
+
+    def _img_diff(self, image, control_image, max_diff, max_size_diff=QSize()):
+        temp_image = os.path.join(tempfile.gettempdir(), "%s_result.png" % control_image)
+
+        with open(temp_image, "wb") as f:
+            f.write(image)
+
+        control = QgsRenderChecker()
+        control.setControlPathPrefix("qgis_server")
+        control.setControlName(control_image)
+        control.setRenderedImage(temp_image)
+        if max_size_diff.isValid():
+            control.setSizeTolerance(max_size_diff.width(), max_size_diff.height())
+        return control.compareImages(control_image), control.report()
+
+    def _img_diff_error(self, response, headers, image, max_diff=10, max_size_diff=QSize()):
+        self.assertEqual(
+            headers.get("Content-Type"), "image/png",
+            "Content type is wrong: %s" % headers.get("Content-Type"))
+        test, report = self._img_diff(response, image, max_diff, max_size_diff)
+
+        with open(os.path.join(tempfile.gettempdir(), image + "_result.png"), "rb") as rendered_file:
+            encoded_rendered_file = base64.b64encode(rendered_file.read())
+            message = "Image is wrong\n%s\nImage:\necho '%s' | base64 -d >%s/%s_result.png" % (
+                report, encoded_rendered_file.strip(), tempfile.gettempdir(), image
+            )
+
+        with open(os.path.join(tempfile.gettempdir(), image + "_result_diff.png"), "rb") as diff_file:
+            encoded_diff_file = base64.b64encode(diff_file.read())
+            message += "\nDiff:\necho '%s' | base64 -d > %s/%s_result_diff.png" % (
+                encoded_diff_file.strip(), tempfile.gettempdir(), image
+            )
+
+        self.assertTrue(test, message)
 
 if __name__ == '__main__':
     unittest.main()

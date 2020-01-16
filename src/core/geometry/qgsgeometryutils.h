@@ -37,7 +37,8 @@ class CORE_EXPORT QgsGeometryUtils
      */
     static QList<QgsLineStringV2*> extractLineStrings( const QgsAbstractGeometryV2* geom );
 
-    /** Returns the closest vertex to a geometry for a specified point
+    /** Returns the closest vertex to a geometry for a specified point.
+     * On error null point will be returned and "id" argument will be invalid.
      */
     static QgsPointV2 closestVertex( const QgsAbstractGeometryV2& geom, const QgsPointV2& pt, QgsVertexId& id );
 
@@ -48,6 +49,21 @@ class CORE_EXPORT QgsGeometryUtils
      * @note added in QGIS 2.16
      */
     static double distanceToVertex( const QgsAbstractGeometryV2& geom, const QgsVertexId& id );
+
+    /** Retrieves the vertices which are before and after the interpolated point at a specified distance along a linestring
+     * (or polygon boundary).
+     * @param geometry line or polygon geometry
+     * @param distance distance to traverse along geometry
+     * @param previousVertex will be set to previous vertex ID
+     * @param nextVertex will be set to next vertex ID
+     * @note if the distance coincides exactly with a vertex, then both previousVertex and nextVertex will be set to this vertex
+     * @returns true if vertices were successfully retrieved
+     * @note added in QGIS 2.18
+     */
+    static bool verticesAtDistance( const QgsAbstractGeometryV2& geometry,
+                                    double distance,
+                                    QgsVertexId& previousVertex,
+                                    QgsVertexId& nextVertex );
 
     /** Returns vertices adjacent to a specified vertex within a geometry.
      */
@@ -235,7 +251,7 @@ class CORE_EXPORT QgsGeometryUtils
       for ( int i = 0; i < container.size(); ++i )
       {
         sqrDist = container.at( i )->closestSegment( pt, segmentPt, vertexAfter, leftOf, epsilon );
-        if ( sqrDist < minDist )
+        if ( sqrDist >= 0 && sqrDist < minDist )
         {
           minDist = sqrDist;
           minDistSegmentX = segmentPt.x();
@@ -264,6 +280,9 @@ class CORE_EXPORT QgsGeometryUtils
           partOffset += 1;
         }
       }
+
+      if ( minDist == std::numeric_limits<double>::max() )
+        return -1;  // error: no segments
 
       segmentPt.setX( minDistSegmentX );
       segmentPt.setY( minDistSegmentY );

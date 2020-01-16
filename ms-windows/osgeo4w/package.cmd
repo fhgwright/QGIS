@@ -29,7 +29,7 @@ if "%ARCH%"=="" goto usage
 if not "%SHA%"=="" set SHA=-%SHA%
 if "%SITE%"=="" set SITE=qgis.org
 
-set BUILDDIR=%CD%\build-%ARCH%
+set BUILDDIR=%CD%\build-%PACKAGENAME%-%ARCH%
 
 if "%OSGEO4W_ROOT%"=="" (
 	if "%ARCH%"=="x86" (
@@ -341,6 +341,7 @@ tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-server/%PACKAGENAME
 	"apps/%PACKAGENAME%/bin/wms_metadata.xml" ^
 	"apps/%PACKAGENAME%/bin/schemaExtension.xsd" ^
 	"apps/%PACKAGENAME%/python/qgis/_server.pyd" ^
+	"apps/%PACKAGENAME%/python/qgis/_server.lib" ^
 	"apps/%PACKAGENAME%/python/qgis/server/" ^
 	"httpd.d/httpd_%PACKAGENAME%.conf.tmpl" ^
 	"etc/postinstall/%PACKAGENAME%-server.bat" ^

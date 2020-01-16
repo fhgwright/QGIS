@@ -1794,6 +1794,25 @@ QgsAbstractGeometryV2* QgsGeos::reshapeGeometry( const QgsLineStringV2& reshapeW
   }
 }
 
+QgsGeometry QgsGeos::mergeLines( QString* errorMsg ) const
+{
+  if ( !mGeos )
+  {
+    return QgsGeometry();
+  }
+
+  if ( GEOSGeomTypeId_r( geosinit.ctxt, mGeos ) != GEOS_MULTILINESTRING )
+    return QgsGeometry();
+
+  GEOSGeomScopedPtr geos;
+  try
+  {
+    geos.reset( GEOSLineMerge_r( geosinit.ctxt, mGeos ) );
+  }
+  CATCH_GEOS_WITH_ERRMSG( QgsGeometry() );
+  return QgsGeometry( fromGeos( geos.get() ) );
+}
+
 QgsGeometry QgsGeos::closestPoint( const QgsGeometry& other, QString* errorMsg ) const
 {
   if ( !mGeos || other.isEmpty() )
@@ -1870,6 +1889,36 @@ QgsGeometry QgsGeos::shortestLine( const QgsGeometry& other, QString* errorMsg )
   line->addVertex( QgsPointV2( nx1, ny1 ) );
   line->addVertex( QgsPointV2( nx2, ny2 ) );
   return QgsGeometry( line );
+}
+
+double QgsGeos::lineLocatePoint( const QgsPointV2& point, QString* errorMsg ) const
+{
+  if ( !mGeos )
+  {
+    return -1;
+  }
+
+  GEOSGeomScopedPtr otherGeom( asGeos( &point, mPrecision ) );
+  if ( !otherGeom )
+  {
+    return -1;
+  }
+
+  double distance = -1;
+  try
+  {
+    distance = GEOSProject_r( geosinit.ctxt, mGeos, otherGeom.get() );
+  }
+  catch ( GEOSException &e )
+  {
+    if ( errorMsg )
+    {
+      *errorMsg = e.what();
+    }
+    return -1;
+  }
+
+  return distance;
 }
 
 

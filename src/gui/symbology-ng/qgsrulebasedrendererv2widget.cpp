@@ -258,7 +258,6 @@ void QgsRuleBasedRendererV2Widget::refineRuleCategoriesGui( const QModelIndexLis
   QgsCategorizedSymbolRendererV2Widget* w = new QgsCategorizedSymbolRendererV2Widget( mLayer, mStyle, nullptr );
   w->setPanelTitle( tr( "Add categories to rules" ) );
   connect( w, SIGNAL( panelAccepted( QgsPanelWidget* ) ), this, SLOT( refineRuleCategoriesAccepted( QgsPanelWidget* ) ) );
-  w->setDockMode( this->dockMode() );
   w->setMapCanvas( mMapCanvas );
   openPanel( w );
 }
@@ -269,7 +268,6 @@ void QgsRuleBasedRendererV2Widget::refineRuleRangesGui( const QModelIndexList& )
   w->setPanelTitle( tr( "Add ranges to rules" ) );
   connect( w, SIGNAL( panelAccepted( QgsPanelWidget* ) ), this, SLOT( refineRuleRangesAccepted( QgsPanelWidget* ) ) );
   w->setMapCanvas( mMapCanvas );
-  w->setDockMode( this->dockMode() );
   openPanel( w );
 }
 
@@ -483,7 +481,10 @@ void QgsRuleBasedRendererV2Widget::refineRuleRangesAccepted( QgsPanelWidget *pan
 
 void QgsRuleBasedRendererV2Widget::ruleWidgetPanelAccepted( QgsPanelWidget *panel )
 {
-  QgsRendererRulePropsWidget* widget = qobject_cast<QgsRendererRulePropsWidget*>( panel );
+  QgsRendererRulePropsWidget *widget = qobject_cast<QgsRendererRulePropsWidget*>( panel );
+  if ( !widget )
+    return;
+
   widget->apply();
 
   // model should know about the change and emit dataChanged signal for the view
@@ -514,8 +515,6 @@ void QgsRuleBasedRendererV2Widget::countFeatures()
     countMap[rule].duplicateCount = 0;
   }
 
-  QgsFeatureIterator fit = mLayer->getFeatures( QgsFeatureRequest().setFlags( QgsFeatureRequest::NoGeometry ) );
-
   QgsRenderContext renderContext;
   renderContext.setRendererScale( 0 ); // ignore scale
 
@@ -537,6 +536,11 @@ void QgsRuleBasedRendererV2Widget::countFeatures()
   renderContext.setExpressionContext( context );
 
   mRenderer->startRender( renderContext, mLayer->fields() );
+  // QgsRuleBasedRenderer::filter must be called after startRender
+  QgsFeatureRequest req = QgsFeatureRequest().setFilterExpression( mRenderer->filter( mLayer->fields() ) );
+  req.setExpressionContext( context );
+  req.setSubsetOfAttributes( mRenderer->usedAttributes(), mLayer->fields() );
+  QgsFeatureIterator fit = mLayer->getFeatures( req );
 
   int nFeatures = mLayer->featureCount();
   QProgressDialog p( tr( "Calculating feature count." ), tr( "Abort" ), 0, nFeatures );
@@ -762,19 +766,18 @@ void QgsRendererRulePropsWidget::testFilter()
 
   QApplication::setOverrideCursor( Qt::WaitCursor );
 
-  QgsFeatureIterator fit = mLayer->getFeatures();
+  QgsFeatureRequest req = QgsFeatureRequest().setSubsetOfAttributes( QgsAttributeList() )
+                          .setFlags( QgsFeatureRequest::NoGeometry )
+                          .setFilterExpression( editFilter->text() )
+                          .setExpressionContext( context );
+
+  QgsFeatureIterator fit = mLayer->getFeatures( req );
 
   int count = 0;
   QgsFeature f;
   while ( fit.nextFeature( f ) )
   {
-    context.setFeature( f );
-
-    QVariant value = filter.evaluate( &context );
-    if ( value.toInt() != 0 )
-      count++;
-    if ( filter.hasEvalError() )
-      break;
+    count++;
   }
 
   QApplication::restoreOverrideCursor();

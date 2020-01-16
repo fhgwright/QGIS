@@ -88,6 +88,16 @@ class CORE_EXPORT QgsGeos: public QgsGeometryEngine
     QgsAbstractGeometryV2* offsetCurve( double distance, int segments, int joinStyle, double mitreLimit, QString* errorMsg = nullptr ) const override;
     QgsAbstractGeometryV2* reshapeGeometry( const QgsLineStringV2& reshapeWithLine, int* errorCode, QString* errorMsg = nullptr ) const;
 
+    /** Merges any connected lines in a LineString/MultiLineString geometry and
+     * converts them to single line strings.
+     * @param errorMsg if specified, will be set to any reported GEOS errors
+     * @returns a LineString or MultiLineString geometry, with any connected lines
+     * joined. An empty geometry will be returned if the input geometry was not a
+     * LineString/MultiLineString geometry.
+     * @note added in QGIS 2.18
+     */
+    QgsGeometry mergeLines( QString* errorMsg = nullptr ) const;
+
     /** Returns the closest point on the geometry to the other geometry.
      * @note added in QGIS 2.14
      * @see shortestLine()
@@ -99,6 +109,17 @@ class CORE_EXPORT QgsGeos: public QgsGeometryEngine
      * @see closestPoint()
      */
     QgsGeometry shortestLine( const QgsGeometry& other, QString* errorMsg = nullptr ) const;
+
+    /** Returns a distance representing the location along this linestring of the closest point
+     * on this linestring geometry to the specified point. Ie, the returned value indicates
+     * how far along this linestring you need to traverse to get to the closest location
+     * where this linestring comes to the specified point.
+     * @param point point to seek proximity to
+     * @param errorMsg error messages emitted, if any
+     * @note only valid for linestring geometries
+     * @return distance along line, or -1 on error
+     */
+    double lineLocatePoint( const QgsPointV2& point, QString* errorMsg = nullptr ) const;
 
     /** Create a geometry from a GEOSGeometry
      * @param geos GEOSGeometry. Ownership is NOT transferred.

@@ -221,7 +221,7 @@ class CORE_EXPORT QgsGeometry
      * @param afterVertex will be set to the vertex index of the next vertex after the closest one. Will be set to -1 if
      * not present.
      * @param sqrDist will be set to the square distance between the closest vertex and the specified point
-     * @returns closest point in geometry
+     * @returns closest point in geometry. If not found (empty geometry), returns null point nad sqrDist is negative.
      */
     //TODO QGIS 3.0 - rename beforeVertex to previousVertex, afterVertex to nextVertex
     QgsPoint closestVertex( const QgsPoint& point, int& atVertex, int& beforeVertex, int& afterVertex, double& sqrDist ) const;
@@ -233,6 +233,15 @@ class CORE_EXPORT QgsGeometry
      * @note added in QGIS 2.16
      */
     double distanceToVertex( int vertex ) const;
+
+    /**
+     * Returns the bisector angle for this geometry at the specified vertex.
+     * @param vertex vertex index to calculate bisector angle at
+     * @returns bisector angle, in radians clockwise from north
+     * @note added in QGIS 2.18
+     * @see interpolateAngle()
+     */
+    double angleAtVertex( int vertex ) const;
 
     /**
      * Returns the indexes of the vertices before and after the given vertex index.
@@ -515,8 +524,31 @@ class CORE_EXPORT QgsGeometry
     /**
      * Return interpolated point on line at distance
      * @note added in 1.9
+     * @see lineLocatePoint()
      */
     QgsGeometry* interpolate( double distance ) const;
+
+    /** Returns a distance representing the location along this linestring of the closest point
+     * on this linestring geometry to the specified point. Ie, the returned value indicates
+     * how far along this linestring you need to traverse to get to the closest location
+     * where this linestring comes to the specified point.
+     * @param point point to seek proximity to
+     * @return distance along line, or -1 on error
+     * @note only valid for linestring geometries
+     * @see interpolate()
+     * @note added in QGIS 2.18
+     */
+    double lineLocatePoint( const QgsGeometry& point ) const;
+
+    /** Returns the angle parallel to the linestring or polygon boundary at the specified distance
+     * along the geometry. Angles are in radians, clockwise from north.
+     * If the distance coincides precisely at a node then the average angle from the segment either side
+     * of the node is returned.
+     * @param distance distance along geometry
+     * @note added in QGIS 2.18
+     * @see angleAtVertex()
+     */
+    double interpolateAngle( double distance ) const;
 
     /** Returns a geometry representing the points shared by this geometry and other. */
     QgsGeometry* intersection( const QgsGeometry* geometry ) const;
@@ -526,6 +558,15 @@ class CORE_EXPORT QgsGeometry
      * @note this operation is not called union since its a reserved word in C++.
      */
     QgsGeometry* combine( const QgsGeometry* geometry ) const;
+
+    /** Merges any connected lines in a LineString/MultiLineString geometry and
+     * converts them to single line strings.
+     * @returns a LineString or MultiLineString geometry, with any connected lines
+     * joined. An empty geometry will be returned if the input geometry was not a
+     * MultiLineString geometry.
+     * @note added in QGIS 2.18
+     */
+    QgsGeometry mergeLines() const;
 
     /** Returns a geometry representing the points making up this geometry that do not make up other. */
     QgsGeometry* difference( const QgsGeometry* geometry ) const;

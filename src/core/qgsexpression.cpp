@@ -1826,6 +1826,34 @@ static QVariant fcnGeometryN( const QVariantList& values, const QgsExpressionCon
   return result;
 }
 
+static QVariant fcnBoundary( const QVariantList& values, const QgsExpressionContext*, QgsExpression* parent )
+{
+  QgsGeometry geom = getGeometry( values.at( 0 ), parent );
+
+  if ( geom.isEmpty() )
+    return QVariant();
+
+  QgsAbstractGeometryV2* boundary = geom.geometry()->boundary();
+  if ( !boundary )
+    return QVariant();
+
+  return QVariant::fromValue( QgsGeometry( boundary ) );
+}
+
+static QVariant fcnLineMerge( const QVariantList& values, const QgsExpressionContext*, QgsExpression* parent )
+{
+  QgsGeometry geom = getGeometry( values.at( 0 ), parent );
+
+  if ( geom.isEmpty() )
+    return QVariant();
+
+  QgsGeometry merged = geom.mergeLines();
+  if ( merged.isEmpty() )
+    return QVariant();
+
+  return QVariant::fromValue( merged );
+}
+
 static QVariant fcnMakePoint( const QVariantList& values, const QgsExpressionContext*, QgsExpression* parent )
 {
   if ( values.count() < 2 || values.count() > 4 )
@@ -2587,6 +2615,52 @@ static QVariant fcnShortestLine( const QVariantList& values, const QgsExpression
   return result;
 }
 
+static QVariant fcnLineInterpolatePoint( const QVariantList& values, const QgsExpressionContext*, QgsExpression* parent )
+{
+  QgsGeometry lineGeom = getGeometry( values.at( 0 ), parent );
+  double distance = getDoubleValue( values.at( 1 ), parent );
+
+  QgsGeometry* geom = lineGeom.interpolate( distance );
+
+  QVariant result = geom ? QVariant::fromValue( *geom ) : QVariant();
+  delete geom;
+  return result;
+}
+
+static QVariant fcnLineInterpolateAngle( const QVariantList& values, const QgsExpressionContext*, QgsExpression* parent )
+{
+  QgsGeometry lineGeom = getGeometry( values.at( 0 ), parent );
+  double distance = getDoubleValue( values.at( 1 ), parent );
+
+  return lineGeom.interpolateAngle( distance ) * 180.0 / M_PI;
+}
+
+static QVariant fcnAngleAtVertex( const QVariantList& values, const QgsExpressionContext*, QgsExpression* parent )
+{
+  QgsGeometry geom = getGeometry( values.at( 0 ), parent );
+  int vertex = getIntValue( values.at( 1 ), parent );
+
+  return geom.angleAtVertex( vertex ) * 180.0 / M_PI;
+}
+
+static QVariant fcnDistanceToVertex( const QVariantList& values, const QgsExpressionContext*, QgsExpression* parent )
+{
+  QgsGeometry geom = getGeometry( values.at( 0 ), parent );
+  int vertex = getIntValue( values.at( 1 ), parent );
+
+  return geom.distanceToVertex( vertex );
+}
+
+static QVariant fcnLineLocatePoint( const QVariantList& values, const QgsExpressionContext*, QgsExpression* parent )
+{
+  QgsGeometry lineGeom = getGeometry( values.at( 0 ), parent );
+  QgsGeometry pointGeom = getGeometry( values.at( 1 ), parent );
+
+  double distance = lineGeom.lineLocatePoint( pointGeom );
+
+  return distance >= 0 ? distance : QVariant();
+}
+
 static QVariant fcnRound( const QVariantList& values, const QgsExpressionContext *, QgsExpression* parent )
 {
   if ( values.length() == 2 )
@@ -3182,9 +3256,12 @@ const QStringList& QgsExpression::BuiltinFunctions()
     << "disjoint" << "intersects" << "touches" << "crosses" << "contains"
     << "relate"
     << "overlaps" << "within" << "buffer" << "centroid" << "bounds" << "reverse" << "exterior_ring"
+    << "boundary" << "line_merge"
     << "bounds_width" << "bounds_height" << "is_closed" << "convex_hull" << "difference"
     << "distance" << "intersection" << "sym_difference" << "combine"
     << "extrude" << "azimuth" <<  "project" << "closest_point" << "shortest_line"
+    << "line_locate_point" << "line_interpolate_point"
+    << "line_interpolate_angle" << "angle_at_vertex" << "distance_to_vertex"
     << "union" << "geom_to_wkt" << "geomToWKT" << "geometry"
     << "transform" << "get_feature" << "getFeature"
     << "levenshtein" << "longest_common_substring" << "hamming_distance"
@@ -3221,7 +3298,7 @@ const QList<QgsExpression::Function*>& QgsExpression::Functions()
     << new StaticFunction( "sqrt", ParameterList() << Parameter( "value" ), fcnSqrt, "Math" )
     << new StaticFunction( "radians", ParameterList() << Parameter( "degrees" ), fcnRadians, "Math" )
     << new StaticFunction( "degrees", ParameterList() << Parameter( "radians" ), fcnDegrees, "Math" )
-    << new StaticFunction( "azimuth", ParameterList() << Parameter( "point_a" ) << Parameter( "point_b" ), fcnAzimuth, "Math" )
+    << new StaticFunction( "azimuth", ParameterList() << Parameter( "point_a" ) << Parameter( "point_b" ), fcnAzimuth, QStringList() << "Math" << "GeometryGroup" )
     << new StaticFunction( "project", ParameterList() << Parameter( "point" ) << Parameter( "distance" ) << Parameter( "bearing" ), fcnProject, "GeometryGroup" )
     << new StaticFunction( "abs", ParameterList() << Parameter( "value" ), fcnAbs, "Math" )
     << new StaticFunction( "cos", ParameterList() << Parameter( "angle" ), fcnCos, "Math" )
@@ -3246,13 +3323,13 @@ const QList<QgsExpression::Function*>& QgsExpression::Functions()
     << new StaticFunction( "floor", 1, fcnFloor, "Math" )
     << new StaticFunction( "ceil", 1, fcnCeil, "Math" )
     << new StaticFunction( "pi", 0, fcnPi, "Math", QString(), false, QStringList(), false, QStringList() << "$pi" )
-    << new StaticFunction( "to_int", 1, fcnToInt, "Conversions", QString(), false, QStringList(), false, QStringList() << "toint" )
-    << new StaticFunction( "to_real", 1, fcnToReal, "Conversions", QString(), false, QStringList(), false, QStringList() << "toreal" )
-    << new StaticFunction( "to_string", 1, fcnToString, "Conversions", QString(), false, QStringList(), false, QStringList() << "tostring" )
-    << new StaticFunction( "to_datetime", 1, fcnToDateTime, "Conversions", QString(), false, QStringList(), false, QStringList() << "todatetime" )
-    << new StaticFunction( "to_date", 1, fcnToDate, "Conversions", QString(), false, QStringList(), false, QStringList() << "todate" )
-    << new StaticFunction( "to_time", 1, fcnToTime, "Conversions", QString(), false, QStringList(), false, QStringList() << "totime" )
-    << new StaticFunction( "to_interval", 1, fcnToInterval, "Conversions", QString(), false, QStringList(), false, QStringList() << "tointerval" )
+    << new StaticFunction( "to_int", ParameterList() << Parameter( "value" ), fcnToInt, "Conversions", QString(), false, QStringList(), false, QStringList() << "toint" )
+    << new StaticFunction( "to_real", ParameterList() << Parameter( "value" ), fcnToReal, "Conversions", QString(), false, QStringList(), false, QStringList() << "toreal" )
+    << new StaticFunction( "to_string", ParameterList() << Parameter( "value" ), fcnToString, QStringList() << "Conversions" << "String", QString(), false, QStringList(), false, QStringList() << "tostring" )
+    << new StaticFunction( "to_datetime", ParameterList() << Parameter( "value" ), fcnToDateTime, QStringList() << "Conversions" << "Date and Time", QString(), false, QStringList(), false, QStringList() << "todatetime" )
+    << new StaticFunction( "to_date", ParameterList() << Parameter( "value" ), fcnToDate, QStringList() << "Conversions" << "Date and Time", QString(), false, QStringList(), false, QStringList() << "todate" )
+    << new StaticFunction( "to_time", ParameterList() << Parameter( "value" ), fcnToTime, QStringList() << "Conversions" << "Date and Time", QString(), false, QStringList(), false, QStringList() << "totime" )
+    << new StaticFunction( "to_interval", ParameterList() << Parameter( "value" ), fcnToInterval, QStringList() << "Conversions" << "Date and Time", QString(), false, QStringList(), false, QStringList() << "tointerval" )
     << new StaticFunction( "coalesce", -1, fcnCoalesce, "Conditionals", QString(), false, QStringList(), false, QStringList(), true )
     << new StaticFunction( "if", 3, fcnIf, "Conditionals", QString(), False, QStringList(), true )
     << new StaticFunction( "aggregate", ParameterList() << Parameter( "layer" ) << Parameter( "aggregate" ) << Parameter( "expression" )
@@ -3279,7 +3356,7 @@ const QList<QgsExpression::Function*>& QgsExpression::Functions()
     << new StaticFunction( "max_length", aggParams, fcnAggregateMaxLength, "Aggregates", QString(), False, QStringList(), true )
     << new StaticFunction( "concatenate", aggParams << Parameter( "concatenator", true ), fcnAggregateStringConcat, "Aggregates", QString(), False, QStringList(), true )
 
-    << new StaticFunction( "regexp_match", 2, fcnRegexpMatch, "Conditionals" )
+    << new StaticFunction( "regexp_match", ParameterList() << Parameter( "string" ) << Parameter( "regex" ), fcnRegexpMatch, QStringList() << "Conditionals" << "String" )
     << new StaticFunction( "now", 0, fcnNow, "Date and Time", QString(), false, QStringList(), false, QStringList() << "$now" )
     << new StaticFunction( "age", 2, fcnAge, "Date and Time" )
     << new StaticFunction( "year", 1, fcnYear, "Date and Time" )
@@ -3300,7 +3377,7 @@ const QList<QgsExpression::Function*>& QgsExpression::Functions()
     << new StaticFunction( "soundex", 1, fcnSoundex, "Fuzzy Matching" )
     << new StaticFunction( "char", 1, fcnChar, "String" )
     << new StaticFunction( "wordwrap", ParameterList() << Parameter( "text" ) << Parameter( "length" ) << Parameter( "delimiter", true, " " ), fcnWordwrap, "String" )
-    << new StaticFunction( "length", 1, fcnLength, "String" )
+    << new StaticFunction( "length", ParameterList() << Parameter( "text", true, "" ), fcnLength, QStringList() << "String" << "GeometryGroup" )
     << new StaticFunction( "replace", 3, fcnReplace, "String" )
     << new StaticFunction( "regexp_replace", 3, fcnRegexpReplace, "String" )
     << new StaticFunction( "regexp_substr", 2, fcnRegexpSubstr, "String" )
@@ -3313,7 +3390,7 @@ const QList<QgsExpression::Function*>& QgsExpression::Functions()
     << new StaticFunction( "lpad", 3, fcnLPad, "String" )
     << new StaticFunction( "format", -1, fcnFormatString, "String" )
     << new StaticFunction( "format_number", 2, fcnFormatNumber, "String" )
-    << new StaticFunction( "format_date", 2, fcnFormatDate, "String" )
+    << new StaticFunction( "format_date", ParameterList() << Parameter( "date" ) << Parameter( "format" ), fcnFormatDate, QStringList() << "String" << "Date and Time" )
     << new StaticFunction( "color_rgb", 3, fcnColorRgb, "Color" )
     << new StaticFunction( "color_rgba", 4, fncColorRgba, "Color" )
     << new StaticFunction( "ramp_color", 2, fcnRampColor, "Color" )
@@ -3373,6 +3450,8 @@ const QList<QgsExpression::Function*>& QgsExpression::Functions()
     << new StaticFunction( "exterior_ring", 1, fcnExteriorRing, "GeometryGroup" )
     << new StaticFunction( "interior_ring_n", 2, fcnInteriorRingN, "GeometryGroup" )
     << new StaticFunction( "geometry_n", 2, fcnGeometryN, "GeometryGroup" )
+    << new StaticFunction( "boundary", ParameterList() << Parameter( "geometry" ), fcnBoundary, "GeometryGroup" )
+    << new StaticFunction( "line_merge", ParameterList() << Parameter( "geometry" ), fcnLineMerge, "GeometryGroup" )
     << new StaticFunction( "bounds", 1, fcnBounds, "GeometryGroup" )
     << new StaticFunction( "num_points", 1, fcnGeomNumPoints, "GeometryGroup" )
     << new StaticFunction( "num_interior_rings", 1, fcnGeomNumInteriorRings, "GeometryGroup" )
@@ -3395,6 +3474,16 @@ const QList<QgsExpression::Function*>& QgsExpression::Functions()
     << new StaticFunction( "order_parts", 3, fcnOrderParts, "GeometryGroup", QString() )
     << new StaticFunction( "closest_point", 2, fcnClosestPoint, "GeometryGroup" )
     << new StaticFunction( "shortest_line", 2, fcnShortestLine, "GeometryGroup" )
+    << new StaticFunction( "line_interpolate_point", ParameterList() << Parameter( "geometry" )
+                           << Parameter( "distance" ), fcnLineInterpolatePoint, "GeometryGroup" )
+    << new StaticFunction( "line_interpolate_angle", ParameterList() << Parameter( "geometry" )
+                           << Parameter( "distance" ), fcnLineInterpolateAngle, "GeometryGroup" )
+    << new StaticFunction( "line_locate_point", ParameterList() << Parameter( "geometry" )
+                           << Parameter( "point" ), fcnLineLocatePoint, "GeometryGroup" )
+    << new StaticFunction( "angle_at_vertex", ParameterList() << Parameter( "geometry" )
+                           << Parameter( "vertex" ), fcnAngleAtVertex, "GeometryGroup" )
+    << new StaticFunction( "distance_to_vertex", ParameterList() << Parameter( "geometry" )
+                           << Parameter( "vertex" ), fcnDistanceToVertex, "GeometryGroup" )
     << new StaticFunction( "$rownum", 0, fcnRowNumber, "deprecated" )
     << new StaticFunction( "$id", 0, fcnFeatureId, "Record" )
     << new StaticFunction( "$currentfeature", 0, fcnFeature, "Record" )
@@ -3490,6 +3579,14 @@ bool QgsExpression::isValid( const QString &text, const QgsExpressionContext *co
   exp.prepare( context );
   errorMessage = exp.parserErrorString();
   return !exp.hasParserError();
+}
+
+void QgsExpression::setExpression( const QString& expression )
+{
+  detach();
+  d->mRootNode = ::parseExpression( expression, d->mParserErrorString );
+  d->mEvalErrorString = QString();
+  d->mExp = expression;
 }
 
 void QgsExpression::setScale( double scale ) { d->mScale = scale; }
@@ -3615,6 +3712,18 @@ QgsExpression::~QgsExpression()
   Q_ASSERT( d );
   if ( !d->ref.deref() )
     delete d;
+}
+
+bool QgsExpression::operator==( const QgsExpression& other ) const
+{
+  if ( d == other.d || d->mExp == other.d->mExp )
+    return true;
+  return false;
+}
+
+bool QgsExpression::isValid() const
+{
+  return d->mRootNode;
 }
 
 bool QgsExpression::hasParserError() const { return !d->mParserErrorString.isNull(); }
@@ -3795,7 +3904,7 @@ int QgsExpression::currentRowNumber() { return d->mRowNumber; }
 QString QgsExpression::dump() const
 {
   if ( !d->mRootNode )
-    return tr( "(no root)" );
+    return QString();
 
   return d->mRootNode->dump();
 }
@@ -4234,9 +4343,33 @@ QVariant QgsExpression::NodeBinaryOperator::eval( QgsExpression *parent, const Q
         if ( mOp == boLike || mOp == boILike || mOp == boNotLike || mOp == boNotILike ) // change from LIKE syntax to regexp
         {
           QString esc_regexp = QRegExp::escape( regexp );
-          // XXX escape % and _  ???
-          esc_regexp.replace( '%', ".*" );
-          esc_regexp.replace( '_', '.' );
+          // manage escape % and _
+          if ( esc_regexp.startsWith( '%' ) )
+          {
+            esc_regexp.replace( 0, 1, ".*" );
+          }
+          QRegExp rx( "[^\\\\](%)" );
+          int pos = 0;
+          while (( pos = rx.indexIn( esc_regexp, pos ) ) != -1 )
+          {
+            esc_regexp.replace( pos + 1, 1, ".*" );
+            pos += 1;
+          }
+          rx.setPattern( "\\\\%" );
+          esc_regexp.replace( rx, "%" );
+          if ( esc_regexp.startsWith( '_' ) )
+          {
+            esc_regexp.replace( 0, 1, "." );
+          }
+          rx.setPattern( "[^\\\\](_)" );
+          pos = 0;
+          while (( pos = rx.indexIn( esc_regexp, pos ) ) != -1 )
+          {
+            esc_regexp.replace( pos + 1, 1, '.' );
+            pos += 1;
+          }
+          rx.setPattern( "\\\\_" );
+          esc_regexp.replace( rx, "_" );
           matches = QRegExp( esc_regexp, mOp == boLike || mOp == boNotLike ? Qt::CaseSensitive : Qt::CaseInsensitive ).exactMatch( str );
         }
         else
