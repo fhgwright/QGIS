@@ -25,11 +25,11 @@ __copyright__ = '(C) 2012, Victor Olaya'
 
 __revision__ = '$Format:%H$'
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QMessageBox, QApplication, QCursor, QColor, QPalette, QPushButton, QWidget,\
-    QVBoxLayout
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QMessageBox, QApplication, QPushButton, QWidget, QVBoxLayout
+from qgis.PyQt.QtGui import QCursor, QColor, QPalette
 
-from qgis.core import *
+from qgis.core import QgsMapLayerRegistry, QgsExpressionContext, QgsExpressionContextUtils, QgsExpression
 
 from processing.core.ProcessingLog import ProcessingLog
 from processing.core.ProcessingConfig import ProcessingConfig
@@ -49,11 +49,13 @@ from processing.core.parameters import ParameterSelection
 from processing.core.parameters import ParameterFixedTable
 from processing.core.parameters import ParameterRange
 from processing.core.parameters import ParameterTableField
+from processing.core.parameters import ParameterTableMultipleField
 from processing.core.parameters import ParameterMultipleInput
 from processing.core.parameters import ParameterString
 from processing.core.parameters import ParameterNumber
 from processing.core.parameters import ParameterFile
 from processing.core.parameters import ParameterCrs
+from processing.core.parameters import ParameterPoint
 from processing.core.parameters import ParameterGeometryPredicate
 
 from processing.core.outputs import OutputRaster
@@ -73,15 +75,15 @@ class AlgorithmDialog(AlgorithmDialogBase):
         self.mainWidget = ParametersPanel(self, alg)
         self.setMainWidget()
 
-        cornerWidget = QWidget()
+        self.cornerWidget = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 5)
         self.tabWidget.setStyleSheet("QTabBar::tab { height: 30px; }")
-        runAsBatchButton = QPushButton(self.tr("Run as batch process..."))
-        runAsBatchButton.clicked.connect(self.runAsBatch)
-        layout.addWidget(runAsBatchButton)
-        cornerWidget.setLayout(layout)
-        self.tabWidget.setCornerWidget(cornerWidget)
+        self.runAsBatchButton = QPushButton(self.tr("Run as batch process..."))
+        self.runAsBatchButton.clicked.connect(self.runAsBatch)
+        layout.addWidget(self.runAsBatchButton)
+        self.cornerWidget.setLayout(layout)
+        self.tabWidget.setCornerWidget(self.cornerWidget)
 
         QgsMapLayerRegistry.instance().layerWasAdded.connect(self.mainWidget.layerAdded)
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.mainWidget.layersWillBeRemoved)
@@ -101,8 +103,8 @@ class AlgorithmDialog(AlgorithmDialogBase):
                 continue
             if not self.setParamValue(
                     param, self.mainWidget.valueItems[param.name]):
-                raise AlgorithmDialogBase.InvalidParameterValue(param,
-                                                                self.mainWidget.valueItems[param.name])
+                raise AlgorithmDialogBase.InvalidParameterValue(
+                    param, self.mainWidget.valueItems[param.name])
 
         for param in params:
             if isinstance(param, ParameterExtent):
@@ -120,6 +122,18 @@ class AlgorithmDialog(AlgorithmDialogBase):
 
         return True
 
+    def evaluateExpression(self, text):
+        context = QgsExpressionContext()
+        context.appendScope(QgsExpressionContextUtils.globalScope())
+        context.appendScope(QgsExpressionContextUtils.projectScope())
+        exp = QgsExpression(text)
+        if exp.hasParserError():
+            raise Exception(exp.parserErrorString())
+        result = exp.evaluate(context)
+        if exp.hasEvalError():
+            raise ValueError(exp.evalErrorString())
+        return result
+
     def setParamValue(self, param, widget, alg=None):
         if isinstance(param, ParameterRaster):
             return param.setValue(widget.getValue())
@@ -136,10 +150,14 @@ class AlgorithmDialog(AlgorithmDialogBase):
             return param.setValue(widget.table)
         elif isinstance(param, ParameterRange):
             return param.setValue(widget.getValue())
-        if isinstance(param, ParameterTableField):
+        elif isinstance(param, ParameterTableField):
             if param.optional and widget.currentIndex() == 0:
                 return param.setValue(None)
             return param.setValue(widget.currentText())
+        elif isinstance(param, ParameterTableMultipleField):
+            if param.optional and len(list(widget.get_selected_items())) == 0:
+                return param.setValue(None)
+            return param.setValue(list(widget.get_selected_items()))
         elif isinstance(param, ParameterMultipleInput):
             if param.datatype == ParameterMultipleInput.TYPE_FILE:
                 return param.setValue(widget.selectedoptions)
@@ -152,13 +170,20 @@ class AlgorithmDialog(AlgorithmDialogBase):
                     options = dataobjects.getVectorLayers([param.datatype], sorting=False)
                 return param.setValue([options[i] for i in widget.selectedoptions])
         elif isinstance(param, (ParameterNumber, ParameterFile, ParameterCrs,
-                                ParameterExtent)):
+                                ParameterExtent, ParameterPoint)):
             return param.setValue(widget.getValue())
         elif isinstance(param, ParameterString):
             if param.multiline:
-                return param.setValue(unicode(widget.toPlainText()))
+                text = unicode(widget.toPlainText())
             else:
-                return param.setValue(unicode(widget.text()))
+                text = widget.text()
+
+            if param.evaluateExpressions:
+                try:
+                    text = self.evaluateExpression(text)
+                except:
+                    pass
+            return param.setValue(text)
         elif isinstance(param, ParameterGeometryPredicate):
             return param.setValue(widget.value())
         else:

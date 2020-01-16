@@ -144,16 +144,20 @@ class QGis
     //TODO QGIS 3.0 - clean up and move to QgsUnitTypes and rename to DistanceUnit
     enum UnitType
     {
-      Meters,
-      Feet,
-      Degrees, //for 1.0 api backwards compatibility
-      UnknownUnit,
+      Meters, /*!< meters */
+      Feet, /*!< imperial feet */
+      Degrees, /*!< degrees, for planar geographic CRS distance measurements */ //for 1.0 api backwards compatibility
+      NauticalMiles, /*!< nautical miles */
+      Kilometers, /*!< kilometers */
+      Yards, /*!< imperial yards */
+      Miles, /*!< terrestial miles */
+
+      UnknownUnit, /*!< unknown distance unit */
 
       // for [1.4;1.8] api compatibility
       DecimalDegrees,         // was 2
       DegreesMinutesSeconds,  // was 4
       DegreesDecimalMinutes,  // was 5
-      NauticalMiles
     };
 
     //! Provides the canonical name of the type value
@@ -231,6 +235,12 @@ class QGis
     /** Default highlight line/outline minimum width in mm.
      *  @note added in 2.3 */
     static double DEFAULT_HIGHLIGHT_MIN_WIDTH_MM;
+
+    /** Fudge factor used to compare two scales. The code is often going from scale to scale
+     *  denominator. So it looses precision and, when a limit is inclusive, can lead to errors.
+     *  To avoid that, use this factor instead of using <= or >=.
+     * @note added in 2.15*/
+    static double SCALE_PRECISION;
 };
 
 //! Compares two QVariant values and returns whether the first is less than the second.

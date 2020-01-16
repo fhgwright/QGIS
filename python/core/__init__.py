@@ -23,19 +23,14 @@ __copyright__ = '(C) 2014, Nathan Woodrow'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-try:
-    import sip
-    sip.setapi("QVariant", 2)
-except:
-    pass
+from qgis.PyQt.QtCore import QCoreApplication, NULL
 
 import inspect
 import string
 from qgis._core import *
-from PyQt4.QtCore import QCoreApplication
 
 
-def register_function(function, arg_count, group, usesgeometry=False, **kwargs):
+def register_function(function, arg_count, group, usesgeometry=False, referenced_columns=[QgsFeatureRequest.AllAttributes], **kwargs):
     """
     Register a Python function to be used as a expression function.
 
@@ -64,8 +59,8 @@ def register_function(function, arg_count, group, usesgeometry=False, **kwargs):
     """
     class QgsExpressionFunction(QgsExpression.Function):
 
-        def __init__(self, func, name, args, group, helptext='', usesgeometry=True, expandargs=False):
-            QgsExpression.Function.__init__(self, name, args, group, helptext, usesgeometry)
+        def __init__(self, func, name, args, group, helptext='', usesgeometry=True, referencedColumns=QgsFeatureRequest.AllAttributes, expandargs=False):
+            QgsExpression.Function.__init__(self, name, args, group, helptext, usesgeometry, referencedColumns)
             self.function = func
             self.expandargs = expandargs
 
@@ -105,7 +100,7 @@ def register_function(function, arg_count, group, usesgeometry=False, **kwargs):
 
     function.__name__ = name
     helptext = helptemplate.safe_substitute(name=name, doc=helptext)
-    f = QgsExpressionFunction(function, name, arg_count, group, helptext, usesgeometry, expandargs)
+    f = QgsExpressionFunction(function, name, arg_count, group, helptext, usesgeometry, referenced_columns, expandargs)
 
     # This doesn't really make any sense here but does when used from a decorator context
     # so it can stay.
@@ -137,45 +132,6 @@ def qgsfunction(args='auto', group='custom', **kwargs):
     def wrapper(func):
         return register_function(func, args, group, **kwargs)
     return wrapper
-
-try:
-    # Add a __nonzero__ method onto QPyNullVariant so we can check for null values easier.
-    #   >>> value = QPyNullVariant("int")
-    #   >>> if value:
-    #   >>>	  print "Not a null value"
-    from types import MethodType
-    from PyQt4.QtCore import QPyNullVariant
-
-    def __nonzero__(self):
-        return False
-
-    def __repr__(self):
-        return 'NULL'
-
-    def __eq__(self, other):
-        return isinstance(other, QPyNullVariant) or other is None
-
-    def __ne__(self, other):
-        return not isinstance(other, QPyNullVariant) and other is not None
-
-    def __hash__(self):
-        return 2178309
-
-    QPyNullVariant.__nonzero__ = MethodType(__nonzero__, None, QPyNullVariant)
-    QPyNullVariant.__repr__ = MethodType(__repr__, None, QPyNullVariant)
-    QPyNullVariant.__eq__ = MethodType(__eq__, None, QPyNullVariant)
-    QPyNullVariant.__ne__ = MethodType(__ne__, None, QPyNullVariant)
-    QPyNullVariant.__hash__ = MethodType(__hash__, None, QPyNullVariant)
-
-    NULL = QPyNullVariant(int)
-
-except ImportError:
-    try:
-        # TODO: Fixme, this creates an invalid variant, not a NULL one
-        from PyQt5.QtCore import QVariant
-        NULL = QVariant()
-    except (ImportError, RuntimeError):
-        pass
 
 
 class QgsEditError(Exception):

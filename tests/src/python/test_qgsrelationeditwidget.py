@@ -12,15 +12,13 @@ __copyright__ = 'Copyright 2015, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
 
 from qgis.core import (
     QgsFeature,
-    QgsGeometry,
-    QgsPoint,
     QgsVectorLayer,
-    NULL,
     QgsProject,
     QgsRelation,
     QgsMapLayerRegistry,
@@ -32,31 +30,13 @@ from qgis.gui import (
     QgsEditorWidgetRegistry,
     QgsRelationWidgetWrapper,
     QgsAttributeEditorContext,
-    QgsVectorLayerTools,
-    QgsFeatureListView
+    QgsVectorLayerTools
 )
 
-from qgis.PyQt.QtCore import (
-    QTimer
-)
+from qgis.PyQt.QtCore import QTimer
+from qgis.PyQt.QtWidgets import QToolButton, QTableView, QApplication
+from qgis.testing import start_app, unittest
 
-from qgis.PyQt.QtWidgets import (
-    QWidget,
-    QToolButton,
-    QTableView,
-    QListView
-)
-
-from qgis.PyQt.QtGui import (
-    QApplication
-)
-
-from time import sleep
-
-from qgis.testing import (start_app,
-                          unittest
-                          )
-from utilities import unitTestDataPath
 start_app()
 
 
@@ -118,11 +98,11 @@ class TestQgsRelationEditWidget(unittest.TestCase):
         """
         self.createWrapper(self.vl_a, '"name"=\'Erich Gamma\'')
 
-        self.assertEquals(self.table_view.model().rowCount(), 1)
+        self.assertEqual(self.table_view.model().rowCount(), 1)
 
-        self.assertEquals(1, len([f for f in self.vl_b.getFeatures()]))
+        self.assertEqual(1, len([f for f in self.vl_b.getFeatures()]))
 
-        fid = self.vl_b.getFeatures(QgsFeatureRequest().setFilterExpression('"name"=\'Design Patterns. Elements of Reusable Object-Oriented Software\'')).next().id()
+        fid = next(self.vl_b.getFeatures(QgsFeatureRequest().setFilterExpression('"name"=\'Design Patterns. Elements of Reusable Object-Oriented Software\''))).id()
 
         self.widget.featureSelectionManager().select([fid])
 
@@ -130,47 +110,47 @@ class TestQgsRelationEditWidget(unittest.TestCase):
         btn.click()
 
         # This is the important check that the feature is deleted
-        self.assertEquals(0, len([f for f in self.vl_b.getFeatures()]))
+        self.assertEqual(0, len([f for f in self.vl_b.getFeatures()]))
 
         # This is actually more checking that the database on delete action is properly set on the relation
-        self.assertEquals(0, len([f for f in self.vl_link.getFeatures()]))
+        self.assertEqual(0, len([f for f in self.vl_link.getFeatures()]))
 
-        self.assertEquals(self.table_view.model().rowCount(), 0)
+        self.assertEqual(self.table_view.model().rowCount(), 0)
 
     def test_list(self):
         """
         Simple check if several related items are shown
         """
-        wrapper = self.createWrapper(self.vl_b)
+        wrapper = self.createWrapper(self.vl_b)  # NOQA
 
-        self.assertEquals(self.table_view.model().rowCount(), 4)
+        self.assertEqual(self.table_view.model().rowCount(), 4)
 
-    @unittest.expectedFailure
+    @unittest.expectedFailure(os.environ['QT_VERSION'] == '4' and os.environ['TRAVIS_OS_NAME'] == 'linux') # It's probably not related to this variables at all, but that's the closest we can get to the real source of this problem at the moment...
     def test_add_feature(self):
         """
         Check if a new related feature is added
         """
         self.createWrapper(self.vl_a, '"name"=\'Douglas Adams\'')
 
-        self.assertEquals(self.table_view.model().rowCount(), 0)
+        self.assertEqual(self.table_view.model().rowCount(), 0)
 
         self.vltools.setValues([None, 'The Hitchhiker\'s Guide to the Galaxy'])
         btn = self.widget.findChild(QToolButton, 'mAddFeatureButton')
         btn.click()
 
         # Book entry has been created
-        self.assertEquals(2, len([f for f in self.vl_b.getFeatures()]))
+        self.assertEqual(2, len([f for f in self.vl_b.getFeatures()]))
 
         # Link entry has been created
-        self.assertEquals(5, len([f for f in self.vl_link.getFeatures()]))
+        self.assertEqual(5, len([f for f in self.vl_link.getFeatures()]))
 
-        self.assertEquals(self.table_view.model().rowCount(), 1)
+        self.assertEqual(self.table_view.model().rowCount(), 1)
 
     def test_link_feature(self):
         """
         Check if an existing feature can be linked
         """
-        wrapper = self.createWrapper(self.vl_a, '"name"=\'Douglas Adams\'')
+        wrapper = self.createWrapper(self.vl_a, '"name"=\'Douglas Adams\'')  # NOQA
 
         f = QgsFeature(self.vl_b.fields())
         f.setAttributes([self.vl_b.dataProvider().defaultValue(0), 'The Hitchhiker\'s Guide to the Galaxy'])
@@ -185,28 +165,27 @@ class TestQgsRelationEditWidget(unittest.TestCase):
 
         timer = QTimer()
         timer.setSingleShot(True)
-        timer.setInterval(0) # will run in the event loop as soon as it's processed when the dialog is opened
+        timer.setInterval(0)  # will run in the event loop as soon as it's processed when the dialog is opened
         timer.timeout.connect(choose_linked_feature)
         timer.start()
 
         btn.click()
         # magically the above code selects the feature here...
 
-        link_feature = self.vl_link.getFeatures(QgsFeatureRequest().setFilterExpression('"fk_book"={}'.format(f[0]))).next()
+        link_feature = next(self.vl_link.getFeatures(QgsFeatureRequest().setFilterExpression('"fk_book"={}'.format(f[0]))))
         self.assertIsNotNone(link_feature[0])
 
-        self.assertEquals(self.table_view.model().rowCount(), 1)
+        self.assertEqual(self.table_view.model().rowCount(), 1)
 
-    @unittest.expectedFailure
     def test_unlink_feature(self):
         """
         Check if a linked feature can be unlinked
         """
         wrapper = self.createWrapper(self.vl_b)
-        wdg = wrapper.widget()
+        wdg = wrapper.widget()  # NOQA
 
         # All authors are listed
-        self.assertEquals(self.table_view.model().rowCount(), 4)
+        self.assertEqual(self.table_view.model().rowCount(), 4)
 
         it = self.vl_a.getFeatures(
             QgsFeatureRequest().setFilterExpression('"name" IN (\'Richard Helm\', \'Ralph Johnson\')'))
@@ -217,9 +196,9 @@ class TestQgsRelationEditWidget(unittest.TestCase):
         btn.click()
 
         # This is actually more checking that the database on delete action is properly set on the relation
-        self.assertEquals(2, len([f for f in self.vl_link.getFeatures()]))
+        self.assertEqual(2, len([f for f in self.vl_link.getFeatures()]))
 
-        self.assertEquals(2, self.table_view.model().rowCount())
+        self.assertEqual(2, self.table_view.model().rowCount())
 
     def startTransaction(self):
         """
@@ -266,7 +245,6 @@ class TestQgsRelationEditWidget(unittest.TestCase):
             relation = self.rel_a
             nmrel = self.rel_b
 
-        parent = QWidget()
         self.wrapper = QgsRelationWidgetWrapper(layer, relation)
         self.wrapper.setConfig({'nm-rel': nmrel.id()})
         context = QgsAttributeEditorContext()
@@ -279,7 +257,7 @@ class TestQgsRelationEditWidget(unittest.TestCase):
         request = QgsFeatureRequest()
         if filter:
             request.setFilterExpression(filter)
-        book = layer.getFeatures(request).next()
+        book = next(layer.getFeatures(request))
         self.wrapper.setFeature(book)
 
         self.table_view = self.widget.findChild(QTableView)

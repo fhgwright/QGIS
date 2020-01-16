@@ -24,7 +24,7 @@
 
 class QgsValueRelationWidgetFactory;
 
-/**
+/** \ingroup gui
  * Wraps a value relation widget. This widget will offer a combobox with values from another layer
  * referenced by a foreign key (a constraint may be set but is not required on data level).
  * This is useful for having value lists on a separate layer containing codes and their
@@ -66,6 +66,7 @@ class GUI_EXPORT QgsValueRelationWidgetWrapper : public QgsEditorWidgetWrapper
     QVariant value() const override;
     // TODO or have friend class :)
     static ValueRelationCache createCache( const QgsEditorWidgetConfig& config );
+    void showIndeterminateState() override;
 
   protected:
     QWidget* createWidget( QWidget* parent ) override;

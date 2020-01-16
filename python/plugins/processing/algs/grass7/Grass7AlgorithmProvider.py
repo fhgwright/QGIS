@@ -26,14 +26,14 @@ __copyright__ = '(C) 2014, Victor Olaya'
 __revision__ = '$Format:%H$'
 
 import os
-from PyQt4.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon
 from processing.core.ProcessingConfig import ProcessingConfig, Setting
 from processing.core.AlgorithmProvider import AlgorithmProvider
 from processing.core.ProcessingLog import ProcessingLog
-from Grass7Utils import Grass7Utils
-from Grass7Algorithm import Grass7Algorithm
+from .Grass7Utils import Grass7Utils
+from .Grass7Algorithm import Grass7Algorithm
 from processing.tools.system import isWindows, isMac
-from nviz7 import nviz7
+from .nviz7 import nviz7
 
 pluginPath = os.path.normpath(os.path.join(
     os.path.split(os.path.dirname(__file__))[0], os.pardir))
@@ -84,7 +84,7 @@ class Grass7AlgorithmProvider(AlgorithmProvider):
                 except Exception as e:
                     ProcessingLog.addToLog(
                         ProcessingLog.LOG_ERROR,
-                        self.tr('Could not open GRASS GIS 7 algorithm: %s' % descriptionFile))
+                        self.tr('Could not open GRASS GIS 7 algorithm: %s\n%s') % (descriptionFile, unicode(e)))
         self.preloadedAlgs.append(nviz7())
 
     def _loadAlgorithms(self):

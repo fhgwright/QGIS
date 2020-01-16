@@ -6,23 +6,25 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 """
+from builtins import chr
+from builtins import str
 __author__ = 'Matthias Kuhn'
 __date__ = '4/28/2015'
 __copyright__ = 'Copyright 2015, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
 from qgis.testing import unittest
-from qgis.utils import qgsfunction
 from qgis.core import QgsNetworkContentFetcher
 from utilities import unitTestDataPath
-from PyQt4.QtCore import QUrl, QCoreApplication
-from PyQt4.QtNetwork import QNetworkReply
-import SocketServer
+from qgis.PyQt.QtCore import QUrl, QCoreApplication
+from qgis.PyQt.QtNetwork import QNetworkReply
+import socketserver
 import threading
-import SimpleHTTPServer
+import http.server
 
 
 class TestQgsNetworkContentFetcher(unittest.TestCase):
@@ -31,9 +33,9 @@ class TestQgsNetworkContentFetcher(unittest.TestCase):
     def setUpClass(cls):
         # Bring up a simple HTTP server
         os.chdir(unitTestDataPath() + '')
-        handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        handler = http.server.SimpleHTTPRequestHandler
 
-        cls.httpd = SocketServer.TCPServer(('localhost', 0), handler)
+        cls.httpd = socketserver.TCPServer(('localhost', 0), handler)
         cls.port = cls.httpd.server_address[1]
 
         cls.httpd_thread = threading.Thread(target=cls.httpd.serve_forever)
@@ -115,7 +117,7 @@ class TestQgsNetworkContentFetcher(unittest.TestCase):
         assert r.error() == QNetworkReply.NoError, r.error()
 
         html = fetcher.contentAsString()
-        assert unichr(6040) in html
+        assert chr(6040) in html
 
 if __name__ == "__main__":
     unittest.main()

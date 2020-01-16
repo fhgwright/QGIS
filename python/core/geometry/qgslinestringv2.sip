@@ -106,6 +106,10 @@ class QgsLineStringV2: public QgsCurveV2
      */
     QPolygonF asQPolygonF() const;
 
+    /** Returns the geometry converted to the more generic curve type QgsCompoundCurveV2
+        @return the converted geometry. Caller takes ownership*/
+    QgsAbstractGeometryV2* toCurveType() const /Factory/;
+
     //reimplemented methods
 
     virtual QString geometryType() const;
@@ -127,14 +131,18 @@ class QgsLineStringV2: public QgsCurveV2
     virtual double length() const;
     virtual QgsPointV2 startPoint() const;
     virtual QgsPointV2 endPoint() const;
-    virtual QgsLineStringV2* curveToLine() const /Factory/;
+    /** Returns a new line string geometry corresponding to a segmentized approximation
+     * of the curve.
+     * @param tolerance segmentation tolerance
+     * @param toleranceType maximum segmentation angle or maximum difference between approximation and curve*/
+    virtual QgsLineStringV2* curveToLine( double tolerance = M_PI_2 / 90, SegmentationToleranceType toleranceType = MaximumAngle ) const /Factory/;
 
     int numPoints() const;
     void points( QList<QgsPointV2>& pt ) const;
 
     void draw( QPainter& p ) const;
-
-    void transform( const QgsCoordinateTransform& ct, QgsCoordinateTransform::TransformDirection d = QgsCoordinateTransform::ForwardTransform );
+    void transform( const QgsCoordinateTransform& ct, QgsCoordinateTransform::TransformDirection d = QgsCoordinateTransform::ForwardTransform,
+                    bool transformZ = false );
     void transform( const QTransform& t );
 
     void addToPainterPath( QPainterPath& path ) const;

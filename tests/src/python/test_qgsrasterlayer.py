@@ -6,17 +6,19 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 """
+from builtins import str
 __author__ = 'Tim Sutton'
 __date__ = '20/08/2012'
 __copyright__ = 'Copyright 2012, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
 
-from PyQt4.QtCore import QFileInfo, QObject, SIGNAL
-from PyQt4 import QtGui
+from qgis.PyQt.QtCore import QFileInfo
+from qgis.PyQt.QtGui import QColor
 
 from qgis.core import (QgsRaster,
                        QgsRasterLayer,
@@ -31,9 +33,7 @@ from qgis.core import (QgsRaster,
                        QgsSingleBandGrayRenderer,
                        QgsSingleBandPseudoColorRenderer)
 from utilities import unitTestDataPath
-from qgis.testing import (start_app,
-                          unittest
-                          )
+from qgis.testing import start_app, unittest
 
 # Convenience instances in case you may need them
 # not used in this test
@@ -58,7 +58,7 @@ class TestQgsRasterLayer(unittest.TestCase):
         assert len(myRasterValues) > 0
 
         # Get the name of the first band
-        myBand = myRasterValues.keys()[0]
+        myBand = list(myRasterValues.keys())[0]
         # myExpectedName = 'Band 1
         myExpectedBand = 1
         myMessage = 'Expected "%s" got "%s" for first raster band name' % (
@@ -67,14 +67,14 @@ class TestQgsRasterLayer(unittest.TestCase):
 
         # Convert each band value to a list of ints then to a string
 
-        myValues = myRasterValues.values()
+        myValues = list(myRasterValues.values())
         myIntValues = []
         for myValue in myValues:
             myIntValues.append(int(myValue))
         myValues = str(myIntValues)
         myExpectedValues = '[127, 141, 112, 72, 86, 126, 156, 211, 170]'
         myMessage = 'Expected: %s\nGot: %s' % (myValues, myExpectedValues)
-        self.assertEquals(myValues, myExpectedValues, myMessage)
+        self.assertEqual(myValues, myExpectedValues, myMessage)
 
     def testTransparency(self):
         myPath = os.path.join(unitTestDataPath('raster'),
@@ -175,13 +175,13 @@ class TestQgsRasterLayer(unittest.TestCase):
         myColorRampShader.setColorRampType(QgsColorRampShader.INTERPOLATED)
         myItems = []
         myItem = QgsColorRampShader.ColorRampItem(
-            10, QtGui.QColor('#ffff00'), 'foo')
+            10, QColor('#ffff00'), 'foo')
         myItems.append(myItem)
         myItem = QgsColorRampShader.ColorRampItem(
-            100, QtGui.QColor('#ff00ff'), 'bar')
+            100, QColor('#ff00ff'), 'bar')
         myItems.append(myItem)
         myItem = QgsColorRampShader.ColorRampItem(
-            1000, QtGui.QColor('#00ff00'), 'kazam')
+            1000, QColor('#00ff00'), 'kazam')
         myItems.append(myItem)
         myColorRampShader.setColorRampItemList(myItems)
         myRasterShader.setRasterShaderFunction(myColorRampShader)
@@ -197,13 +197,13 @@ class TestQgsRasterLayer(unittest.TestCase):
         myColorRampShader.setColorRampType(QgsColorRampShader.INTERPOLATED)
         myItems = []
         myItem = QgsColorRampShader.ColorRampItem(10,
-                                                  QtGui.QColor('#ffff00'), 'foo')
+                                                  QColor('#ffff00'), 'foo')
         myItems.append(myItem)
         myItem = QgsColorRampShader.ColorRampItem(100,
-                                                  QtGui.QColor('#ff00ff'), 'bar')
+                                                  QColor('#ff00ff'), 'bar')
         myItems.append(myItem)
         myItem = QgsColorRampShader.ColorRampItem(1000,
-                                                  QtGui.QColor('#00ff00'), 'kazam')
+                                                  QColor('#00ff00'), 'kazam')
         myItems.append(myItem)
         myColorRampShader.setColorRampItemList(myItems)
         myRasterShader.setRasterShaderFunction(myColorRampShader)
@@ -223,8 +223,7 @@ class TestQgsRasterLayer(unittest.TestCase):
         layer = QgsRasterLayer(myPath, myBaseName)
 
         self.rendererChanged = False
-        QObject.connect(layer, SIGNAL("rendererChanged()"),
-                        self.onRendererChanged)
+        layer.rendererChanged.connect(self.onRendererChanged)
 
         rShader = QgsRasterShader()
         r = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, rShader)

@@ -58,8 +58,12 @@ class QgsMapSettings;
 class QgsLabelFeature;
 class QgsLabelingEngineV2;
 class QgsVectorLayerLabelProvider;
+class QgsDxfExport;
 class QgsVectorLayerDiagramProvider;
 
+/** \ingroup core
+ * \class QgsPalLayerSettings
+ */
 class CORE_EXPORT QgsPalLayerSettings
 {
   public:
@@ -533,7 +537,6 @@ class CORE_EXPORT QgsPalLayerSettings
      * @param f feature to label
      * @param context render context. The QgsExpressionContext contained within the render context
      * must have already had the feature and fields sets prior to calling this method.
-     * @param dxfLayer dxfLayer name
      * @param labelFeature if using QgsLabelingEngineV2, this will receive the label feature. Not available
      * in Python bindings.
      * @param obstacleGeometry optional obstacle geometry, if a different geometry to the feature's geometry
@@ -542,7 +545,7 @@ class CORE_EXPORT QgsPalLayerSettings
      * the feature's original geometry will be used as an obstacle for labels. Not available
      * in Python bindings.
      */
-    void registerFeature( QgsFeature& f, QgsRenderContext& context, const QString& dxfLayer, QgsLabelFeature** labelFeature = nullptr, QgsGeometry* obstacleGeometry = nullptr );
+    void registerFeature( QgsFeature& f, QgsRenderContext& context, QgsLabelFeature** labelFeature = nullptr, QgsGeometry* obstacleGeometry = nullptr );
 
     void readFromLayer( QgsVectorLayer* layer );
     void writeToLayer( QgsVectorLayer* layer );
@@ -712,7 +715,7 @@ class CORE_EXPORT QgsPalLayerSettings
 
     /** Registers a feature as an obstacle only (no label rendered)
      */
-    void registerObstacleFeature( QgsFeature &f, QgsRenderContext &context, const QString& dxfLayer, QgsLabelFeature** obstacleFeature, QgsGeometry* obstacleGeometry = nullptr );
+    void registerObstacleFeature( QgsFeature &f, QgsRenderContext &context, QgsLabelFeature** obstacleFeature, QgsGeometry* obstacleGeometry = nullptr );
 
     QMap<DataDefinedProperties, QVariant> dataDefinedValues;
     QgsExpression* expression;
@@ -723,6 +726,8 @@ class CORE_EXPORT QgsPalLayerSettings
     static QVector< PredefinedPointPosition > DEFAULT_PLACEMENT_ORDER;
 };
 
+/** \ingroup core
+ */
 class CORE_EXPORT QgsLabelCandidate
 {
   public:
@@ -830,7 +835,7 @@ class CORE_EXPORT QgsLabelComponent
 };
 
 
-/**
+/** \ingroup core
  * Class that stores computed placement from labeling engine.
  * @note added in 2.4
  */
@@ -857,6 +862,9 @@ class CORE_EXPORT QgsLabelingResults
 };
 
 Q_NOWARN_DEPRECATED_PUSH
+/** \ingroup core
+ * \class QgsPalLabeling
+ */
 class CORE_EXPORT QgsPalLabeling : public QgsLabelingEngineInterface
 {
   public:
@@ -949,9 +957,8 @@ class CORE_EXPORT QgsPalLabeling : public QgsLabelingEngineInterface
      * @param feat feature to label
      * @param context render context. The QgsExpressionContext contained within the render context
      * must have already had the feature and fields sets prior to calling this method.
-     * @param dxfLayer dxfLayer name
      */
-    virtual void registerFeature( const QString& layerID, QgsFeature& feat, QgsRenderContext& context, const QString& dxfLayer = QString::null ) override;
+    virtual void registerFeature( const QString& layerID, QgsFeature& feat, QgsRenderContext& context ) override;
 
     virtual void registerDiagramFeature( const QString& layerID, QgsFeature& feat, QgsRenderContext& context ) override;
     //! called when the map is drawn and labels should be placed
@@ -1057,6 +1064,7 @@ class CORE_EXPORT QgsPalLabeling : public QgsLabelingEngineInterface
                                        const QMap< QgsPalLayerSettings::DataDefinedProperties, QVariant >& ddValues );
 
     friend class QgsVectorLayerLabelProvider; // to allow calling the static methods above
+    friend class QgsDxfExport;                // to allow calling the static methods above
 
     void deleteTemporaryData();
 

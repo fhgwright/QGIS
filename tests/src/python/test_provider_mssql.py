@@ -12,31 +12,16 @@ __copyright__ = 'Copyright 2015, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
-import sys
-from qgis.core import NULL
 
-from qgis.core import (
-    QgsVectorLayer,
-    QgsFeatureRequest,
-    QgsFeature,
-    QgsProviderRegistry
-)
+from qgis.core import QgsVectorLayer, QgsFeatureRequest
 
-from PyQt4.QtCore import (
-    QSettings,
-    QDate,
-    QTime,
-    QDateTime,
-    QVariant
-)
+from qgis.PyQt.QtCore import QSettings, QDate, QTime, QDateTime, QVariant
 
 from utilities import unitTestDataPath
-from qgis.testing import (
-    start_app,
-    unittest
-)
+from qgis.testing import start_app, unittest
 from providertestbase import ProviderTestCase
 
 start_app()
@@ -85,7 +70,7 @@ class TestPyQgsMssqlProvider(unittest.TestCase, ProviderTestCase):
         self.assertEqual(fields.at(fields.indexFromName(
             'datetime_field')).type(), QVariant.DateTime)
 
-        f = vl.getFeatures(QgsFeatureRequest()).next()
+        f = next(vl.getFeatures(QgsFeatureRequest()))
 
         date_idx = vl.fieldNameIndex('date_field')
         assert isinstance(f.attributes()[date_idx], QDate)

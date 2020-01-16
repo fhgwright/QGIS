@@ -11,12 +11,12 @@ SET(QGIS_APP_SRCS
   qgsjoindialog.cpp
   qgsannotationwidget.cpp
   qgsattributeactiondialog.cpp
+  qgsattributeactionpropertiesdialog.cpp
   qgsattributetypedialog.cpp
   qgsattributetabledialog.cpp
   qgsbookmarks.cpp
   qgsbrowserdockwidget.cpp
   qgsclipboard.cpp
-  qgsconfigureshortcutsdialog.cpp
   qgscustomization.cpp
   qgscustomprojectiondialog.cpp
   qgsdecorationitem.cpp
@@ -50,6 +50,8 @@ SET(QGIS_APP_SRCS
   qgsrulebasedlabelingwidget.cpp
   qgssavestyletodbdialog.cpp
   qgsstatusbarcoordinateswidget.cpp
+  qgsstatusbarmagnifierwidget.cpp
+  qgsstatusbarscalewidget.cpp
   qgsversioninfo.cpp
   qgswelcomepageitemsmodel.cpp
   qgswelcomepage.cpp
@@ -73,6 +75,8 @@ SET(QGIS_APP_SRCS
   qgsmaptoolmovefeature.cpp
   qgsmaptoolmovelabel.cpp
   qgsmaptooloffsetcurve.cpp
+  qgsmaptooloffsetpointsymbol.cpp
+  qgsmaptoolpointsymbol.cpp
   qgsmaptoolreshape.cpp
   qgsmaptoolrotatefeature.cpp
   qgsmaptoolrotatelabel.cpp
@@ -94,10 +98,12 @@ SET(QGIS_APP_SRCS
   nodetool/qgsvertexentry.cpp
   nodetool/qgsnodeeditor.cpp
 
+  qgslayerstylingwidget.cpp
   qgsmeasuredialog.cpp
   qgsmeasuretool.cpp
   qgsmergeattributesdialog.cpp
   qgsoptions.cpp
+  qgspointmarkeritem.cpp
   qgspointrotationitem.cpp
   qgspluginmetadata.cpp
   qgspluginregistry.cpp
@@ -107,9 +113,9 @@ SET(QGIS_APP_SRCS
   qgsrasterlayerproperties.cpp
   qgsrelationmanagerdialog.cpp
   qgsrelationadddlg.cpp
+  qgsselectbyformdialog.cpp
   qgsstatisticalsummarydockwidget.cpp
   qgstextannotationdialog.cpp
-  qgsshortcutsmanager.cpp
   qgssnappingdialog.cpp
   qgssvgannotationdialog.cpp
   qgsundowidget.cpp
@@ -135,6 +141,8 @@ SET(QGIS_APP_SRCS
   composer/qgscomposermapwidget.cpp
   composer/qgscomposerscalebarwidget.cpp
   composer/qgscomposershapewidget.cpp
+  composer/qgscomposerpolygonwidget.cpp
+  composer/qgscomposerpolylinewidget.cpp
   composer/qgscomposertablewidget.cpp
   composer/qgscomposertablebackgroundcolorsdialog.cpp
   composer/qgscomposerlegenditemdialog.cpp
@@ -181,12 +189,12 @@ SET (QGIS_APP_MOC_HDRS
   qgsannotationwidget.h
   qgsapplayertreeviewmenuprovider.h
   qgsattributeactiondialog.h
+  qgsattributeactionpropertiesdialog.h
   qgsattributetypedialog.h
   qgsattributetabledialog.h
   qgsbookmarks.h
   qgsbrowserdockwidget.h
   qgsclipboard.h
-  qgsconfigureshortcutsdialog.h
   qgscustomization.h
   qgscustomprojectiondialog.h
   qgsdecorationitem.h
@@ -219,8 +227,9 @@ SET (QGIS_APP_MOC_HDRS
   qgsmaplayerstyleguiutils.h
   qgsrulebasedlabelingwidget.h
   qgssavestyletodbdialog.h
-  qgsshortcutsmanager.h
   qgsstatusbarcoordinateswidget.h
+  qgsstatusbarmagnifierwidget.h
+  qgsstatusbarscalewidget.h
   qgsversioninfo.h
   qgswelcomepageitemsmodel.h
   qgswelcomepage.h
@@ -245,6 +254,8 @@ SET (QGIS_APP_MOC_HDRS
   qgsmaptoolmovelabel.h
   qgsmaptoollabel.h
   qgsmaptooloffsetcurve.h
+  qgsmaptooloffsetpointsymbol.h
+  qgsmaptoolpointsymbol.h
   qgsmaptoolreshape.h
   qgsmaptoolrotatefeature.h
   qgsmaptoolrotatelabel.h
@@ -266,6 +277,7 @@ SET (QGIS_APP_MOC_HDRS
   nodetool/qgsselectedfeature.h
   nodetool/qgsnodeeditor.h
 
+  qgslayerstylingwidget.h
   qgsmeasuredialog.h
   qgsmeasuretool.h
   qgsmergeattributesdialog.h
@@ -276,6 +288,7 @@ SET (QGIS_APP_MOC_HDRS
   qgsrasterlayerproperties.h
   qgsrelationmanagerdialog.h
   qgsrelationadddlg.h
+  qgsselectbyformdialog.h
   qgssnappingdialog.h
   qgssponsors.h
   qgsstatisticalsummarydockwidget.h
@@ -306,6 +319,8 @@ SET (QGIS_APP_MOC_HDRS
   composer/qgscomposertablewidget.h
   composer/qgscomposertablebackgroundcolorsdialog.h
   composer/qgscomposershapewidget.h
+  composer/qgscomposerpolygonwidget.h
+  composer/qgscomposerpolylinewidget.h
   composer/qgscompositionwidget.h
   composer/qgsatlascompositionwidget.h
 
@@ -569,12 +584,7 @@ ELSE (ANDROID)
   ADD_EXECUTABLE(${QGIS_APP_NAME} MACOSX_BUNDLE WIN32 ${QGIS_APPMAIN_SRCS} ${IMAGE_RCC_SRCS} ${TEST_RCC_SRCS})
 ENDIF (ANDROID)
 
-IF (NOT MSVC)
-  ADD_DEFINITIONS("-UAPP_EXPORT")
-  IF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
-  ENDIF()
-ENDIF (NOT MSVC)
+REMOVE_DEFINITIONS("-DAPP_EXPORT=${DLLIMPORT}")
 ADD_DEFINITIONS("\"-DAPP_EXPORT=${DLLEXPORT}\"")
 
 # Putting IMAGE_RCC_SRCS into qgis_app lib is cousing problems when the lib is loaded (by plugin for example) in test unit (qgis_composerpicturetest).
@@ -644,7 +654,7 @@ IF (POSTGRES_FOUND)
 ENDIF (POSTGRES_FOUND)
 
 IF(MSVC)
-  INSTALL(FILES qgis.ico DESTINATION ${CMAKE_INSTALL_PREFIX}/icons)
+  INSTALL(FILES qgis.ico qgis-mime.ico qgis-qgs.ico qgis-qlr.ico qgis-qml.ico qgis-qpt.ico DESTINATION ${CMAKE_INSTALL_PREFIX}/icons)
 ENDIF(MSVC)
 
 INSTALL(TARGETS qgis_app

@@ -36,6 +36,7 @@
 #include "qgswmtsdimensions.h"
 #include "qgsnetworkaccessmanager.h"
 #include "qgswmscapabilities.h"
+#include "qgscrscache.h"
 
 #include <QButtonGroup>
 #include <QFileDialog>
@@ -116,7 +117,7 @@ QgsWMSSourceSelect::QgsWMSSourceSelect( QWidget * parent, Qt::WindowFlags fl, bo
     if ( currentCRS != -1 )
     {
       //convert CRS id to epsg
-      QgsCoordinateReferenceSystem currentRefSys( currentCRS, QgsCoordinateReferenceSystem::InternalCrsId );
+      QgsCoordinateReferenceSystem currentRefSys = QgsCRSCache::instance()->crsBySrsId( currentCRS );
       if ( currentRefSys.isValid() )
       {
         mDefaultCRS = mCRS = currentRefSys.authid();
@@ -617,8 +618,8 @@ void QgsWMSSourceSelect::on_btnChangeSpatialRefSys_clicked()
   mySelector->setOgcWmsCrsFilter( mCRSs );
 
   QString myDefaultCrs = QgsProject::instance()->readEntry( "SpatialRefSys", "/ProjectCrs", GEO_EPSG_CRS_AUTHID );
-  QgsCoordinateReferenceSystem defaultCRS;
-  if ( defaultCRS.createFromOgcWmsCrs( myDefaultCrs ) )
+  QgsCoordinateReferenceSystem defaultCRS = QgsCRSCache::instance()->crsByOgcWmsCrs( myDefaultCrs );
+  if ( defaultCRS.isValid() )
   {
     mySelector->setSelectedCrsId( defaultCRS.srsid() );
   }
@@ -1086,8 +1087,7 @@ QString QgsWMSSourceSelect::descriptionForAuthId( const QString& authId )
   if ( mCrsNames.contains( authId ) )
     return mCrsNames[ authId ];
 
-  QgsCoordinateReferenceSystem qgisSrs;
-  qgisSrs.createFromOgcWmsCrs( authId );
+  QgsCoordinateReferenceSystem qgisSrs = QgsCRSCache::instance()->crsByOgcWmsCrs( authId );
   mCrsNames.insert( authId, qgisSrs.description() );
   return qgisSrs.description();
 }

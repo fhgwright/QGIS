@@ -16,6 +16,7 @@
 #include <QObject>
 #include <QString>
 #include <QApplication>
+#include <QCheckBox>
 
 //qgis includes...
 #include <qgis.h>
@@ -37,6 +38,7 @@ class TestQGis : public QObject
     void permissiveToInt();
     void doubleToString();
     void qgsround();
+    void signalBlocker();
     void qVariantCompare_data();
     void qVariantCompare();
 
@@ -153,6 +155,77 @@ void TestQGis::qgsround()
   QCOMPARE( qgsRound( -1.5 ), -2. );
 }
 
+void TestQGis::signalBlocker()
+{
+  QScopedPointer< QCheckBox > checkbox( new QCheckBox() );
+
+  QSignalSpy spy( checkbox.data(), SIGNAL( toggled( bool ) ) );
+
+  //first check that signals are not blocked
+  QVERIFY( !checkbox->signalsBlocked() );
+  checkbox->setChecked( true );
+  QCOMPARE( spy.count(), 1 );
+  QCOMPARE( spy.last().at( 0 ).toBool(), true );
+
+  //block signals
+  {
+    QgsSignalBlocker< QCheckBox > blocker( checkbox.data() );
+    QVERIFY( checkbox->signalsBlocked() );
+
+    checkbox->setChecked( false );
+    QVERIFY( !checkbox->isChecked() );
+
+    //should be no new signals
+    QCOMPARE( spy.count(), 1 );
+    QCOMPARE( spy.last().at( 0 ).toBool(), true );
+    checkbox->setChecked( true );
+  }
+
+  //blocker is out of scope, blocking should be removed
+  QVERIFY( !checkbox->signalsBlocked() );
+  checkbox->setChecked( false );
+  QCOMPARE( spy.count(), 2 );
+  QCOMPARE( spy.last().at( 0 ).toBool(), false );
+
+  // now check that initial blocking state is restored when QgsSignalBlocker goes out of scope
+  checkbox->blockSignals( true );
+  {
+    QgsSignalBlocker< QCheckBox > blocker( checkbox.data() );
+    QVERIFY( checkbox->signalsBlocked() );
+  }
+  // initial blocked state should be restored
+  QVERIFY( checkbox->signalsBlocked() );
+  checkbox->blockSignals( false );
+
+  // nested signal blockers
+  {
+    QgsSignalBlocker< QCheckBox > blocker( checkbox.data() );
+    QVERIFY( checkbox->signalsBlocked() );
+    {
+      QgsSignalBlocker< QCheckBox > blocker2( checkbox.data() );
+      QVERIFY( checkbox->signalsBlocked() );
+    }
+    QVERIFY( checkbox->signalsBlocked() );
+  }
+  QVERIFY( !checkbox->signalsBlocked() );
+
+  // check whileBlocking function
+  checkbox->setChecked( true );
+  QCOMPARE( spy.count(), 3 );
+  QCOMPARE( spy.last().at( 0 ).toBool(), true );
+
+  QVERIFY( !checkbox->signalsBlocked() );
+  whileBlocking( checkbox.data() )->setChecked( false );
+  // should have been no signals emitted
+  QCOMPARE( spy.count(), 3 );
+  // check that initial state of blocked signals was restored correctly
+  QVERIFY( !checkbox->signalsBlocked() );
+  checkbox->blockSignals( true );
+  QVERIFY( checkbox->signalsBlocked() );
+  whileBlocking( checkbox.data() )->setChecked( true );
+  QVERIFY( checkbox->signalsBlocked() );
+}
+
 void TestQGis::qVariantCompare_data()
 {
   QTest::addColumn<QVariant>( "lhs" );
@@ -218,6 +291,7 @@ void TestQGis::qVariantCompare()
   QCOMPARE( qgsVariantLessThan( lhs, rhs ), lessThan );
   QCOMPARE( qgsVariantGreaterThan( lhs, rhs ), greaterThan );
 }
+
 
 QTEST_MAIN( TestQGis )
 #include "testqgis.moc"

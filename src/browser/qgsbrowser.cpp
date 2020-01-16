@@ -23,6 +23,7 @@
 #include "qgsdataitem.h"
 #include "qgsbrowser.h"
 #include "qgsbrowsermodel.h"
+#include "qgscrscache.h"
 #include "qgsencodingfiledialog.h"
 #include "qgsgenericprojectionselector.h"
 #include "qgslogger.h"
@@ -302,7 +303,7 @@ void QgsBrowser::on_mActionSetProjection_triggered()
   mySelector->setSelectedCrsId( mLayer->crs().srsid() );
   if ( mySelector->exec() )
   {
-    QgsCoordinateReferenceSystem srs( mySelector->selectedCrsId(), QgsCoordinateReferenceSystem::InternalCrsId );
+    QgsCoordinateReferenceSystem srs = QgsCRSCache::instance()->crsBySrsId( mySelector->selectedCrsId() );
 
     // TODO: open data source in write mode set crs and save
 #if 0
@@ -364,7 +365,6 @@ void QgsBrowser::restoreWindowState()
 
 void QgsBrowser::keyPressEvent( QKeyEvent * e )
 {
-  QgsDebugMsg( "Entered" );
   if ( e->key() == Qt::Key_Escape )
   {
     stopRendering();
@@ -377,7 +377,6 @@ void QgsBrowser::keyPressEvent( QKeyEvent * e )
 
 void QgsBrowser::keyReleaseEvent( QKeyEvent * e )
 {
-  QgsDebugMsg( "Entered" );
   if ( treeView->hasFocus() && ( e->key() == Qt::Key_Up || e->key() == Qt::Key_Down ) )
   {
     itemClicked( treeView->selectionModel()->currentIndex() );
@@ -390,7 +389,6 @@ void QgsBrowser::keyReleaseEvent( QKeyEvent * e )
 
 void QgsBrowser::stopRendering()
 {
-  QgsDebugMsg( "Entered" );
   if ( mapCanvas )
     mapCanvas->stopRendering();
 }
@@ -485,13 +483,11 @@ void QgsBrowser::tabChanged()
 
 void QgsBrowser::on_mActionRefresh_triggered()
 {
-  QgsDebugMsg( "Entered" );
   refresh();
 }
 
 void QgsBrowser::refresh( const QModelIndex& index )
 {
-  QgsDebugMsg( "Entered" );
   if ( index.isValid() )
   {
     QgsDataItem *item = mModel->dataItem( index );

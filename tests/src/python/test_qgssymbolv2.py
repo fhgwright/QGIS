@@ -23,15 +23,16 @@ __copyright__ = '(C) 2016, Nyall Dawson'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import os
-import csv
+import qgis  # NOQA
 
 from utilities import unitTestDataPath
 
-from PyQt4.QtCore import QSize, QDir
-from PyQt4.QtGui import QImage, QColor, QPainter
+from qgis.PyQt.QtCore import QDir
+from qgis.PyQt.QtGui import QImage, QColor, QPainter
 
 from qgis.core import (QgsGeometry,
+                       QgsSymbolV2,
+                       QgsMapUnitScale,
                        QgsMarkerSymbolV2,
                        QgsFillSymbolV2,
                        QgsLineSymbolV2,
@@ -39,14 +40,11 @@ from qgis.core import (QgsGeometry,
                        QgsFeature,
                        QGis,
                        QgsMapSettings,
-                       QgsRectangle,
-                       QgsRenderChecker
+                       QgsRenderChecker,
+                       QgsSimpleMarkerSymbolLayerV2
                        )
 
-from qgis.testing import(
-    unittest,
-    start_app
-)
+from qgis.testing import unittest, start_app
 
 
 start_app()
@@ -106,7 +104,7 @@ class TestQgsSymbolV2(unittest.TestCase):
 
         for test in tests:
             geom = QgsGeometry.fromWkt(test['wkt'])
-            assert geom and not geom.isEmpty(), 'Could not create geometry'
+            assert geom and not geom.isEmpty(), 'Could not create geometry {}'.format(test['wkt'])
             rendered_image = self.renderGeometry(geom)
             assert self.imageCheck(test['name'], test['reference_image'], rendered_image)
 
@@ -149,7 +147,7 @@ class TestQgsSymbolV2(unittest.TestCase):
         ms.setOutputSize(image.size())
         context = QgsRenderContext.fromMapSettings(ms)
         context.setPainter(painter)
-        context.setScaleFactor(96 / 25.4) # 96 DPI
+        context.setScaleFactor(96 / 25.4)  # 96 DPI
 
         painter.begin(image)
         image.fill(QColor(0, 0, 0))
@@ -184,9 +182,116 @@ class TestQgsSymbolV2(unittest.TestCase):
         checker.setColorTolerance(2)
         result = checker.compareImages(name, 20)
         self.report += checker.report()
-        print self.report
+        print(self.report)
         return result
 
 
+class TestQgsMarkerSymbolV2(unittest.TestCase):
+
+    def setUp(self):
+        self.report = "<h1>Python QgsMarkerSymbolV2 Tests</h1>\n"
+
+    def tearDown(self):
+        report_file_path = "%s/qgistest.html" % QDir.tempPath()
+        with open(report_file_path, 'a') as report_file:
+            report_file.write(self.report)
+
+    def testSize(self):
+        # test size and setSize
+
+        # create a marker symbol with a single layer
+        markerSymbol = QgsMarkerSymbolV2()
+        markerSymbol.deleteSymbolLayer(0)
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10))
+        self.assertEqual(markerSymbol.size(), 10)
+        markerSymbol.setSize(20)
+        self.assertEqual(markerSymbol.size(), 20)
+        self.assertEqual(markerSymbol.symbolLayer(0).size(), 20)
+
+        # add additional layers
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10))
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 30))
+        self.assertEqual(markerSymbol.size(), 30)
+        markerSymbol.setSize(3)
+        self.assertEqual(markerSymbol.size(), 3)
+        # layer sizes should maintain relative size
+        self.assertEqual(markerSymbol.symbolLayer(0).size(), 2)
+        self.assertEqual(markerSymbol.symbolLayer(1).size(), 1)
+        self.assertEqual(markerSymbol.symbolLayer(2).size(), 3)
+
+    def testAngle(self):
+        # test angle and setAngle
+
+        # create a marker symbol with a single layer
+        markerSymbol = QgsMarkerSymbolV2()
+        markerSymbol.deleteSymbolLayer(0)
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10, 90))
+        self.assertEqual(markerSymbol.angle(), 90)
+        markerSymbol.setAngle(100)
+        self.assertEqual(markerSymbol.angle(), 100)
+        self.assertEqual(markerSymbol.symbolLayer(0).angle(), 100)
+
+        # add additional layers
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10, 130))
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10, 150))
+        # should take first layer's angle
+        self.assertEqual(markerSymbol.angle(), 100)
+        markerSymbol.setAngle(10)
+        self.assertEqual(markerSymbol.angle(), 10)
+        # layer angles should maintain relative angle
+        self.assertEqual(markerSymbol.symbolLayer(0).angle(), 10)
+        self.assertEqual(markerSymbol.symbolLayer(1).angle(), 40)
+        self.assertEqual(markerSymbol.symbolLayer(2).angle(), 60)
+
+    def testSizeUnit(self):
+        # test sizeUnit and setSizeUnit
+
+        # create a marker symbol with a single layer
+        markerSymbol = QgsMarkerSymbolV2()
+        markerSymbol.deleteSymbolLayer(0)
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10))
+        self.assertEqual(markerSymbol.sizeUnit(), QgsSymbolV2.MM)
+        markerSymbol.setSizeUnit(QgsSymbolV2.MapUnit)
+        self.assertEqual(markerSymbol.sizeUnit(), QgsSymbolV2.MapUnit)
+        self.assertEqual(markerSymbol.symbolLayer(0).sizeUnit(), QgsSymbolV2.MapUnit)
+
+        # add additional layers
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10))
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 30))
+        # should now be mixed size units
+        self.assertEqual(markerSymbol.sizeUnit(), QgsSymbolV2.Mixed)
+        markerSymbol.setSizeUnit(QgsSymbolV2.Pixel)
+        self.assertEqual(markerSymbol.sizeUnit(), QgsSymbolV2.Pixel)
+        # all layers should have size unit set
+        self.assertEqual(markerSymbol.symbolLayer(0).sizeUnit(), QgsSymbolV2.Pixel)
+        self.assertEqual(markerSymbol.symbolLayer(1).sizeUnit(), QgsSymbolV2.Pixel)
+        self.assertEqual(markerSymbol.symbolLayer(2).sizeUnit(), QgsSymbolV2.Pixel)
+
+    def testSizeMapUnitScale(self):
+        # test sizeMapUnitScale and setSizeMapUnitScale
+
+        # create a marker symbol with a single layer
+        markerSymbol = QgsMarkerSymbolV2()
+        markerSymbol.deleteSymbolLayer(0)
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10))
+        markerSymbol.symbolLayer(0).setSizeMapUnitScale(QgsMapUnitScale(10000, 20000))
+        self.assertEqual(markerSymbol.sizeMapUnitScale(), QgsMapUnitScale(10000, 20000))
+        markerSymbol.setSizeMapUnitScale(QgsMapUnitScale(1000, 2000))
+        self.assertEqual(markerSymbol.sizeMapUnitScale(), QgsMapUnitScale(1000, 2000))
+        self.assertEqual(markerSymbol.symbolLayer(0).sizeMapUnitScale(), QgsMapUnitScale(1000, 2000))
+
+        # add additional layers
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 10))
+        markerSymbol.appendSymbolLayer(QgsSimpleMarkerSymbolLayerV2('star', QColor(255, 0, 0), QColor(0, 255, 0), 30))
+        # should take first layer's map unit scale
+        self.assertEqual(markerSymbol.sizeMapUnitScale(), QgsMapUnitScale(1000, 2000))
+        markerSymbol.setSizeMapUnitScale(QgsMapUnitScale(3000, 4000))
+        self.assertEqual(markerSymbol.sizeMapUnitScale(), QgsMapUnitScale(3000, 4000))
+        # all layers should have size unit set
+        self.assertEqual(markerSymbol.symbolLayer(0).sizeMapUnitScale(), QgsMapUnitScale(3000, 4000))
+        self.assertEqual(markerSymbol.symbolLayer(1).sizeMapUnitScale(), QgsMapUnitScale(3000, 4000))
+        self.assertEqual(markerSymbol.symbolLayer(2).sizeMapUnitScale(), QgsMapUnitScale(3000, 4000))
+
+
 if __name__ == '__main__':
-    unittest.main()# -*- coding: utf-8 -*-
+    unittest.main()

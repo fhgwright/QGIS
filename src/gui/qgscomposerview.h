@@ -20,6 +20,7 @@
 #include <QGraphicsView>
 #include "qgsaddremoveitemcommand.h"
 #include "qgsprevieweffect.h" // for QgsPreviewEffect::PreviewMode
+#include <QGraphicsPolygonItem>
 
 class QDomDocument;
 class QDomElement;
@@ -36,9 +37,10 @@ class QgsComposerPicture;
 class QgsComposerRuler;
 class QgsComposerScaleBar;
 class QgsComposerShape;
+class QgsComposerNodesItem;
 class QgsComposerAttributeTableV2;
 
-/** \ingroup MapComposer
+/** \ingroup gui
  * Widget to display the composer items. Manages the composer tools and the
  * mouse/key events.
  * Creates the composer items according to the current map tools and keeps track
@@ -63,10 +65,13 @@ class GUI_EXPORT QgsComposerView: public QGraphicsView
       AddPicture,      // add raster/vector picture
       AddRectangle,
       AddEllipse,
+      AddPolygon,
+      AddPolyline,
       AddTriangle,
       AddTable,        // add attribute table
       AddAttributeTable,
       MoveItemContent, // move content of item (e.g. content of map)
+      EditNodesItem,
       Pan,
       Zoom
     };
@@ -143,6 +148,13 @@ class GUI_EXPORT QgsComposerView: public QGraphicsView
     /** Set zoom level, where a zoom level of 1.0 corresponds to 100%*/
     void setZoomLevel( double zoomLevel );
 
+    /** Scales the view in a safe way, by limiting the acceptable range
+     * of the scale applied.
+     * @param scale factor to scale view by
+     * @note added in QGIS 2.16
+     */
+    void scaleSafe( double scale );
+
     /** Sets whether a preview effect should be used to alter the view's appearance
      * @param enabled Set to true to enable the preview effect on the view
      * @note added in 2.3
@@ -207,6 +219,19 @@ class GUI_EXPORT QgsComposerView: public QGraphicsView
 
     /** Draw a shape on the canvas */
     void addShape( Tool currentTool );
+
+    /** Point based shape stuff */
+    void addPolygonNode( const QPointF & scenePoint );
+    void movePolygonNode( const QPointF & scenePoint );
+    void displayNodes( const bool display = true );
+    void setSelectedNode( QgsComposerNodesItem *shape, const int index );
+    void unselectNode();
+
+    float mMoveContentSearchRadius;
+    QgsComposerNodesItem* mNodesItem;
+    int mNodesItemIndex;
+    QScopedPointer<QGraphicsPolygonItem> mPolygonItem;
+    QScopedPointer<QGraphicsPathItem> mPolylineItem;
 
     /** True if user is currently panning by clicking and dragging with the pan tool*/
     bool mToolPanning;

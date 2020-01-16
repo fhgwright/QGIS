@@ -19,7 +19,11 @@
 %Include qgis.sip
 
 %Include qgsapplication.sip
+%Include qgsaction.sip
+%Include qgsactionmanager.sip
+%Include qgsaggregatecalculator.sip
 %Include qgsattributeaction.sip
+%Include qgsattributetableconfig.sip
 %Include qgsbrowsermodel.sip
 %Include qgsclipper.sip
 %Include qgscolorscheme.sip
@@ -36,6 +40,7 @@
 %Include qgsdataitemproviderregistry.sip
 %Include qgsdataprovider.sip
 %Include qgsdatasourceuri.sip
+%Include qgsdatetimestatisticalsummary.sip
 %Include qgsdatumtransformstore.sip
 %Include qgsdbfilterproxymodel.sip
 %Include qgsdistancearea.sip
@@ -54,6 +59,8 @@
 %Include qgsgml.sip
 %Include qgsgmlschema.sip
 %Include qgshistogram.sip
+%Include qgsinterval.sip
+%Include qgsjsonutils.sip
 %Include qgsmaptopixelgeometrysimplifier.sip
 %Include qgstransaction.sip
 %Include qgstransactiongroup.sip
@@ -114,6 +121,7 @@
 %Include qgsrenderchecker.sip
 %Include qgsrendercontext.sip
 %Include qgsrunprocess.sip
+%Include qgsruntimeprofiler.sip
 %Include qgsscalecalculator.sip
 %Include qgsscaleexpression.sip
 %Include qgsscaleutils.sip
@@ -121,7 +129,9 @@
 %Include qgssnapper.sip
 %Include qgssnappingutils.sip
 %Include qgsspatialindex.sip
+%Include qgssqlstatement.sip
 %Include qgsstatisticalsummary.sip
+%Include qgsstringstatisticalsummary.sip
 %Include qgsstringutils.sip
 %Include qgstolerance.sip
 %Include qgstracer.sip
@@ -158,6 +168,7 @@
 %Include auth/qgsauthmethod.sip
 
 %Include composer/qgsaddremoveitemcommand.sip
+%Include composer/qgsgroupungroupitemscommand.sip
 %Include composer/qgsaddremovemultiframecommand.sip
 %Include composer/qgsatlascomposition.sip
 %Include composer/qgscomposerarrow.sip
@@ -186,6 +197,9 @@
 %Include composer/qgscomposerpicture.sip
 %Include composer/qgscomposerscalebar.sip
 %Include composer/qgscomposershape.sip
+%Include composer/qgscomposernodesitem.sip
+%Include composer/qgscomposerpolygon.sip
+%Include composer/qgscomposerpolyline.sip
 %Include composer/qgscomposertable.sip
 %Include composer/qgscomposertablecolumn.sip
 %Include composer/qgscomposertablev2.sip
@@ -272,6 +286,7 @@
 %Include raster/qgssinglebandcolordatarenderer.sip
 %Include raster/qgssinglebandgrayrenderer.sip
 %Include raster/qgssinglebandpseudocolorrenderer.sip
+%Include raster/qgshillshaderenderer.sip
 
 %Include symbology-ng/qgscolorbrewerpalette.sip
 %Include symbology-ng/qgscptcityarchive.sip
@@ -286,6 +301,7 @@
 %Include symbology-ng/qgsheatmaprenderer.sip
 %Include symbology-ng/qgsinvertedpolygonrenderer.sip
 %Include symbology-ng/qgslegendsymbolitemv2.sip
+%Include symbology-ng/qgsnullsymbolrenderer.sip
 %Include symbology-ng/qgspointdisplacementrenderer.sip
 %Include symbology-ng/qgsrendererv2.sip
 %Include symbology-ng/qgsrendererv2registry.sip
@@ -301,6 +317,7 @@
 %Include symbology-ng/qgssymbollayerv2registry.sip
 %Include symbology-ng/qgssymbollayerv2utils.sip
 %Include symbology-ng/qgsvectorfieldsymbollayer.sip
+%Include symbology-ng/qgsarrowsymbollayer.sip
 
 %Include symbology-ng/qgssymbologyv2conversion.sip
 

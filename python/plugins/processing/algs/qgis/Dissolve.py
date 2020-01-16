@@ -25,7 +25,13 @@ __copyright__ = '(C) 2012, Victor Olaya'
 
 __revision__ = '$Format:%H$'
 
+import os
+
+from qgis.PyQt.QtGui import QIcon
+
 from qgis.core import QgsFeature, QgsGeometry
+
+from processing.core.ProcessingLog import ProcessingLog
 from processing.core.GeoAlgorithm import GeoAlgorithm
 from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecutionException
 from processing.core.parameters import ParameterVector
@@ -33,6 +39,8 @@ from processing.core.parameters import ParameterBoolean
 from processing.core.parameters import ParameterTableField
 from processing.core.outputs import OutputVector
 from processing.tools import vector, dataobjects
+
+pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
 
 
 class Dissolve(GeoAlgorithm):
@@ -42,10 +50,8 @@ class Dissolve(GeoAlgorithm):
     FIELD = 'FIELD'
     DISSOLVE_ALL = 'DISSOLVE_ALL'
 
-    #==========================================================================
-    #def getIcon(self):
-    #   return QtGui.QIcon(os.path.dirname(__file__) + "/icons/dissolve.png")
-    #==========================================================================
+    def getIcon(self):
+        return QIcon(os.path.join(pluginPath, 'images', 'ftools', 'dissolve.png'))
 
     def defineCharacteristics(self):
         self.name = 'Dissolve'
@@ -81,15 +87,35 @@ class Dissolve(GeoAlgorithm):
                 if first:
                     attrs = inFeat.attributes()
                     tmpInGeom = QgsGeometry(inFeat.geometry())
-                    if tmpInGeom.isGeosEmpty() or not tmpInGeom.isGeosValid():
+                    if tmpInGeom.isGeosEmpty():
+                        continue
+                    errors = tmpInGeom.validateGeometry()
+                    if len(errors) != 0:
+                        for error in errors:
+                            ProcessingLog.addToLog(ProcessingLog.LOG_ERROR,
+                                                   self.tr('ValidateGeometry()'
+                                                           'error: One or more '
+                                                           'input features have '
+                                                           'invalid geometry: ')
+                                                   + error.what())
                         continue
                     outFeat.setGeometry(tmpInGeom)
                     first = False
                 else:
                     tmpInGeom = QgsGeometry(inFeat.geometry())
-                    if tmpInGeom.isGeosEmpty() or not tmpInGeom.isGeosValid():
+                    if tmpInGeom.isGeosEmpty():
                         continue
                     tmpOutGeom = QgsGeometry(outFeat.geometry())
+                    errors = tmpInGeom.validateGeometry()
+                    if len(errors) != 0:
+                        for error in errors:
+                            ProcessingLog.addToLog(ProcessingLog.LOG_ERROR,
+                                                   self.tr('ValidateGeometry()'
+                                                           'error:One or more input'
+                                                           'features have invalid '
+                                                           'geometry: ')
+                                                   + error.what())
+                        continue
                     try:
                         tmpOutGeom = QgsGeometry(tmpOutGeom.combine(tmpInGeom))
                         outFeat.setGeometry(tmpOutGeom)
@@ -114,10 +140,19 @@ class Dissolve(GeoAlgorithm):
                 attrs = inFeat.attributes()
                 tempItem = attrs[fieldIdx]
                 tmpInGeom = QgsGeometry(inFeat.geometry())
-                if tmpInGeom.isGeosEmpty() or not tmpInGeom.isGeosValid():
+                if tmpInGeom.isGeosEmpty():
                     continue
+                errors = tmpInGeom.validateGeometry()
+                if len(errors) != 0:
+                    for error in errors:
+                        ProcessingLog.addToLog(ProcessingLog.LOG_ERROR,
+                                               self.tr('ValidateGeometry() '
+                                                       'error: One or more input'
+                                                       'features have invalid '
+                                                       'geometry: ')
+                                               + error.what())
 
-                if attrDict[unicode(tempItem).strip()] == None:
+                if attrDict[unicode(tempItem).strip()] is None:
                     # keep attributes of first feature
                     attrDict[unicode(tempItem).strip()] = attrs
 
@@ -125,6 +160,7 @@ class Dissolve(GeoAlgorithm):
 
             features = None
 
+            nElement = 0
             for key, value in myDict.items():
                 nElement += 1
                 progress.setPercentage(int(nElement * 100 / nFeat))

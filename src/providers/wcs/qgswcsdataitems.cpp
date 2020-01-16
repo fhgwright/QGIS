@@ -20,6 +20,7 @@
 #include "qgswcssourceselect.h"
 #include "qgsowsconnection.h"
 #include "qgsnewhttpconnection.h"
+#include "qgscrscache.h"
 
 #include <QFileInfo>
 #include <QSettings>
@@ -33,12 +34,10 @@ QgsWCSConnectionItem::QgsWCSConnectionItem( QgsDataItem* parent, QString name, Q
 
 QgsWCSConnectionItem::~QgsWCSConnectionItem()
 {
-  QgsDebugMsg( "Entered" );
 }
 
 QVector<QgsDataItem*> QgsWCSConnectionItem::createChildren()
 {
-  QgsDebugMsg( "Entered" );
   QVector<QgsDataItem*> children;
 
   QgsDataSourceURI uri;
@@ -119,7 +118,7 @@ void QgsWCSConnectionItem::deleteConnection()
 
 // ---------------------------------------------------------------------------
 
-QgsWCSLayerItem::QgsWCSLayerItem( QgsDataItem* parent, QString name, QString path, const QgsWcsCapabilitiesProperty& capabilitiesProperty, QgsDataSourceURI dataSourceUri, const QgsWcsCoverageSummary& coverageSummary )
+QgsWCSLayerItem::QgsWCSLayerItem( QgsDataItem* parent, QString name, QString path, const QgsWcsCapabilitiesProperty& capabilitiesProperty, const QgsDataSourceURI &dataSourceUri, const QgsWcsCoverageSummary& coverageSummary )
     : QgsLayerItem( parent, name, path, QString(), QgsLayerItem::Raster, "wcs" )
     , mCapabilities( capabilitiesProperty )
     , mDataSourceUri( dataSourceUri )
@@ -196,7 +195,7 @@ QString QgsWCSLayerItem::createUri()
   QgsCoordinateReferenceSystem testCrs;
   Q_FOREACH ( const QString& c, mCoverageSummary.supportedCrs )
   {
-    testCrs.createFromOgcWmsCrs( c );
+    testCrs = QgsCRSCache::instance()->crsByOgcWmsCrs( c );
     if ( testCrs.isValid() )
     {
       crs = c;

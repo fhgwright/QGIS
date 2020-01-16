@@ -1,4 +1,4 @@
-#############################################################
+############################################################
 # sources
 
 SET(QGIS_CORE_SRCS
@@ -16,6 +16,7 @@ SET(QGIS_CORE_SRCS
   gps/tok.c
 
   symbology-ng/qgs25drenderer.cpp
+  symbology-ng/qgsarrowsymbollayer.cpp
   symbology-ng/qgscategorizedsymbolrendererv2.cpp
   symbology-ng/qgscolorbrewerpalette.cpp
   symbology-ng/qgscptcityarchive.cpp
@@ -28,6 +29,7 @@ SET(QGIS_CORE_SRCS
   symbology-ng/qgslegendsymbolitemv2.cpp
   symbology-ng/qgslinesymbollayerv2.cpp
   symbology-ng/qgsmarkersymbollayerv2.cpp
+  symbology-ng/qgsnullsymbolrenderer.cpp
   symbology-ng/qgspointdisplacementrenderer.cpp
   symbology-ng/qgsrendererv2.cpp
   symbology-ng/qgsrendererv2registry.cpp
@@ -75,7 +77,10 @@ SET(QGIS_CORE_SRCS
 
   qgis.cpp
   qgsapplication.cpp
-  qgsattributeaction.cpp
+  qgsaction.cpp
+  qgsactionmanager.cpp
+  qgsaggregatecalculator.cpp
+  qgsattributetableconfig.cpp
   qgsbrowsermodel.cpp
   qgscachedfeatureiterator.cpp
   qgscacheindex.cpp
@@ -85,7 +90,6 @@ SET(QGIS_CORE_SRCS
   qgscolorschemeregistry.cpp
   qgsconditionalstyle.cpp
   qgscontexthelp.cpp
-  qgscontexthelp_texts.cpp
   qgscoordinatereferencesystem.cpp
   qgscoordinatetransform.cpp
   qgscoordinateutils.cpp
@@ -97,6 +101,8 @@ SET(QGIS_CORE_SRCS
   qgsdataitemprovider.cpp
   qgsdataitemproviderregistry.cpp
   qgsdatasourceuri.cpp
+  qgsdataprovider.cpp
+  qgsdatetimestatisticalsummary.cpp
   qgsdatumtransformstore.cpp
   qgsdbfilterproxymodel.cpp
   qgsdiagramrendererv2.cpp
@@ -106,7 +112,6 @@ SET(QGIS_CORE_SRCS
   qgsexpression.cpp
   qgsexpressioncontext.cpp
   qgsexpressionfieldbuffer.cpp
-  qgsexpression_texts.cpp
   qgsfeature.cpp
   qgsfeatureiterator.cpp
   qgsfeaturerequest.cpp
@@ -119,6 +124,8 @@ SET(QGIS_CORE_SRCS
   qgsgml.cpp
   qgsgmlschema.cpp
   qgshistogram.cpp
+  qgsinterval.cpp
+  qgsjsonutils.cpp
   qgslabel.cpp
   qgslabelattributes.cpp
   qgslabelfeature.cpp
@@ -155,6 +162,7 @@ SET(QGIS_CORE_SRCS
   qgsobjectcustomproperties.cpp
   qgsofflineediting.cpp
   qgsogcutils.cpp
+  qgsogrutils.cpp
   qgsowsconnection.cpp
   qgspaintenginehack.cpp
   qgspallabeling.cpp
@@ -178,6 +186,7 @@ SET(QGIS_CORE_SRCS
   qgsrendercontext.cpp
   qgsrulebasedlabeling.cpp
   qgsrunprocess.cpp
+  qgsruntimeprofiler.cpp
   qgsscalecalculator.cpp
   qgsscaleexpression.cpp
   qgsscaleutils.cpp
@@ -187,7 +196,10 @@ SET(QGIS_CORE_SRCS
   qgssnappingutils.cpp
   qgsspatialindex.cpp
   qgssqlexpressioncompiler.cpp
+  qgssqliteexpressioncompiler.cpp
+  qgssqlstatement.cpp
   qgsstatisticalsummary.cpp
+  qgsstringstatisticalsummary.cpp
   qgsstringutils.cpp
   qgstextlabelfeature.cpp
   qgstolerance.cpp
@@ -246,6 +258,9 @@ SET(QGIS_CORE_SRCS
   composer/qgscomposerpicture.cpp
   composer/qgscomposerscalebar.cpp
   composer/qgscomposershape.cpp
+  composer/qgscomposernodesitem.cpp
+  composer/qgscomposerpolygon.cpp
+  composer/qgscomposerpolyline.cpp
   composer/qgscomposertable.cpp
   composer/qgscomposertablecolumn.cpp
   composer/qgscomposertablev2.cpp
@@ -253,6 +268,7 @@ SET(QGIS_CORE_SRCS
   composer/qgscomposerutils.cpp
   composer/qgscomposition.cpp
   composer/qgsdoubleboxscalebarstyle.cpp
+  composer/qgsgroupungroupitemscommand.cpp
   composer/qgslegendmodel.cpp
   composer/qgsnumericscalebarstyle.cpp
   composer/qgspaperitem.cpp
@@ -316,6 +332,7 @@ SET(QGIS_CORE_SRCS
   raster/qgssinglebandcolordatarenderer.cpp
   raster/qgssinglebandgrayrenderer.cpp
   raster/qgssinglebandpseudocolorrenderer.cpp
+  raster/qgshillshaderenderer.cpp
 
   geometry/qgsabstractgeometryv2.cpp
   geometry/qgscircularstringv2.cpp
@@ -339,23 +356,30 @@ SET(QGIS_CORE_SRCS
   geometry/qgspolygonv2.cpp
   geometry/qgswkbptr.cpp
   geometry/qgswkbtypes.cpp
+  geometry/qgswkbsimplifierptr.cpp
+
+  ${CMAKE_CURRENT_BINARY_DIR}/qgscontexthelp_texts.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/qgsexpression_texts.cpp
 )
 
+
 FILE(GLOB JSON_HELP_FILES "${CMAKE_SOURCE_DIR}/resources/function_help/json/*")
-STRING(REPLACE "$" "$$" JSON_HELP_FILES "${JSON_HELP_FILES}")
+IF(NOT USING_NINJA)
+  STRING(REPLACE "$" "$$" JSON_HELP_FILES "${JSON_HELP_FILES}")
+ENDIF(NOT USING_NINJA)
 STRING(REPLACE "\(" "\\(" JSON_HELP_FILES "${JSON_HELP_FILES}")
 STRING(REPLACE "\)" "\\)" JSON_HELP_FILES "${JSON_HELP_FILES}")
-ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/qgsexpression_texts.cpp
+ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qgsexpression_texts.cpp
   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/process_function_template.py ${CMAKE_CURRENT_BINARY_DIR}/qgsexpression_texts.cpp.temp
-  COMMAND ${CMAKE_COMMAND} -DSRC=${CMAKE_CURRENT_BINARY_DIR}/qgsexpression_texts.cpp.temp -DDST=${CMAKE_CURRENT_SOURCE_DIR}/qgsexpression_texts.cpp -P ${CMAKE_SOURCE_DIR}/cmake/CopyIfChanged.cmake
+  COMMAND ${CMAKE_COMMAND} -DSRC=${CMAKE_CURRENT_BINARY_DIR}/qgsexpression_texts.cpp.temp -DDST=${CMAKE_CURRENT_BINARY_DIR}/qgsexpression_texts.cpp -P ${CMAKE_SOURCE_DIR}/cmake/CopyIfChanged.cmake
   DEPENDS ${JSON_HELP_FILES}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 FILE(GLOB CONTEXT_HELP_FILES "${CMAKE_SOURCE_DIR}/resources/context_help/*")
-ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/qgscontexthelp_texts.cpp
+ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qgscontexthelp_texts.cpp
   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/process_contexthelp.py ${CMAKE_CURRENT_BINARY_DIR}/qgscontexthelp_texts.cpp.temp
-  COMMAND ${CMAKE_COMMAND} -DSRC=${CMAKE_CURRENT_BINARY_DIR}/qgscontexthelp_texts.cpp.temp -DDST=${CMAKE_CURRENT_SOURCE_DIR}/qgscontexthelp_texts.cpp -P ${CMAKE_SOURCE_DIR}/cmake/CopyIfChanged.cmake
+  COMMAND ${CMAKE_COMMAND} -DSRC=${CMAKE_CURRENT_BINARY_DIR}/qgscontexthelp_texts.cpp.temp -DDST=${CMAKE_CURRENT_BINARY_DIR}/qgscontexthelp_texts.cpp -P ${CMAKE_SOURCE_DIR}/cmake/CopyIfChanged.cmake
   DEPENDS ${CONTEXT_HELP_FILES}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
@@ -412,11 +436,11 @@ IF (QT_MOBILITY_LOCATION_FOUND OR Qt5Positioning_FOUND)
   )
 ENDIF (QT_MOBILITY_LOCATION_FOUND OR Qt5Positioning_FOUND)
 
-ADD_FLEX_FILES(QGIS_CORE_SRCS qgsexpressionlexer.ll)
-ADD_BISON_FILES(QGIS_CORE_SRCS qgsexpressionparser.yy)
+ADD_FLEX_FILES(QGIS_CORE_SRCS qgsexpressionlexer.ll qgssqlstatementlexer.ll)
+ADD_BISON_FILES(QGIS_CORE_SRCS qgsexpressionparser.yy qgssqlstatementparser.yy)
 
 IF(NOT MSVC)
-  SET_SOURCE_FILES_PROPERTIES(qgsexpressionparser.cpp PROPERTIES COMPILE_FLAGS -w)
+  SET_SOURCE_FILES_PROPERTIES(qgsexpressionparser.cpp qgssqlstatementparser.cpp PROPERTIES COMPILE_FLAGS -w)
 ELSE(NOT MSVC)
   # -wd4702 unreachable code
   SET_SOURCE_FILES_PROPERTIES(
@@ -473,6 +497,7 @@ SET(QGIS_CORE_MOC_HDRS
   qgsvectorlayer.h
   qgsvectorlayerjoinbuffer.h
   qgsvisibilitypresetcollection.h
+  qgswebpage.h
   qgswebview.h
 
   auth/qgsauthmanager.h
@@ -503,11 +528,15 @@ SET(QGIS_CORE_MOC_HDRS
   composer/qgscomposerpicture.h
   composer/qgscomposerscalebar.h
   composer/qgscomposershape.h
+  composer/qgscomposernodesitem.h
+  composer/qgscomposerpolygon.h
+  composer/qgscomposerpolyline.h
   composer/qgscomposertablecolumn.h
   composer/qgscomposertable.h
   composer/qgscomposertablev2.h
   composer/qgscomposertexttable.h
   composer/qgscomposition.h
+  composer/qgsgroupungroupitemscommand.h
   composer/qgslegendmodel.h
   composer/qgspaperitem.h
 
@@ -533,7 +562,6 @@ SET(QGIS_CORE_MOC_HDRS
 
 IF (NOT WITH_QTWEBKIT)
   SET(QGIS_CORE_MOC_HDRS ${QGIS_CORE_MOC_HDRS}
-    qgswebpage.h
     qgswebframe.h
   )
 ENDIF(NOT WITH_QTWEBKIT)
@@ -564,7 +592,7 @@ IF(MSVC)
 ELSE(MSVC)
   SET_SOURCE_FILES_PROPERTIES(${QGIS_CORE_MOC_SRCS} PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations" )
   IF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo))
-    SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_SOURCE_DIR}/qgsexpression_texts.cpp PROPERTIES COMPILE_FLAGS "-O1")
+    SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_BINARY_DIR}/qgsexpression_texts.cpp PROPERTIES COMPILE_FLAGS "-O1")
   ENDIF ()
 ENDIF(MSVC)
 
@@ -577,6 +605,9 @@ SET(QGIS_CORE_HDRS
   ../plugins/qgisplugin.h
 
   qgis.h
+  qgsaction.h
+  qgsaggregatecalculator.h
+  qgsattributetableconfig.h
   qgsattributeaction.h
   qgscachedfeatureiterator.h
   qgscacheindex.h
@@ -587,7 +618,8 @@ SET(QGIS_CORE_HDRS
   qgsconnectionpool.h
   qgscontexthelp.h
   qgsconditionalstyle.h
-  qgscoordinatereferencesystem.h
+  qgscoordinatereferencesystem.h  
+  qgscoordinatereferencesystem_p.h
   qgscoordinateutils.h
   qgscrscache.h
   qgscsexception.h
@@ -598,6 +630,7 @@ SET(QGIS_CORE_HDRS
   qgsdataitemprovider.h
   qgsdataitemproviderregistry.h
   qgsdatasourceuri.h
+  qgsdatetimestatisticalsummary.h
   qgsdatumtransformstore.h
   qgsdbfilterproxymodel.h
   qgsdiagramrendererv2.h
@@ -620,6 +653,8 @@ SET(QGIS_CORE_HDRS
   qgsgeometrycache.h
   qgshistogram.h
   qgsindexedfeature.h
+  qgsinterval.h
+  qgsjsonutils.h
   qgslayerdefinition.h
   qgslabel.h
   qgslabelattributes.h
@@ -660,6 +695,7 @@ SET(QGIS_CORE_HDRS
   qgsrelation.h
   qgsrenderchecker.h
   qgsrendercontext.h
+  qgsruntimeprofiler.h
   qgsscalecalculator.h
   qgsscaleexpression.h
   qgsscaleutils.h
@@ -669,7 +705,9 @@ SET(QGIS_CORE_HDRS
   qgsspatialindex.h
   qgssqlexpressioncompiler.h
   qgsstatisticalsummary.h
+  qgsstringstatisticalsummary.h
   qgsstringutils.h
+  qgstestutils.h
   qgstextlabelfeature.h
   qgstolerance.h
   qgstracer.h
@@ -770,6 +808,7 @@ SET(QGIS_CORE_HDRS
   raster/qgssinglebandcolordatarenderer.h
   raster/qgssinglebandgrayrenderer.h
   raster/qgssinglebandpseudocolorrenderer.h
+  raster/qgshillshaderenderer.h
 
   symbology-ng/qgs25drenderer.h
   symbology-ng/qgscategorizedsymbolrendererv2.h
@@ -787,6 +826,7 @@ SET(QGIS_CORE_HDRS
   symbology-ng/qgssinglesymbolrendererv2.h
   symbology-ng/qgsheatmaprenderer.h
   symbology-ng/qgsinvertedpolygonrenderer.h
+  symbology-ng/qgsnullsymbolrenderer.h
   symbology-ng/qgssymbollayerv2.h
   symbology-ng/qgssymbollayerv2registry.h
   symbology-ng/qgssymbollayerv2utils.h
@@ -800,10 +840,29 @@ SET(QGIS_CORE_HDRS
   layertree/qgslayertreeutils.h
 
   geometry/qgsabstractgeometryv2.h
+  geometry/qgscircularstringv2.h
+  geometry/qgscompoundcurvev2.h
+  geometry/qgscurvepolygonv2.h
+  geometry/qgscurvev2.h
+  geometry/qgsgeometrycollectionv2.h
+  geometry/qgsgeometryeditutils.h
+  geometry/qgsgeometryengine.h
+  geometry/qgsgeometryfactory.h
   geometry/qgsgeometry.h
+  geometry/qgsgeometryutils.h
+  geometry/qgsgeos.h
   geometry/qgsinternalgeometryengine.h
+  geometry/qgslinestringv2.h
+  geometry/qgsmulticurvev2.h
+  geometry/qgsmultilinestringv2.h
+  geometry/qgsmultipointv2.h
+  geometry/qgsmultipolygonv2.h
+  geometry/qgsmultisurfacev2.h
   geometry/qgspointv2.h
+  geometry/qgspolygonv2.h
+  geometry/qgssurfacev2.h
   geometry/qgswkbptr.h
+  geometry/qgswkbsimplifierptr.h
   geometry/qgswkbtypes.h
 )
 
@@ -839,12 +898,7 @@ INCLUDE_DIRECTORIES(SYSTEM
   ${QCA_INCLUDE_DIR}
 )
 
-IF (NOT MSVC)
-  ADD_DEFINITIONS("-UCORE_EXPORT")
-  IF ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
-  ENDIF()
-ENDIF (NOT MSVC)
+REMOVE_DEFINITIONS("-DCORE_EXPORT=${DLLIMPORT}")
 ADD_DEFINITIONS("\"-DCORE_EXPORT=${DLLEXPORT}\"")
 
 

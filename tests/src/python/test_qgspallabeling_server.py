@@ -17,13 +17,14 @@ __copyright__ = 'Copyright 2013, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import sys
 import os
 import glob
 import shutil
 
-from PyQt4.QtCore import QSettings, qDebug
+from qgis.PyQt.QtCore import QSettings, qDebug
 
 from qgis.core import QgsProject, QgsApplication, QgsPalLabeling
 
@@ -114,7 +115,7 @@ class TestServerBase(TestQgsPalLabeling):
         # TODO: support other types of servers, besides WMS
         ms = self._TestMapSettings
         osize = ms.outputSize()
-        dpi = str(ms.outputDpi())
+        dpi = str(int(ms.outputDpi()))
         lyrs = [str(self._MapRegistry.mapLayer(i).name()) for i in ms.layers()]
         lyrs.reverse()
         params = {

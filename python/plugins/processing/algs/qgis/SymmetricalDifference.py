@@ -25,6 +25,10 @@ __copyright__ = '(C) 2014, Alexander Bruy'
 
 __revision__ = '$Format:%H$'
 
+import os
+
+from qgis.PyQt.QtGui import QIcon
+
 from qgis.core import QGis, QgsFeature, QgsGeometry, QgsFeatureRequest, NULL
 from processing.core.ProcessingLog import ProcessingLog
 from processing.core.GeoAlgorithm import GeoAlgorithm
@@ -33,9 +37,7 @@ from processing.core.parameters import ParameterVector
 from processing.core.outputs import OutputVector
 from processing.tools import dataobjects, vector
 
-GEOM_25D = [QGis.WKBPoint25D, QGis.WKBLineString25D, QGis.WKBPolygon25D,
-            QGis.WKBMultiPoint25D, QGis.WKBMultiLineString25D,
-            QGis.WKBMultiPolygon25D]
+pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
 
 
 class SymmetricalDifference(GeoAlgorithm):
@@ -43,6 +45,9 @@ class SymmetricalDifference(GeoAlgorithm):
     INPUT = 'INPUT'
     OVERLAY = 'OVERLAY'
     OUTPUT = 'OUTPUT'
+
+    def getIcon(self):
+        return QIcon(os.path.join(pluginPath, 'images', 'ftools', 'sym_difference.png'))
 
     def defineCharacteristics(self):
         self.name, self.i18n_name = self.trAlgorithm('Symmetrical difference')
@@ -64,10 +69,6 @@ class SymmetricalDifference(GeoAlgorithm):
         providerB = layerB.dataProvider()
 
         geomType = providerA.geometryType()
-        if geomType in GEOM_25D:
-            raise GeoAlgorithmExecutionException(
-                self.tr('Input layer has unsupported geometry type {}').format(geomType))
-
         fields = vector.combineVectorFields(layerA, layerB)
         writer = self.getOutputFromName(self.OUTPUT).getVectorWriter(
             fields, geomType, providerA.crs())

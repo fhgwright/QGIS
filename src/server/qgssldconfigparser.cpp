@@ -28,6 +28,7 @@
 #include "qgssymbolv2.h"
 #include "qgsvectorlayer.h"
 #include "qgsvectordataprovider.h"
+#include "qgscrscache.h"
 #include <sqlite3.h>
 
 //layer builders
@@ -466,7 +467,6 @@ QDomDocument QgsSLDConfigParser::getStyles( QStringList& layerList ) const
   for ( int i = 0; i < layerList.size(); i++ )
   {
     QString layerName;
-    QString typeName;
     layerName = layerList.at( i );
     QDomElement userLayerElement = findUserLayerElement( layerName );
     if ( userLayerElement.isNull() )
@@ -717,11 +717,11 @@ bool QgsSLDConfigParser::WMSInspireActivated() const
   return false;
 }
 
-QgsComposition* QgsSLDConfigParser::createPrintComposition( const QString& composerTemplate, QgsMapRenderer* mapRenderer, const QMap< QString, QString >& parameterMap ) const
+QgsComposition* QgsSLDConfigParser::createPrintComposition( const QString& composerTemplate, QgsMapRenderer* mapRenderer, const QMap< QString, QString >& parameterMap, QStringList& highlightLayers ) const
 {
   if ( mFallbackParser )
   {
-    return mFallbackParser->createPrintComposition( composerTemplate, mapRenderer, parameterMap );
+    return mFallbackParser->createPrintComposition( composerTemplate, mapRenderer, parameterMap, highlightLayers );
   }
   return nullptr;
 }
@@ -1003,7 +1003,6 @@ bool QgsSLDConfigParser::labelSettingsFromUserStyle( const QDomElement& userStyl
   int polyColorRed = 0;
   int polyColorGreen = 0;
   int polyColorBlue = 0;
-  QString elemText;
   QString fontfamily = QString( "Helvetica" );
   QString fontstyle = QString( "Normal" );
   int fontsize = 14;
@@ -1677,8 +1676,7 @@ void QgsSLDConfigParser::setCrsForLayer( const QDomElement& layerElem, QgsMapLay
     if ( conversionOk )
     {
       //set spatial ref sys
-      QgsCoordinateReferenceSystem srs;
-      srs.createFromOgcWmsCrs( QString( "EPSG:%1" ).arg( epsgnr ) );
+      QgsCoordinateReferenceSystem srs = QgsCRSCache::instance()->crsByOgcWmsCrs( QString( "EPSG:%1" ).arg( epsgnr ) );
       ml->setCrs( srs );
     }
   }
@@ -1687,8 +1685,7 @@ void QgsSLDConfigParser::setCrsForLayer( const QDomElement& layerElem, QgsMapLay
     QString projString = layerElem.attribute( "proj", "" );
     if ( !projString.isEmpty() )
     {
-      QgsCoordinateReferenceSystem srs;
-      srs.createFromProj4( projString );
+      QgsCoordinateReferenceSystem srs = QgsCRSCache::instance()->crsByProj4( projString );
       //TODO: createFromProj4 used to save to the user database any new CRS
       // this behavior was changed in order to separate creation and saving.
       // Not sure if it necessary to save it here, should be checked by someone

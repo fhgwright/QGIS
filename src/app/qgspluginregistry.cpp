@@ -52,7 +52,8 @@ QgsPluginRegistry *QgsPluginRegistry::instance()
 }
 
 QgsPluginRegistry::QgsPluginRegistry()
-    : mPythonUtils( nullptr ), mQgisInterface( nullptr )
+    : mPythonUtils( nullptr )
+    , mQgisInterface( nullptr )
 {
 // constructor does nothing
 }
@@ -494,7 +495,6 @@ void QgsPluginRegistry::restoreSessionPlugins( const QString& thePluginDirString
     QgsDebugMsg( "Loading python plugins" );
 
     QStringList corePlugins = QStringList();
-    corePlugins << "fTools";
     corePlugins << "GdalTools";
     corePlugins << "db_manager";
     corePlugins << "processing";

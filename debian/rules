@@ -7,6 +7,9 @@
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
+# Enable hardening build flags
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+
 # These are used for cross-compiling and for saving the configure script
 # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -31,7 +34,7 @@ ifneq (,$(findstring -oracle,$(DISTRIBUTION)))
 	WITH_ORACLE=1
 endif
 
-ifneq ($(DISTRIBUTION),$(findstring $(DISTRIBUTION),"wheezy jessie stretch precise trusty utopic vivid wily xenial"))
+ifneq ($(DISTRIBUTION),$(findstring $(DISTRIBUTION),"wheezy jessie stretch precise trusty wily xenial"))
 	DISTRIBUTION := sid
 endif
 
@@ -50,6 +53,8 @@ QGIS_ABI=$(QGIS_MAJOR).$(QGIS_MINOR).$(QGIS_PATCH)
 GRASS=grass$(subst .,,$(shell pkg-config --modversion grass|cut -d. -f1,2))
 GRASSVER=$(subst .,,$(shell pkg-config --modversion grass|cut -d. -f1))
 
+WITH_GLOBE=$(shell dpkg --compare-versions "$$(dpkg-query -W --showformat='$${Version}' libosgearth-dev)" ge 2.7 && echo 1)
+
 CMAKE_OPTS := \
 	-DBUILDNAME=$(DEB_BUILD_NAME) \
 	-DCMAKE_VERBOSE_MAKEFILE=1 \
@@ -62,8 +67,8 @@ CMAKE_OPTS := \
 	-DSERVER_SKIP_ECW=TRUE \
 	-DQGIS_CGIBIN_SUBDIR=/usr/lib/cgi-bin \
 	-DWITH_APIDOC=TRUE \
+	-DGENERATE_QHP=TRUE \
 	-DWITH_CUSTOM_WIDGETS=TRUE \
-	-DWITH_GLOBE=TRUE \
 	-DWITH_INTERNAL_HTTPLIB2=FALSE \
 	-DWITH_INTERNAL_JINJA2=FALSE \
 	-DWITH_INTERNAL_MARKUPSAFE=FALSE \
@@ -73,6 +78,10 @@ CMAKE_OPTS := \
 	-DWITH_INTERNAL_YAML=FALSE \
 	-DQT_TAG_FILE=/usr/share/qt4/doc/html/qt.tags \
 	-DQT_DOC_URL=/usr/share/qt4/doc/html/
+
+ifneq ($(SHA),)
+	CMAKE_OPTS += -DSHA=$(SHA)
+endif
 
 ifeq ($(GRASSVER),7)
 	CMAKE_OPTS += \
@@ -97,6 +106,16 @@ else
 	CMAKE_OPTS += -DWITH_INTERNAL_NOSE2=FALSE -DWITH_INTERNAL_SIX=FALSE
 endif
 
+ifeq (,$(findstring $(DISTRIBUTION),"stretch sid wily xenial"))
+	CMAKE_OPTS += -DWITH_INTERNAL_FUTURE=TRUE
+else
+	CMAKE_OPTS += -DWITH_INTERNAL_FUTURE=FALSE
+endif
+
+ifneq (,$(WITH_GLOBE))
+	CMAKE_OPTS += -DWITH_GLOBE=TRUE
+endif
+
 ifneq (,$(findstring $(DISTRIBUTION),"wheezy precise"))
 	CMAKE_OPTS += -DWITH_PYSPATIALITE=TRUE
 endif
@@ -105,11 +124,15 @@ ifneq (,$(findstring $(DISTRIBUTION),"sid stretch"))
 	CMAKE_OPTS += -DPOSTGRES_LIBRARY=/usr/lib/$(DEB_BUILD_MULTIARCH)/libpq.so
 endif
 
+ifneq (,$(findstring $(DISTRIBUTION),"sid stretch xenial"))
+	CMAKE_OPTS += -DWITH_QTWEBKIT=FALSE
+endif
+
 ifneq (,$(findstring $(DISTRIBUTION),"sid"))
 	CMAKE_OPTS += -DGEOS_LIBRARY=/usr/lib/$(DEB_BUILD_MULTIARCH)/libgeos_c.so
 endif
 
-ifneq (,$(findstring $(DISTRIBUTION),"jessie stretch trusty utopic vivid wily xenial sid"))
+ifneq (,$(findstring $(DISTRIBUTION),"jessie stretch trusty wily xenial sid"))
 	CMAKE_OPTS += -DPYTHON_LIBRARY=/usr/lib/$(DEB_BUILD_MULTIARCH)/libpython2.7.so
 endif
 
@@ -181,6 +204,10 @@ endif
 
 CONTROL_EXPRESSIONS = $(DISTRIBUTION) grass$(GRASSVER)
 
+ifneq (,$(WITH_GLOBE))
+	CONTROL_EXPRESSIONS += globe
+endif
+
 ifneq (,$(WITH_ORACLE))
 	CONTROL_EXPRESSIONS += oracle
 endif
@@ -220,10 +247,6 @@ binary binary-arch binary-indep build build-arch build-indep clean install insta
 override_dh_clean: cleantemplates
 	dh_clean qgis.bin.1 qbrowser.bin.1
 
-	# automatically generated files
-	-$(RM) $(CURDIR)/src/core/qgscontexthelp_texts.cpp
-	-$(RM) $(CURDIR)/src/core/qgsexpression_texts.cpp
-
 	-$(RM) -r $(CURDIR)/$(QGIS_BUILDDIR)/
 
 override_dh_auto_configure:
@@ -249,6 +272,35 @@ endif
 override_dh_auto_install:
 	dh_auto_install
 
+	# remove unwanted files
+	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/doc/api/installdox
+	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/doc/api/html/jquery.js
+	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/doc/api/jquery.js
+
+	# replace leaflet and jquery urls
+	perl -i -p \
+		-e 's#http://.*/leaflet.css#leaflet/leaflet.css#;s#http://.*/leaflet.js#leaflet/leaflet.js#;s#http://.*/jquery-.*.min.js#jquery-min.js#' \
+		$(CURDIR)/debian/tmp/usr/share/qgis/doc/developersmap.html
+
+	# Use /usr/bin/python2.7 explicitly for Python Policy compliance
+	perl -i -pe 's=#!/usr/bin/env python=#!/usr/bin/python2.7=;' $$(find debian/tmp -name "*.py")
+
+	# Don't include a copy of the world.tif also included in osgearth-data
+	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/globe/world.tif
+
+	# remove extra license files
+	-find $(CURDIR)/debian/tmp/usr/share/qgis/resources/cpt-city-qgis-min/ -name COPYING.xml -delete
+	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/doc/LICENSE
+	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/python/plugins/db_manager/LICENSE
+	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/python/plugins/MetaSearch/LICENSE.txt
+
+	# Man pages are installed by dh_installman
+	$(RM) $(CURDIR)/debian/tmp/usr/man/man1/qgis.1
+	$(RM) $(CURDIR)/debian/tmp/usr/man/man1/qbrowser.1
+
+	# Don't ship srs.db, automatically updated in postinst with crssync
+	mv $(CURDIR)/debian/tmp/usr/share/qgis/resources/srs.db $(CURDIR)/debian/tmp/usr/share/qgis/resources/srs-template.db
+
 	# Install menu pixmap
 	install -o root -g root -d $(CURDIR)/debian/tmp/usr/share/pixmaps
 	install -o root -g root -m 644 $(CURDIR)/images/icons/qgis_icon.svg $(CURDIR)/debian/tmp/usr/share/pixmaps/qgis.svg
@@ -261,6 +313,16 @@ override_dh_auto_install:
 	for size in 8x8 16x16 22x22 24x24 32x32 36x36 42x42 48x48 64x64 72x72 80x80 96x96 128x128; do \
 		install -o root -g root -d $(CURDIR)/debian/tmp/usr/share/icons/hicolor/$${size}/mimetypes ; \
 		install -o root -g root -m 644 $(CURDIR)/debian/qgis-mime-icon$${size}.png $(CURDIR)/debian/tmp/usr/share/icons/hicolor/$${size}/mimetypes/qgis-mime.png ; \
+	done
+
+	# Install QGIS file formats icons
+	for file_type in qgs qlr qml qpt; do \
+		for size in 8x8 16x16 22x22 24x24 32x32 36x36 42x42 48x48 64x64 72x72 80x80 96x96 128x128 192x192 256x256 512x512; do \
+			install -o root -g root -d $(CURDIR)/debian/tmp/usr/share/icons/hicolor/$${size}/mimetypes ; \
+			install -o root -g root -m 644 \
+				$(CURDIR)/debian/qgis-$${file_type}$${size}.png \
+				$(CURDIR)/debian/tmp/usr/share/icons/hicolor/$${size}/mimetypes/qgis-$${file_type}.png ; \
+		done ; \
 	done
 
 	# Install application icon
@@ -304,34 +366,6 @@ override_dh_auto_install:
 	install -o root -g root -m 755 $(CURDIR)/debian/qgis.sh $(CURDIR)/debian/qgis/usr/bin/qbrowser
 
 override_dh_install:
-	# Don't ship srs.db, automatically updated in postinst with crssync
-	mv $(CURDIR)/debian/tmp/usr/share/qgis/resources/srs.db $(CURDIR)/debian/tmp/usr/share/qgis/resources/srs-template.db
-
-	perl -i -pe 's=#!/usr/bin/env python=#!/usr/bin/python2.7=;' $$(find debian/tmp -name "*.py")
-
-	# remove unwanted files
-	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/doc/api/installdox
-	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/doc/api/html/jquery.js
-	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/doc/api/jquery.js
-
-	# replace leaflet and jquery urls
-	perl -i -p \
-		-e 's#http://.*/leaflet.css#leaflet/leaflet.css#;s#http://.*/leaflet.js#leaflet/leaflet.js#;s#http://.*/jquery-.*.min.js#jquery-min.js#' \
-		$(CURDIR)/debian/tmp/usr/share/qgis/doc/developersmap.html
-
-	# Don't include a copy of the world.tif also included in osgearth-data
-	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/globe/world.tif
-
-	# remove extra license files
-	-find $(CURDIR)/debian/tmp/usr/share/qgis/resources/cpt-city-qgis-min/ -name COPYING.xml -delete
-	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/doc/LICENSE
-	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/python/plugins/db_manager/LICENSE
-	$(RM) $(CURDIR)/debian/tmp/usr/share/qgis/python/plugins/MetaSearch/LICENSE.txt
-
-	# Man pages are installed by dh_installman
-	$(RM) $(CURDIR)/debian/tmp/usr/man/man1/qgis.1
-	$(RM) $(CURDIR)/debian/tmp/usr/man/man1/qbrowser.1
-
 	dh_install --autodest --list-missing
 
 override_dh_installchangelogs:

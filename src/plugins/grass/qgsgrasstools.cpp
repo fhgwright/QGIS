@@ -52,7 +52,8 @@ class QgsGrassToolsTreeFilterProxyModel : public QSortFilterProxyModel
 {
   public:
     explicit QgsGrassToolsTreeFilterProxyModel( QObject *parent )
-        : QSortFilterProxyModel( parent ), mModel( 0 )
+        : QSortFilterProxyModel( parent )
+        , mModel( 0 )
     {
       setDynamicSortFilter( true );
       mRegExp.setPatternSyntax( QRegExp::Wildcard );
@@ -149,7 +150,7 @@ class QgsGrassToolsTreeFilterProxyModel : public QSortFilterProxyModel
 };
 
 QgsGrassTools::QgsGrassTools( QgisInterface *iface, QWidget * parent, const char * name, Qt::WindowFlags f )
-    : QDockWidget( parent, f )
+    : QgsDockWidget( parent, f )
     , mModulesListModel( 0 )
     , mModelProxy( 0 )
 {
@@ -229,7 +230,6 @@ void QgsGrassTools::resetTitle()
 
 void QgsGrassTools::showTabs()
 {
-  QgsDebugMsg( "entered." );
 
   resetTitle();
 
@@ -584,7 +584,6 @@ void QgsGrassTools::closeMapset()
 
 void QgsGrassTools::mapsetChanged()
 {
-  QgsDebugMsg( "entered." );
 
   mTabWidget->setCurrentIndex( 0 );
   closeTools();
@@ -594,7 +593,6 @@ void QgsGrassTools::mapsetChanged()
 
 QgsGrassTools::~QgsGrassTools()
 {
-  QgsDebugMsg( "entered." );
   saveWindowLocation();
 }
 
@@ -634,13 +632,11 @@ void QgsGrassTools::saveWindowLocation()
 
 void QgsGrassTools::emitRegionChanged()
 {
-  QgsDebugMsg( "entered." );
   emit regionChanged();
 }
 
 void QgsGrassTools::closeTools()
 {
-  QgsDebugMsg( "entered." );
 
   for ( int i = mTabWidget->count() - 1; i > 1; i-- ) // first is module tree, second is region
   {
@@ -710,7 +706,6 @@ void QgsGrassTools::itemClicked( const QModelIndex &theIndex )
 
 void QgsGrassTools::on_mDebugButton_clicked()
 {
-  QgsDebugMsg( "entered" );
 
   QApplication::setOverrideCursor( Qt::BusyCursor );
 

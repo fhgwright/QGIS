@@ -173,6 +173,8 @@ QgsMssqlSourceSelect::QgsMssqlSourceSelect( QWidget *parent, Qt::WindowFlags fl,
   mTablesTreeView->setEditTriggers( QAbstractItemView::CurrentChanged );
   mTablesTreeView->setItemDelegate( new QgsMssqlSourceSelectDelegate( this ) );
 
+  connect( mTablesTreeView->selectionModel(), SIGNAL( selectionChanged( const QItemSelection&, const QItemSelection& ) ), this, SLOT( treeWidgetSelectionChanged( const QItemSelection&, const QItemSelection& ) ) );
+
   QSettings settings;
   mTablesTreeView->setSelectionMode( settings.value( "/qgis/addMSSQLDC", false ).toBool() ?
                                      QAbstractItemView::ExtendedSelection :
@@ -384,7 +386,6 @@ void QgsMssqlSourceSelect::on_mSearchModeComboBox_currentIndexChanged( const QSt
 
 void QgsMssqlSourceSelect::setLayerType( const QgsMssqlLayerProperty& layerProperty )
 {
-  QgsDebugMsg( "entering." );
   mTableModel.setGeometryTypesForTable( layerProperty );
 }
 
@@ -632,9 +633,6 @@ void QgsMssqlSourceSelect::finishList()
 {
   QApplication::restoreOverrideCursor();
 
-  if ( cmbConnections->count() > 0 )
-    mAddButton->setEnabled( true );
-
   mTablesTreeView->sortByColumn( QgsMssqlTableModel::dbtmTable, Qt::AscendingOrder );
   mTablesTreeView->sortByColumn( QgsMssqlTableModel::dbtmSchema, Qt::AscendingOrder );
 }
@@ -737,6 +735,11 @@ void QgsMssqlSourceSelect::setSearchExpression( const QString& regexp )
   Q_UNUSED( regexp );
 }
 
+void QgsMssqlSourceSelect::treeWidgetSelectionChanged( const QItemSelection &selected, const QItemSelection &deselected )
+{
+  Q_UNUSED( deselected )
+  mAddButton->setEnabled( !selected.isEmpty() );
+}
 
 QgsMssqlGeomColumnTypeThread::QgsMssqlGeomColumnTypeThread( QString connectionName, bool useEstimatedMetadata )
     : QThread()
@@ -789,8 +792,7 @@ void QgsMssqlGeomColumnTypeThread::run()
       QSqlDatabase db = QSqlDatabase::database( mConnectionName );
       if ( !QgsMssqlProvider::OpenDatabase( db ) )
       {
-        QString msg = db.lastError().text();
-        QgsDebugMsg( msg );
+        QgsDebugMsg( db.lastError().text() );
         continue;
       }
 
@@ -798,8 +800,7 @@ void QgsMssqlGeomColumnTypeThread::run()
       q.setForwardOnly( true );
       if ( !q.exec( query ) )
       {
-        QString msg = q.lastError().text();
-        QgsDebugMsg( msg );
+        QgsDebugMsg( q.lastError().text() );
       }
 
       QString type;

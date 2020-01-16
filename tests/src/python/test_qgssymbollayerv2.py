@@ -23,17 +23,19 @@ __copyright__ = '(C) 2012, Massimo Endrighi'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
 
-from PyQt4.QtCore import pyqtWrapperType, Qt, QDir, QFile, QIODevice, QPointF
-from PyQt4.QtXml import QDomDocument
-from PyQt4.QtGui import QColor
+from qgis.PyQt.QtCore import pyqtWrapperType, Qt, QDir, QFile, QIODevice, QPointF
+from qgis.PyQt.QtXml import QDomDocument
+from qgis.PyQt.QtGui import QColor
 
 from qgis.core import (QgsCentroidFillSymbolLayerV2,
                        QgsEllipseSymbolLayerV2,
                        QgsFillSymbolLayerV2,
                        QgsFontMarkerSymbolLayerV2,
+                       QgsFilledMarkerSymbolLayer,
                        QgsGradientFillSymbolLayerV2,
                        QgsImageFillSymbolLayer,
                        QgsLinePatternFillSymbolLayer,
@@ -48,12 +50,14 @@ from qgis.core import (QgsCentroidFillSymbolLayerV2,
                        QgsSvgMarkerSymbolLayerV2,
                        QgsSymbolLayerV2,
                        QgsVectorFieldSymbolLayer,
+                       QgsRasterFillSymbolLayer,
+                       QgsShapeburstFillSymbolLayerV2,
+                       QgsArrowSymbolLayer,
                        QgsSymbolV2,
                        )
-from qgis.testing import (start_app,
-                          unittest
-                          )
+from qgis.testing import start_app, unittest
 from utilities import unitTestDataPath
+
 # Convenience instances in case you may need them
 # not used in this test
 start_app()
@@ -74,7 +78,7 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
      """
 
     def testBinding(self):
-        """Test python bindings existance."""
+        """Test python bindings existence."""
         mType = type(QgsSymbolLayerV2)
         mExpectedType = pyqtWrapperType
         mMessage = 'Expected "%s" got "%s"' % (mExpectedType, mType)
@@ -90,6 +94,22 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
 
         try:
             mType = type(QgsGradientFillSymbolLayerV2)
+        except:
+            mType = None
+        mExpectedType = pyqtWrapperType
+        mMessage = 'Expected "%s" got "%s"' % (mExpectedType, mType)
+        assert mExpectedType == mType, mMessage
+
+        try:
+            mType = type(QgsLinePatternFillSymbolLayer)
+        except:
+            mType = None
+        mExpectedType = pyqtWrapperType
+        mMessage = 'Expected "%s" got "%s"' % (mExpectedType, mType)
+        assert mExpectedType == mType, mMessage
+
+        try:
+            mType = type(QgsPointPatternFillSymbolLayer)
         except:
             mType = None
         mExpectedType = pyqtWrapperType
@@ -113,6 +133,22 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
         assert mExpectedType == mType, mMessage
 
         try:
+            mType = type(QgsGradientFillSymbolLayerV2)
+        except:
+            mType = None
+        mExpectedType = pyqtWrapperType
+        mMessage = 'Expected "%s" got "%s"' % (mExpectedType, mType)
+        assert mExpectedType == mType, mMessage
+
+        try:
+            mType = type(QgsShapeburstFillSymbolLayerV2)
+        except:
+            mType = None
+        mExpectedType = pyqtWrapperType
+        mMessage = 'Expected "%s" got "%s"' % (mExpectedType, mType)
+        assert mExpectedType == mType, mMessage
+
+        try:
             mType = type(QgsSVGFillSymbolLayer)
         except:
             mType = None
@@ -122,6 +158,14 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
 
         try:
             mType = type(QgsCentroidFillSymbolLayerV2)
+        except:
+            mType = None
+        mExpectedType = pyqtWrapperType
+        mMessage = 'Expected "%s" got "%s"' % (mExpectedType, mType)
+        assert mExpectedType == mType, mMessage
+
+        try:
+            mType = type(QgsRasterFillSymbolLayer)
         except:
             mType = None
         mExpectedType = pyqtWrapperType
@@ -146,6 +190,14 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
 
         try:
             mType = type(QgsMarkerLineSymbolLayerV2)
+        except:
+            mType = None
+        mExpectedType = pyqtWrapperType
+        mMessage = 'Expected "%s" got "%s"' % (mExpectedType, mType)
+        assert mExpectedType == mType, mMessage
+
+        try:
+            mType = type(QgsArrowSymbolLayer)
         except:
             mType = None
         mExpectedType = pyqtWrapperType
@@ -186,6 +238,14 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
 
         try:
             mType = type(QgsSimpleMarkerSymbolLayerV2)
+        except:
+            mType = None
+        mExpectedType = pyqtWrapperType
+        mMessage = 'Expected "%s" got "%s"' % (mExpectedType, mType)
+        assert mExpectedType == mType, mMessage
+
+        try:
+            mType = type(QgsFilledMarkerSymbolLayer)
         except:
             mType = None
         mExpectedType = pyqtWrapperType
@@ -349,7 +409,7 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
         mMessage = 'Expected "%s" got "%s"' % (mExpectedValue, mValue)
         assert mExpectedValue == mValue, mMessage
 
-        mExpectedValue = u'regular_star'
+        mExpectedValue = u'star'
         mValue = mSymbolLayer.subSymbol().symbolLayer(0).name()
         mMessage = 'Expected "%s" got "%s"' % (mExpectedValue, mValue)
         assert mExpectedValue == mValue, mMessage
@@ -716,7 +776,7 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
 
         mExpectedValue = u'skull.svg'
         mValue = os.path.basename(mSymbolLayer.path())
-        print "VALUE", mSymbolLayer.path()
+        print("VALUE", mSymbolLayer.path())
         mMessage = 'Expected "%s" got "%s"' % (mExpectedValue, mValue)
         assert mExpectedValue == mValue, mMessage
 
@@ -729,6 +789,34 @@ class TestQgsSymbolLayerV2(unittest.TestCase):
         mValue = mSymbolLayer.angle()
         mMessage = 'Expected "%s" got "%s"' % (mExpectedValue, mValue)
         assert mExpectedValue == mValue, mMessage
+
+    def testQgsFilledMarkerSymbolLayer(self):
+        """
+        Test QgsFilledMarkerSymbolLayer
+        """
+        # test colors, need to make sure colors are passed/retrieved from subsymbol
+        mSymbolLayer = QgsFilledMarkerSymbolLayer.create()
+
+        mSymbolLayer.setColor(QColor(150, 50, 100))
+        self.assertEqual(mSymbolLayer.color(), QColor(150, 50, 100))
+        self.assertEqual(mSymbolLayer.subSymbol().color(), QColor(150, 50, 100))
+        mSymbolLayer.subSymbol().setColor(QColor(250, 150, 200))
+        self.assertEqual(mSymbolLayer.subSymbol().color(), QColor(250, 150, 200))
+        self.assertEqual(mSymbolLayer.color(), QColor(250, 150, 200))
+
+    def testQgsVectorFieldSymbolLayer(self):
+        """
+        Test QgsVectorFieldSymbolLayer
+        """
+        # test colors, need to make sure colors are passed/retrieved from subsymbol
+        mSymbolLayer = QgsVectorFieldSymbolLayer.create()
+
+        mSymbolLayer.setColor(QColor(150, 50, 100))
+        self.assertEqual(mSymbolLayer.color(), QColor(150, 50, 100))
+        self.assertEqual(mSymbolLayer.subSymbol().color(), QColor(150, 50, 100))
+        mSymbolLayer.subSymbol().setColor(QColor(250, 150, 200))
+        self.assertEqual(mSymbolLayer.subSymbol().color(), QColor(250, 150, 200))
+        self.assertEqual(mSymbolLayer.color(), QColor(250, 150, 200))
 
 if __name__ == '__main__':
     unittest.main()

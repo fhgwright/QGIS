@@ -25,6 +25,10 @@ __copyright__ = '(C) 2012, Victor Olaya'
 
 __revision__ = '$Format:%H$'
 
+import os
+
+from qgis.PyQt.QtGui import QIcon
+
 from qgis.core import QGis, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsWKBTypes
 
 from processing.core.GeoAlgorithm import GeoAlgorithm
@@ -34,9 +38,7 @@ from processing.core.parameters import ParameterVector
 from processing.core.outputs import OutputVector
 from processing.tools import dataobjects, vector
 
-GEOM_25D = [QGis.WKBPoint25D, QGis.WKBLineString25D, QGis.WKBPolygon25D,
-            QGis.WKBMultiPoint25D, QGis.WKBMultiLineString25D,
-            QGis.WKBMultiPolygon25D]
+pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
 
 
 class Clip(GeoAlgorithm):
@@ -44,6 +46,9 @@ class Clip(GeoAlgorithm):
     INPUT = 'INPUT'
     OVERLAY = 'OVERLAY'
     OUTPUT = 'OUTPUT'
+
+    def getIcon(self):
+        return QIcon(os.path.join(pluginPath, 'images', 'ftools', 'clip.png'))
 
     def defineCharacteristics(self):
         self.name, self.i18n_name = self.trAlgorithm('Clip')
@@ -59,11 +64,6 @@ class Clip(GeoAlgorithm):
             self.getParameterValue(Clip.INPUT))
         layerB = dataobjects.getObjectFromUri(
             self.getParameterValue(Clip.OVERLAY))
-
-        geomType = layerA.dataProvider().geometryType()
-        if geomType in GEOM_25D:
-            raise GeoAlgorithmExecutionException(
-                self.tr('Input layer has unsupported geometry type {}').format(geomType))
 
         writer = self.getOutputFromName(self.OUTPUT).getVectorWriter(
             layerA.pendingFields(),

@@ -224,6 +224,8 @@ QgsOracleSourceSelect::QgsOracleSourceSelect( QWidget *parent, Qt::WindowFlags f
   mTablesTreeView->setEditTriggers( QAbstractItemView::CurrentChanged );
   mTablesTreeView->setItemDelegate( mTablesTreeDelegate );
 
+  connect( mTablesTreeView->selectionModel(), SIGNAL( selectionChanged( const QItemSelection&, const QItemSelection& ) ), this, SLOT( treeWidgetSelectionChanged( const QItemSelection&, const QItemSelection& ) ) );
+
   QSettings settings;
   mTablesTreeView->setSelectionMode( settings.value( "/qgis/addOracleDC", false ).toBool() ?
                                      QAbstractItemView::ExtendedSelection :
@@ -430,7 +432,6 @@ void QgsOracleSourceSelect::on_mSearchModeComboBox_currentIndexChanged( const QS
 
 void QgsOracleSourceSelect::setLayerType( QgsOracleLayerProperty layerProperty )
 {
-  QgsDebugMsg( "entering." );
   mTableModel.addTableEntry( layerProperty );
 }
 
@@ -518,7 +519,7 @@ void QgsOracleSourceSelect::on_btnConnect_clicked()
   QgsDataSourceURI uri = QgsOracleConn::connUri( cmbConnections->currentText() );
 
   mIsConnected = true;
-  mTablesTreeDelegate->setConnectionInfo( uri.connectionInfo() );
+  mTablesTreeDelegate->setConnectionInfo( uri );
 
   mColumnTypeThread = new QgsOracleColumnTypeThread( cmbConnections->currentText(),
       uri.useEstimatedMetadata(),
@@ -540,9 +541,6 @@ void QgsOracleSourceSelect::on_btnConnect_clicked()
 void QgsOracleSourceSelect::finishList()
 {
   QApplication::restoreOverrideCursor();
-
-  if ( cmbConnections->count() > 0 )
-    mAddButton->setEnabled( true );
 
 #if 0
   for ( int i = 0; i < QgsOracleTableModel::dbtmColumns; i++ )
@@ -674,7 +672,13 @@ void QgsOracleSourceSelect::loadTableFromCache()
 
 
   mIsConnected = true;
-  mTablesTreeDelegate->setConnectionInfo( uri.connectionInfo() );
+  mTablesTreeDelegate->setConnectionInfo( uri );
 
   finishList();
+}
+
+void QgsOracleSourceSelect::treeWidgetSelectionChanged( const QItemSelection &selected, const QItemSelection &deselected )
+{
+  Q_UNUSED( deselected )
+  mAddButton->setEnabled( !selected.isEmpty() );
 }

@@ -25,8 +25,10 @@ __copyright__ = '(C) 2010, Michael Minn'
 
 __revision__ = '$Format:%H$'
 
+import os
 
-from PyQt4.QtCore import QVariant
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QVariant
 from qgis.core import QgsFields, QgsVectorLayer
 
 from processing.core.GeoAlgorithm import GeoAlgorithm
@@ -34,12 +36,15 @@ from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecution
 from processing.core.parameters import ParameterMultipleInput
 from processing.core.outputs import OutputVector
 
-from processing.tools import dataobjects, vector
+pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
 
 
 class Merge(GeoAlgorithm):
     LAYERS = 'LAYERS'
     OUTPUT = 'OUTPUT'
+
+    def getIcon(self):
+        return QIcon(os.path.join(pluginPath, 'images', 'ftools', 'merge_shapes.png'))
 
     def defineCharacteristics(self):
         self.name, self.i18n_name = self.trAlgorithm('Merge vector layers')
@@ -57,7 +62,7 @@ class Merge(GeoAlgorithm):
         layers = []
         fields = QgsFields()
         totalFeatureCount = 0
-        for x in xrange(0, len(paths)):
+        for x in xrange(len(paths)):
             layer = QgsVectorLayer(paths[x], unicode(x), 'ogr')
 
             if (len(layers) > 0):
@@ -92,7 +97,7 @@ class Merge(GeoAlgorithm):
                 sattributes = feature.attributes()
                 dattributes = []
                 for dindex, dfield in enumerate(fields):
-                    if (dfield.type() == QVariant.Int):
+                    if (dfield.type() == QVariant.Int, QVariant.UInt, QVariant.LongLong, QVariant.ULongLong):
                         dattribute = 0
                     elif (dfield.type() == QVariant.Double):
                         dattribute = 0.0

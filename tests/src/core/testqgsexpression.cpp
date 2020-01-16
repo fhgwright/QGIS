@@ -30,6 +30,7 @@
 #include "qgsmaplayerregistry.h"
 #include "qgsvectordataprovider.h"
 #include "qgsdistancearea.h"
+#include "qgsproject.h"
 
 static void _parseAndEvalExpr( int arg )
 {
@@ -48,14 +49,18 @@ class TestQgsExpression: public QObject
   public:
 
     TestQgsExpression()
-        : mPointsLayer( 0 )
-        , mMemoryLayer( 0 )
+        : mPointsLayer( nullptr )
+        , mMemoryLayer( nullptr )
+        , mAggregatesLayer( nullptr )
+        , mChildLayer( nullptr )
     {}
 
   private:
 
     QgsVectorLayer* mPointsLayer;
     QgsVectorLayer* mMemoryLayer;
+    QgsVectorLayer* mAggregatesLayer;
+    QgsVectorLayer* mChildLayer;
 
   private slots:
 
@@ -104,6 +109,70 @@ class TestQgsExpression: public QObject
       f4.setAttribute( "col2", "test4" );
       mMemoryLayer->dataProvider()->addFeatures( QgsFeatureList() << f1 << f2 << f3 << f4 );
       QgsMapLayerRegistry::instance()->addMapLayer( mMemoryLayer );
+
+      // test layer for aggregates
+      mAggregatesLayer = new QgsVectorLayer( "Point?field=col1:integer&field=col2:string&field=col3:integer", "aggregate_layer", "memory" );
+      QVERIFY( mAggregatesLayer->isValid() );
+      QgsFeature af1( mAggregatesLayer->dataProvider()->fields(), 1 );
+      af1.setAttribute( "col1", 4 );
+      af1.setAttribute( "col2", "test" );
+      af1.setAttribute( "col3", 2 );
+      QgsFeature af2( mAggregatesLayer->dataProvider()->fields(), 2 );
+      af2.setAttribute( "col1", 2 );
+      af2.setAttribute( "col2", QVariant( QVariant::String ) );
+      af2.setAttribute( "col3", 1 );
+      QgsFeature af3( mAggregatesLayer->dataProvider()->fields(), 3 );
+      af3.setAttribute( "col1", 3 );
+      af3.setAttribute( "col2", "test333" );
+      af3.setAttribute( "col3", 2 );
+      QgsFeature af4( mAggregatesLayer->dataProvider()->fields(), 4 );
+      af4.setAttribute( "col1", 2 );
+      af4.setAttribute( "col2", "test4" );
+      af4.setAttribute( "col3", 2 );
+      QgsFeature af5( mAggregatesLayer->dataProvider()->fields(), 5 );
+      af5.setAttribute( "col1", 5 );
+      af5.setAttribute( "col2", QVariant( QVariant::String ) );
+      af5.setAttribute( "col3", 3 );
+      QgsFeature af6( mAggregatesLayer->dataProvider()->fields(), 6 );
+      af6.setAttribute( "col1", 8 );
+      af6.setAttribute( "col2", "test4" );
+      af6.setAttribute( "col3", 3 );
+      mAggregatesLayer->dataProvider()->addFeatures( QgsFeatureList() << af1 << af2 << af3 << af4 << af5 << af6 );
+      QgsMapLayerRegistry::instance()->addMapLayer( mAggregatesLayer );
+
+      mChildLayer = new QgsVectorLayer( "Point?field=parent:integer&field=col2:string&field=col3:integer", "child_layer", "memory" );
+      QVERIFY( mChildLayer->isValid() );
+      QgsFeature cf1( mChildLayer->dataProvider()->fields(), 1 );
+      cf1.setAttribute( "parent", 4 );
+      cf1.setAttribute( "col2", "test" );
+      cf1.setAttribute( "col3", 2 );
+      QgsFeature cf2( mChildLayer->dataProvider()->fields(), 2 );
+      cf2.setAttribute( "parent", 4 );
+      cf2.setAttribute( "col2", QVariant( QVariant::String ) );
+      cf2.setAttribute( "col3", 1 );
+      QgsFeature cf3( mChildLayer->dataProvider()->fields(), 3 );
+      cf3.setAttribute( "parent", 4 );
+      cf3.setAttribute( "col2", "test333" );
+      cf3.setAttribute( "col3", 2 );
+      QgsFeature cf4( mChildLayer->dataProvider()->fields(), 4 );
+      cf4.setAttribute( "parent", 3 );
+      cf4.setAttribute( "col2", "test4" );
+      cf4.setAttribute( "col3", 2 );
+      QgsFeature cf5( mChildLayer->dataProvider()->fields(), 5 );
+      cf5.setAttribute( "parent", 3 );
+      cf5.setAttribute( "col2", QVariant( QVariant::String ) );
+      cf5.setAttribute( "col3", 7 );
+      mChildLayer->dataProvider()->addFeatures( QgsFeatureList() << cf1 << cf2 << cf3 << cf4 << cf5 );
+      QgsMapLayerRegistry::instance()->addMapLayer( mChildLayer );
+
+      QgsRelation rel;
+      rel.setRelationId( "my_rel" );
+      rel.setRelationName( "relation name" );
+      rel.setReferencedLayer( mAggregatesLayer->id() );
+      rel.setReferencingLayer( mChildLayer->id() );
+      rel.addFieldPair( "parent", "col1" );
+      QVERIFY( rel.isValid() );
+      QgsProject::instance()->relationManager()->addRelation( rel );
     }
 
     void cleanupTestCase()
@@ -228,6 +297,65 @@ class TestQgsExpression: public QObject
       QCOMPARE( exp.dump(), dump );
     }
 
+    void named_parameter_data()
+    {
+      //test passing named parameters to functions
+      QTest::addColumn<QString>( "string" );
+      QTest::addColumn<bool>( "parserError" );
+      QTest::addColumn<QString>( "dump" );
+      QTest::addColumn<QVariant>( "result" );
+
+      QTest::newRow( "unsupported" ) << "min( val1:=1, val2:=2, val3:=3 )" << true << "" << QVariant();
+      QTest::newRow( "named params named" ) << "clamp( min:=1, value:=2, max:=3)" << false << "clamp(1, 2, 3)" << QVariant( 2.0 );
+      QTest::newRow( "named params unnamed" ) << "clamp(1,2,3)" << false << "clamp(1, 2, 3)" << QVariant( 2.0 );
+      QTest::newRow( "named params mixed" ) << "clamp( 1, value:=2, max:=3)" << false << "clamp(1, 2, 3)" << QVariant( 2.0 );
+      QTest::newRow( "named params mixed bad" ) << "clamp( 1, value:=2, 3)" << true << "" << QVariant();
+      QTest::newRow( "named params mixed 2" ) << "clamp( 1, 2, max:=3)" << false << "clamp(1, 2, 3)" << QVariant( 2.0 );
+      QTest::newRow( "named params reordered" ) << "clamp( value := 2, max:=3, min:=1)" << false << "clamp(1, 2, 3)" << QVariant( 2.0 );
+      QTest::newRow( "named params mixed case" ) << "clamp( Min:=1, vAlUe:=2,MAX:=3)" << false << "clamp(1, 2, 3)" << QVariant( 2.0 );
+      QTest::newRow( "named params expression node" ) << "clamp( min:=1*2, value:=2+2, max:=3+1+2)" << false << "clamp(1 * 2, 2 + 2, 3 + 1 + 2)" << QVariant( 4.0 );
+      QTest::newRow( "named params bad name" ) << "clamp( min:=1, x:=2, y:=3)" << true << "" << QVariant();
+      QTest::newRow( "named params dupe implied" ) << "clamp( 1, 2, value:= 3, max:=4)" << true << "" << QVariant();
+      QTest::newRow( "named params dupe explicit" ) << "clamp( 1, value := 2, value:= 3, max:=4)" << true << "" << QVariant();
+      QTest::newRow( "named params dupe explicit 2" ) << "clamp( value:=1, value := 2, max:=4)" << true << "" << QVariant();
+      QTest::newRow( "named params non optional omitted" ) << "clamp( min:=1, max:=2)" << true << "" << QVariant();
+      QTest::newRow( "optional parameters specified" ) << "wordwrap( 'testxstring', 5, 'x')" << false << "wordwrap('testxstring', 5, 'x')" << QVariant( "test\nstring" );
+      QTest::newRow( "optional parameters specified named" ) << "wordwrap( text:='testxstring', length:=5, delimiter:='x')" << false << "wordwrap('testxstring', 5, 'x')" << QVariant( "test\nstring" );
+      QTest::newRow( "optional parameters unspecified" ) << "wordwrap( text:='test string', length:=5 )" << false << "wordwrap('test string', 5, ' ')" << QVariant( "test\nstring" );
+      QTest::newRow( "named params dupe explicit 3" ) << "wordwrap( 'test string', 5, length:=6 )" << true << "" << QVariant();
+      QTest::newRow( "named params dupe explicit 4" ) << "wordwrap( text:='test string', length:=5, length:=6 )" << true << "" << QVariant();
+    }
+
+    void named_parameter()
+    {
+      QFETCH( QString, string );
+      QFETCH( bool, parserError );
+      QFETCH( QString, dump );
+      QFETCH( QVariant, result );
+
+      QgsExpression exp( string );
+      QCOMPARE( exp.hasParserError(), parserError );
+      if ( exp.hasParserError() )
+      {
+        //parser error, so no point continuing testing
+        qDebug() << exp.parserErrorString();
+        return;
+      }
+
+      QgsExpressionContext context;
+      Q_ASSERT( exp.prepare( &context ) );
+
+      QVariant res = exp.evaluate();
+      if ( exp.hasEvalError() )
+        qDebug() << exp.evalErrorString();
+      if ( res.type() != result.type() )
+      {
+        qDebug() << "got " << res.typeName() << " instead of " << result.typeName();
+      }
+      QCOMPARE( res, result );
+      QCOMPARE( exp.dump(), dump );
+    }
+
     void evaluation_data()
     {
       QTest::addColumn<QString>( "string" );
@@ -299,6 +427,20 @@ class TestQgsExpression: public QObject
       QTest::newRow( "'nan'='x'" ) << "'nan'='x'" << false << QVariant( 0 );
       QTest::newRow( "'inf'='inf'" ) << "'inf'='inf'" << false << QVariant( 1 );
       QTest::newRow( "'inf'='x'" ) << "'inf'='x'" << false << QVariant( 0 );
+      QTest::newRow( "'1.1'='1.1'" ) << "'1.1'='1.1'" << false << QVariant( 1 );
+      QTest::newRow( "'1.1'!='1.1'" ) << "'1.1'!='1.1'" << false << QVariant( 0 );
+      QTest::newRow( "'1.1'='1.10'" ) << "'1.1'='1.10'" << false << QVariant( 0 );
+      QTest::newRow( "'1.1'!='1.10'" ) << "'1.1'!='1.10'" << false << QVariant( 1 );
+      QTest::newRow( "1.1=1.10" ) << "1.1=1.10" << false << QVariant( 1 );
+      QTest::newRow( "1.1 != 1.10" ) << "1.1 != 1.10" << false << QVariant( 0 );
+      QTest::newRow( "'1.1'=1.1" ) << "'1.1'=1.1" << false << QVariant( 1 );
+      QTest::newRow( "'1.10'=1.1" ) << "'1.10'=1.1" << false << QVariant( 1 );
+      QTest::newRow( "1.1='1.10'" ) << "1.1='1.10'" << false << QVariant( 1 );
+      QTest::newRow( "'1.1'='1.10000'" ) << "'1.1'='1.10000'" << false << QVariant( 0 );
+      QTest::newRow( "'1E-23'='1E-23'" ) << "'1E-23'='1E-23'" << false << QVariant( 1 );
+      QTest::newRow( "'1E-23'!='1E-23'" ) << "'1E-23'!='1E-23'" << false << QVariant( 0 );
+      QTest::newRow( "'1E-23'='2E-23'" ) << "'1E-23'='2E-23'" << false << QVariant( 0 );
+      QTest::newRow( "'1E-23'!='2E-23'" ) << "'1E-23'!='2E-23'" << false << QVariant( 1 );
 
       // is, is not
       QTest::newRow( "is null,null" ) << "null is null" << false << QVariant( 1 );
@@ -309,6 +451,10 @@ class TestQgsExpression: public QObject
       QTest::newRow( "is not int" ) << "1 is not 1" << false << QVariant( 0 );
       QTest::newRow( "is text" ) << "'x' is 'y'" << false << QVariant( 0 );
       QTest::newRow( "is not text" ) << "'x' is not 'y'" << false << QVariant( 1 );
+      QTest::newRow( "'1.1' is '1.10'" ) << "'1.1' is '1.10'" << false << QVariant( 0 );
+      QTest::newRow( "'1.1' is '1.10000'" ) << "'1.1' is '1.10000'" << false << QVariant( 0 );
+      QTest::newRow( "1.1 is '1.10'" ) << "1.1 is '1.10'" << false << QVariant( 1 );
+      QTest::newRow( "'1.10' is 1.1" ) << "'1.10' is 1.1" << false << QVariant( 1 );
 
       //  logical
       QTest::newRow( "T or F" ) << "1=1 or 2=3" << false << QVariant( 1 );
@@ -354,28 +500,29 @@ class TestQgsExpression: public QObject
       // math functions
       QTest::newRow( "pi" ) << "pi()" << false << QVariant( M_PI );
       QTest::newRow( "sqrt" ) << "sqrt(16)" << false << QVariant( 4. );
+      QTest::newRow( "sqrt" ) << "sqrt(value:=16)" << false << QVariant( 4. );
       QTest::newRow( "abs(0.1)" ) << "abs(0.1)" << false << QVariant( 0.1 );
       QTest::newRow( "abs(0)" ) << "abs(0)" << false << QVariant( 0. );
-      QTest::newRow( "abs(-0.1)" ) << "abs(-0.1)" << false << QVariant( 0.1 );
+      QTest::newRow( "abs( value:=-0.1)" ) << "abs(value:=-0.1)" << false << QVariant( 0.1 );
       QTest::newRow( "invalid sqrt value" ) << "sqrt('a')" << true << QVariant();
-      QTest::newRow( "degrees to radians" ) << "toint(radians(45)*1000000)" << false << QVariant( 785398 ); // sorry for the nasty hack to work around floating point comparison problems
-      QTest::newRow( "radians to degrees" ) << "toint(degrees(2)*1000)" << false << QVariant( 114592 );
-      QTest::newRow( "sin 0" ) << "sin(0)" << false << QVariant( 0. );
-      QTest::newRow( "cos 0" ) << "cos(0)" << false << QVariant( 1. );
-      QTest::newRow( "tan 0" ) << "tan(0)" << false << QVariant( 0. );
-      QTest::newRow( "asin 0" ) << "asin(0)" << false << QVariant( 0. );
-      QTest::newRow( "acos 1" ) << "acos(1)" << false << QVariant( 0. );
-      QTest::newRow( "atan 0" ) << "atan(0)" << false << QVariant( 0. );
+      QTest::newRow( "degrees to radians" ) << "toint(radians(degrees:=45)*1000000)" << false << QVariant( 785398 ); // sorry for the nasty hack to work around floating point comparison problems
+      QTest::newRow( "radians to degrees" ) << "toint(degrees(radians:=2)*1000)" << false << QVariant( 114592 );
+      QTest::newRow( "sin 0" ) << "sin(angle:=0)" << false << QVariant( 0. );
+      QTest::newRow( "cos 0" ) << "cos(angle:=0)" << false << QVariant( 1. );
+      QTest::newRow( "tan 0" ) << "tan(angle:=0)" << false << QVariant( 0. );
+      QTest::newRow( "asin 0" ) << "asin(value:=0)" << false << QVariant( 0. );
+      QTest::newRow( "acos 1" ) << "acos(value:=1)" << false << QVariant( 0. );
+      QTest::newRow( "atan 0" ) << "atan(value:=0)" << false << QVariant( 0. );
       QTest::newRow( "atan2(0,1)" ) << "atan2(0,1)" << false << QVariant( 0. );
-      QTest::newRow( "atan2(1,0)" ) << "atan2(1,0)" << false << QVariant( M_PI / 2 );
+      QTest::newRow( "atan2(1,0)" ) << "atan2(dx:=1,dy:=0)" << false << QVariant( M_PI / 2 );
       QTest::newRow( "exp(0)" ) << "exp(0)" << false << QVariant( 1. );
-      QTest::newRow( "exp(1)" ) << "exp(1)" << false << QVariant( exp( 1. ) );
+      QTest::newRow( "exp(1)" ) << "exp(value:=1)" << false << QVariant( exp( 1. ) );
       QTest::newRow( "ln(0)" ) << "ln(0)" << false << QVariant();
       QTest::newRow( "log10(-1)" ) << "log10(-1)" << false << QVariant();
-      QTest::newRow( "ln(1)" ) << "ln(1)" << false << QVariant( log( 1. ) );
+      QTest::newRow( "ln(1)" ) << "ln(value:=1)" << false << QVariant( log( 1. ) );
       QTest::newRow( "log10(100)" ) << "log10(100)" << false << QVariant( 2. );
       QTest::newRow( "log(2,32)" ) << "log(2,32)" << false << QVariant( 5. );
-      QTest::newRow( "log(10,1000)" ) << "log(10,1000)" << false << QVariant( 3. );
+      QTest::newRow( "log(10,1000)" ) << "log(base:=10,value:=1000)" << false << QVariant( 3. );
       QTest::newRow( "log(-2,32)" ) << "log(-2,32)" << false << QVariant();
       QTest::newRow( "log(2,-32)" ) << "log(2,-32)" << false << QVariant();
       QTest::newRow( "log(0.5,32)" ) << "log(0.5,32)" << false << QVariant( -5. );
@@ -389,6 +536,7 @@ class TestQgsExpression: public QObject
       QTest::newRow( "min(-16.6,3.5,-2.1)" ) << "min(-16.6,3.5,-2.1)" << false << QVariant( -16.6 );
       QTest::newRow( "min(5,3.5,-2.1)" ) << "min(5,3.5,-2.1)" << false << QVariant( -2.1 );
       QTest::newRow( "clamp(-2,1,5)" ) << "clamp(-2,1,5)" << false << QVariant( 1.0 );
+      QTest::newRow( "clamp(min:=-2,value:=1,max:=5)" ) << "clamp(min:=-2,value:=1,max:=5)" << false << QVariant( 1.0 );
       QTest::newRow( "clamp(-2,-10,5)" ) << "clamp(-2,-10,5)" << false << QVariant( -2.0 );
       QTest::newRow( "clamp(-2,100,5)" ) << "clamp(-2,100,5)" << false << QVariant( 5.0 );
       QTest::newRow( "floor(4.9)" ) << "floor(4.9)" << false << QVariant( 4. );
@@ -582,8 +730,12 @@ class TestQgsExpression: public QObject
       QTest::newRow( "relate bad 2" ) << "relate(geom_from_wkt('POINT(110 120)'),geom_from_wkt(''))" << false << QVariant();
       QTest::newRow( "relate pattern true" ) << "relate( geom_from_wkt( 'LINESTRING(40 40,120 120)' ), geom_from_wkt( 'LINESTRING(40 40,60 120)' ), '**1F001**' )" << false << QVariant( true );
       QTest::newRow( "relate pattern false" ) << "relate( geom_from_wkt( 'LINESTRING(40 40,120 120)' ), geom_from_wkt( 'LINESTRING(40 40,60 120)' ), '**1F002**' )" << false << QVariant( false );
-      QTest::newRow( "azimuth" ) << "toint(degrees(azimuth( make_point(25, 45), make_point(75, 100)))*1000000)" << false << QVariant( 42273689 );
+      QTest::newRow( "azimuth" ) << "toint(degrees(azimuth( point_a := make_point(25, 45), point_b := make_point(75, 100)))*1000000)" << false << QVariant( 42273689 );
       QTest::newRow( "azimuth" ) << "toint(degrees( azimuth( make_point(75, 100), make_point(25,45) ) )*1000000)" << false << QVariant( 222273689 );
+      QTest::newRow( "project not geom" ) << "project( 'asd', 1, 2 )" << true << QVariant();
+      QTest::newRow( "project not point" ) << "project( geom_from_wkt('LINESTRING(2 0,2 2, 3 2, 3 0)'), 1, 2 )" << true << QVariant();
+      QTest::newRow( "project x" ) << "toint(x(project( make_point( 1, 2 ), 3, radians(270)))*1000000)" << false << QVariant( -2 * 1000000 );
+      QTest::newRow( "project y" ) << "toint(y(project( point:=make_point( 1, 2 ), distance:=3, bearing:=radians(270)))*1000000)" << false << QVariant( 2 * 1000000 );
       QTest::newRow( "extrude geom" ) << "geom_to_wkt(extrude( geom_from_wkt('LineString( 1 2, 3 2, 4 3)'),1,2))" << false << QVariant( "Polygon ((1 2, 3 2, 4 3, 5 5, 4 4, 2 4, 1 2))" );
       QTest::newRow( "extrude not geom" ) << "extrude('g',5,6)" << true << QVariant();
       QTest::newRow( "extrude null" ) << "extrude(NULL,5,6)" << false << QVariant();
@@ -620,6 +772,7 @@ class TestQgsExpression: public QObject
       QTest::newRow( "title" ) << "title(' HeLlO   WORLD ')" << false << QVariant( " Hello   World " );
       QTest::newRow( "trim" ) << "trim('   Test String ')" << false << QVariant( "Test String" );
       QTest::newRow( "trim empty string" ) << "trim('')" << false << QVariant( "" );
+      QTest::newRow( "char" ) << "char(81)" << false << QVariant( "Q" );
       QTest::newRow( "wordwrap" ) << "wordwrap('university of qgis',13)" << false << QVariant( "university of\nqgis" );
       QTest::newRow( "wordwrap" ) << "wordwrap('university of qgis',13,' ')" << false << QVariant( "university of\nqgis" );
       QTest::newRow( "wordwrap" ) << "wordwrap('university of qgis',-3)" << false << QVariant( "university\nof qgis" );
@@ -669,15 +822,15 @@ class TestQgsExpression: public QObject
 
       // Datetime functions
       QTest::newRow( "to date" ) << "todate('2012-06-28')" << false << QVariant( QDate( 2012, 6, 28 ) );
-      QTest::newRow( "to interval" ) << "tointerval('1 Year 1 Month 1 Week 1 Hour 1 Minute')" << false << QVariant::fromValue( QgsExpression::Interval( 34758060 ) );
+      QTest::newRow( "to interval" ) << "tointerval('1 Year 1 Month 1 Week 1 Hour 1 Minute')" << false << QVariant::fromValue( QgsInterval( 34758060 ) );
       QTest::newRow( "day with date" ) << "day('2012-06-28')" << false << QVariant( 28 );
       QTest::newRow( "day with interval" ) << "day(tointerval('28 days'))" << false << QVariant( 28.0 );
       QTest::newRow( "month with date" ) << "month('2012-06-28')" << false << QVariant( 6 );
       QTest::newRow( "month with interval" ) << "month(tointerval('2 months'))" << false << QVariant( 2.0 );
       QTest::newRow( "year with date" ) << "year('2012-06-28')" << false << QVariant( 2012 );
       QTest::newRow( "year with interval" ) << "year(tointerval('2 years'))" << false << QVariant( 2.0 );
-      QTest::newRow( "age" ) << "age('2012-06-30','2012-06-28')" << false << QVariant::fromValue( QgsExpression::Interval( 172800 ) );
-      QTest::newRow( "negative age" ) << "age('2012-06-28','2012-06-30')" << false << QVariant::fromValue( QgsExpression::Interval( -172800 ) );
+      QTest::newRow( "age" ) << "age('2012-06-30','2012-06-28')" << false << QVariant::fromValue( QgsInterval( 172800 ) );
+      QTest::newRow( "negative age" ) << "age('2012-06-28','2012-06-30')" << false << QVariant::fromValue( QgsInterval( -172800 ) );
       QTest::newRow( "day of week date" ) << "day_of_week(todate('2015-09-21'))" << false << QVariant( 1 );
       QTest::newRow( "day of week datetime" ) << "day_of_week(to_datetime('2015-09-20 13:01:43'))" << false << QVariant( 0 );
       QTest::newRow( "hour datetime" ) << "hour(to_datetime('2015-09-20 13:01:43'))" << false << QVariant( 13 );
@@ -698,9 +851,14 @@ class TestQgsExpression: public QObject
       QTest::newRow( "age time" ) << "second(age(to_time('08:30:22'),to_time('07:12:10')))" << false << QVariant( 4692.0 );
       QTest::newRow( "age date" ) << "day(age(to_date('2004-03-22'),to_date('2004-03-12')))" << false << QVariant( 10.0 );
       QTest::newRow( "age datetime" ) << "hour(age(to_datetime('2004-03-22 08:30:22'),to_datetime('2004-03-12 07:30:22')))" << false << QVariant( 241.0 );
+      QTest::newRow( "date + time" ) << "to_date('2013-03-04') + to_time('13:14:15')" << false << QVariant( QDateTime( QDate( 2013, 3, 4 ), QTime( 13, 14, 15 ) ) );
+      QTest::newRow( "time + date" ) << "to_time('13:14:15') + to_date('2013-03-04')" << false << QVariant( QDateTime( QDate( 2013, 3, 4 ), QTime( 13, 14, 15 ) ) );
+      QTest::newRow( "date - date" ) << "to_date('2013-03-04') - to_date('2013-03-01')" << false << QVariant( QgsInterval( 3*24*60*60 ) );
+      QTest::newRow( "datetime - datetime" ) << "to_datetime('2013-03-04 08:30:00') - to_datetime('2013-03-01 05:15:00')" << false << QVariant( QgsInterval( 3*24*60*60 + 3 * 60*60 + 15*60 ) );
+      QTest::newRow( "time - time" ) << "to_time('08:30:00') - to_time('05:15:00')" << false << QVariant( QgsInterval( 3 * 60*60 + 15*60 ) );
 
       // Color functions
-      QTest::newRow( "ramp color" ) << "ramp_color('Spectral',0.3)" << false << QVariant( "253,190,115,255" );
+      QTest::newRow( "ramp color" ) << "ramp_color('Spectral',0.3)" << false << QVariant( "254,190,116,255" );
       QTest::newRow( "color rgb" ) << "color_rgb(255,127,0)" << false << QVariant( "255,127,0" );
       QTest::newRow( "color rgba" ) << "color_rgba(255,127,0,200)" << false << QVariant( "255,127,0,200" );
       QTest::newRow( "color hsl" ) << "color_hsl(100,50,70)" << false << QVariant( "166,217,140" );
@@ -771,8 +929,8 @@ class TestQgsExpression: public QObject
       QTest::newRow( "layer_property attribution" ) << QString( "layer_property('%1','attribution')" ).arg( mPointsLayer->name() ) << false << QVariant( mPointsLayer->attribution() );
       QTest::newRow( "layer_property attribution_url" ) << QString( "layer_property('%1','attribution_url')" ).arg( mPointsLayer->name() ) << false << QVariant( mPointsLayer->attributionUrl() );
       QTest::newRow( "layer_property source" ) << QString( "layer_property('%1','source')" ).arg( mPointsLayer->name() ) << false << QVariant( mPointsLayer->publicSource() );
-      QTest::newRow( "layer_property min_scale" ) << QString( "layer_property('%1','min_scale')" ).arg( mPointsLayer->name() ) << false << QVariant(( double )mPointsLayer->minimumScale() );
-      QTest::newRow( "layer_property max_scale" ) << QString( "layer_property('%1','max_scale')" ).arg( mPointsLayer->name() ) << false << QVariant(( double )mPointsLayer->maximumScale() );
+      QTest::newRow( "layer_property min_scale" ) << QString( "layer_property('%1','min_scale')" ).arg( mPointsLayer->name() ) << false << QVariant( mPointsLayer->minimumScale() );
+      QTest::newRow( "layer_property max_scale" ) << QString( "layer_property('%1','max_scale')" ).arg( mPointsLayer->name() ) << false << QVariant( mPointsLayer->maximumScale() );
       QTest::newRow( "layer_property crs" ) << QString( "layer_property('%1','crs')" ).arg( mPointsLayer->name() ) << false << QVariant( "EPSG:4326" );
       QTest::newRow( "layer_property extent" ) << QString( "geom_to_wkt(layer_property('%1','extent'))" ).arg( mPointsLayer->name() ) << false << QVariant( "Polygon ((-118.88888889 22.80020704, -83.33333333 22.80020704, -83.33333333 46.87198068, -118.88888889 46.87198068, -118.88888889 22.80020704))" );
       QTest::newRow( "layer_property type" ) << QString( "layer_property('%1','type')" ).arg( mPointsLayer->name() ) << false << QVariant( "Vector" );
@@ -844,10 +1002,10 @@ class TestQgsExpression: public QObject
           break;
         case QVariant::UserType:
         {
-          if ( result.userType() == qMetaTypeId<QgsExpression::Interval>() )
+          if ( result.userType() == qMetaTypeId<QgsInterval>() )
           {
-            QgsExpression::Interval inter = result.value<QgsExpression::Interval>();
-            QgsExpression::Interval gotinter = expected.value<QgsExpression::Interval>();
+            QgsInterval inter = result.value<QgsInterval>();
+            QgsInterval gotinter = expected.value<QgsInterval>();
             QCOMPARE( inter.seconds(), gotinter.seconds() );
           }
           else
@@ -1052,6 +1210,209 @@ class TestQgsExpression: public QObject
       }
     }
 
+    void aggregate_data()
+    {
+      QTest::addColumn<QString>( "string" );
+      QTest::addColumn<bool>( "evalError" );
+      QTest::addColumn<QVariant>( "result" );
+
+      QTest::newRow( "bad layer" ) << "aggregate('xxxtest','sum',\"col1\")" << true << QVariant();
+      QTest::newRow( "bad aggregate" ) << "aggregate('test','xxsum',\"col1\")" << true << QVariant();
+      QTest::newRow( "bad expression" ) << "aggregate('test','sum',\"xcvxcvcol1\")" << true << QVariant();
+
+      QTest::newRow( "int aggregate 1" ) << "aggregate('test','sum',\"col1\")" << false << QVariant( 65 );
+      QTest::newRow( "int aggregate 2" ) << "aggregate('test','max',\"col1\")" << false << QVariant( 41 );
+      QTest::newRow( "int aggregate named" ) << "aggregate(layer:='test',aggregate:='sum',expression:=\"col1\")" << false << QVariant( 65 );
+      QTest::newRow( "string aggregate on int" ) << "aggregate('test','max_length',\"col1\")" << true << QVariant();
+      QTest::newRow( "string aggregate 1" ) << "aggregate('test','min',\"col2\")" << false << QVariant( "test1" );
+      QTest::newRow( "string aggregate 2" ) << "aggregate('test','min_length',\"col2\")" << false << QVariant( 5 );
+      QTest::newRow( "string concatenate" ) << "aggregate('test','concatenate',\"col2\",concatenator:=' , ')" << false << QVariant( "test1 , test2 , test3 , test4" );
+
+      QTest::newRow( "sub expression" ) << "aggregate('test','sum',\"col1\" * 2)" << false << QVariant( 65 * 2 );
+      QTest::newRow( "bad sub expression" ) << "aggregate('test','sum',\"xcvxcv\" * 2)" << true << QVariant();
+
+      QTest::newRow( "filter" ) << "aggregate('test','sum',\"col1\", \"col1\" <= 10)" << false << QVariant( 13 );
+      QTest::newRow( "filter context" ) << "aggregate('test','sum',\"col1\", \"col1\" <= @test_var)" << false << QVariant( 13 );
+      QTest::newRow( "filter named" ) << "aggregate(layer:='test',aggregate:='sum',expression:=\"col1\", filter:=\"col1\" <= 10)" << false << QVariant( 13 );
+      QTest::newRow( "filter no matching" ) << "aggregate('test','sum',\"col1\", \"col1\" <= -10)" << false << QVariant( 0 );
+    }
+
+    void aggregate()
+    {
+      QgsExpressionContext context;
+      QgsExpressionContextScope* scope = new QgsExpressionContextScope();
+      scope->setVariable( "test_var", 10 );
+      context << scope;
+
+      QFETCH( QString, string );
+      QFETCH( bool, evalError );
+      QFETCH( QVariant, result );
+
+      QgsExpression exp( string );
+      QCOMPARE( exp.hasParserError(), false );
+      if ( exp.hasParserError() )
+        qDebug() << exp.parserErrorString();
+
+      QVariant res;
+
+      //try evaluating once without context (only if variables aren't required)
+      if ( !string.contains( "@" ) )
+      {
+        res = exp.evaluate();
+        if ( exp.hasEvalError() )
+          qDebug() << exp.evalErrorString();
+
+        QCOMPARE( exp.hasEvalError(), evalError );
+        QCOMPARE( res, result );
+      }
+
+      //try evaluating with context
+      res = exp.evaluate( &context );
+      if ( exp.hasEvalError() )
+        qDebug() << exp.evalErrorString();
+
+      QCOMPARE( exp.hasEvalError(), evalError );
+      QCOMPARE( res, result );
+
+      // check again - make sure value was correctly cached
+      res = exp.evaluate( &context );
+      QCOMPARE( res, result );
+    }
+
+    void layerAggregates_data()
+    {
+      QTest::addColumn<QString>( "string" );
+      QTest::addColumn<bool>( "evalError" );
+      QTest::addColumn<QVariant>( "result" );
+
+      QTest::newRow( "count" ) << "count(\"col1\")" << false << QVariant( 6.0 );
+      QTest::newRow( "count_distinct" ) << "count_distinct(\"col1\")" << false << QVariant( 5.0 );
+      QTest::newRow( "count_missing" ) << "count_missing(\"col2\")" << false << QVariant( 2 );
+      QTest::newRow( "sum" ) << "sum(\"col1\")" << false << QVariant( 24.0 );
+      QTest::newRow( "minimum" ) << "minimum(\"col1\")" << false << QVariant( 2.0 );
+      QTest::newRow( "maximum" ) << "maximum(\"col1\")" << false << QVariant( 8.0 );
+      QTest::newRow( "mean" ) << "mean(\"col1\")" << false << QVariant( 4.0 );
+      QTest::newRow( "median" ) << "median(\"col1\")" << false << QVariant( 3.5 );
+      QTest::newRow( "stdev" ) << "round(stdev(\"col1\")*10000)" << false << QVariant( 22804 );
+      QTest::newRow( "range" ) << "range(\"col1\")" << false << QVariant( 6.0 );
+      QTest::newRow( "minority" ) << "minority(\"col3\")" << false << QVariant( 1 );
+      QTest::newRow( "majority" ) << "majority(\"col3\")" << false << QVariant( 2 );
+      QTest::newRow( "q1" ) << "q1(\"col1\")" << false << QVariant( 2 );
+      QTest::newRow( "q3" ) << "q3(\"col1\")" << false << QVariant( 5 );
+      QTest::newRow( "iqr" ) << "iqr(\"col1\")" << false << QVariant( 3 );
+      QTest::newRow( "min_length" ) << "min_length(\"col2\")" << false << QVariant( 0 );
+      QTest::newRow( "max_length" ) << "max_length(\"col2\")" << false << QVariant( 7 );
+      QTest::newRow( "concatenate" ) << "concatenate(\"col2\",concatenator:=',')" << false << QVariant( "test,,test333,test4,,test4" );
+
+      QTest::newRow( "bad expression" ) << "sum(\"xcvxcvcol1\")" << true << QVariant();
+      QTest::newRow( "aggregate named" ) << "sum(expression:=\"col1\")" << false << QVariant( 24.0 );
+      QTest::newRow( "string aggregate on int" ) << "max_length(\"col1\")" << true << QVariant();
+
+      QTest::newRow( "sub expression" ) << "sum(\"col1\" * 2)" << false << QVariant( 48 );
+      QTest::newRow( "bad sub expression" ) << "sum(\"xcvxcv\" * 2)" << true << QVariant();
+
+      QTest::newRow( "filter" ) << "sum(\"col1\", NULL, \"col1\" >= 5)" << false << QVariant( 13 );
+      QTest::newRow( "filter named" ) << "sum(expression:=\"col1\", filter:=\"col1\" >= 5)" << false << QVariant( 13 );
+      QTest::newRow( "filter no matching" ) << "sum(expression:=\"col1\", filter:=\"col1\" <= -5)" << false << QVariant( 0 );
+
+      QTest::newRow( "group by" ) << "sum(\"col1\", \"col3\")" << false << QVariant( 9 );
+      QTest::newRow( "group by and filter" ) << "sum(\"col1\", \"col3\", \"col1\">=3)" << false << QVariant( 7 );
+      QTest::newRow( "group by and filter named" ) << "sum(expression:=\"col1\", group_by:=\"col3\", filter:=\"col1\">=3)" << false << QVariant( 7 );
+      QTest::newRow( "group by expression" ) << "sum(\"col1\", \"col1\" % 2)" << false << QVariant( 16 );
+    }
+
+    void layerAggregates()
+    {
+      QgsExpressionContext context;
+      context.appendScope( QgsExpressionContextUtils::layerScope( mAggregatesLayer ) );
+
+      QgsFeature af1( mAggregatesLayer->dataProvider()->fields(), 1 );
+      af1.setAttribute( "col1", 4 );
+      af1.setAttribute( "col2", "test" );
+      af1.setAttribute( "col3", 2 );
+      context.setFeature( af1 );
+
+      QFETCH( QString, string );
+      QFETCH( bool, evalError );
+      QFETCH( QVariant, result );
+
+      QgsExpression exp( string );
+      QCOMPARE( exp.hasParserError(), false );
+      if ( exp.hasParserError() )
+        qDebug() << exp.parserErrorString();
+
+      //try evaluating with context
+      QVariant res = exp.evaluate( &context );
+      if ( exp.hasEvalError() )
+        qDebug() << exp.evalErrorString();
+
+      QCOMPARE( exp.hasEvalError(), evalError );
+      QCOMPARE( res, result );
+
+      // check again - make sure value was correctly cached
+      res = exp.evaluate( &context );
+      QCOMPARE( res, result );
+    }
+
+    void relationAggregate_data()
+    {
+      QTest::addColumn<QString>( "string" );
+      QTest::addColumn<int>( "parentKey" );
+      QTest::addColumn<bool>( "evalError" );
+      QTest::addColumn<QVariant>( "result" );
+
+      QTest::newRow( "bad relation" ) << "relation_aggregate('xxxtest','sum',\"col3\")" << 0 << true << QVariant();
+      QTest::newRow( "bad aggregate" ) << "relation_aggregate('my_rel','xxsum',\"col3\")" << 0 << true << QVariant();
+      QTest::newRow( "bad expression" ) << "relation_aggregate('my_rel','sum',\"xcvxcvcol1\")" << 0 << true << QVariant();
+
+      QTest::newRow( "relation aggregate 1" ) << "relation_aggregate('my_rel','sum',\"col3\")" << 4 << false << QVariant( 5 );
+      QTest::newRow( "relation aggregate by name" ) << "relation_aggregate('relation name','sum',\"col3\")" << 4 << false << QVariant( 5 );
+      QTest::newRow( "relation aggregate 2" ) << "relation_aggregate('my_rel','sum',\"col3\")" << 3 << false << QVariant( 9 );
+      QTest::newRow( "relation aggregate 2" ) << "relation_aggregate('my_rel','sum',\"col3\")" << 6 << false << QVariant( 0 );
+      QTest::newRow( "relation aggregate count 1" ) << "relation_aggregate('my_rel','count',\"col3\")" << 4 << false << QVariant( 3 );
+      QTest::newRow( "relation aggregate count 2" ) << "relation_aggregate('my_rel','count',\"col3\")" << 3 << false << QVariant( 2 );
+      QTest::newRow( "relation aggregate count 2" ) << "relation_aggregate('my_rel','count',\"col3\")" << 6 << false << QVariant( 0 );
+      QTest::newRow( "relation aggregate concatenation" ) << "relation_aggregate('my_rel','concatenate',to_string(\"col3\"),concatenator:=',')" << 3 << false << QVariant( "2,7" );
+
+      QTest::newRow( "named relation aggregate 1" ) << "relation_aggregate(relation:='my_rel',aggregate:='sum',expression:=\"col3\")" << 4 << false << QVariant( 5 );
+      QTest::newRow( "relation aggregate sub expression 1" ) << "relation_aggregate('my_rel','sum',\"col3\" * 2)" << 4 << false << QVariant( 10 );
+      QTest::newRow( "relation aggregate bad sub expression" ) << "relation_aggregate('my_rel','sum',\"fsdfsddf\" * 2)" << 4 << true << QVariant();
+    }
+
+    void relationAggregate()
+    {
+      QFETCH( QString, string );
+      QFETCH( int, parentKey );
+      QFETCH( bool, evalError );
+      QFETCH( QVariant, result );
+
+      QgsExpressionContext context;
+      context.appendScope( QgsExpressionContextUtils::layerScope( mAggregatesLayer ) );
+
+      QgsFeature af1( mAggregatesLayer->dataProvider()->fields(), 1 );
+      af1.setAttribute( "col1", parentKey );
+      context.setFeature( af1 );
+
+      QgsExpression exp( string );
+      QCOMPARE( exp.hasParserError(), false );
+      if ( exp.hasParserError() )
+        qDebug() << exp.parserErrorString();
+
+      QVariant res;
+
+      //try evaluating with context
+      res = exp.evaluate( &context );
+      if ( exp.hasEvalError() )
+        qDebug() << exp.evalErrorString();
+
+      QCOMPARE( exp.hasEvalError(), evalError );
+      QCOMPARE( res, result );
+
+      // check again - make sure value was correctly cached
+      res = exp.evaluate( &context );
+      QCOMPARE( res, result );
+    }
+
     void get_feature_geometry()
     {
       //test that get_feature fetches feature's geometry
@@ -1075,7 +1436,7 @@ class TestQgsExpression: public QObject
       QCOMPARE( v1.toInt() <= 10, true );
       QCOMPARE( v1.toInt() >= 1, true );
 
-      QgsExpression exp2( "rand(-5,-5)" );
+      QgsExpression exp2( "rand(min:=-5,max:=-5)" );
       QVariant v2 = exp2.evaluate();
       QCOMPARE( v2.toInt(), -5 );
 
@@ -1092,7 +1453,7 @@ class TestQgsExpression: public QObject
       QCOMPARE( v1.toDouble() <= 9.5, true );
       QCOMPARE( v1.toDouble() >= 1.5, true );
 
-      QgsExpression exp2( "randf(-0.0005,-0.0005)" );
+      QgsExpression exp2( "randf(min:=-0.0005,max:=-0.0005)" );
       QVariant v2 = exp2.evaluate();
       QCOMPARE( v2.toDouble(), -0.0005 );
 

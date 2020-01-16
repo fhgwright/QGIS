@@ -132,6 +132,11 @@ QgsAbstractGeometryV2* QgsGeometry::geometry() const
 
 void QgsGeometry::setGeometry( QgsAbstractGeometryV2* geometry )
 {
+  if ( d->geometry == geometry )
+  {
+    return;
+  }
+
   detach( false );
   if ( d->geometry )
   {
@@ -361,6 +366,22 @@ QgsPoint QgsGeometry::closestVertex( const QgsPoint& point, int& atVertex, int& 
   return QgsPoint( vp.x(), vp.y() );
 }
 
+double QgsGeometry::distanceToVertex( int vertex ) const
+{
+  if ( !d->geometry )
+  {
+    return -1;
+  }
+
+  QgsVertexId id;
+  if ( !vertexIdFromVertexNr( vertex, id ) )
+  {
+    return -1;
+  }
+
+  return QgsGeometryUtils::distanceToVertex( *( d->geometry ), id );
+}
+
 void QgsGeometry::adjacentVertices( int atVertex, int& beforeVertex, int& afterVertex ) const
 {
   if ( !d->geometry )
@@ -428,7 +449,7 @@ bool QgsGeometry::deleteVertex( int atVertex )
   }
 
   //maintain compatibility with < 2.10 API
-  if ( d->geometry->geometryType() == "MultiPoint" )
+  if ( QgsWKBTypes::flatType( d->geometry->wkbType() ) == QgsWKBTypes::MultiPoint )
   {
     detach( true );
     removeWkbGeos();
@@ -466,7 +487,7 @@ bool QgsGeometry::insertVertex( double x, double y, int beforeVertex )
   }
 
   //maintain compatibility with < 2.10 API
-  if ( d->geometry->geometryType() == "MultiPoint" )
+  if ( QgsWKBTypes::flatType( d->geometry->wkbType() ) == QgsWKBTypes::MultiPoint )
   {
     detach( true );
     removeWkbGeos();
@@ -987,7 +1008,7 @@ bool QgsGeometry::convertToSingleType()
 
 QgsPoint QgsGeometry::asPoint() const
 {
-  if ( !d->geometry || d->geometry->geometryType() != "Point" )
+  if ( !d->geometry || QgsWKBTypes::flatType( d->geometry->wkbType() ) != QgsWKBTypes::Point )
   {
     return QgsPoint();
   }
@@ -1008,7 +1029,8 @@ QgsPolyline QgsGeometry::asPolyline() const
     return polyLine;
   }
 
-  bool doSegmentation = ( d->geometry->geometryType() == "CompoundCurve" || d->geometry->geometryType() == "CircularString" );
+  bool doSegmentation = ( QgsWKBTypes::flatType( d->geometry->wkbType() ) == QgsWKBTypes::CompoundCurve
+                          || QgsWKBTypes::flatType( d->geometry->wkbType() ) == QgsWKBTypes::CircularString );
   QgsLineStringV2* line = nullptr;
   if ( doSegmentation )
   {
@@ -1050,7 +1072,7 @@ QgsPolygon QgsGeometry::asPolygon() const
   if ( !d->geometry )
     return QgsPolygon();
 
-  bool doSegmentation = ( d->geometry->geometryType() == "CurvePolygon" );
+  bool doSegmentation = ( QgsWKBTypes::flatType( d->geometry->wkbType() ) == QgsWKBTypes::CurvePolygon );
 
   QgsPolygonV2* p = nullptr;
   if ( doSegmentation )
@@ -1084,7 +1106,7 @@ QgsPolygon QgsGeometry::asPolygon() const
 
 QgsMultiPoint QgsGeometry::asMultiPoint() const
 {
-  if ( !d->geometry || d->geometry->geometryType() != "MultiPoint" )
+  if ( !d->geometry || QgsWKBTypes::flatType( d->geometry->wkbType() ) != QgsWKBTypes::MultiPoint )
   {
     return QgsMultiPoint();
   }

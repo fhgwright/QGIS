@@ -12,10 +12,6 @@ __copyright__ = 'Copyright 2015, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import os
-import tempfile
-import shutil
-import glob
 
 from qgis.core import (
     QGis,
@@ -25,7 +21,6 @@ from qgis.core import (
     QgsVectorLayer,
     QgsFeatureRequest,
     QgsFeature,
-    QgsProviderRegistry,
     QgsGeometry,
     NULL
 )
@@ -41,7 +36,7 @@ from utilities import (
 )
 
 from providertestbase import ProviderTestCase
-from PyQt4.QtCore import QVariant
+from qgis.PyQt.QtCore import QVariant
 
 start_app()
 TEST_DATA_DIR = unitTestDataPath()
@@ -105,6 +100,18 @@ class TestPyQgsMemoryProvider(unittest.TestCase, ProviderTestCase):
     @classmethod
     def tearDownClass(cls):
         """Run after all tests"""
+
+    def testGetFeaturesSubsetAttributes2(self):
+        """ Override and skip this test for memory provider, as it's actually more efficient for the memory provider to return
+        its features as direct copies (due to implicit sharing of QgsFeature)
+        """
+        pass
+
+    def testGetFeaturesNoGeometry(self):
+        """ Override and skip this test for memory provider, as it's actually more efficient for the memory provider to return
+        its features as direct copies (due to implicit sharing of QgsFeature)
+        """
+        pass
 
     def testCtors(self):
         testVectors = ["Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon", "None"]
@@ -255,6 +262,44 @@ class TestPyQgsMemoryProvider(unittest.TestCase, ProviderTestCase):
         for f in myFields:
             assert f == importedFields.field(f.name())
 
+    def testRenameAttributes(self):
+        layer = QgsVectorLayer("Point", "test", "memory")
+        provider = layer.dataProvider()
+
+        res = provider.addAttributes([QgsField("name", QVariant.String, ),
+                                      QgsField("age", QVariant.Int),
+                                      QgsField("size", QVariant.Double)])
+        layer.updateFields()
+        assert res, "Failed to add attributes"
+        ft = QgsFeature()
+        ft.setGeometry(QgsGeometry.fromPoint(QgsPoint(10, 10)))
+        ft.setAttributes(["Johny",
+                          20,
+                          0.3])
+        res, t = provider.addFeatures([ft])
+
+        # bad rename
+        self.assertFalse(provider.renameAttributes({-1: 'not_a_field'}))
+        self.assertFalse(provider.renameAttributes({100: 'not_a_field'}))
+        # already exists
+        self.assertFalse(provider.renameAttributes({1: 'name'}))
+
+        # rename one field
+        self.assertTrue(provider.renameAttributes({1: 'this_is_the_new_age'}))
+        self.assertEqual(provider.fields().at(1).name(), 'this_is_the_new_age')
+        layer.updateFields()
+        fet = next(layer.getFeatures())
+        self.assertEqual(fet.fields()[1].name(), 'this_is_the_new_age')
+
+        # rename two fields
+        self.assertTrue(provider.renameAttributes({1: 'mapinfo_is_the_stone_age', 2: 'super_size'}))
+        self.assertEqual(provider.fields().at(1).name(), 'mapinfo_is_the_stone_age')
+        self.assertEqual(provider.fields().at(2).name(), 'super_size')
+        layer.updateFields()
+        fet = next(layer.getFeatures())
+        self.assertEqual(fet.fields()[1].name(), 'mapinfo_is_the_stone_age')
+        self.assertEqual(fet.fields()[2].name(), 'super_size')
+
 
 class TestPyQgsMemoryProviderIndexed(unittest.TestCase, ProviderTestCase):
 
@@ -316,6 +361,18 @@ class TestPyQgsMemoryProviderIndexed(unittest.TestCase, ProviderTestCase):
     @classmethod
     def tearDownClass(cls):
         """Run after all tests"""
+
+    def testGetFeaturesSubsetAttributes2(self):
+        """ Override and skip this test for memory provider, as it's actually more efficient for the memory provider to return
+        its features as direct copies (due to implicit sharing of QgsFeature)
+        """
+        pass
+
+    def testGetFeaturesNoGeometry(self):
+        """ Override and skip this test for memory provider, as it's actually more efficient for the memory provider to return
+        its features as direct copies (due to implicit sharing of QgsFeature)
+        """
+        pass
 
 if __name__ == '__main__':
     unittest.main()

@@ -309,3 +309,106 @@ INSERT INTO qgis_test.child_table_good (geom, code1) VALUES ('srid=4326;Point(1 
 INSERT INTO qgis_test.child_table2_good (geom, code2) VALUES ('srid=4326;Point(-1 -1)'::geometry, 'child2 1');
 INSERT INTO qgis_test.child_table2_good (geom, code2) VALUES ('srid=4326;Point(-1 1)'::geometry, 'child2 2');
 
+--------------------------------------
+-- A writable view with an int pk
+--
+
+CREATE TABLE qgis_test.bikes
+(
+  pk serial NOT NULL,
+  name character varying(255)
+);
+
+CREATE OR REPLACE VIEW qgis_test.bikes_view
+  AS
+    SELECT *
+    FROM qgis_test.bikes;
+
+CREATE OR REPLACE FUNCTION qgis_test.bikes_view_insert()
+  RETURNS trigger AS
+$BODY$
+BEGIN
+  INSERT INTO qgis_test.bikes (
+    "name"
+  )
+  VALUES (
+    NEW.name
+  )
+  RETURNING pk INTO NEW.pk;
+
+  RETURN NEW;
+END; $BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+CREATE TRIGGER bikes_view_ON_INSERT INSTEAD OF INSERT ON qgis_test.bikes_view
+  FOR EACH ROW EXECUTE PROCEDURE qgis_test.bikes_view_insert();
+
+--------------------------------------
+-- A string primary key to force usage of pktMap
+--
+
+CREATE SEQUENCE qgis_test.oid_serial;
+
+CREATE TABLE qgis_test.oid_serial_table
+(
+  obj_id varchar(16) NOT NULL,
+  name character varying(255),
+  CONSTRAINT pkey_oid_serial PRIMARY KEY (obj_id)
+);
+
+ALTER TABLE qgis_test.oid_serial_table ALTER COLUMN obj_id SET DEFAULT 'prf_' || nextval('qgis_test.oid_serial');
+
+
+--------------------------------------
+-- Test use of domain types
+--
+
+CREATE DOMAIN qgis_test.var_char_domain
+  AS character varying;
+
+CREATE DOMAIN qgis_test.var_char_domain_6
+  AS character varying(6);
+
+CREATE DOMAIN qgis_test.character_domain
+  AS character;
+
+CREATE DOMAIN qgis_test.character_domain_6
+  AS character(6);
+
+CREATE DOMAIN qgis_test.char_domain
+  AS char;
+
+CREATE DOMAIN qgis_test.char_domain_6
+  AS char(6);
+
+CREATE DOMAIN qgis_test.text_domain
+  AS text;
+
+CREATE DOMAIN qgis_test.numeric_domain
+  AS numeric(10,4);
+
+CREATE TABLE qgis_test.domains
+(
+  fld_var_char_domain qgis_test.var_char_domain,
+  fld_var_char_domain_6 qgis_test.var_char_domain_6,
+  fld_character_domain qgis_test.character_domain,
+  fld_character_domain_6 qgis_test.character_domain_6,
+  fld_char_domain qgis_test.char_domain,
+  fld_char_domain_6 qgis_test.char_domain_6,
+  fld_text_domain qgis_test.text_domain,
+  fld_numeric_domain qgis_test.numeric_domain
+);
+
+
+--------------------------------------
+-- Temporary table for testing renaming fields
+--
+
+CREATE TABLE qgis_test.rename_table
+(
+  gid serial NOT NULL,
+  field1 text,
+  field2 text
+);
+
+INSERT INTO qgis_test.rename_table (field1,field2) VALUES ('a','b');

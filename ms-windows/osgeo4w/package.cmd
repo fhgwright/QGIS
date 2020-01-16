@@ -187,6 +187,7 @@ cmake %CMAKE_OPT% ^
 	-D WITH_INTERNAL_DATEUTIL=FALSE ^
 	-D WITH_INTERNAL_PYTZ=FALSE ^
 	-D WITH_INTERNAL_SIX=FALSE ^
+	-D WITH_INTERNAL_FUTURE=FALSE ^
 	%SRCDIR%
 if errorlevel 1 (echo cmake failed & goto error)
 
@@ -308,6 +309,7 @@ tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-common/%PACKAGENAME
 	"apps/%PACKAGENAME%/plugins/identcertauthmethod.dll" ^
 	"apps/%PACKAGENAME%/plugins/memoryprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/mssqlprovider.dll" ^
+	"apps/%PACKAGENAME%/plugins/db2provider.dll" ^
 	"apps/%PACKAGENAME%/plugins/ogrprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/owsprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/pkcs12authmethod.dll" ^
@@ -318,6 +320,8 @@ tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%-common/%PACKAGENAME
 	"apps/%PACKAGENAME%/plugins/wcsprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/wfsprovider.dll" ^
 	"apps/%PACKAGENAME%/plugins/wmsprovider.dll" ^
+	"apps/%PACKAGENAME%/plugins/arcgismapserverprovider.dll" ^
+	"apps/%PACKAGENAME%/plugins/arcgisfeatureserverprovider.dll" ^
 	"apps/%PACKAGENAME%/resources/qgis.db" ^
 	"apps/%PACKAGENAME%/resources/spatialite.db" ^
 	"apps/%PACKAGENAME%/resources/srs.db" ^

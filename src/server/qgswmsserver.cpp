@@ -960,7 +960,7 @@ QImage* QgsWMSServer::getLegendGraphics()
   Q_FOREACH ( const QString& layerId, layerIds )
   {
     QgsMapLayer *ml = QgsMapLayerRegistry::instance()->mapLayer( layerId );
-    ml->setLayerName( layerNameMap[ layerId ] );
+    ml->setName( layerNameMap[ layerId ] );
   }
   //  clear map layer registry
   QgsMapLayerRegistry::instance()->removeAllMapLayers();
@@ -1282,12 +1282,13 @@ QByteArray* QgsWMSServer::getPrint( const QString& formatString )
 
   applyOpacities( layersList, bkVectorRenderers, bkRasterRenderers, labelTransparencies, labelBufferTransparencies );
 
-
-  QgsComposition* c = mConfigParser->createPrintComposition( mParameters[ "TEMPLATE" ], mMapRenderer, QMap<QString, QString>( mParameters ) );
+  QStringList highlightLayers;
+  QgsComposition* c = mConfigParser->createPrintComposition( mParameters[ "TEMPLATE" ], mMapRenderer, QMap<QString, QString>( mParameters ), highlightLayers );
   if ( !c )
   {
     restoreOpacities( bkVectorRenderers, bkRasterRenderers, labelTransparencies, labelBufferTransparencies );
     clearFeatureSelections( selectedLayerIdList );
+    QgsWMSConfigParser::removeHighlightLayers( highlightLayers );
     return nullptr;
   }
 
@@ -1353,6 +1354,7 @@ QByteArray* QgsWMSServer::getPrint( const QString& formatString )
 
   restoreOpacities( bkVectorRenderers, bkRasterRenderers, labelTransparencies, labelBufferTransparencies );
   clearFeatureSelections( selectedLayerIdList );
+  QgsWMSConfigParser::removeHighlightLayers( highlightLayers );
 
   delete c;
   return ba;
@@ -1387,6 +1389,10 @@ QImage* QgsWMSServer::getMap( HitTest* hitTest )
 
   QPainter thePainter( theImage );
   thePainter.setRenderHint( QPainter::Antialiasing ); //make it look nicer
+
+  QStringList layerSet = mMapRenderer->layerSet();
+  QStringList highlightLayers = QgsWMSConfigParser::addHighlightLayers( mParameters, layerSet );
+  mMapRenderer->setLayerSet( layerSet );
 
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
   Q_FOREACH ( QgsMapLayer *layer, QgsMapLayerRegistry::instance()->mapLayers() )
@@ -1432,6 +1438,7 @@ QImage* QgsWMSServer::getMap( HitTest* hitTest )
 
   restoreOpacities( bkVectorRenderers, bkRasterRenderers, labelTransparencies, labelBufferTransparencies );
   clearFeatureSelections( selectedLayerIdList );
+  QgsWMSConfigParser::removeHighlightLayers( highlightLayers );
 
   // QgsMessageLog::logMessage( "clearing filters" );
   if ( !hitTest )
@@ -2027,7 +2034,7 @@ int QgsWMSServer::configureMapRender( const QPaintDevice* paintDevice ) const
     QgsProject::instance()->writeEntry( "SpatialRefSys", "/ProjectionsEnabled", 1 );
 
     //destination SRS
-    outputCRS = QgsCRSCache::instance()->crsByAuthId( crs );
+    outputCRS = QgsCRSCache::instance()->crsByOgcWmsCrs( crs );
     if ( !outputCRS.isValid() )
     {
       QgsMessageLog::logMessage( "Error, could not create output CRS from EPSG" );
@@ -2194,6 +2201,10 @@ int QgsWMSServer::featureInfoFromVectorLayer( QgsVectorLayer* layer,
   {
     fReq.setFilterRect( searchRect );
   }
+  else
+  {
+    fReq.setFlags( fReq.flags() & ~ QgsFeatureRequest::ExactIntersect );
+  }
 
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
   mAccessControl->filterFeatures( layer, fReq );
@@ -2249,7 +2260,7 @@ int QgsWMSServer::featureInfoFromVectorLayer( QgsVectorLayer* layer,
         }
         else
         {
-          featureBBox->combineExtentWith( &box );
+          featureBBox->combineExtentWith( box );
         }
       }
     }
@@ -2589,7 +2600,7 @@ void QgsWMSServer::applyRequestedLayerFilters( const QStringList& layerList , QH
         }
         else
         {
-          filterExtent.combineExtentWith( &layerExtent );
+          filterExtent.combineExtentWith( layerExtent );
         }
       }
       mMapRenderer->setExtent( filterExtent );
@@ -2795,7 +2806,7 @@ QStringList QgsWMSServer::applyFeatureSelections( const QStringList& layerList )
       selectedIds.insert( STRING_TO_FID( id ) );
     }
 
-    vLayer->setSelectedFeatures( selectedIds );
+    vLayer->selectByIds( selectedIds );
   }
 
 
@@ -2812,7 +2823,7 @@ void QgsWMSServer::clearFeatureSelections( const QStringList& layerIds ) const
     if ( !layer )
       continue;
 
-    layer->setSelectedFeatures( QgsFeatureIds() );
+    layer->selectByIds( QgsFeatureIds() );
   }
 
   return;
@@ -3278,7 +3289,7 @@ QDomElement QgsWMSServer::createFeatureGML(
     }
 
     QDomElement fieldElem = doc.createElement( "qgs:" + attributeName.replace( QString( " " ), QString( "_" ) ) );
-    QString fieldTextString = featureAttributes[i].toString();
+    QString fieldTextString = featureAttributes.at( i ).toString();
     if ( layer )
     {
       fieldTextString = replaceValueMapAndRelation( layer, i, QgsExpression::replaceExpressionText( fieldTextString, &expressionContext ) );

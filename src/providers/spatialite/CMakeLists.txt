@@ -10,7 +10,6 @@ SET(SPATIALITE_SRCS
   qgsspatialitedataitems.cpp
   qgsspatialiteconnection.cpp
   qgsspatialiteconnpool.cpp
-  qgsspatialiteexpressioncompiler.cpp
   qgsspatialitefeatureiterator.cpp
   qgsspatialitesourceselect.cpp
   qgsspatialitetablemodel.cpp
@@ -41,6 +40,7 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_BINARY_DIR}/../../ui
 )
 INCLUDE_DIRECTORIES(SYSTEM
+  ${SQLITE3_INCLUDE_DIR}
   ${SPATIALITE_INCLUDE_DIR}
   ${GEOS_INCLUDE_DIR}
 )

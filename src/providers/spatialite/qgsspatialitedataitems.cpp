@@ -107,7 +107,6 @@ static QgsLayerItem::LayerType _layerTypeFromDb( QString dbType )
 
 QVector<QgsDataItem*> QgsSLConnectionItem::createChildren()
 {
-  QgsDebugMsg( "Entered" );
   QVector<QgsDataItem*> children;
   QgsSpatiaLiteConnection connection( mName );
 
@@ -355,8 +354,6 @@ void QgsSLRootItem::createDatabase()
   QString errCause;
   if ( ::createDb( filename, errCause ) )
   {
-    QMessageBox::information( nullptr, tr( "Create SpatiaLite database" ), tr( "The database has been created" ) );
-
     // add connection
     settings.setValue( "/SpatiaLite/connections/" + QFileInfo( filename ).fileName() + "/sqlitepath", filename );
 

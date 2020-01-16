@@ -48,6 +48,7 @@
 #include "qgsvectorlayer.h"
 #include "qgsvectordataprovider.h"
 #include "qgsmaplayerregistry.h"
+#include "qgsxmlutils.h"
 
 
 QgsMapLayer::QgsMapLayer( QgsMapLayer::LayerType type,
@@ -62,12 +63,8 @@ QgsMapLayer::QgsMapLayer( QgsMapLayer::LayerType type,
     , mLegend( nullptr )
     , mStyleManager( new QgsMapLayerStyleManager( this ) )
 {
-  mCRS = new QgsCoordinateReferenceSystem();
-
   // Set the display name = internal name
-  QgsDebugMsg( "original name: '" + mLayerOrigName + '\'' );
   mLayerName = capitaliseLayerName( mLayerOrigName );
-  QgsDebugMsg( "display name: '" + mLayerName + '\'' );
 
   mShortName = "";
   //mShortName.replace( QRegExp( "[\\W]" ), "_" );
@@ -87,11 +84,12 @@ QgsMapLayer::QgsMapLayer( QgsMapLayer::LayerType type,
   mMinScale = 0;
   mMaxScale = 100000000;
   mScaleBasedVisibility = false;
+
+  connect( this, SIGNAL( nameChanged() ), this, SIGNAL( layerNameChanged() ) );
 }
 
 QgsMapLayer::~QgsMapLayer()
 {
-  delete mCRS;
   delete mLegend;
   delete mStyleManager;
 }
@@ -107,16 +105,21 @@ QString QgsMapLayer::id() const
   return mID;
 }
 
-/** Write property of QString layerName. */
 void QgsMapLayer::setLayerName( const QString & name )
 {
-  QgsDebugMsg( "new original name: '" + name + '\'' );
+  setName( name );
+}
+
+void QgsMapLayer::setName( const QString& name )
+{
   QString newName = capitaliseLayerName( name );
-  QgsDebugMsg( "new display name: '" + name + '\'' );
-  if ( name == mLayerOrigName && newName == mLayerName ) return;
+  if ( name == mLayerOrigName && newName == mLayerName )
+    return;
+
   mLayerOrigName = name; // store the new original name
   mLayerName = newName;
-  emit layerNameChanged();
+
+  emit nameChanged();
 }
 
 /** Read property of QString layerName. */
@@ -149,6 +152,7 @@ void QgsMapLayer::setBlendMode( QPainter::CompositionMode blendMode )
 {
   mBlendMode = blendMode;
   emit blendModeChanged( blendMode );
+  emit styleChanged();
 }
 
 /** Read blend mode for layer */
@@ -170,8 +174,6 @@ void QgsMapLayer::drawLabels( QgsRenderContext& rendererContext )
 
 bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
 {
-  QgsCoordinateReferenceSystem savedCRS;
-  CUSTOM_CRS_VALIDATION savedValidation;
   bool layerError;
 
   QDomNode mnl;
@@ -379,11 +381,14 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
   mnl = layerElement.namedItem( "layername" );
   mne = mnl.toElement();
 
+  QgsCoordinateReferenceSystem savedCRS;
+  CUSTOM_CRS_VALIDATION savedValidation;
+
   QDomNode srsNode = layerElement.namedItem( "srs" );
-  mCRS->readXML( srsNode );
-  mCRS->setValidationHint( tr( "Specify CRS for layer %1" ).arg( mne.text() ) );
-  mCRS->validate();
-  savedCRS = *mCRS;
+  mCRS.readXML( srsNode );
+  mCRS.setValidationHint( tr( "Specify CRS for layer %1" ).arg( mne.text() ) );
+  mCRS.validate();
+  savedCRS = mCRS;
 
   // Do not validate any projections in children, they will be overwritten anyway.
   // No need to ask the user for a projections when it is overwritten, is there?
@@ -397,7 +402,7 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
   // file readnig functions changed it. They will if projections is specfied in the file.
   // FIXME: is this necessary?
   QgsCoordinateReferenceSystem::setCustomSrsValidation( savedValidation );
-  *mCRS = savedCRS;
+  mCRS = savedCRS;
 
   // Abort if any error in layer, such as not found.
   if ( layerError )
@@ -422,13 +427,19 @@ bool QgsMapLayer::readLayerXML( const QDomElement& layerElement )
 
   // use scale dependent visibility flag
   setScaleBasedVisibility( layerElement.attribute( "hasScaleBasedVisibilityFlag" ).toInt() == 1 );
-  setMinimumScale( layerElement.attribute( "minimumScale" ).toFloat() );
-  setMaximumScale( layerElement.attribute( "maximumScale" ).toFloat() );
+  setMinimumScale( layerElement.attribute( "minimumScale" ).toDouble() );
+  setMaximumScale( layerElement.attribute( "maximumScale" ).toDouble() );
+
+  QDomNode extentNode = layerElement.namedItem( "extent" );
+  if ( !extentNode.isNull() )
+  {
+    setExtent( QgsXmlUtils::readRectangle( extentNode.toElement() ) );
+  }
 
   // set name
   mnl = layerElement.namedItem( "layername" );
   mne = mnl.toElement();
-  setLayerName( mne.text() );
+  setName( mne.text() );
 
   //short name
   QDomElement shortNameElem = layerElement.firstChildElement( "shortname" );
@@ -530,6 +541,11 @@ bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& docume
   layerElement.setAttribute( "hasScaleBasedVisibilityFlag", hasScaleBasedVisibility() ? 1 : 0 );
   layerElement.setAttribute( "minimumScale", QString::number( minimumScale() ) );
   layerElement.setAttribute( "maximumScale", QString::number( maximumScale() ) );
+
+  if ( !mExtent.isNull() )
+  {
+    layerElement.appendChild( QgsXmlUtils::writeRectangle( mExtent, document ) );
+  }
 
   // ID
   QDomElement layerId = document.createElement( "id" );
@@ -762,7 +778,7 @@ bool QgsMapLayer::writeLayerXML( QDomElement& layerElement, QDomDocument& docume
 
   // spatial reference system id
   QDomElement mySrsElement = document.createElement( "srs" );
-  mCRS->writeXML( mySrsElement, document );
+  mCRS.writeXML( mySrsElement, document );
   layerElement.appendChild( mySrsElement );
 
 #if 0
@@ -933,6 +949,10 @@ void QgsMapLayer::connectNotify( const char * signal )
 } //  QgsMapLayer::connectNotify
 #endif
 
+bool QgsMapLayer::isInScaleRange( double scale ) const
+{
+  return !mScaleBasedVisibility || ( mMinScale * QGis::SCALE_PRECISION < scale && scale < mMaxScale );
+}
 
 void QgsMapLayer::toggleScaleBasedVisibility( bool theVisibilityFlag )
 {
@@ -944,18 +964,18 @@ bool QgsMapLayer::hasScaleBasedVisibility() const
   return mScaleBasedVisibility;
 }
 
-void QgsMapLayer::setMinimumScale( const float theMinScale )
+void QgsMapLayer::setMinimumScale( double theMinScale )
 {
   mMinScale = theMinScale;
 }
 
-float QgsMapLayer::minimumScale() const
+double QgsMapLayer::minimumScale() const
 {
   return mMinScale;
 }
 
 
-void QgsMapLayer::setMaximumScale( const float theMaxScale )
+void QgsMapLayer::setMaximumScale( double theMaxScale )
 {
   mMaxScale = theMaxScale;
 }
@@ -965,7 +985,7 @@ void QgsMapLayer::setScaleBasedVisibility( const bool enabled )
   mScaleBasedVisibility = enabled;
 }
 
-float QgsMapLayer::maximumScale() const
+double QgsMapLayer::maximumScale() const
 {
   return mMaxScale;
 }
@@ -990,17 +1010,17 @@ void QgsMapLayer::setSubLayerVisibility( const QString& name, bool vis )
 
 const QgsCoordinateReferenceSystem& QgsMapLayer::crs() const
 {
-  return *mCRS;
+  return mCRS;
 }
 
 void QgsMapLayer::setCrs( const QgsCoordinateReferenceSystem& srs, bool emitSignal )
 {
-  *mCRS = srs;
+  mCRS = srs;
 
-  if ( !mCRS->isValid() )
+  if ( !mCRS.isValid() )
   {
-    mCRS->setValidationHint( tr( "Specify CRS for layer %1" ).arg( name() ) );
-    mCRS->validate();
+    mCRS.setValidationHint( tr( "Specify CRS for layer %1" ).arg( name() ) );
+    mCRS.validate();
   }
 
   if ( emitSignal )
@@ -1016,8 +1036,8 @@ QString QgsMapLayer::capitaliseLayerName( const QString& name )
 
   QString layerName( name );
 
-  if ( capitaliseLayerName )
-    layerName = layerName.left( 1 ).toUpper() + layerName.mid( 1 );
+  if ( capitaliseLayerName && !layerName.isEmpty() )
+    layerName = layerName.at( 0 ).toUpper() + layerName.mid( 1 );
 
   return layerName;
 }
@@ -1213,8 +1233,8 @@ bool QgsMapLayer::importNamedStyle( QDomDocument& myDocument, QString& myErrorMe
 
   // use scale dependent visibility flag
   setScaleBasedVisibility( myRoot.attribute( "hasScaleBasedVisibilityFlag" ).toInt() == 1 );
-  setMinimumScale( myRoot.attribute( "minimumScale" ).toFloat() );
-  setMaximumScale( myRoot.attribute( "maximumScale" ).toFloat() );
+  setMinimumScale( myRoot.attribute( "minimumScale" ).toDouble() );
+  setMaximumScale( myRoot.attribute( "maximumScale" ).toDouble() );
 
 #if 0
   //read transparency level
@@ -1595,10 +1615,30 @@ QString QgsMapLayer::loadSldStyle( const QString &theURI, bool &theResultFlag )
   return "";
 }
 
+bool QgsMapLayer::readStyle( const QDomNode& node, QString& errorMessage )
+{
+  Q_UNUSED( node );
+  Q_UNUSED( errorMessage );
+  return false;
+}
+
+bool QgsMapLayer::writeStyle( QDomNode& node, QDomDocument& doc, QString& errorMessage ) const
+{
+  Q_UNUSED( node );
+  Q_UNUSED( doc );
+  Q_UNUSED( errorMessage );
+  return false;
+}
+
 
 QUndoStack* QgsMapLayer::undoStack()
 {
   return &mUndoStack;
+}
+
+QUndoStack* QgsMapLayer::undoStackStyles()
+{
+  return &mUndoStackStyles;
 }
 
 
@@ -1671,6 +1711,11 @@ void QgsMapLayer::triggerRepaint()
 QString QgsMapLayer::metadata()
 {
   return QString();
+}
+
+void QgsMapLayer::emitStyleChanged()
+{
+  emit styleChanged();
 }
 
 void QgsMapLayer::setExtent( const QgsRectangle &r )

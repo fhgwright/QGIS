@@ -134,7 +134,7 @@
           </property>
           <property name="icon">
            <iconset resource="../../images/images.qrc">
-            <normaloff>:/images/themes/default/propertyicons/symbology.png</normaloff>:/images/themes/default/propertyicons/symbology.png</iconset>
+            <normaloff>:/images/themes/default/propertyicons/symbology.svg</normaloff>:/images/themes/default/propertyicons/symbology.svg</iconset>
           </property>
          </item>
          <item>
@@ -142,7 +142,7 @@
            <string>OWS server</string>
           </property>
           <property name="toolTip">
-           <string>OWS server</string>
+           <string>WMS/WFS Server Configuration</string>
           </property>
           <property name="icon">
            <iconset resource="../../images/images.qrc">
@@ -168,6 +168,15 @@
           <property name="icon">
            <iconset resource="../../images/images.qrc">
             <normaloff>:/images/themes/default/relation.svg</normaloff>:/images/themes/default/relation.svg</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Data Sources</string>
+          </property>
+          <property name="icon">
+           <iconset resource="../../images/images.qrc">
+            <normaloff>:/images/themes/default/propertyicons/attributes.png</normaloff>:/images/themes/default/propertyicons/attributes.png</iconset>
           </property>
          </item>
          <item>
@@ -218,7 +227,7 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>7</number>
          </property>
          <widget class="QWidget" name="mProjOpts_01">
           <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -247,8 +256,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>683</width>
-                <height>779</height>
+                <width>565</width>
+                <height>685</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -749,8 +758,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>326</width>
-                <height>46</height>
+                <width>294</width>
+                <height>59</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -763,7 +772,7 @@
                <item>
                 <widget class="QGroupBox" name="cbxProjectionEnabled">
                  <property name="title">
-                  <string>Enable 'on the fly' CRS transformation</string>
+                  <string>Enable 'on the fly' CRS transformation (OTF)</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -851,6 +860,11 @@
                       <string>Identifiable</string>
                      </property>
                     </column>
+                    <column>
+                     <property name="text">
+                      <string>Read Only</string>
+                     </property>
+                    </column>
                    </widget>
                   </item>
                  </layout>
@@ -889,8 +903,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>379</width>
-                <height>582</height>
+                <width>676</width>
+                <height>764</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -1221,9 +1235,16 @@
                  </property>
                  <layout class="QGridLayout" name="gridLayout_12">
                   <item row="2" column="1">
-                   <widget class="QPushButton" name="mButtonCopyColors">
-                    <property name="text">
+                   <widget class="QToolButton" name="mButtonCopyColors">
+                    <property name="toolTip">
                      <string>Copy colors</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../../images/images.qrc">
+                      <normaloff>:/images/themes/default/mActionCopySelected.png</normaloff>:/images/themes/default/mActionCopySelected.png</iconset>
                     </property>
                    </widget>
                   </item>
@@ -1241,23 +1262,44 @@
                    </spacer>
                   </item>
                   <item row="0" column="1">
-                   <widget class="QPushButton" name="mButtonAddColor">
-                    <property name="text">
+                   <widget class="QToolButton" name="mButtonAddColor">
+                    <property name="toolTip">
                      <string>Add color</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../../images/images.qrc">
+                      <normaloff>:/images/themes/default/symbologyAdd.svg</normaloff>:/images/themes/default/symbologyAdd.svg</iconset>
                     </property>
                    </widget>
                   </item>
                   <item row="3" column="1">
-                   <widget class="QPushButton" name="mButtonPasteColors">
-                    <property name="text">
+                   <widget class="QToolButton" name="mButtonPasteColors">
+                    <property name="toolTip">
                      <string>Paste colors</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../../images/images.qrc">
+                      <normaloff>:/images/themes/default/mActionEditPaste.svg</normaloff>:/images/themes/default/mActionEditPaste.svg</iconset>
                     </property>
                    </widget>
                   </item>
                   <item row="1" column="1">
-                   <widget class="QPushButton" name="mButtonRemoveColor">
-                    <property name="text">
+                   <widget class="QToolButton" name="mButtonRemoveColor">
+                    <property name="toolTip">
                      <string>Remove color</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../../images/images.qrc">
+                      <normaloff>:/images/themes/default/symbologyRemove.svg</normaloff>:/images/themes/default/symbologyRemove.svg</iconset>
                     </property>
                    </widget>
                   </item>
@@ -1265,16 +1307,30 @@
                    <widget class="QgsColorSchemeList" name="mTreeProjectColors" native="true"/>
                   </item>
                   <item row="4" column="1">
-                   <widget class="QPushButton" name="mButtonImportColors">
+                   <widget class="QToolButton" name="mButtonImportColors">
+                    <property name="statusTip">
+                     <string>Import colors</string>
+                    </property>
                     <property name="text">
-                     <string>Import</string>
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../../images/images.qrc">
+                      <normaloff>:/images/themes/default/mActionFileOpen.svg</normaloff>:/images/themes/default/mActionFileOpen.svg</iconset>
                     </property>
                    </widget>
                   </item>
                   <item row="5" column="1">
-                   <widget class="QPushButton" name="mButtonExportColors">
+                   <widget class="QToolButton" name="mButtonExportColors">
+                    <property name="toolTip">
+                     <string>Export colors</string>
+                    </property>
                     <property name="text">
-                     <string>Export</string>
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="../../images/images.qrc">
+                      <normaloff>:/images/themes/default/mActionFileSave.svg</normaloff>:/images/themes/default/mActionFileSave.svg</iconset>
                     </property>
                    </widget>
                   </item>
@@ -1314,8 +1370,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>663</width>
-                <height>2249</height>
+                <width>676</width>
+                <height>2317</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -1339,11 +1395,11 @@
                  <property name="collapsed" stdset="0">
                   <bool>false</bool>
                  </property>
-                 <property name="saveCollapsedState" stdset="0">
-                  <bool>true</bool>
-                 </property>
                  <property name="syncGroup" stdset="0">
                   <string notr="true">projowsserver</string>
+                 </property>
+                 <property name="saveCollapsedState" stdset="0">
+                  <bool>true</bool>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_6">
                   <item row="1" column="0">
@@ -2380,8 +2436,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>168</width>
-                <height>46</height>
+                <width>676</width>
+                <height>764</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -2431,7 +2487,31 @@
            </property>
           </layout>
          </widget>
-         <widget class="QWidget" name="page">
+         <widget class="QWidget" name="mTab_DataSources">
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0" colspan="2">
+            <widget class="QCheckBox" name="mAutoTransaction">
+             <property name="toolTip">
+              <string>When enabled, layers from the same database connection will be put into a transaction group. Their edit state will be synchronized and changes to these layers will be sent to the provider immediately. Only supported on postgres provider.</string>
+             </property>
+             <property name="text">
+              <string>Automatically create transaction groups where possible</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QCheckBox" name="mEvaluateDefaultValues">
+             <property name="toolTip">
+              <string>When enabled, default values will be evaluated as early as possible. This will fill default values in the add feature form already and not only create them on commit. Only supported for postgres provider.</string>
+             </property>
+             <property name="text">
+              <string>Evaluate default values on provider side</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="mTab_Variables">
           <layout class="QVBoxLayout" name="verticalLayout_23">
            <item>
             <widget class="QGroupBox" name="groupBox_4">
@@ -2519,6 +2599,12 @@
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>QgsVariableEditorWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">qgsvariableeditorwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>QgsCodeEditorPython</class>
    <extends>QWidget</extends>
    <header>qgscodeeditorpython.h</header>
@@ -2528,12 +2614,6 @@
    <class>QgsProjectionSelector</class>
    <extends>QWidget</extends>
    <header>qgsprojectionselector.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>QgsVariableEditorWidget</class>
-   <extends>QWidget</extends>
-   <header location="global">qgsvariableeditorwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

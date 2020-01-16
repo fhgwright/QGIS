@@ -17,7 +17,6 @@
 ***************************************************************************
 """
 
-
 __author__ = 'Alexander Bruy'
 __date__ = 'December 2012'
 __copyright__ = '(C) 2012, Alexander Bruy'
@@ -31,14 +30,15 @@ import sys
 import json
 import os
 
-from PyQt4 import uic
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QIcon, QMenu, QAction, QCursor, QMessageBox, QFileDialog, QApplication
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIcon, QCursor
+from qgis.PyQt.QtWidgets import QMenu, QAction, QMessageBox, QFileDialog, QApplication
 
 from qgis.core import QgsApplication
 from qgis.utils import iface
 
-from processing.modeler.ModelerUtils import ModelerUtils
+from processing.core.alglist import algList
 from processing.gui.AlgorithmDialog import AlgorithmDialog
 from processing.gui.HelpEditionDialog import HelpEditionDialog
 from processing.algs.r.RAlgorithm import RAlgorithm
@@ -193,10 +193,10 @@ class ScriptEditorDialog(BASE, WIDGET):
                 return
 
         if self.algType == self.SCRIPT_PYTHON:
-            scriptDir = ScriptUtils.scriptsFolder()
+            scriptDir = ScriptUtils.defaultScriptsFolder()
             filterName = self.tr('Python scripts (*.py)')
         elif self.algType == self.SCRIPT_R:
-            scriptDir = RUtils.RScriptsFolder()
+            scriptDir = RUtils.defaultRScriptsFolder()
             filterName = self.tr('Processing R script (*.rsx)')
 
         self.filename = QFileDialog.getOpenFileName(
@@ -224,10 +224,10 @@ class ScriptEditorDialog(BASE, WIDGET):
     def saveScript(self, saveAs):
         if self.filename is None or saveAs:
             if self.algType == self.SCRIPT_PYTHON:
-                scriptDir = ScriptUtils.scriptsFolder()
+                scriptDir = ScriptUtils.defaultScriptsFolder()
                 filterName = self.tr('Python scripts (*.py)')
             elif self.algType == self.SCRIPT_R:
-                scriptDir = RUtils.RScriptsFolder()
+                scriptDir = RUtils.defaultRScriptsFolder()
                 filterName = self.tr('Processing R script (*.rsx)')
 
             self.filename = unicode(QFileDialog.getSaveFileName(self,
@@ -273,10 +273,10 @@ class ScriptEditorDialog(BASE, WIDGET):
     def runAlgorithm(self):
         if self.algType == self.SCRIPT_PYTHON:
             alg = ScriptAlgorithm(None, unicode(self.editor.text()))
-            alg.provider = ModelerUtils.providers['script']
+            alg.provider = algList.getProviderFromName('script')
         if self.algType == self.SCRIPT_R:
             alg = RAlgorithm(None, unicode(self.editor.text()))
-            alg.provider = ModelerUtils.providers['r']
+            alg.provider = algList.getProviderFromName('r')
 
         dlg = alg.getCustomParametersDialog()
         if not dlg:

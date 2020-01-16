@@ -30,6 +30,10 @@ find . \
     -o -name "*.astyle" \
     -o -name "sha*.diff" \
     -o -name "*.bom" \
+    -o -name "*.bak" \
+    -o -name "*.rej" \
+    -o -name "*.orig" \
+    -o -name "*.new" \
     -o -name "*~" \
   \) \
   -print \

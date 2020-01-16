@@ -29,7 +29,7 @@ __revision__ = '$Format:%H$'
 
 import os
 
-from PyQt4.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon
 
 from processing.core.GeoAlgorithm import GeoAlgorithm
 from processing.algs.gdal.GdalAlgorithmDialog import GdalAlgorithmDialog
@@ -50,10 +50,16 @@ class GdalAlgorithm(GeoAlgorithm):
     def processAlgorithm(self, progress):
         commands = self.getConsoleCommands()
         layers = dataobjects.getVectorLayers()
+        supported = dataobjects.getSupportedOutputVectorLayerExtensions()
         for i, c in enumerate(commands):
             for layer in layers:
                 if layer.source() in c:
-                    c = c.replace(layer.source(), dataobjects.exportVectorLayer(layer))
+                    exported = dataobjects.exportVectorLayer(layer, supported)
+                    exportedFileName = os.path.splitext(os.path.split(exported)[1])[0]
+                    c = c.replace(layer.source(), exported)
+                    if os.path.isfile(layer.source()):
+                        fileName = os.path.splitext(os.path.split(layer.source())[1])[0]
+                        c = c.replace(fileName, exportedFileName)
 
             commands[i] = c
         GdalUtils.runGdal(commands, progress)
@@ -62,7 +68,7 @@ class GdalAlgorithm(GeoAlgorithm):
         return self._formatHelp('''This algorithm is based on the GDAL %s module.
 
                 For more info, see the <a href = 'http://www.gdal.org/%s.html'> module help</a>
-                ''' %  (self.commandName(), self.commandName()))
+                ''' % (self.commandName(), self.commandName()))
 
     def commandName(self):
         alg = self.getCopy()

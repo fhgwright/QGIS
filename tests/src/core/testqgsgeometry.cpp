@@ -35,6 +35,8 @@
 #include "qgspolygonv2.h"
 #include "qgscircularstringv2.h"
 #include "qgsgeometrycollectionv2.h"
+#include "qgsgeometryfactory.h"
+#include "qgstestutils.h"
 
 //qgs unit test utility class
 #include "qgsrenderchecker.h"
@@ -93,6 +95,8 @@ class TestQgsGeometry : public QObject
     void exportToGeoJSON();
 
     void wkbInOut();
+
+    void segmentizeCircularString();
 
   private:
     /** A helper method to do a render check to see if the geometry op is as expected */
@@ -511,7 +515,7 @@ void TestQgsGeometry::pointV2()
   //clear
   QgsPointV2 p11( 5.0, 6.0 );
   p11.clear();
-  QCOMPARE( p11.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( p11.wkbType(), QgsWKBTypes::Point );
   QCOMPARE( p11.x(), 0.0 );
   QCOMPARE( p11.y(), 0.0 );
 
@@ -535,14 +539,14 @@ void TestQgsGeometry::pointV2()
   //bad WKB - check for no crash
   p13 = QgsPointV2( 1, 2 );
   QVERIFY( !p13.fromWkb( QgsConstWkbPtr( nullptr, 0 ) ) );
-  QCOMPARE( p13.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( p13.wkbType(), QgsWKBTypes::Point );
   QgsLineStringV2 line;
   p13 = QgsPointV2( 1, 2 );
   wkb = line.asWkb( size );
   QVERIFY( !p13.fromWkb( QgsConstWkbPtr( wkb, size ) ) );
   delete[] wkb;
   wkb = 0;
-  QCOMPARE( p13.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( p13.wkbType(), QgsWKBTypes::Point );
 
   //to/from WKT
   p13 = QgsPointV2( QgsWKBTypes::PointZM, 1.0, 2.0, 3.0, -4.0 );
@@ -554,7 +558,6 @@ void TestQgsGeometry::pointV2()
 
   //bad WKT
   QVERIFY( !p14.fromWkt( "Polygon()" ) );
-  QCOMPARE( p14.wkbType(), QgsWKBTypes::Unknown );
 
   //asGML2
   QgsPointV2 exportPoint( 1, 2 );
@@ -598,19 +601,24 @@ void TestQgsGeometry::pointV2()
   QgsCoordinateReferenceSystem sourceSrs;
   sourceSrs.createFromSrid( 3994 );
   QgsCoordinateReferenceSystem destSrs;
-  destSrs.createFromSrid( 4326 );
+  destSrs.createFromSrid( 4202 ); // want a transform with ellipsoid change
   QgsCoordinateTransform tr( sourceSrs, destSrs );
   QgsPointV2 p16( QgsWKBTypes::PointZM, 6374985, -3626584, 1, 2 );
   p16.transform( tr, QgsCoordinateTransform::ForwardTransform );
-  QVERIFY( qgsDoubleNear( p16.x(), 175.771, 0.001 ) );
-  QVERIFY( qgsDoubleNear( p16.y(), -39.722, 0.001 ) );
-  QVERIFY( qgsDoubleNear( p16.z(), 57.2958, 0.001 ) );
+  QGSCOMPARENEAR( p16.x(), 175.771, 0.001 );
+  QGSCOMPARENEAR( p16.y(), -39.724, 0.001 );
+  QGSCOMPARENEAR( p16.z(), 1.0, 0.001 );
   QCOMPARE( p16.m(), 2.0 );
   p16.transform( tr, QgsCoordinateTransform::ReverseTransform );
-  QVERIFY( qgsDoubleNear( p16.x(), 6374985, 1 ) );
-  QVERIFY( qgsDoubleNear( p16.y(), -3626584, 1 ) );
-  QVERIFY( qgsDoubleNear( p16.z(), 1.0, 0.001 ) );
+  QGSCOMPARENEAR( p16.x(), 6374985, 1 );
+  QGSCOMPARENEAR( p16.y(), -3626584, 1 );
+  QGSCOMPARENEAR( p16.z(), 1.0, 0.001 );
   QCOMPARE( p16.m(), 2.0 );
+  //test with z transform
+  p16.transform( tr, QgsCoordinateTransform::ForwardTransform, true );
+  QGSCOMPARENEAR( p16.z(), -19.249, 0.001 );
+  p16.transform( tr, QgsCoordinateTransform::ReverseTransform, true );
+  QGSCOMPARENEAR( p16.z(), 1.0, 0.001 );
 
   //QTransform transform
   QTransform qtr = QTransform::fromScale( 2, 3 );
@@ -870,7 +878,7 @@ void TestQgsGeometry::lineStringV2()
   QCOMPARE( l7.partCount(), 0 );
   QVERIFY( !l7.is3D() );
   QVERIFY( !l7.isMeasure() );
-  QCOMPARE( l7.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( l7.wkbType(), QgsWKBTypes::LineString );
 
   //setPoints
   QgsLineStringV2 l8;
@@ -894,7 +902,7 @@ void TestQgsGeometry::lineStringV2()
   QCOMPARE( l8.nCoordinates(), 0 );
   QCOMPARE( l8.ringCount(), 0 );
   QCOMPARE( l8.partCount(), 0 );
-  QCOMPARE( l8.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( l8.wkbType(), QgsWKBTypes::LineString );
 
   //setPoints with z
   l8.setPoints( QgsPointSequenceV2() << QgsPointV2( QgsWKBTypes::PointZ, 1, 2, 3 ) << QgsPointV2( QgsWKBTypes::PointZ, 2, 3, 4 ) );
@@ -1315,13 +1323,13 @@ void TestQgsGeometry::lineStringV2()
   QCOMPARE( cloned->numPoints(), 0 );
   QVERIFY( !cloned->is3D() );
   QVERIFY( !cloned->isMeasure() );
-  QCOMPARE( cloned->wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( cloned->wkbType(), QgsWKBTypes::LineString );
   segmentized.reset( static_cast< QgsLineStringV2* >( l14.segmentize() ) );
   QVERIFY( segmentized->isEmpty() );
   QCOMPARE( segmentized->numPoints(), 0 );
   QVERIFY( !segmentized->is3D() );
   QVERIFY( !segmentized->isMeasure() );
-  QCOMPARE( segmentized->wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( segmentized->wkbType(), QgsWKBTypes::LineString );
 
   //to/from WKB
   QgsLineStringV2 l15;
@@ -1352,13 +1360,13 @@ void TestQgsGeometry::lineStringV2()
   //bad WKB - check for no crash
   l16.clear();
   QVERIFY( !l16.fromWkb( QgsConstWkbPtr( nullptr, 0 ) ) );
-  QCOMPARE( l16.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( l16.wkbType(), QgsWKBTypes::LineString );
   QgsPointV2 point( 1, 2 );
   wkb = point.asWkb( size ) ;
   QVERIFY( !l16.fromWkb( QgsConstWkbPtr( wkb, size ) ) );
   delete[] wkb;
   wkb = 0;
-  QCOMPARE( l16.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( l16.wkbType(), QgsWKBTypes::LineString );
 
   //to/from WKT
   QgsLineStringV2 l17;
@@ -1386,7 +1394,7 @@ void TestQgsGeometry::lineStringV2()
   QCOMPARE( l18.numPoints(), 0 );
   QVERIFY( !l18.is3D() );
   QVERIFY( !l18.isMeasure() );
-  QCOMPARE( l18.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( l18.wkbType(), QgsWKBTypes::LineString );
 
   //asGML2
   QgsLineStringV2 exportLine;
@@ -1465,7 +1473,7 @@ void TestQgsGeometry::lineStringV2()
   QgsCoordinateReferenceSystem sourceSrs;
   sourceSrs.createFromSrid( 3994 );
   QgsCoordinateReferenceSystem destSrs;
-  destSrs.createFromSrid( 4326 );
+  destSrs.createFromSrid( 4202 ); // want a transform with ellipsoid change
   QgsCoordinateTransform tr( sourceSrs, destSrs );
 
   // 2d CRS transform
@@ -1473,39 +1481,47 @@ void TestQgsGeometry::lineStringV2()
   l21.setPoints( QgsPointSequenceV2() << QgsPointV2( 6374985, -3626584 )
                  << QgsPointV2( 6474985, -3526584 ) );
   l21.transform( tr, QgsCoordinateTransform::ForwardTransform );
-  QVERIFY( qgsDoubleNear( l21.pointN( 0 ).x(), 175.771, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l21.pointN( 0 ).y(), -39.722, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l21.pointN( 1 ).x(), 176.959, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l21.pointN( 1 ).y(), -38.798, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l21.boundingBox().xMinimum(), 175.771, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l21.boundingBox().yMinimum(), -39.722, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l21.boundingBox().xMaximum(), 176.959, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l21.boundingBox().yMaximum(), -38.798, 0.001 ) );
+  QGSCOMPARENEAR( l21.pointN( 0 ).x(), 175.771, 0.001 );
+  QGSCOMPARENEAR( l21.pointN( 0 ).y(), -39.724, 0.001 );
+  QGSCOMPARENEAR( l21.pointN( 1 ).x(), 176.959, 0.001 );
+  QGSCOMPARENEAR( l21.pointN( 1 ).y(), -38.7999, 0.001 );
+  QGSCOMPARENEAR( l21.boundingBox().xMinimum(), 175.771, 0.001 );
+  QGSCOMPARENEAR( l21.boundingBox().yMinimum(), -39.724, 0.001 );
+  QGSCOMPARENEAR( l21.boundingBox().xMaximum(), 176.959, 0.001 );
+  QGSCOMPARENEAR( l21.boundingBox().yMaximum(), -38.7999, 0.001 );
 
   //3d CRS transform
   QgsLineStringV2 l22;
   l22.setPoints( QgsPointSequenceV2() << QgsPointV2( QgsWKBTypes::PointZM, 6374985, -3626584, 1, 2 )
                  << QgsPointV2( QgsWKBTypes::PointZM, 6474985, -3526584, 3, 4 ) );
   l22.transform( tr, QgsCoordinateTransform::ForwardTransform );
-  QVERIFY( qgsDoubleNear( l22.pointN( 0 ).x(), 175.771, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l22.pointN( 0 ).y(), -39.722, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l22.pointN( 0 ).z(), 57.2958, 0.001 ) );
+  QGSCOMPARENEAR( l22.pointN( 0 ).x(), 175.771, 0.001 );
+  QGSCOMPARENEAR( l22.pointN( 0 ).y(), -39.724, 0.001 );
+  QGSCOMPARENEAR( l22.pointN( 0 ).z(), 1.0, 0.001 );
   QCOMPARE( l22.pointN( 0 ).m(), 2.0 );
-  QVERIFY( qgsDoubleNear( l22.pointN( 1 ).x(), 176.959, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l22.pointN( 1 ).y(), -38.798, 0.001 ) );
-  QVERIFY( qgsDoubleNear( l22.pointN( 1 ).z(), 171.887, 0.001 ) );
+  QGSCOMPARENEAR( l22.pointN( 1 ).x(), 176.959, 0.001 );
+  QGSCOMPARENEAR( l22.pointN( 1 ).y(), -38.7999, 0.001 );
+  QGSCOMPARENEAR( l22.pointN( 1 ).z(), 3.0, 0.001 );
   QCOMPARE( l22.pointN( 1 ).m(), 4.0 );
 
   //reverse transform
   l22.transform( tr, QgsCoordinateTransform::ReverseTransform );
-  QVERIFY( qgsDoubleNear( l22.pointN( 0 ).x(), 6374985, 0.01 ) );
-  QVERIFY( qgsDoubleNear( l22.pointN( 0 ).y(), -3626584, 0.01 ) );
-  QVERIFY( qgsDoubleNear( l22.pointN( 0 ).z(), 1, 0.001 ) );
+  QGSCOMPARENEAR( l22.pointN( 0 ).x(), 6374985, 0.01 );
+  QGSCOMPARENEAR( l22.pointN( 0 ).y(), -3626584, 0.01 );
+  QGSCOMPARENEAR( l22.pointN( 0 ).z(), 1, 0.001 );
   QCOMPARE( l22.pointN( 0 ).m(), 2.0 );
-  QVERIFY( qgsDoubleNear( l22.pointN( 1 ).x(), 6474985, 0.01 ) );
-  QVERIFY( qgsDoubleNear( l22.pointN( 1 ).y(), -3526584, 0.01 ) );
-  QVERIFY( qgsDoubleNear( l22.pointN( 1 ).z(), 3, 0.001 ) );
+  QGSCOMPARENEAR( l22.pointN( 1 ).x(), 6474985, 0.01 );
+  QGSCOMPARENEAR( l22.pointN( 1 ).y(), -3526584, 0.01 );
+  QGSCOMPARENEAR( l22.pointN( 1 ).z(), 3, 0.001 );
   QCOMPARE( l22.pointN( 1 ).m(), 4.0 );
+
+  //z value transform
+  l22.transform( tr, QgsCoordinateTransform::ForwardTransform, true );
+  QGSCOMPARENEAR( l22.pointN( 0 ).z(), -19.249066, 0.001 );
+  QGSCOMPARENEAR( l22.pointN( 1 ).z(), -21.092128, 0.001 );
+  l22.transform( tr, QgsCoordinateTransform::ReverseTransform, true );
+  QGSCOMPARENEAR( l22.pointN( 0 ).z(), 1.0, 0.001 );
+  QGSCOMPARENEAR( l22.pointN( 1 ).z(), 3.0, 0.001 );
 
   //QTransform transform
   QTransform qtr = QTransform::fromScale( 2, 3 );
@@ -2565,7 +2581,7 @@ void TestQgsGeometry::polygonV2()
   QCOMPARE( p9.partCount(), 0 );
   QVERIFY( !p9.is3D() );
   QVERIFY( !p9.isMeasure() );
-  QCOMPARE( p9.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( p9.wkbType(), QgsWKBTypes::Polygon );
 
   //equality operator
   QgsPolygonV2 p10;
@@ -2769,13 +2785,13 @@ void TestQgsGeometry::polygonV2()
   //bad WKB - check for no crash
   p17.clear();
   QVERIFY( !p17.fromWkb( QgsConstWkbPtr( nullptr, 0 ) ) );
-  QCOMPARE( p17.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( p17.wkbType(), QgsWKBTypes::Polygon );
   QgsPointV2 point( 1, 2 );
   wkb = point.asWkb( size ) ;
   QVERIFY( !p17.fromWkb( QgsConstWkbPtr( wkb, size ) ) );
   delete[] wkb;
   wkb = 0;
-  QCOMPARE( p17.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( p17.wkbType(), QgsWKBTypes::Polygon );
 
   //to/from WKT
   QgsPolygonV2 p18;
@@ -2803,7 +2819,7 @@ void TestQgsGeometry::polygonV2()
   QCOMPARE( p19.numInteriorRings(), 0 );
   QVERIFY( !p19.is3D() );
   QVERIFY( !p19.isMeasure() );
-  QCOMPARE( p19.wkbType(), QgsWKBTypes::Unknown );
+  QCOMPARE( p19.wkbType(), QgsWKBTypes::Polygon );
 
   //as JSON
   QgsPolygonV2 exportPolygon;
@@ -3409,6 +3425,31 @@ void TestQgsGeometry::wkbInOut()
   QString wkt = g14182.exportToWkt();
   QCOMPARE( wkt, QString() );
 
+  //WKB with a truncated header
+  const char *badHeaderHexwkb = "0102";
+  wkb = hex2bytes( badHeaderHexwkb, &size );
+  QgsGeometry badHeader;
+  // NOTE: wkb onwership transferred to QgsGeometry
+  badHeader.fromWkb( wkb, size );
+  QVERIFY( badHeader.isEmpty() );
+  QCOMPARE( badHeader.wkbType(), QGis::WKBUnknown );
+}
+
+void TestQgsGeometry::segmentizeCircularString()
+{
+  QString wkt( "CIRCULARSTRING( 0 0, 0.5 0.5, 2 0 )" );
+  QgsCircularStringV2* circularString = dynamic_cast<QgsCircularStringV2*>( QgsGeometryFactory::geomFromWkt( wkt ) );
+  QVERIFY( circularString );
+  QgsLineStringV2* lineString = circularString->curveToLine();
+  QVERIFY( lineString );
+  QgsPointSequenceV2 points;
+  lineString->points( points );
+
+  delete circularString;
+  delete lineString;
+
+  //make sure the curve point is part of the segmentized result
+  QVERIFY( points.contains( QgsPointV2( 0.5, 0.5 ) ) );
 }
 
 QTEST_MAIN( TestQgsGeometry )

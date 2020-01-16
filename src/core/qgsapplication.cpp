@@ -153,14 +153,14 @@ void QgsApplication::init( QString customConfigPath )
   {
     // we run from source directory - not installed to destination (specified prefix)
     ABISYM( mPrefixPath ) = QString(); // set invalid path
-#if defined(_MSC_VER) && !defined(USING_NMAKE)
+#if defined(_MSC_VER) && !defined(USING_NMAKE) && !defined(USING_NINJA)
     setPluginPath( ABISYM( mBuildOutputPath ) + '/' + QString( QGIS_PLUGIN_SUBDIR ) + '/' + ABISYM( mCfgIntDir ) );
 #else
     setPluginPath( ABISYM( mBuildOutputPath ) + '/' + QString( QGIS_PLUGIN_SUBDIR ) );
 #endif
     setPkgDataPath( ABISYM( mBuildSourcePath ) ); // directly source path - used for: doc, resources, svg
     ABISYM( mLibraryPath ) = ABISYM( mBuildOutputPath ) + '/' + QGIS_LIB_SUBDIR + '/';
-#if defined(_MSC_VER) && !defined(USING_NMAKE)
+#if defined(_MSC_VER) && !defined(USING_NMAKE) && !defined(USING_NINJA)
     ABISYM( mLibexecPath ) = ABISYM( mBuildOutputPath ) + '/' + QGIS_LIBEXEC_SUBDIR + '/' + ABISYM( mCfgIntDir ) + '/';
 #else
     ABISYM( mLibexecPath ) = ABISYM( mBuildOutputPath ) + '/' + QGIS_LIBEXEC_SUBDIR + '/';
@@ -412,22 +412,32 @@ QString QgsApplication::iconPath( const QString& iconFile )
 
 QIcon QgsApplication::getThemeIcon( const QString &theName )
 {
+  QgsApplication* app = qobject_cast<QgsApplication*>( instance() );
+  if ( app && app->mIconCache.contains( theName ) )
+    return app->mIconCache.value( theName );
+
+  QIcon icon;
+
   QString myPreferredPath = activeThemePath() + QDir::separator() + theName;
   QString myDefaultPath = defaultThemePath() + QDir::separator() + theName;
   if ( QFile::exists( myPreferredPath ) )
   {
-    return QIcon( myPreferredPath );
+    icon = QIcon( myPreferredPath );
   }
   else if ( QFile::exists( myDefaultPath ) )
   {
     //could still return an empty icon if it
     //doesnt exist in the default theme either!
-    return QIcon( myDefaultPath );
+    icon = QIcon( myDefaultPath );
   }
   else
   {
-    return QIcon();
+    icon = QIcon();
   }
+
+  if ( app )
+    app->mIconCache.insert( theName, icon );
+  return icon;
 }
 
 // TODO: add some caching mechanism ?
@@ -696,7 +706,7 @@ QStringList QgsApplication::svgPaths()
   //defined by user in options dialog
   QSettings settings;
   QStringList myPathList;
-  QString myPaths = settings.value( "svg/searchPathsForSVG", QDir::homePath() ).toString();
+  QString myPaths = settings.value( "svg/searchPathsForSVG", QString() ).toString();
   if ( !myPaths.isEmpty() )
   {
     myPathList = myPaths.split( '|' );
@@ -715,7 +725,7 @@ QStringList QgsApplication::composerTemplatePaths()
   //defined by user in options dialog
   QSettings settings;
   QStringList myPathList;
-  QString myPaths = settings.value( "composer/searchPathsForTemplates", QDir::homePath() ).toString();
+  QString myPaths = settings.value( "composer/searchPathsForTemplates", QString() ).toString();
   if ( !myPaths.isEmpty() )
   {
     myPathList = myPaths.split( '|' );

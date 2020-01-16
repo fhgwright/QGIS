@@ -55,7 +55,9 @@ QgsGrassEditRenderer::QgsGrassEditRenderer()
 
   // first/last vertex marker to distinguish vertices from nodes
   QgsMarkerLineSymbolLayerV2 * firstVertexMarkerLine = new QgsMarkerLineSymbolLayerV2( false );
-  QgsSimpleMarkerSymbolLayerV2 *markerSymbolLayer = new QgsSimpleMarkerSymbolLayerV2( "x", QColor( 255, 0, 0 ), QColor( 255, 0, 0 ), 2 );
+  QgsSimpleMarkerSymbolLayerV2 *markerSymbolLayer = new QgsSimpleMarkerSymbolLayerV2( QgsSimpleMarkerSymbolLayerBase::Cross2, 2 );
+  markerSymbolLayer->setColor( QColor( 255, 0, 0 ) );
+  markerSymbolLayer->setBorderColor( QColor( 255, 0, 0 ) );
   markerSymbolLayer->setOutlineWidth( 0.5 );
   QgsSymbolLayerV2List markerLayers;
   markerLayers << markerSymbolLayer;
@@ -202,7 +204,6 @@ QString QgsGrassEditRenderer::dump() const
 
 QDomElement QgsGrassEditRenderer::save( QDomDocument& doc )
 {
-  QgsDebugMsg( "entered" );
   QDomElement rendererElem = doc.createElement( RENDERER_TAG_NAME );
   rendererElem.setAttribute( "type", "grassEdit" );
 
@@ -220,7 +221,6 @@ QDomElement QgsGrassEditRenderer::save( QDomDocument& doc )
 
 QgsFeatureRendererV2* QgsGrassEditRenderer::create( QDomElement& element )
 {
-  QgsDebugMsg( "entered" );
   QgsGrassEditRenderer *renderer = new QgsGrassEditRenderer();
 
   QDomElement childElem = element.firstChildElement();
@@ -258,7 +258,6 @@ QgsFeatureRendererV2* QgsGrassEditRenderer::create( QDomElement& element )
 
 QgsRendererV2Widget* QgsGrassEditRendererWidget::create( QgsVectorLayer* layer, QgsStyleV2* style, QgsFeatureRendererV2* renderer )
 {
-  QgsDebugMsg( "entered" );
   return new QgsGrassEditRendererWidget( layer, style, renderer );
 }
 
@@ -268,7 +267,6 @@ QgsGrassEditRendererWidget::QgsGrassEditRendererWidget( QgsVectorLayer* layer, Q
     , mLineRendererWidget( 0 )
     , mPointRendererWidget( 0 )
 {
-  QgsDebugMsg( "entered" );
   mRenderer = dynamic_cast<QgsGrassEditRenderer*>( renderer->clone() );
   if ( !mRenderer )
   {
@@ -286,13 +284,11 @@ QgsGrassEditRendererWidget::QgsGrassEditRendererWidget( QgsVectorLayer* layer, Q
 
 QgsGrassEditRendererWidget::~QgsGrassEditRendererWidget()
 {
-  QgsDebugMsg( "entered" );
   delete mRenderer;
 }
 
 QgsFeatureRendererV2* QgsGrassEditRendererWidget::renderer()
 {
-  QgsDebugMsg( "entered" );
   mRenderer->setLineRenderer( mLineRendererWidget->renderer()->clone() );
   mRenderer->setMarkerRenderer( mPointRendererWidget->renderer()->clone() );
   return mRenderer;

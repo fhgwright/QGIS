@@ -36,7 +36,7 @@
 #include "qgsvectordataprovider.h"
 #include "qgsvectorlayer.h"
 #include "qgswkbptr.h"
-
+#include "qgscrscache.h"
 
 // QWT Charting widget
 
@@ -230,7 +230,7 @@ QgsGPSInformationWidget::QgsGPSInformationWidget( QgsMapCanvas * thepCanvas, QWi
     radRecenterWhenNeeded->setChecked( true );
   }
 
-  mWgs84CRS.createFromOgcWmsCrs( "EPSG:4326" );
+  mWgs84CRS = QgsCRSCache::instance()->crsByOgcWmsCrs( "EPSG:4326" );
 
   mBtnDebug->setVisible( mySettings.value( "/gps/showDebug", "false" ).toBool() );  // use a registry setting to control - power users/devs could set it
 
@@ -584,9 +584,7 @@ void QgsGPSInformationWidget::displayGPSInformation( const QgsGPSInformation& in
       QColor bg( Qt::white ); // moved several items outside of the following if block to minimize loop time
       bg.setAlpha( 200 );
       QColor myColor;
-      QBrush symbolBrush( Qt::black );
-      QBrush textBgBrush( bg );
-      QSize markerSize( 9, 9 );
+
       // Add a marker to the polar plot
       if ( currentInfo.id > 0 )       // don't show satellite if id=0 (no satellite indication)
       {
@@ -607,6 +605,9 @@ void QgsGPSInformationWidget::displayGPSInformation( const QgsGPSInformation& in
           myColor = Qt::black; //strong signal
         }
 #ifdef WITH_QWTPOLAR
+        QBrush symbolBrush( Qt::black );
+        QSize markerSize( 9, 9 );
+        QBrush textBgBrush( bg );
 #if (QWT_POLAR_VERSION<0x010000)
         mypMarker->setSymbol( QwtSymbol( QwtSymbol::Ellipse,
                                          symbolBrush, QPen( myColor ), markerSize ) );
@@ -817,19 +818,16 @@ void QgsGPSInformationWidget::on_mBtnCloseFeature_clicked()
   {
     QgsFeature* f = new QgsFeature( 0 );
 
-    int size = 0;
-    int wkbtype = 0;
-
     QgsCoordinateTransform t( mWgs84CRS, vlayer->crs() );
     QgsPoint myPoint = t.transform( mLastGpsPosition );
     double x = myPoint.x();
     double y = myPoint.y();
 
-    size = 1 + sizeof( int ) + 2 * sizeof( double );
+    int size = 1 + sizeof( int ) + 2 * sizeof( double );
     unsigned char *buf = new unsigned char[size];
 
     QgsWkbPtr wkbPtr( buf, size );
-    wkbPtr << ( char ) QgsApplication::endian() << wkbtype << x << y;
+    wkbPtr << ( char ) QgsApplication::endian() << QGis::WKBPoint << x << y;
 
     QgsGeometry *g = new QgsGeometry();
     g->fromWkb( buf, size );

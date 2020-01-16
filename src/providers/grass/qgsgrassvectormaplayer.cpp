@@ -55,7 +55,6 @@ QgsGrassVectorMapLayer::QgsGrassVectorMapLayer( QgsGrassVectorMap *map, int fiel
 
 void QgsGrassVectorMapLayer::clear()
 {
-  QgsDebugMsg( "entered" );
   mTableFields.clear();
   mFields.clear();
   mAttributeFields.clear();
@@ -87,7 +86,6 @@ int QgsGrassVectorMapLayer::cidxFieldNumCats()
 
 void QgsGrassVectorMapLayer::load()
 {
-  QgsDebugMsg( "entered" );
   clear();
 
   if ( !mMap )
@@ -342,16 +340,15 @@ void QgsGrassVectorMapLayer::close()
 QStringList QgsGrassVectorMapLayer::fieldNames( QgsFields & fields )
 {
   QStringList list;
-  for ( int i = 0; i < fields.size(); i++ )
+  Q_FOREACH ( const QgsField& field, fields )
   {
-    list << fields.at( i ).name();
+    list << field.name();
   }
   return list;
 }
 
 void QgsGrassVectorMapLayer::updateFields()
 {
-  QgsDebugMsg( "entered" );
 
   // update fields to pass layer/buffer check when committing
   for ( int i = mFields.size() - 1; i >= 0; i-- )
@@ -366,9 +363,8 @@ void QgsGrassVectorMapLayer::updateFields()
       mFields.remove( i );
     }
   }
-  for ( int i = 0; i < mTableFields.size(); i++ )
+  Q_FOREACH ( const QgsField& field, mTableFields )
   {
-    QgsField field = mTableFields.at( i );
     if ( mFields.indexFromName( field.name() ) == -1 )
     {
       mFields.append( field );
@@ -421,7 +417,6 @@ QString QgsGrassVectorMapLayer::quotedValue( QVariant value )
 
 dbDriver * QgsGrassVectorMapLayer::openDriver( QString &error )
 {
-  QgsDebugMsg( "entered" );
   dbDriver * driver = 0;
 
   if ( !mFieldInfo )
@@ -473,7 +468,6 @@ void QgsGrassVectorMapLayer::addTopoField( QgsFields &fields )
 
 void QgsGrassVectorMapLayer::startEdit()
 {
-  QgsDebugMsg( "entered" );
 
   // add topo field which is present until closeEdit when data are reloaded
   addTopoField( mFields );
@@ -491,7 +485,6 @@ void QgsGrassVectorMapLayer::startEdit()
 
 void QgsGrassVectorMapLayer::closeEdit()
 {
-  QgsDebugMsg( "entered" );
 
   if ( mDriver )
   {
@@ -610,9 +603,9 @@ void QgsGrassVectorMapLayer::createTable( const QgsFields &fields, QString &erro
 
   QgsFields catFields;
   catFields.append( QgsField( mFieldInfo->key, QVariant::Int, "integer" ) );
-  for ( int i = 0; i < fields.size(); i++ )
+  Q_FOREACH ( const QgsField& field, fields )
   {
-    catFields.append( fields[i] );
+    catFields.append( field );
   }
 
   try
@@ -655,10 +648,10 @@ void QgsGrassVectorMapLayer::createTable( const QgsFields &fields, QString &erro
 
   if ( mFieldInfo )
   {
-    for ( int i = 0; i < fields.size(); i++ )
+    Q_FOREACH ( const QgsField& field, fields )
     {
-      mTableFields.append( fields[i] );
-      mAttributeFields.append( fields[i] );
+      mTableFields.append( field );
+      mAttributeFields.append( field );
     }
     mHasTable = true;
     mKeyColumn = 0;
@@ -757,9 +750,8 @@ void QgsGrassVectorMapLayer::deleteColumn( const QgsField &field, QString &error
   if ( QString( mFieldInfo->driver ) == "sqlite" )
   {
     QStringList columns;
-    for ( int i = 0; i < mTableFields.size(); i++ )
+    Q_FOREACH ( const QgsField& f, mTableFields )
     {
-      QgsField f = mTableFields.at( i );
       if ( f.name() != field.name() )
       {
         columns << f.name();
@@ -911,9 +903,9 @@ void QgsGrassVectorMapLayer::reinsertAttributes( int cat, QString &error )
 
     if ( mAttributes.contains( cat ) )
     {
-      for ( int i = 0; i < mTableFields.size(); i++ )
+      Q_FOREACH ( const QgsField& f, mTableFields )
       {
-        QString name = mTableFields.at( i ).name();
+        QString name = f.name();
         if ( name == mFieldInfo->key )
         {
           continue;
@@ -1170,9 +1162,9 @@ void QgsGrassVectorMapLayer::printCachedAttributes()
 #ifdef QGISDEBUG
   QgsDebugMsgLevel( QString( "mAttributes.size() = %1" ).arg( mAttributes.size() ), 4 );
   QStringList names;
-  for ( int i = 0; i < mAttributeFields.size(); i++ )
+  Q_FOREACH ( const QgsField& field, mAttributeFields )
   {
-    names << mAttributeFields[i].name();
+    names << field.name();
   }
   QgsDebugMsgLevel( names.join( "|" ), 4 );
 

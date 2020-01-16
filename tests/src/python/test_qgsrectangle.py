@@ -12,18 +12,12 @@ __copyright__ = 'Copyright 2012, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
 
 from qgis.core import QgsRectangle, QgsPoint
 
-from qgis.testing import (
-    start_app,
-    unittest
-)
-
-from utilities import (
-    compareWkt
-)
+from qgis.testing import start_app, unittest
+from utilities import compareWkt
 
 start_app()
 
@@ -156,7 +150,7 @@ class TestQgsRectangle(unittest.TestCase):
                      (True, rect1.contains(rect2)))
         assert rect1.contains(rect2), myMessage
 
-        print rect1.toString()
+        print(rect1.toString())
         assert rect1 == QgsRectangle(0.0, 0.0, 7.0, 7.0), 'Wrong combine with rectangle result'
 
         rect1 = QgsRectangle(0.0, 0.0, 5.0, 5.0)
@@ -169,7 +163,7 @@ class TestQgsRectangle(unittest.TestCase):
         myResult = rect1.toString()
         myMessage = ('Expected: %s\nGot: %s\n' %
                      (myExpectedResult, myResult))
-        self.assertEquals(myResult, myExpectedResult, myMessage)
+        self.assertEqual(myResult, myExpectedResult, myMessage)
 
         rect1 = QgsRectangle(0.0, 0.0, 5.0, 5.0)
         rect1.unionRect(rect2)

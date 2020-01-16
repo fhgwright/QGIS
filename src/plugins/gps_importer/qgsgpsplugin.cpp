@@ -124,8 +124,9 @@ void QgsGPSPlugin::run()
   std::vector<QgsVectorLayer*> gpxLayers;
   QMap<QString, QgsMapLayer*>::const_iterator iter;
   QgsMapLayerRegistry* registry = QgsMapLayerRegistry::instance();
-  for ( iter =  registry->mapLayers().begin();
-        iter != registry->mapLayers().end(); ++iter )
+  QMap<QString, QgsMapLayer*> layers = registry->mapLayers();
+  for ( iter = layers.constBegin();
+        iter != layers.constEnd(); ++iter )
   {
     if ( iter.value()->type() == QgsMapLayer::VectorLayer )
     {
@@ -570,7 +571,7 @@ void QgsGPSPlugin::setupBabel()
 {
   // where is gpsbabel?
   QSettings settings;
-  mBabelPath = settings.value( "/Plugin-GPS/gpsbabelpath", QDir::homePath() ).toString();
+  mBabelPath = settings.value( "/Plugin-GPS/gpsbabelpath", QString() ).toString();
   if ( mBabelPath.isEmpty() )
     mBabelPath = "gpsbabel";
   // the importable formats

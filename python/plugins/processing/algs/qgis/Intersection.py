@@ -25,6 +25,10 @@ __copyright__ = '(C) 2012, Victor Olaya'
 
 __revision__ = '$Format:%H$'
 
+import os
+
+from qgis.PyQt.QtGui import QIcon
+
 from qgis.core import QGis, QgsFeatureRequest, QgsFeature, QgsGeometry, QgsWKBTypes
 
 from processing.core.GeoAlgorithm import GeoAlgorithm
@@ -33,6 +37,8 @@ from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecution
 from processing.core.parameters import ParameterVector
 from processing.core.outputs import OutputVector
 from processing.tools import dataobjects, vector
+
+pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
 
 wkbTypeGroups = {
     'Point': (QGis.WKBPoint, QGis.WKBMultiPoint, QGis.WKBPoint25D, QGis.WKBMultiPoint25D,),
@@ -43,16 +49,15 @@ for key, value in wkbTypeGroups.items():
     for const in value:
         wkbTypeGroups[const] = key
 
-GEOM_25D = [QGis.WKBPoint25D, QGis.WKBLineString25D, QGis.WKBPolygon25D,
-            QGis.WKBMultiPoint25D, QGis.WKBMultiLineString25D,
-            QGis.WKBMultiPolygon25D]
-
 
 class Intersection(GeoAlgorithm):
 
     INPUT = 'INPUT'
     INPUT2 = 'INPUT2'
     OUTPUT = 'OUTPUT'
+
+    def getIcon(self):
+        return QIcon(os.path.join(pluginPath, 'images', 'ftools', 'intersect.png'))
 
     def defineCharacteristics(self):
         self.name, self.i18n_name = self.trAlgorithm('Intersection')
@@ -71,10 +76,6 @@ class Intersection(GeoAlgorithm):
         vproviderA = vlayerA.dataProvider()
 
         geomType = vproviderA.geometryType()
-        if geomType in GEOM_25D:
-            raise GeoAlgorithmExecutionException(
-                self.tr('Input layer has unsupported geometry type {}').format(geomType))
-
         fields = vector.combineVectorFields(vlayerA, vlayerB)
         writer = self.getOutputFromName(self.OUTPUT).getVectorWriter(fields,
                                                                      geomType, vproviderA.crs())
@@ -103,7 +104,6 @@ class Intersection(GeoAlgorithm):
                                                self.tr('GEOS geoprocessing error: One or '
                                                        'more input features have invalid '
                                                        'geometry.'))
-                        break
                     try:
                         if int_geom.wkbType() in wkbTypeGroups[wkbTypeGroups[int_geom.wkbType()]]:
                             outFeat.setGeometry(int_geom)

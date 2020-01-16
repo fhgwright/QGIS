@@ -35,6 +35,7 @@
 
 
 #include "qgsapplication.h"
+#include "qgscrscache.h"
 #include "qgsdataprovider.h"
 #include "qgsfeature.h"
 #include "qgsfield.h"
@@ -353,8 +354,7 @@ void QgsMssqlProvider::loadMetadata()
   query.setForwardOnly( true );
   if ( !query.exec( QString( "select f_geometry_column, coord_dimension, srid, geometry_type from geometry_columns where f_table_schema = '%1' and f_table_name = '%2'" ).arg( mSchemaName, mTableName ) ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
   }
   if ( query.isActive() && query.next() )
   {
@@ -373,8 +373,7 @@ void QgsMssqlProvider::loadFields()
   query.setForwardOnly( true );
   if ( !query.exec( QString( "exec sp_columns @table_name = N'%1', @table_owner = '%2'" ).arg( mTableName, mSchemaName ) ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text( ) );
     return;
   }
   if ( query.isActive() )
@@ -447,8 +446,7 @@ void QgsMssqlProvider::loadFields()
       query.setForwardOnly( true );
       if ( !query.exec( QString( "exec sp_pkeys @table_name = N'%1', @table_owner = '%2' " ).arg( mTableName, mSchemaName ) ) )
       {
-        QString msg = query.lastError().text();
-        QgsDebugMsg( msg );
+        QgsDebugMsg( query.lastError().text() );
       }
       if ( query.isActive() && query.next() )
       {
@@ -462,8 +460,7 @@ void QgsMssqlProvider::loadFields()
         if ( !query.exec( QString( "select count(distinct [%1]), count([%1]) from [%2].[%3]" )
                           .arg( pk, mSchemaName, mTableName ) ) )
         {
-          QString msg = query.lastError().text();
-          QgsDebugMsg( msg );
+          QgsDebugMsg( query.lastError().text() );
         }
         if ( query.isActive() && query.next() && query.value( 0 ).toInt() == query.value( 1 ).toInt() )
         {
@@ -476,6 +473,32 @@ void QgsMssqlProvider::loadFields()
       mValid = false;
       setLastError( error );
     }
+  }
+}
+
+QString QgsMssqlProvider::quotedValue( const QVariant& value )
+{
+  if ( value.isNull() )
+    return "NULL";
+
+  switch ( value.type() )
+  {
+    case QVariant::Int:
+    case QVariant::LongLong:
+    case QVariant::Double:
+      return value.toString();
+
+    case QVariant::Bool:
+      return value.toBool() ? "1" : "0";
+
+    default:
+    case QVariant::String:
+      QString v = value.toString();
+      v.replace( '\'', "''" );
+      if ( v.contains( '\\' ) )
+        return v.replace( '\\', "\\\\" ).prepend( "N'" ).append( '\'' );
+      else
+        return v.prepend( '\'' ).append( '\'' );
   }
 }
 
@@ -512,8 +535,7 @@ QVariant QgsMssqlProvider::minimumValue( int index )
 
   if ( !query.exec( sql ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
   }
 
   if ( query.isActive() && query.next() )
@@ -544,8 +566,7 @@ QVariant QgsMssqlProvider::maximumValue( int index )
 
   if ( !query.exec( sql ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
   }
 
   if ( query.isActive() && query.next() )
@@ -585,8 +606,7 @@ void QgsMssqlProvider::uniqueValues( int index, QList<QVariant> &uniqueValues, i
 
   if ( !query.exec( sql ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
   }
 
   if ( query.isActive() )
@@ -642,14 +662,14 @@ void QgsMssqlProvider::UpdateStatistics( bool estimate )
   if ( estimate )
   {
     if ( mGeometryColType == "geometry" )
-      statement = QString( "select min([%1].STPointN(1).STX), min([%1].STPointN(1).STY), max([%1].STPointN(1).STX), max([%1].STPointN(1).STY)" ).arg( mGeometryColName );
+      statement = QString( "select min([%1].MakeValid().STPointN(1).STX), min([%1].MakeValid().STPointN(1).STY), max([%1].MakeValid().STPointN(1).STX), max([%1].MakeValid().STPointN(1).STY)" ).arg( mGeometryColName );
     else
-      statement = QString( "select min([%1].STPointN(1).Long), min([%1].STPointN(1).Lat), max([%1].STPointN(1).Long), max([%1].STPointN(1).Lat)" ).arg( mGeometryColName );
+      statement = QString( "select min([%1].MakeValid().STPointN(1).Long), min([%1].MakeValid().STPointN(1).Lat), max([%1].MakeValid().STPointN(1).Long), max([%1].MakeValid().STPointN(1).Lat)" ).arg( mGeometryColName );
   }
   else
   {
     if ( mGeometryColType == "geometry" )
-      statement = QString( "select min([%1].STEnvelope().STPointN(1).STX), min([%1].STEnvelope().STPointN(1).STY), max([%1].STEnvelope().STPointN(3).STX), max([%1].STEnvelope().STPointN(3).STY)" ).arg( mGeometryColName );
+      statement = QString( "select min([%1].MakeValid().STEnvelope().STPointN(1).STX), min([%1].MakeValid().STEnvelope().STPointN(1).STY), max([%1].MakeValid().STEnvelope().STPointN(3).STX), max([%1].MakeValid().STEnvelope().STPointN(3).STY)" ).arg( mGeometryColName );
     else
     {
       statement = QString( "select [%1]" ).arg( mGeometryColName );
@@ -666,8 +686,7 @@ void QgsMssqlProvider::UpdateStatistics( bool estimate )
 
   if ( !query.exec( statement ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
   }
 
   if ( !query.isActive() )
@@ -851,8 +870,6 @@ bool QgsMssqlProvider::addFeatures( QgsFeatureList & flist )
       QgsDebugMsg( msg );
       if ( !mSkipFailures )
       {
-        QString msg = query.lastError().text();
-        QgsDebugMsg( msg );
         pushError( msg );
         return false;
       }
@@ -1016,8 +1033,7 @@ bool QgsMssqlProvider::addAttributes( const QList<QgsField> &attributes )
   query.setForwardOnly( true );
   if ( !query.exec( statement ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
     return false;
   }
 
@@ -1051,8 +1067,7 @@ bool QgsMssqlProvider::deleteAttributes( const QgsAttributeIds &attributes )
 
   if ( !query.exec( statement ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
     return false;
   }
 
@@ -1119,8 +1134,7 @@ bool QgsMssqlProvider::changeAttributeValues( const QgsChangedAttributesMap &att
     // use prepared statement to prevent from sql injection
     if ( !query.prepare( statement ) )
     {
-      QString msg = query.lastError().text();
-      QgsDebugMsg( msg );
+      QgsDebugMsg( query.lastError().text() );
       return false;
     }
 
@@ -1181,8 +1195,7 @@ bool QgsMssqlProvider::changeAttributeValues( const QgsChangedAttributesMap &att
 
     if ( !query.exec() )
     {
-      QString msg = query.lastError().text();
-      QgsDebugMsg( msg );
+      QgsDebugMsg( query.lastError().text() );
       return false;
     }
   }
@@ -1239,8 +1252,7 @@ bool QgsMssqlProvider::changeGeometryValues( const QgsGeometryMap &geometry_map 
 
     if ( !query.prepare( statement ) )
     {
-      QString msg = query.lastError().text();
-      QgsDebugMsg( msg );
+      QgsDebugMsg( query.lastError().text() );
       return false;
     }
 
@@ -1258,8 +1270,7 @@ bool QgsMssqlProvider::changeGeometryValues( const QgsGeometryMap &geometry_map 
 
     if ( !query.exec() )
     {
-      QString msg = query.lastError().text();
-      QgsDebugMsg( msg );
+      QgsDebugMsg( query.lastError().text() );
       return false;
     }
   }
@@ -1293,8 +1304,7 @@ bool QgsMssqlProvider::deleteFeatures( const QgsFeatureIds & id )
 
   if ( !query.exec( statement ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
     return false;
   }
 
@@ -1351,8 +1361,7 @@ bool QgsMssqlProvider::createSpatialIndex()
 
   if ( !query.exec( statement ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
     return false;
   }
 
@@ -1380,8 +1389,7 @@ bool QgsMssqlProvider::createAttributeIndex( int field )
 
   if ( !query.exec( statement ) )
   {
-    QString msg = query.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( query.lastError().text() );
     return false;
   }
 
@@ -1402,8 +1410,12 @@ QgsCoordinateReferenceSystem QgsMssqlProvider::crs()
     bool execOk = query.exec( QString( "select srtext from spatial_ref_sys where srid = %1" ).arg( QString::number( mSRId ) ) );
     if ( execOk && query.isActive() )
     {
-      if ( query.next() && mCrs.createFromWkt( query.value( 0 ).toString() ) )
-        return mCrs;
+      if ( query.next() )
+      {
+        mCrs = QgsCRSCache::instance()->crsByWkt( query.value( 0 ).toString() );
+        if ( mCrs.isValid() )
+          return mCrs;
+      }
 
       query.finish();
     }
@@ -1411,8 +1423,12 @@ QgsCoordinateReferenceSystem QgsMssqlProvider::crs()
 
     // Look in the system reference table for the data if we can't find it yet
     execOk = query.exec( QString( "select well_known_text from sys.spatial_reference_systems where spatial_reference_id = %1" ).arg( QString::number( mSRId ) ) );
-    if ( execOk && query.isActive() && query.next() && mCrs.createFromWkt( query.value( 0 ).toString() ) )
-      return mCrs;
+    if ( execOk && query.isActive() && query.next() )
+    {
+      mCrs = QgsCRSCache::instance()->crsByWkt( query.value( 0 ).toString() );
+      if ( mCrs.isValid() )
+        return mCrs;
+    }
   }
   return mCrs;
 }
@@ -1851,7 +1867,7 @@ QgsVectorLayerImport::ImportError QgsMssqlProvider::createEmptyLayer(
       QgsField fld = fields[i];
       if ( oldToNewAttrIdxMap && fld.name() == primaryKey )
       {
-        oldToNewAttrIdxMap->insert( fields.indexFromName( fld.name() ), 0 );
+        oldToNewAttrIdxMap->insert( fields.fieldNameIndex( fld.name() ), 0 );
         continue;
       }
 
@@ -1872,7 +1888,7 @@ QgsVectorLayerImport::ImportError QgsMssqlProvider::createEmptyLayer(
 
       flist.append( fld );
       if ( oldToNewAttrIdxMap )
-        oldToNewAttrIdxMap->insert( fields.indexFromName( fld.name() ), offset++ );
+        oldToNewAttrIdxMap->insert( fields.fieldNameIndex( fld.name() ), offset++ );
     }
 
     if ( !provider->addAttributes( flist ) )
@@ -1952,4 +1968,324 @@ QGISEXTERN QgsVectorLayerImport::ImportError createEmptyLayer(
            uri, fields, wkbType, srs, overwrite,
            oldToNewAttrIdxMap, errorMessage, options
          );
+}
+QGISEXTERN bool saveStyle( const QString& uri, const QString& qmlStyle, const QString& sldStyle,
+                           const QString& styleName, const QString& styleDescription,
+                           const QString& uiFileContent, bool useAsDefault, QString& errCause )
+{
+  QgsDataSourceURI dsUri( uri );
+  // connect to database
+  QSqlDatabase mDatabase = QgsMssqlProvider::GetDatabase( dsUri.service(), dsUri.host(), dsUri.database(), dsUri.username(), dsUri.password() );
+
+  if ( !QgsMssqlProvider::OpenDatabase( mDatabase ) )
+  {
+    QgsDebugMsg( "Error connecting to database" );
+    QgsDebugMsg( mDatabase.lastError().text() );
+    return false;
+  }
+
+  QSqlQuery query = QSqlQuery( mDatabase );
+  query.setForwardOnly( true );
+  if ( !query.exec( QString( "SELECT COUNT(*) FROM information_schema.tables WHERE table_name= N'layer_styles'" ) ) )
+  {
+    QString msg = query.lastError().text();
+    QgsDebugMsg( msg );
+    return false;
+  }
+  if ( query.isActive() && query.next() && query.value( 0 ).toInt() == 0 )
+  {
+    QgsDebugMsg( "Need to create styles table" );
+    bool execOk = query.exec( QString( "CREATE TABLE [dbo].[layer_styles]("
+                                       "[id] int IDENTITY(1,1) PRIMARY KEY,"
+                                       "[f_table_catalog] [varchar](1024) NULL,"
+                                       "[f_table_schema] [varchar](1024) NULL,"
+                                       "[f_table_name] [varchar](1024) NULL,"
+                                       "[f_geometry_column] [varchar](1024) NULL,"
+                                       "[styleName] [varchar](1024) NULL,"
+                                       "[styleQML] [text] NULL,"
+                                       "[styleSLD] [text] NULL,"
+                                       "[useAsDefault] [int] NULL,"
+                                       "[description] [text] NULL,"
+                                       "[owner] [varchar](1024) NULL,"
+                                       "[ui] [text] NULL,"
+                                       "[update_time] [datetime] NULL"
+                                       ") ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]" ) );
+    if ( !execOk )
+    {
+      errCause = QObject::tr( "Unable to save layer style. It's not possible to create the destination table on the database. Maybe this is due to table permissions. Please contact your database admin" );
+      return false;
+    }
+    query.finish();
+    query.clear();
+  }
+
+  QString uiFileColumn;
+  QString uiFileValue;
+  if ( !uiFileContent.isEmpty() )
+  {
+    uiFileColumn = ",ui";
+    uiFileValue = QString( ",XMLPARSE(DOCUMENT %1)" ).arg( uiFileContent );
+  }
+  QgsDebugMsg( "Ready to insert new style" );
+  // Note: in the construction of the INSERT and UPDATE strings the qmlStyle and sldStyle values
+  // can contain user entered strings, which may themselves include %## values that would be
+  // replaced by the QString.arg function.  To ensure that the final SQL string is not corrupt these
+  // two values are both replaced in the final .arg call of the string construction.
+
+  QString sql = QString( "INSERT INTO layer_styles"
+                         "(f_table_catalog,f_table_schema,f_table_name,f_geometry_column,styleName,styleQML,styleSLD,useAsDefault,description,owner%11"
+                         ") VALUES ("
+                         "%1,%2,%3,%4,%5,%6,%7,%8,%9,%10%12"
+                         ")" )
+                .arg( QgsMssqlProvider::quotedValue( dsUri.database() ) )
+                .arg( QgsMssqlProvider::quotedValue( dsUri.schema() ) )
+                .arg( QgsMssqlProvider::quotedValue( dsUri.table() ) )
+                .arg( QgsMssqlProvider::quotedValue( dsUri.geometryColumn() ) )
+                .arg( QgsMssqlProvider::quotedValue( styleName.isEmpty() ? dsUri.table() : styleName ) )
+                .arg( QgsMssqlProvider::quotedValue( qmlStyle ) )
+                .arg( QgsMssqlProvider::quotedValue( sldStyle ) )
+                .arg( useAsDefault ? "1" : "0" )
+                .arg( QgsMssqlProvider::quotedValue( styleDescription.isEmpty() ? QDateTime::currentDateTime().toString() : styleDescription ) )
+                .arg( QgsMssqlProvider::quotedValue( dsUri.username() ) )
+                .arg( uiFileColumn )
+                .arg( uiFileValue );
+
+  QString checkQuery = QString( "SELECT styleName"
+                                " FROM layer_styles"
+                                " WHERE f_table_catalog=%1"
+                                " AND f_table_schema=%2"
+                                " AND f_table_name=%3"
+                                " AND f_geometry_column=%4"
+                                " AND styleName=%5" )
+                       .arg( QgsMssqlProvider::quotedValue( dsUri.database() ) )
+                       .arg( QgsMssqlProvider::quotedValue( dsUri.schema() ) )
+                       .arg( QgsMssqlProvider::quotedValue( dsUri.table() ) )
+                       .arg( QgsMssqlProvider::quotedValue( dsUri.geometryColumn() ) )
+                       .arg( QgsMssqlProvider::quotedValue( styleName.isEmpty() ? dsUri.table() : styleName ) );
+
+  if ( !query.exec( checkQuery ) )
+  {
+    QgsDebugMsg( query.lastError().text() );
+    QgsDebugMsg( "Check Query failed" );
+    return false;
+  }
+  if ( query.isActive() && query.next() && query.value( 0 ).toString() == styleName )
+  {
+    if ( QMessageBox::question( nullptr, QObject::tr( "Save style in database" ),
+                                QObject::tr( "A style named \"%1\" already exists in the database for this layer. Do you want to overwrite it?" )
+                                .arg( styleName.isEmpty() ? dsUri.table() : styleName ),
+                                QMessageBox::Yes | QMessageBox::No ) == QMessageBox::No )
+    {
+      errCause = QObject::tr( "Operation aborted. No changes were made in the database" );
+      QgsDebugMsg( "User selected not to overwrite styles" );
+      return false;
+    }
+
+    QgsDebugMsg( "Updating styles" );
+    sql = QString( "UPDATE layer_styles "
+                   " SET useAsDefault=%1"
+                   ",styleQML=%2"
+                   ",styleSLD=%3"
+                   ",description=%4"
+                   ",owner=%5"
+                   " WHERE f_table_catalog=%6"
+                   " AND f_table_schema=%7"
+                   " AND f_table_name=%8"
+                   " AND f_geometry_column=%9"
+                   " AND styleName=%10" )
+          .arg( useAsDefault ? "1" : "0" )
+          .arg( QgsMssqlProvider::quotedValue( qmlStyle ) )
+          .arg( QgsMssqlProvider::quotedValue( sldStyle ) )
+          .arg( QgsMssqlProvider::quotedValue( styleDescription.isEmpty() ? QDateTime::currentDateTime().toString() : styleDescription ) )
+          .arg( QgsMssqlProvider::quotedValue( dsUri.username() ) )
+          .arg( QgsMssqlProvider::quotedValue( dsUri.database() ) )
+          .arg( QgsMssqlProvider::quotedValue( dsUri.schema() ) )
+          .arg( QgsMssqlProvider::quotedValue( dsUri.table() ) )
+          .arg( QgsMssqlProvider::quotedValue( dsUri.geometryColumn() ) )
+          .arg( QgsMssqlProvider::quotedValue( styleName.isEmpty() ? dsUri.table() : styleName ) );
+  }
+  if ( useAsDefault )
+  {
+    QString removeDefaultSql = QString( "UPDATE layer_styles "
+                                        " SET useAsDefault=0"
+                                        " WHERE f_table_catalog=%1"
+                                        " AND f_table_schema=%2"
+                                        " AND f_table_name=%3"
+                                        " AND f_geometry_column=%4" )
+                               .arg( QgsMssqlProvider::quotedValue( dsUri.database() ) )
+                               .arg( QgsMssqlProvider::quotedValue( dsUri.schema() ) )
+                               .arg( QgsMssqlProvider::quotedValue( dsUri.table() ) )
+                               .arg( QgsMssqlProvider::quotedValue( dsUri.geometryColumn() ) );
+    sql = QString( "%1; %2;" ).arg( removeDefaultSql, sql );
+  }
+
+  QgsDebugMsg( "Inserting styles" );
+  QgsDebugMsg( sql );
+  bool execOk = query.exec( sql );
+
+  if ( !execOk )
+  {
+    errCause = QObject::tr( "Unable to save layer style. It's not possible to insert a new record into the style table. Maybe this is due to table permissions. Please contact your database administrator." );
+  }
+  return execOk;
+}
+
+
+QGISEXTERN QString loadStyle( const QString& uri, QString& errCause )
+{
+  QString style;
+  QgsDataSourceURI dsUri( uri );
+  // connect to database
+  QSqlDatabase mDatabase = QgsMssqlProvider::GetDatabase( dsUri.service(), dsUri.host(), dsUri.database(), dsUri.username(), dsUri.password() );
+
+  if ( !QgsMssqlProvider::OpenDatabase( mDatabase ) )
+  {
+    QgsDebugMsg( "Error connecting to database" );
+    QgsDebugMsg( mDatabase.lastError().text() );
+    return QString();
+  }
+
+  QSqlQuery query = QSqlQuery( mDatabase );
+  query.setForwardOnly( true );
+
+  QString selectQmlQuery = QString( "SELECT top 1 styleQML"
+                                    " FROM layer_styles"
+                                    " WHERE f_table_catalog=%1"
+                                    " AND f_table_schema=%2"
+                                    " AND f_table_name=%3"
+                                    " AND f_geometry_column=%4"
+                                    " ORDER BY useAsDefault desc" )
+                           .arg( QgsMssqlProvider::quotedValue( dsUri.database() ) )
+                           .arg( QgsMssqlProvider::quotedValue( dsUri.schema() ) )
+                           .arg( QgsMssqlProvider::quotedValue( dsUri.table() ) )
+                           .arg( QgsMssqlProvider::quotedValue( dsUri.geometryColumn() ) );
+
+  if ( !query.exec( selectQmlQuery ) )
+  {
+    QgsDebugMsg( "Load of style failed" );
+    QString msg = query.lastError().text();
+    errCause = msg;
+    QgsDebugMsg( msg );
+    return QString();
+  }
+  if ( query.isActive() && query.next() )
+  {
+    QString style = query.value( 0 ).toString();
+    return style;
+  }
+  return QString();
+}
+
+QGISEXTERN int listStyles( const QString &uri, QStringList &ids, QStringList &names,
+                           QStringList &descriptions, QString& errCause )
+{
+  QgsDataSourceURI dsUri( uri );
+  // connect to database
+  QSqlDatabase mDatabase = QgsMssqlProvider::GetDatabase( dsUri.service(), dsUri.host(), dsUri.database(), dsUri.username(), dsUri.password() );
+
+  if ( !QgsMssqlProvider::OpenDatabase( mDatabase ) )
+  {
+    QgsDebugMsg( "Error connecting to database" );
+    QgsDebugMsg( mDatabase.lastError().text() );
+    return -1;
+  }
+
+  QSqlQuery query = QSqlQuery( mDatabase );
+  query.setForwardOnly( true );
+
+  // check if layer_styles table already exist
+  if ( !query.exec( QString( "SELECT COUNT(*) FROM information_schema.tables WHERE table_name= N'layer_styles'" ) ) )
+  {
+    QString msg = query.lastError().text();
+    errCause = msg;
+    QgsDebugMsg( msg );
+    return -1;
+  }
+  if ( query.isActive() && query.next() && query.value( 0 ).toInt() == 0 )
+  {
+    QgsDebugMsg( QObject::tr( "No styles available on DB, or there is an error connecting to the database." ) );
+    return -1;
+  }
+
+  QString selectRelatedQuery = QString( "SELECT id,styleName,description"
+                                        " FROM layer_styles "
+                                        " WHERE f_table_catalog=%1"
+                                        " AND f_table_schema=%2"
+                                        " AND f_table_name=%3"
+                                        " AND f_geometry_column=%4" )
+                               .arg( QgsMssqlProvider::quotedValue( dsUri.database() ) )
+                               .arg( QgsMssqlProvider::quotedValue( dsUri.schema() ) )
+                               .arg( QgsMssqlProvider::quotedValue( dsUri.table() ) )
+                               .arg( QgsMssqlProvider::quotedValue( dsUri.geometryColumn() ) );
+  bool queryOk = query.exec( selectRelatedQuery );
+  if ( !queryOk )
+  {
+    QgsDebugMsg( query.lastError().text() );
+    return -1;
+  }
+  int numberOfRelatedStyles = 0;
+  while ( query.isActive() && query.next() )
+  {
+    QgsDebugMsg( query.value( 1 ).toString() );
+    ids.append( query.value( 0 ).toString() );
+    names.append( query.value( 1 ).toString() );
+    descriptions.append( query.value( 2 ).toString() );
+    numberOfRelatedStyles = numberOfRelatedStyles + 1;
+  }
+  QString selectOthersQuery = QString( "SELECT id,styleName,description"
+                                       " FROM layer_styles "
+                                       " WHERE NOT (f_table_catalog=%1 AND f_table_schema=%2 AND f_table_name=%3 AND f_geometry_column=%4)"
+                                       " ORDER BY update_time DESC" )
+                              .arg( QgsMssqlProvider::quotedValue( dsUri.database() ) )
+                              .arg( QgsMssqlProvider::quotedValue( dsUri.schema() ) )
+                              .arg( QgsMssqlProvider::quotedValue( dsUri.table() ) )
+                              .arg( QgsMssqlProvider::quotedValue( dsUri.geometryColumn() ) );
+  QgsDebugMsg( selectOthersQuery );
+  queryOk = query.exec( selectOthersQuery );
+  if ( !queryOk )
+  {
+    QString msg = query.lastError().text();
+    QgsDebugMsg( msg );
+    return -1;
+  }
+  QgsDebugMsg( query.isActive() && query.size() );
+  while ( query.next() )
+  {
+    ids.append( query.value( 0 ).toString() );
+    names.append( query.value( 1 ).toString() );
+    descriptions.append( query.value( 2 ).toString() );
+  }
+  return numberOfRelatedStyles;
+}
+QGISEXTERN QString getStyleById( const QString& uri, QString styleId, QString& errCause )
+{
+  QgsDataSourceURI dsUri( uri );
+  // connect to database
+  QSqlDatabase mDatabase = QgsMssqlProvider::GetDatabase( dsUri.service(), dsUri.host(), dsUri.database(), dsUri.username(), dsUri.password() );
+
+  if ( !QgsMssqlProvider::OpenDatabase( mDatabase ) )
+  {
+    QgsDebugMsg( "Error connecting to database" );
+    QgsDebugMsg( mDatabase.lastError().text() );
+    return QString();
+  }
+
+  QSqlQuery query = QSqlQuery( mDatabase );
+  query.setForwardOnly( true );
+
+  QString style = "";
+  QString selectQmlQuery = QString( "SELECT styleQml FROM layer_styles WHERE id=%1" ).arg( QgsMssqlProvider::quotedValue( styleId ) );
+  bool queryOk = query.exec( selectQmlQuery );
+  if ( !queryOk )
+  {
+    QString msg = query.lastError().text();
+    QgsDebugMsg( msg );
+    errCause = query.lastError().text();
+    return QString( );
+  }
+  while ( query.next() )
+  {
+    style = query.value( 0 ).toString();
+  }
+  return style;
 }

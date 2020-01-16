@@ -42,6 +42,7 @@
 #include "qgsgml.h"
 #include "qgsgmlschema.h"
 #include "qgswmscapabilities.h"
+#include "qgscrscache.h"
 
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -129,7 +130,7 @@ QgsWmsProvider::QgsWmsProvider( QString const& uri, const QgsWmsCapabilities* ca
     appendError( ERR( tr( "Cannot set CRS" ) ) );
     return;
   }
-  mCrs.createFromOgcWmsCrs( mSettings.mCrsId );
+  mCrs = QgsCRSCache::instance()->crsByOgcWmsCrs( mSettings.mCrsId );
 
   if ( !calculateExtent() || mLayerExtent.isEmpty() )
   {
@@ -215,6 +216,36 @@ QString QgsWmsProvider::getTileUrl() const
   }
 }
 
+static bool isValidLegend( const QgsWmsLegendUrlProperty &l )
+{
+  return l.format.startsWith( "image/" );
+}
+
+/**
+ * Picks a usable legend URL for a given style.
+ */
+static QString pickLegend( const QgsWmsStyleProperty &s )
+{
+  QString url;
+  for ( int k = 0; k < s.legendUrl.size() && url.isEmpty(); k++ )
+  {
+    const QgsWmsLegendUrlProperty &l = s.legendUrl[k];
+    if ( isValidLegend( l ) )
+    {
+      url = l.onlineResource.xlinkHref;
+    }
+  }
+  return url;
+}
+
+static const QgsWmsStyleProperty *searchStyle( const QVector<QgsWmsStyleProperty>& styles, const QString& name )
+{
+  Q_FOREACH ( const QgsWmsStyleProperty &s, styles )
+    if ( s.name == name )
+      return &s;
+  return nullptr;
+}
+
 QString QgsWmsProvider::getLegendGraphicUrl() const
 {
   QString url;
@@ -223,25 +254,31 @@ QString QgsWmsProvider::getLegendGraphicUrl() const
   {
     const QgsWmsLayerProperty &l = mCaps.mLayersSupported[i];
 
-    if ( l.name != mSettings.mActiveSubLayers[0] )
-      continue;
-
-    for ( int j = 0; j < l.style.size() && url.isEmpty(); j++ )
+    if ( l.name == mSettings.mActiveSubLayers[0] )
     {
-      const QgsWmsStyleProperty &s = l.style[j];
-
-      if ( s.name != mSettings.mActiveSubStyles[0] )
-        continue;
-
-      for ( int k = 0; k < s.legendUrl.size() && url.isEmpty(); k++ )
+      if ( !mSettings.mActiveSubStyles[0].isEmpty() && mSettings.mActiveSubStyles[0] != "default" )
       {
-        const QgsWmsLegendUrlProperty &l = s.legendUrl[k];
-
-        if ( l.format != mSettings.mImageMimeType )
-          continue;
-
-        url = l.onlineResource.xlinkHref;
+        const QgsWmsStyleProperty *s = searchStyle( l.style, mSettings.mActiveSubStyles[0] );
+        if ( s )
+          url = pickLegend( *s );
       }
+      else
+      {
+        // QGIS wants the default style, but GetCapabilities doesn't give us a
+        // way to know what is the default style. So we look for the onlineResource
+        // only if there is a single style available or if there is a style called "default".
+        if ( l.style.size() == 1 )
+        {
+          url = pickLegend( l.style[0] );
+        }
+        else
+        {
+          const QgsWmsStyleProperty *s = searchStyle( l.style, "default" );
+          if ( s )
+            url = pickLegend( *s );
+        }
+      }
+      break;
     }
   }
 
@@ -501,7 +538,9 @@ QImage *QgsWmsProvider::draw( QgsRectangle const &viewExtent, int pixelWidth, in
     }
 
     QString layers = visibleLayers.join( "," );
+    layers = layers.isNull() ? "" : layers;
     QString styles = visibleStyles.join( "," );
+    styles = styles.isNull() ? "" : styles;
 
     QgsDebugMsg( "Visible layer list of " + layers + " and style list of " + styles );
 
@@ -827,7 +866,6 @@ QImage *QgsWmsProvider::draw( QgsRectangle const &viewExtent, int pixelWidth, in
 void QgsWmsProvider::readBlock( int bandNo, QgsRectangle  const & viewExtent, int pixelWidth, int pixelHeight, void *block )
 {
   Q_UNUSED( bandNo );
-  QgsDebugMsg( "Entered" );
   // TODO: optimize to avoid writing to QImage
   QImage *image = draw( viewExtent, pixelWidth, pixelHeight );
   if ( !image )   // should not happen
@@ -923,7 +961,13 @@ static const QgsWmsLayerProperty* _findNestedLayerProperty( const QString& layer
 
 bool QgsWmsProvider::extentForNonTiledLayer( const QString& layerName, const QString& crs, QgsRectangle& extent )
 {
-  const QgsWmsLayerProperty* layerProperty = _findNestedLayerProperty( layerName, &mCaps.mCapabilities.capability.layer );
+  const QgsWmsLayerProperty* layerProperty = nullptr;
+  Q_FOREACH ( const QgsWmsLayerProperty& toplevelLayer, mCaps.mCapabilities.capability.layers )
+  {
+    layerProperty = _findNestedLayerProperty( layerName, &toplevelLayer );
+    if ( layerProperty )
+      break;
+  }
   if ( !layerProperty )
     return false;
 
@@ -960,8 +1004,9 @@ bool QgsWmsProvider::extentForNonTiledLayer( const QString& layerName, const QSt
 
   // transform it to requested CRS
 
-  QgsCoordinateReferenceSystem dst, wgs;
-  if ( !wgs.createFromOgcWmsCrs( DEFAULT_LATLON_CRS ) || !dst.createFromOgcWmsCrs( crs ) )
+  QgsCoordinateReferenceSystem dst = QgsCRSCache::instance()->crsByOgcWmsCrs( crs );
+  QgsCoordinateReferenceSystem wgs = QgsCRSCache::instance()->crsByOgcWmsCrs( DEFAULT_LATLON_CRS );
+  if ( !wgs.isValid() || !dst.isValid() )
     return false;
 
   QgsCoordinateTransform xform( wgs, dst );
@@ -989,7 +1034,6 @@ bool QgsWmsProvider::extentForNonTiledLayer( const QString& layerName, const QSt
 
 bool QgsWmsProvider::parseServiceExceptionReportDom( QByteArray const & xml, QString& errorTitle, QString& errorText )
 {
-  QgsDebugMsg( "entering." );
 
 #ifdef QGISDEBUG
   //test the content of the QByteArray
@@ -1056,7 +1100,6 @@ bool QgsWmsProvider::parseServiceExceptionReportDom( QByteArray const & xml, QSt
 
 void QgsWmsProvider::parseServiceException( QDomElement const & e, QString& errorTitle, QString& errorText )
 {
-  QgsDebugMsg( "entering." );
 
   QString seCode = e.attribute( "code" );
   QString seText = e.text();
@@ -1174,7 +1217,6 @@ bool QgsWmsProvider::calculateExtent()
 {
   //! \todo Make this handle non-geographic CRSs (e.g. floor plans) as per WMS spec
 
-  QgsDebugMsg( "entered." );
 
   if ( mSettings.mTiled )
   {
@@ -1190,14 +1232,12 @@ bool QgsWmsProvider::calculateExtent()
       }
       else
       {
-        QgsCoordinateReferenceSystem qgisSrsDest;
-        qgisSrsDest.createFromOgcWmsCrs( mImageCrs );
+        QgsCoordinateReferenceSystem qgisSrsDest = QgsCRSCache::instance()->crsByOgcWmsCrs( mImageCrs );
 
         // pick the first that transforms fin(it)e
         for ( i = 0; i < mTileLayer->boundingBoxes.size(); i++ )
         {
-          QgsCoordinateReferenceSystem qgisSrsSource;
-          qgisSrsSource.createFromOgcWmsCrs( mTileLayer->boundingBoxes[i].crs );
+          QgsCoordinateReferenceSystem qgisSrsSource = QgsCRSCache::instance()->crsByOgcWmsCrs( mTileLayer->boundingBoxes[i].crs );
 
           QgsCoordinateTransform ct( qgisSrsSource, qgisSrsDest );
 
@@ -1254,7 +1294,7 @@ bool QgsWmsProvider::calculateExtent()
       }
       else
       {
-        mLayerExtent.combineExtentWith( &extent );
+        mLayerExtent.combineExtentWith( extent );
       }
 
       firstLayer = false;
@@ -1275,7 +1315,6 @@ int QgsWmsProvider::capabilities() const
   int capability = NoCapabilities;
   bool canIdentify = false;
 
-  QgsDebugMsg( "entering." );
 
   if ( mSettings.mTiled && mTileLayer )
   {
@@ -2023,7 +2062,7 @@ QString QgsWmsProvider::metadata()
   return metadata;
 }
 
-QgsRasterIdentifyResult QgsWmsProvider::identify( const QgsPoint & thePoint, QgsRaster::IdentifyFormat theFormat, const QgsRectangle &theExtent, int theWidth, int theHeight )
+QgsRasterIdentifyResult QgsWmsProvider::identify( const QgsPoint & thePoint, QgsRaster::IdentifyFormat theFormat, const QgsRectangle &theExtent, int theWidth, int theHeight , int /*theDpi*/ )
 {
   QgsDebugMsg( QString( "theFormat = %1" ).arg( theFormat ) );
 
@@ -2064,8 +2103,8 @@ QgsRasterIdentifyResult QgsWmsProvider::identify( const QgsPoint & thePoint, Qgs
     double xRes = 0.001; // expecting meters
 
     // TODO: add CRS as class member
-    QgsCoordinateReferenceSystem crs;
-    if ( crs.createFromOgcWmsCrs( mImageCrs ) )
+    QgsCoordinateReferenceSystem crs = QgsCRSCache::instance()->crsByOgcWmsCrs( mImageCrs );
+    if ( crs.isValid() )
     {
       // set resolution approximately to 1mm
       switch ( crs.mapUnits() )
@@ -2649,8 +2688,7 @@ QgsRasterIdentifyResult QgsWmsProvider::identify( const QgsPoint & thePoint, Qgs
               QgsDebugMsg( QString( "crs not supported:%1" ).arg( result.property( "crs" ).toString() ) );
             }
 
-            QgsCoordinateReferenceSystem featuresCrs;
-            featuresCrs.createFromOgcWmsCrs( crsText );
+            QgsCoordinateReferenceSystem featuresCrs = QgsCRSCache::instance()->crsByOgcWmsCrs( crsText );
 
             if ( !featuresCrs.isValid() )
               throw QString( "CRS %1 invalid" ).arg( crsText );
@@ -2952,20 +2990,29 @@ QUrl QgsWmsProvider::getLegendGraphicFullURL( double scale, const QgsRectangle& 
 
   QUrl url( lurl );
 
-  if ( !url.hasQueryItem( "SERVICE" ) )
+  // query names are NOT case-sensitive, so make an uppercase list for proper comparison
+  QStringList qnames = QStringList();
+  for ( int i = 0; i < url.queryItems().size(); i++ )
+  {
+    qnames << url.queryItems().at( i ).first.toUpper();
+  }
+  if ( !qnames.contains( "SERVICE" ) )
     setQueryItem( url, "SERVICE", "WMS" );
-  if ( !url.hasQueryItem( "VERSION" ) )
+  if ( !qnames.contains( "VERSION" ) )
     setQueryItem( url, "VERSION", mCaps.mCapabilities.version );
-  if ( !url.hasQueryItem( "SLD_VERSION" ) )
+  if ( !qnames.contains( "SLD_VERSION" ) )
     setQueryItem( url, "SLD_VERSION", "1.1.0" ); // can not determine SLD_VERSION
-  if ( !url.hasQueryItem( "REQUEST" ) )
+  if ( !qnames.contains( "REQUEST" ) )
     setQueryItem( url, "REQUEST", "GetLegendGraphic" );
-  if ( !url.hasQueryItem( "FORMAT" ) )
+  if ( !qnames.contains( "FORMAT" ) )
     setFormatQueryItem( url );
-  if ( !url.hasQueryItem( "LAYER" ) )
+  if ( !qnames.contains( "LAYER" ) )
     setQueryItem( url, "LAYER", mSettings.mActiveSubLayers[0] );
-  if ( !url.hasQueryItem( "STYLE" ) )
+  if ( !qnames.contains( "STYLE" ) )
     setQueryItem( url, "STYLE", mSettings.mActiveSubStyles[0] );
+  // by setting TRANSPARENT=true, even too big legend images will look good
+  if ( !qnames.contains( "TRANSPARENT" ) )
+    setQueryItem( url, "TRANSPARENT", "true" );
 
   // add config parameter related to resolution
   QSettings s;
@@ -3003,7 +3050,6 @@ QImage QgsWmsProvider::getLegendGraphic( double scale, bool forceRefresh, const 
   // TODO manage return basing of getCapablity => avoid call if service is not available
   // some services doesn't expose getLegendGraphic in capabilities but adding LegendURL in
   // the layer tags inside capabilities
-  QgsDebugMsg( "entering." );
 
   QString lurl = getLegendGraphicUrl();
 
@@ -3087,7 +3133,6 @@ QgsImageFetcher* QgsWmsProvider::getLegendGraphicFetcher( const QgsMapSettings* 
 
 void QgsWmsProvider::getLegendGraphicReplyFinished( const QImage& img )
 {
-  QgsDebugMsg( "entering." );
 
   QObject* reply = sender();
 
@@ -3299,8 +3344,9 @@ void QgsWmsImageDownloadHandler::cacheReplyFinished()
 
 void QgsWmsImageDownloadHandler::cacheReplyProgress( qint64 bytesReceived, qint64 bytesTotal )
 {
-  QString msg = tr( "%1 of %2 bytes of map downloaded." ).arg( bytesReceived ).arg( bytesTotal < 0 ? QString( "unknown number of" ) : QString::number( bytesTotal ) );
-  QgsDebugMsg( msg );
+  Q_UNUSED( bytesReceived );
+  Q_UNUSED( bytesTotal );
+  QgsDebugMsg( tr( "%1 of %2 bytes of map downloaded." ).arg( bytesReceived ).arg( bytesTotal < 0 ? QString( "unknown number of" ) : QString::number( bytesTotal ) ) );
 }
 
 
@@ -3605,14 +3651,24 @@ void QgsWmsTiledImageDownloadHandler::repeatTileRequest( QNetworkRequest const &
   connect( reply, SIGNAL( finished() ), this, SLOT( tileReplyFinished() ) );
 }
 
+// Some servers like http://glogow.geoportal2.pl/map/wms/wms.php? do not BBOX
+// to be formatted with excessive precision. As a double is exactly represented
+// with 19 decimal figures, do not attempt to output more
+static QString formatDouble( double x )
+{
+  if ( x == 0.0 )
+    return "0";
+  const int numberOfDecimals = qMax( 0, 19 - static_cast<int>( ceil( log10( fabs( x ) ) ) ) );
+  return qgsDoubleToString( x, numberOfDecimals );
+}
+
 QString QgsWmsProvider::toParamValue( const QgsRectangle& rect, bool changeXY )
 {
-  // Warning: does not work with scientific notation
   return QString( changeXY ? "%2,%1,%4,%3" : "%1,%2,%3,%4" )
-         .arg( qgsDoubleToString( rect.xMinimum() ),
-               qgsDoubleToString( rect.yMinimum() ),
-               qgsDoubleToString( rect.xMaximum() ),
-               qgsDoubleToString( rect.yMaximum() ) );
+         .arg( formatDouble( rect.xMinimum() ),
+               formatDouble( rect.yMinimum() ),
+               formatDouble( rect.xMaximum() ),
+               formatDouble( rect.yMaximum() ) );
 }
 
 void QgsWmsProvider::setSRSQueryItem( QUrl& url )

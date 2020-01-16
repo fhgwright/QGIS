@@ -911,7 +911,7 @@ void QgsWMSProjectParser::owsGeneralAndResourceList( QDomElement& parentElement,
   {
     combinedBBox = mapRect;
   }
-  const QgsCoordinateReferenceSystem& projectCrs = mProjectParser->projectCRS();
+  QgsCoordinateReferenceSystem projectCrs = mProjectParser->projectCRS();
   QDomElement bboxElem = doc.createElement( "ows:BoundingBox" );
   bboxElem.setAttribute( "crs", projectCrs.authid() );
   if ( projectCrs.axisInverted() )
@@ -1506,7 +1506,7 @@ void QgsWMSProjectParser::addOWSLayers( QDomDocument &doc,
                                         QgsRectangle& combinedBBox,
                                         const QString& strGroup ) const
 {
-  const QgsCoordinateReferenceSystem& projectCrs = mProjectParser->projectCRS();
+  QgsCoordinateReferenceSystem projectCrs = mProjectParser->projectCRS();
   QDomNodeList legendChildren = legendElem.childNodes();
   for ( int i = 0; i < legendChildren.size(); ++i )
   {
@@ -1696,7 +1696,7 @@ void QgsWMSProjectParser::addOWSLayers( QDomDocument &doc,
       appendLayerBoundingBoxes( layerElem, doc, currentLayer->extent(), currentLayer->crs() );
       */
       //get project crs
-      const QgsCoordinateReferenceSystem& layerCrs = currentLayer->crs();
+      QgsCoordinateReferenceSystem layerCrs = currentLayer->crs();
       QgsCoordinateTransform t( layerCrs, projectCrs );
 
       //transform
@@ -1707,7 +1707,7 @@ void QgsWMSProjectParser::addOWSLayers( QDomDocument &doc,
       }
       else
       {
-        combinedBBox.combineExtentWith( &BBox );
+        combinedBBox.combineExtentWith( BBox );
       }
 
       addOWSLayerStyles( currentLayer, doc, layerElem );

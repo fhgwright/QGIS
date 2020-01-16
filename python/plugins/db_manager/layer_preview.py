@@ -20,8 +20,9 @@ email                : brush.tyler@gmail.com
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import Qt, QSettings, QTimer, SIGNAL
-from PyQt4.QtGui import QColor, QApplication, QCursor
+from qgis.PyQt.QtCore import Qt, QSettings, QTimer
+from qgis.PyQt.QtGui import QColor, QCursor
+from qgis.PyQt.QtWidgets import QApplication
 
 from qgis.gui import QgsMapCanvas, QgsMapCanvasLayer, QgsMessageBar
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry
@@ -45,7 +46,7 @@ class LayerPreview(QgsMapCanvas):
         self.enableAntiAliasing(settings.value("/qgis/enable_anti_aliasing", False, type=bool))
         action = settings.value("/qgis/wheel_action", 0, type=float)
         zoomFactor = settings.value("/qgis/zoom_factor", 2, type=float)
-        self.setWheelAction(QgsMapCanvas.WheelAction(action), zoomFactor)
+        self.setWheelFactor(zoomFactor)
 
     def refresh(self):
         self.setDirty(True)
@@ -62,13 +63,14 @@ class LayerPreview(QgsMapCanvas):
 
         if isinstance(item, Table) and item.type in [Table.VectorType, Table.RasterType]:
             # update the preview, but first let the manager chance to show the canvas
-            runPrev = lambda: self._loadTablePreview(item)
+            def runPrev():
+                return self._loadTablePreview(item)
             QTimer.singleShot(50, runPrev)
         else:
             return
 
         self.item = item
-        self.connect(self.item, SIGNAL('aboutToChange'), self.setDirty)
+        self.item.aboutToChange.connect(self.setDirty)
 
     def setDirty(self, val=True):
         self.dirty = val
@@ -78,7 +80,7 @@ class LayerPreview(QgsMapCanvas):
         if self.item is not None:
             ## skip exception on RuntimeError fixes #6892
             try:
-                self.disconnect(self.item, SIGNAL('aboutToChange'), self.setDirty)
+                self.item.aboutToChange.disconnect(self.setDirty)
             except RuntimeError:
                 pass
 

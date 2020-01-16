@@ -21,7 +21,8 @@ class QgsRenderContext
       UseRenderingOptimization, //!< Enable vector simplification and other rendering optimizations
       DrawSelection,            //!< Whether vector selections should be shown in the rendered map
       DrawSymbolBounds,         //!< Draw bounds of symbols (for debugging/testing)
-      RenderMapTile
+      RenderMapTile,            //!< Draw map such that there are no problems between adjacent tiles
+      Antialiasing,             //!< Use antialiasing while drawing
     };
     typedef QFlags<QgsRenderContext::Flag> Flags;
 
@@ -177,4 +178,16 @@ class QgsRenderContext
      * @see setFeatureFilterProvider()
      */
     const QgsFeatureFilterProvider* featureFilterProvider() const;
+
+    /** Sets the segmentation tolerance applied when rendering curved geometries
+    @param tolerance the segmentation tolerance*/
+    void setSegmentationTolerance( double tolerance );
+    /** Gets the segmentation tolerance applied when rendering curved geometries*/
+    double segmentationTolerance() const;
+
+    /** Sets segmentation tolerance type (maximum angle or maximum difference between curve and approximation)
+    @param type the segmentation tolerance typename*/
+    void setSegmentationToleranceType( QgsAbstractGeometryV2::SegmentationToleranceType type );
+    /** Gets segmentation tolerance type (maximum angle or maximum difference between curve and approximation)*/
+    QgsAbstractGeometryV2::SegmentationToleranceType segmentationToleranceType() const;
 };

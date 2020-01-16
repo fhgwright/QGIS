@@ -12,33 +12,44 @@ __copyright__ = 'Copyright 2013, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
+import sys
 import shutil
 import tempfile
 
 from qgis.core import QgsVectorLayer, QgsPoint, QgsFeature
 
-from qgis.testing import (start_app,
-                          unittest
-                          )
+from qgis.testing import start_app, unittest
 from utilities import unitTestDataPath
 from providertestbase import ProviderTestCase
-from PyQt4.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings
 
 try:
     from pyspatialite import dbapi2 as sqlite3
 except ImportError:
-    print "You should install pyspatialite to run the tests"
+    print("You should install pyspatialite to run the tests")
     raise ImportError
 
-# Convenience instances in case you may need them
-start_app()
+# Pass no_exit=True: for some reason this crashes on exit on Travis MacOSX
+start_app(sys.platform != 'darwin')
 TEST_DATA_DIR = unitTestDataPath()
 
 
-def die(error_message):
-    raise Exception(error_message)
+def count_opened_filedescriptors(filename_to_test):
+    count = -1
+    if sys.platform.startswith('linux'):
+        count = 0
+        open_files_dirname = '/proc/%d/fd' % os.getpid()
+        filenames = os.listdir(open_files_dirname)
+        for filename in filenames:
+            full_filename = open_files_dirname + '/' + filename
+            if os.path.exists(full_filename):
+                link = os.readlink(full_filename)
+                if os.path.basename(link) == os.path.basename(filename_to_test):
+                    count += 1
+    return count
 
 
 class TestQgsSpatialiteProvider(unittest.TestCase, ProviderTestCase):
@@ -132,38 +143,45 @@ class TestQgsSpatialiteProvider(unittest.TestCase, ProviderTestCase):
     def disableCompiler(self):
         QSettings().setValue(u'/qgis/compileExpressions', False)
 
+    def uncompiledFilters(self):
+        return set(['cnt = 10 ^ 2',
+                    '"name" ~ \'[OP]ra[gne]+\'',
+                    'intersects($geometry,geom_from_wkt( \'Polygon ((-72.2 66.1, -65.2 66.1, -65.2 72.0, -72.2 72.0, -72.2 66.1))\'))'])
+
+    def partiallyCompiledFilters(self):
+        return set(['"name" NOT LIKE \'Ap%\'',
+                    'name LIKE \'Apple\'',
+                    'name LIKE \'aPple\''
+                    ])
+
     def test_SplitFeature(self):
         """Create spatialite database"""
         layer = QgsVectorLayer("dbname=%s table=test_pg (geometry)" % self.dbname, "test_pg", "spatialite")
-        assert(layer.isValid())
-        assert(layer.hasGeometryType())
+        self.assertTrue(layer.isValid())
+        self.assertTrue(layer.hasGeometryType())
         layer.startEditing()
-        layer.splitFeatures([QgsPoint(0.5, -0.5), QgsPoint(0.5, 1.5)], 0) == 0 or die("error in split")
-        layer.splitFeatures([QgsPoint(-0.5, 0.5), QgsPoint(1.5, 0.5)], 0) == 0 or die("error in split")
-        if not layer.commitChanges():
-            die("this commit should work")
-        layer.featureCount() == 4 or die("we should have 4 features after 2 split")
+        self.assertEqual(layer.splitFeatures([QgsPoint(0.5, -0.5), QgsPoint(0.5, 1.5)], 0), 0)
+        self.assertEqual(layer.splitFeatures([QgsPoint(-0.5, 0.5), QgsPoint(1.5, 0.5)], 0), 0)
+        self.assertTrue(layer.commitChanges())
+        self.assertEqual(layer.featureCount(), 4)
 
     def xtest_SplitFeatureWithFailedCommit(self):
         """Create spatialite database"""
         layer = QgsVectorLayer("dbname=%s table=test_pg_mk (geometry)" % self.dbname, "test_pg_mk", "spatialite")
-        assert(layer.isValid())
-        assert(layer.hasGeometryType())
+        self.assertTrue(layer.isValid())
+        self.assertTrue(layer.hasGeometryType())
         layer.startEditing()
-        layer.splitFeatures([QgsPoint(0.5, -0.5), QgsPoint(0.5, 1.5)], 0) == 0 or die("error in split")
-        layer.splitFeatures([QgsPoint(-0.5, 0.5), QgsPoint(1.5, 0.5)], 0) == 0 or die("error in split")
-        if layer.commitChanges():
-            die("this commit should fail")
+        self.asserEqual(layer.splitFeatures([QgsPoint(0.5, -0.5), QgsPoint(0.5, 1.5)], 0), 0)
+        self.asserEqual(layer.splitFeatures([QgsPoint(-0.5, 0.5), QgsPoint(1.5, 0.5)], 0), 0)
+        self.assertFalse(layer.commitChanges())
         layer.rollBack()
-        feat = QgsFeature()
-        it = layer.getFeatures()
-        it.nextFeature(feat)
+        feat = next(layer.getFeatures())
         ref = [[(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]]
         res = feat.geometry().asPolygon()
         for ring1, ring2 in zip(ref, res):
             for p1, p2 in zip(ring1, ring2):
                 for c1, c2 in zip(p1, p2):
-                    c1 == c2 or die("polygon has been altered by failed edition")
+                    self.asserEqual(c1, c2)
 
     def test_queries(self):
         """Test loading of query-based layers"""
@@ -171,37 +189,37 @@ class TestQgsSpatialiteProvider(unittest.TestCase, ProviderTestCase):
         # a query with a geometry, but no unique id
         # the id will be autoincremented
         l = QgsVectorLayer("dbname=%s table='(select * from test_q)' (geometry)" % self.dbname, "test_pg_query1", "spatialite")
-        assert(l.isValid())
+        self.assertTrue(l.isValid())
         # the id() is autoincremented
         sum_id1 = sum(f.id() for f in l.getFeatures())
         # the attribute 'id' works
         sum_id2 = sum(f.attributes()[0] for f in l.getFeatures())
-        assert(sum_id1 == 3) # 1+2
-        assert(sum_id2 == 32) # 11 + 21
+        self.assertEqual(sum_id1, 3)   # 1+2
+        self.assertEqual(sum_id2, 32)  # 11 + 21
 
         # and now with an id declared
         l = QgsVectorLayer("dbname=%s table='(select * from test_q)' (geometry) key='id'" % self.dbname, "test_pg_query1", "spatialite")
-        assert(l.isValid())
+        self.assertTrue(l.isValid())
         sum_id1 = sum(f.id() for f in l.getFeatures())
         sum_id2 = sum(f.attributes()[0] for f in l.getFeatures())
-        assert(sum_id1 == 32)
-        assert(sum_id2 == 32)
+        self.assertEqual(sum_id1, 32)
+        self.assertEqual(sum_id2, 32)
 
         # a query, but no geometry
         l = QgsVectorLayer("dbname=%s table='(select id,name from test_q)' key='id'" % self.dbname, "test_pg_query1", "spatialite")
-        assert(l.isValid())
+        self.assertTrue(l.isValid())
         sum_id1 = sum(f.id() for f in l.getFeatures())
         sum_id2 = sum(f.attributes()[0] for f in l.getFeatures())
-        assert(sum_id1 == 32)
-        assert(sum_id2 == 32)
+        self.assertEqual(sum_id1, 32)
+        self.assertEqual(sum_id2, 32)
 
     def test_case(self):
         """Test case sensitivity issues"""
         l = QgsVectorLayer("dbname=%s table='test_n' (geometry) key='id'" % self.dbname, "test_n1", "spatialite")
-        assert(l.isValid())
-        assert(l.dataProvider().fields().count() == 2)
+        self.assertTrue(l.isValid())
+        self.assertEqual(l.dataProvider().fields().count(), 2)
         fields = [f.name() for f in l.dataProvider().fields()]
-        assert('Geometry' not in fields)
+        self.assertTrue('Geometry' not in fields)
 
     def test_invalid_iterator(self):
         """ Test invalid iterator """
@@ -213,6 +231,74 @@ class TestQgsSpatialiteProvider(unittest.TestCase, ProviderTestCase):
         layer.getFeatures()
         layer = None
         os.unlink(corrupt_dbname)
+
+    def testNoDanglingFileDescriptorAfterCloseVariant1(self):
+        ''' Test that when closing the provider all file handles are released '''
+
+        temp_dbname = self.dbname + '.no_dangling_test1'
+        shutil.copy(self.dbname, temp_dbname)
+
+        vl = QgsVectorLayer("dbname=%s table=test_n (geometry)" % temp_dbname, "test_n", "spatialite")
+        self.assertTrue(vl.isValid())
+        # The iterator will take one extra connection
+        myiter = vl.getFeatures()
+        print(vl.featureCount())
+        # Consume one feature but the iterator is still opened
+        f = next(myiter)
+        self.assertTrue(f.isValid())
+
+        if sys.platform.startswith('linux'):
+            self.assertEqual(count_opened_filedescriptors(temp_dbname), 2)
+
+        # does NO release one file descriptor, because shared with the iterator
+        del vl
+
+        # Non portable, but Windows testing is done with trying to unlink
+        if sys.platform.startswith('linux'):
+            self.assertEqual(count_opened_filedescriptors(temp_dbname), 2)
+
+        f = next(myiter)
+        self.assertTrue(f.isValid())
+
+        # Should release one file descriptor
+        del myiter
+
+        # Non portable, but Windows testing is done with trying to unlink
+        if sys.platform.startswith('linux'):
+            self.assertEqual(count_opened_filedescriptors(temp_dbname), 0)
+
+        # Check that deletion works well (can only fail on Windows)
+        os.unlink(temp_dbname)
+        self.assertFalse(os.path.exists(temp_dbname))
+
+    def testNoDanglingFileDescriptorAfterCloseVariant2(self):
+        ''' Test that when closing the provider all file handles are released '''
+
+        temp_dbname = self.dbname + '.no_dangling_test2'
+        shutil.copy(self.dbname, temp_dbname)
+
+        vl = QgsVectorLayer("dbname=%s table=test_n (geometry)" % temp_dbname, "test_n", "spatialite")
+        self.assertTrue(vl.isValid())
+        self.assertTrue(vl.isValid())
+        # Consume all features.
+        myiter = vl.getFeatures()
+        for feature in myiter:
+            pass
+        # The iterator is closed
+        if sys.platform.startswith('linux'):
+            self.assertEqual(count_opened_filedescriptors(temp_dbname), 2)
+
+        # Should release one file descriptor
+        del vl
+
+        # Non portable, but Windows testing is done with trying to unlink
+        if sys.platform.startswith('linux'):
+            self.assertEqual(count_opened_filedescriptors(temp_dbname), 0)
+
+        # Check that deletion works well (can only fail on Windows)
+        os.unlink(temp_dbname)
+        self.assertFalse(os.path.exists(temp_dbname))
+
 
 if __name__ == '__main__':
     unittest.main()

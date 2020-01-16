@@ -725,7 +725,7 @@ void QgsServerProjectParser::combineExtentAndCrsOfGroupChildren( QDomElement& gr
       }
       else
       {
-        combinedBBox.combineExtentWith( &bbox );
+        combinedBBox.combineExtentWith( bbox );
       }
     }
 
@@ -783,7 +783,7 @@ void QgsServerProjectParser::addLayerProjectSettings( QDomElement& layerElem, QD
     const QgsFields& layerFields = vLayer->pendingFields();
     for ( int idx = 0; idx < layerFields.count(); ++idx )
     {
-      const QgsField& field = layerFields[idx];
+      const QgsField& field = layerFields.at( idx );
       if ( excludedAttributes.contains( field.name() ) )
       {
         continue;
@@ -862,7 +862,7 @@ QgsRectangle QgsServerProjectParser::layerBoundingBoxInProjectCRS( const QDomEle
   QString version = doc.documentElement().attribute( "version" );
 
   //create layer crs
-  const QgsCoordinateReferenceSystem& layerCrs = QgsCRSCache::instance()->crsByAuthId( boundingBoxElem.attribute( version == "1.1.1" ? "SRS" : "CRS" ) );
+  QgsCoordinateReferenceSystem layerCrs = QgsCRSCache::instance()->crsByOgcWmsCrs( boundingBoxElem.attribute( version == "1.1.1" ? "SRS" : "CRS" ) );
   if ( !layerCrs.isValid() )
   {
     return BBox;
@@ -912,7 +912,7 @@ bool QgsServerProjectParser::crsSetForLayer( const QDomElement& layerElement, QS
   return true;
 }
 
-const QgsCoordinateReferenceSystem& QgsServerProjectParser::projectCRS() const
+QgsCoordinateReferenceSystem QgsServerProjectParser::projectCRS() const
 {
   //mapcanvas->destinationsrs->spatialrefsys->authid
   if ( mXMLDoc )
@@ -921,7 +921,7 @@ const QgsCoordinateReferenceSystem& QgsServerProjectParser::projectCRS() const
                              firstChildElement( "spatialrefsys" ).firstChildElement( "authid" );
     if ( !authIdElem.isNull() )
     {
-      return QgsCRSCache::instance()->crsByAuthId( authIdElem.text() );
+      return QgsCRSCache::instance()->crsByOgcWmsCrs( authIdElem.text() );
     }
   }
   return QgsCRSCache::instance()->crsByEpsgId( GEO_EPSG_CRS_ID );
@@ -1403,7 +1403,7 @@ QList<QDomElement> QgsServerProjectParser::publishedComposerElements() const
   QDomElement wmsRestrictedComposersElem = propertiesElem.firstChildElement( "WMSRestrictedComposers" );
   if ( wmsRestrictedComposersElem.isNull() )
   {
-    for ( unsigned int i = 0; i < composerNodeList.length(); ++i )
+    for ( int i = 0; i < composerNodeList.size(); ++i )
     {
       composerElemList.push_back( composerNodeList.at( i ).toElement() );
     }

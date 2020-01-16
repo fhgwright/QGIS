@@ -16,20 +16,19 @@ __revision__ = '$Format:%H$'
 
 import os
 import tempfile
-import time
 
-from qgis.core import *
-from qgis.gui import *
+from qgis.core import QgsAuthManager, QgsAuthCertUtils, QgsPkiBundle, QgsAuthMethodConfig, QgsAuthMethod, QgsAuthConfigSslServer
+from qgis.gui import QgsAuthEditorWidgets
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtNetwork import *
-from PyQt4.QtTest import *
+
+from qgis.PyQt.QtCore import QFileInfo, qDebug
+from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox
+from qgis.PyQt.QtTest import QTest
+from qgis.PyQt.QtNetwork import QSsl, QSslError, QSslSocket
 
 from qgis.testing import (
     start_app,
     unittest,
-    expectedFailure,
     unitTestDataPath,
 )
 

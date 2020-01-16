@@ -18,30 +18,20 @@ from qgis.testing import unittest
 from utilities import printImportant, DoxygenParser
 
 # Import all the things!
-from qgis.analysis import *
-from qgis.core import *
-from qgis.gui import *
-from qgis.networkanalysis import *
+from qgis.analysis import *         # NOQA
+from qgis.core import *             # NOQA
+from qgis.gui import *              # NOQA
+from qgis.networkanalysis import *  # NOQA
 try:
-    from qgis.server import *
+    from qgis.server import *       # NOQA
 except:
     pass
-
-# BINDING THRESHOLD
-#
-# The minimum number of unbound functions in QGIS api
-#
-# DON'T RAISE THIS THRESHOLD!!!
-# (changes which lower this threshold are welcomed though!)
-
-ACCEPTABLE_MISSING_CLASSES = 0
-ACCEPTABLE_MISSING_MEMBERS = 0
 
 
 class TestQgsSipCoverage(unittest.TestCase):
 
     def testCoverage(self):
-        print 'CTEST_FULL_OUTPUT'
+        print('CTEST_FULL_OUTPUT')
         prefixPath = os.environ['QGIS_PREFIX_PATH']
         docPath = os.path.join(prefixPath, '..', 'doc', 'api', 'xml')
         parser = DoxygenParser(docPath)
@@ -88,40 +78,40 @@ class TestQgsSipCoverage(unittest.TestCase):
 
         missing_members.sort()
 
-        print "---------------------------------"
-        print 'Missing classes:\n {}'.format('\n '.join(missing_objects))
-        print "---------------------------------"
-        print 'Missing members:\n {}'.format('\n '.join(missing_members))
+        print("---------------------------------")
+        print('Missing classes:\n {}'.format('\n '.join(missing_objects)))
+        print("---------------------------------")
+        print('Missing members:\n {}'.format('\n '.join(missing_members)))
 
         # print summaries
         missing_class_count = len(missing_objects)
         present_count = len(objects) - missing_class_count
         coverage = 100.0 * present_count / len(objects)
 
-        print "---------------------------------"
+        print("---------------------------------")
         printImportant("{} total bindable classes".format(len(objects)))
         printImportant("{} total have bindings".format(present_count))
         printImportant("Binding coverage by classes {}%".format(coverage))
         printImportant("---------------------------------")
-        printImportant("{} classes missing bindings, out of {} allowed".format(missing_class_count, ACCEPTABLE_MISSING_CLASSES))
-        print "---------------------------------"
+        printImportant("{} classes missing bindings".format(missing_class_count))
+        print("---------------------------------")
 
         missing_member_count = len(missing_members)
         present_count = len(parser.bindable_members) - missing_member_count
         coverage = 100.0 * present_count / len(parser.bindable_members)
 
-        print "---------------------------------"
+        print("---------------------------------")
         printImportant("{} total bindable members".format(len(parser.bindable_members)))
         printImportant("{} total have bindings".format(present_count))
         printImportant("Binding coverage by members {}%".format(coverage))
         printImportant("---------------------------------")
-        printImportant("{} members missing bindings, out of {} allowed".format(missing_member_count, ACCEPTABLE_MISSING_MEMBERS))
+        printImportant("{} members missing bindings".format(missing_member_count))
 
-        assert missing_class_count <= ACCEPTABLE_MISSING_CLASSES, """\n\nFAIL: new unbound classes have been introduced, please add SIP bindings for these classes
+        assert missing_class_count <= 0, """\n\nFAIL: new unbound classes have been introduced, please add SIP bindings for these classes
 If these classes are not suitable for the Python bindings, please add the Doxygen tag
 "@note not available in Python bindings" to the CLASS Doxygen comments"""
 
-        assert missing_member_count <= ACCEPTABLE_MISSING_MEMBERS, """\n\nFAIL: new unbound members have been introduced, please add SIP bindings for these members
+        assert missing_member_count <= 0, """\n\nFAIL: new unbound members have been introduced, please add SIP bindings for these members
 If these members are not suitable for the Python bindings, please add the Doxygen tag
 "@note not available in Python bindings" to the MEMBER Doxygen comments"""
 

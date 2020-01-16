@@ -16,7 +16,6 @@
 *                                                                         *
 ***************************************************************************
 """
-from operator import attrgetter
 
 __author__ = 'Victor Olaya'
 __date__ = 'August 2012'
@@ -33,18 +32,30 @@ import time
 import json
 import codecs
 import traceback
-from PyQt4.QtCore import QCoreApplication, QPointF
-from PyQt4.QtGui import QIcon
+from qgis.PyQt.QtCore import QCoreApplication, QPointF
+from qgis.PyQt.QtGui import QIcon
+from operator import attrgetter
+
 from qgis.core import QgsRasterLayer, QgsVectorLayer
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 from processing.core.GeoAlgorithm import GeoAlgorithm
 from processing.modeler.WrongModelException import WrongModelException
 from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecutionException
-from processing.modeler.ModelerUtils import ModelerUtils
-from processing.core.parameters import getParameterFromString, ParameterRaster, ParameterVector, ParameterTable, ParameterTableField, ParameterBoolean, ParameterString, ParameterNumber, ParameterExtent, ParameterDataObject, ParameterMultipleInput
+from processing.core.parameters import (getParameterFromString,
+                                        ParameterRaster,
+                                        ParameterVector,
+                                        ParameterTable,
+                                        ParameterTableField,
+                                        ParameterBoolean,
+                                        ParameterString,
+                                        ParameterNumber,
+                                        ParameterExtent,
+                                        ParameterDataObject,
+                                        ParameterMultipleInput)
 from processing.tools import dataobjects
 from processing.gui.Help2Html import getHtmlFromDescriptionsDict
+from processing.core.alglist import algList
 
 pluginPath = os.path.split(os.path.dirname(__file__))[0]
 
@@ -80,17 +91,17 @@ class Algorithm():
         self.name = None
         self.description = ""
 
-        #The type of the algorithm, indicated as a string, which corresponds
-        #to the string used to refer to it in the python console
+        # The type of the algorithm, indicated as a string, which corresponds
+        # to the string used to refer to it in the python console
         self.consoleName = consoleName
 
         self._algInstance = None
 
-        #A dict of Input object. keys are param names
+        # A dict of Input object. keys are param names
         self.params = {}
 
-        #A dict of ModelerOutput with final output descriptions. Keys are output names.
-        #Outputs not final are not stored in this dict
+        # A dict of ModelerOutput with final output descriptions. Keys are output names.
+        # Outputs not final are not stored in this dict
         self.outputs = {}
 
         self.pos = None
@@ -107,7 +118,7 @@ class Algorithm():
     @property
     def algorithm(self):
         if self._algInstance is None:
-            self._algInstance = ModelerUtils.getAlgorithm(self.consoleName).getCopy()
+            self._algInstance = algList.getAlgorithm(self.consoleName).getCopy()
         return self._algInstance
 
     def setName(self, model):
@@ -217,7 +228,7 @@ class ModelerAlgorithm(GeoAlgorithm):
         # Geoalgorithms in this model. A dict of Algorithm objects, with names as keys
         self.algs = {}
 
-        #Input parameters. A dict of Input objects, with names as keys
+        # Input parameters. A dict of Input objects, with names as keys
         self.inputs = {}
         GeoAlgorithm.__init__(self)
 
@@ -516,7 +527,7 @@ class ModelerAlgorithm(GeoAlgorithm):
 
     def checkBeforeOpeningParametersDialog(self):
         for alg in self.algs.values():
-            algInstance = ModelerUtils.getAlgorithm(alg.consoleName)
+            algInstance = algList.getAlgorithm(alg.consoleName)
             if algInstance is None:
                 return "The model you are trying to run contains an algorithm that is not available: <i>%s</i>" % alg.consoleName
 
@@ -533,6 +544,19 @@ class ModelerAlgorithm(GeoAlgorithm):
         except:
             return False, None
 
+    def shortHelp(self):
+        if 'ALG_DESC' in self.helpContent:
+            return self._formatHelp(unicode(self.helpContent['ALG_DESC']))
+        return None
+
+    def getParameterDescriptions(self):
+        descs = {}
+        descriptions = self.helpContent
+        for param in self.parameters:
+            if param.name in descriptions:
+                descs[param.name] = unicode(descriptions[param.name])
+        return descs
+
     def todict(self):
         keys = ["inputs", "group", "name", "algs", "helpContent"]
         return {k: v for k, v in self.__dict__.iteritems() if k in keys}
@@ -544,7 +568,7 @@ class ModelerAlgorithm(GeoAlgorithm):
             try:
                 d = o.todict()
                 return {"class": o.__class__.__module__ + "." + o.__class__.__name__, "values": d}
-            except Exception as e:
+            except Exception:
                 pass
         return json.dumps(self, default=todict, indent=4)
 
@@ -599,7 +623,7 @@ class ModelerAlgorithm(GeoAlgorithm):
         try:
             alg = ModelerAlgorithm.fromJsonFile(filename)
             return alg
-        except WrongModelException as e:
+        except WrongModelException:
             alg = ModelerAlgorithm.fromOldFormatFile(filename)
             return alg
 
@@ -641,7 +665,7 @@ class ModelerAlgorithm(GeoAlgorithm):
                     model.group = line[len('GROUP:'):]
                 elif line.startswith('ALGORITHM:'):
                     algLine = line[len('ALGORITHM:'):]
-                    alg = ModelerUtils.getAlgorithm(algLine)
+                    alg = algList.getAlgorithm(algLine)
                     if alg is not None:
                         modelAlg = Algorithm(alg.commandLineName())
                         modelAlg.description = alg.name
@@ -692,7 +716,7 @@ class ModelerAlgorithm(GeoAlgorithm):
                         modelAlgs.append(modelAlg.name)
                     else:
                         raise WrongModelException(
-                            _tr('Error in algorithm name: %s', ) % algLine)
+                            _tr('Error in algorithm name: %s',) % algLine)
                 line = lines.readline().strip('\n').strip('\r')
             for modelAlg in model.algs.values():
                 for name, value in modelAlg.params.iteritems():

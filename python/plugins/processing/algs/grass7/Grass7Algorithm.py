@@ -30,8 +30,8 @@ import time
 import uuid
 import importlib
 
-from PyQt4.QtCore import QCoreApplication, QUrl
-from PyQt4.QtGui import QIcon
+from qgis.PyQt.QtCore import QCoreApplication, QUrl
+from qgis.PyQt.QtGui import QIcon
 
 from qgis.core import QgsRasterLayer
 from qgis.utils import iface
@@ -41,10 +41,24 @@ from processing.core.ProcessingConfig import ProcessingConfig
 from processing.core.ProcessingLog import ProcessingLog
 from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecutionException
 
-from processing.core.parameters import getParameterFromString, ParameterVector, ParameterMultipleInput, ParameterExtent, ParameterNumber, ParameterSelection, ParameterRaster, ParameterTable, ParameterBoolean, ParameterString
-from processing.core.outputs import getOutputFromString, OutputRaster, OutputVector, OutputFile, OutputHTML
+from processing.core.parameters import (getParameterFromString,
+                                        ParameterVector,
+                                        ParameterMultipleInput,
+                                        ParameterExtent,
+                                        ParameterNumber,
+                                        ParameterSelection,
+                                        ParameterRaster,
+                                        ParameterTable,
+                                        ParameterBoolean,
+                                        ParameterString,
+                                        ParameterPoint)
+from processing.core.outputs import (getOutputFromString,
+                                     OutputRaster,
+                                     OutputVector,
+                                     OutputFile,
+                                     OutputHTML)
 
-from Grass7Utils import Grass7Utils
+from .Grass7Utils import Grass7Utils
 
 from processing.tools import dataobjects, system
 
@@ -369,7 +383,6 @@ class Grass7Algorithm(GeoAlgorithm):
             unicode(self.getParameterValue(self.GRASS_REGION_EXTENT_PARAMETER))
         regionCoords = region.split(',')
         command = 'g.region'
-        command += ' -a'
         command += ' n=' + unicode(regionCoords[3])
         command += ' s=' + unicode(regionCoords[2])
         command += ' e=' + unicode(regionCoords[1])
@@ -417,6 +430,8 @@ class Grass7Algorithm(GeoAlgorithm):
                 command += ' ' + param.name + '=' + unicode(param.options[idx])
             elif isinstance(param, ParameterString):
                 command += ' ' + param.name + '="' + unicode(param.value) + '"'
+            elif isinstance(param, ParameterPoint):
+                command += ' ' + param.name + '=' + unicode(param.value)
             else:
                 command += ' ' + param.name + '="' + unicode(param.value) + '"'
 
@@ -461,20 +476,12 @@ class Grass7Algorithm(GeoAlgorithm):
                     command += ' input='
                     command += 'correctedoutput' + self.uniqueSufix
                     command += ' output="' + filename + '"'
-                elif self.grass7Name == 'r.composite':
-                    command = 'r.out.gdal --overwrite -c createopt="TFW=YES,COMPRESS=LZW"'
-                    command += ' input='
-                    command += 'correctedoutput' + self.uniqueSufix
-                    command += ' output="' + filename + '"'
                 else:
                     command = 'r.out.gdal --overwrite -c createopt="TFW=YES,COMPRESS=LZW"'
                     command += ' input='
 
                 if self.grass7Name == 'r.horizon':
                     command += out.name + self.uniqueSufix + '_0'
-                elif self.grass7Name == 'r.composite':
-                    self.commands.append(command)
-                    self.outputCommands.append(command)
                 elif self.grass7Name == 'r.statistics':
                     self.commands.append(command)
                     self.outputCommands.append(command)
@@ -543,7 +550,7 @@ class Grass7Algorithm(GeoAlgorithm):
         return command
 
     def setSessionProjectionFromProject(self, commands):
-        if not Grass7Utils.projectionSet:
+        if not Grass7Utils.projectionSet and iface:
             proj4 = iface.mapCanvas().mapSettings().destinationCrs().toProj4()
             command = 'g.proj'
             command += ' -c'

@@ -21,7 +21,7 @@ class QgsEllipseSymbolLayerV2 : QgsMarkerSymbolLayerV2
     void toSld( QDomDocument& doc, QDomElement &element, const QgsStringMap& props ) const;
     void writeSldMarker( QDomDocument& doc, QDomElement &element, const QgsStringMap& props ) const;
 
-    bool writeDxf( QgsDxfExport& e, double mmMapUnitScaleFactor, const QString& layerName, QgsSymbolV2RenderContext* context, const QgsFeature* f, QPointF shift = QPointF( 0.0, 0.0 ) ) const;
+    bool writeDxf( QgsDxfExport &e, double mmMapUnitScaleFactor, const QString &layerName, QgsSymbolV2RenderContext &context, QPointF shift = QPointF( 0.0, 0.0 ) ) const;
 
     void setSymbolName( const QString& name );
     QString symbolName() const;
@@ -34,6 +34,13 @@ class QgsEllipseSymbolLayerV2 : QgsMarkerSymbolLayerV2
 
     Qt::PenStyle outlineStyle() const;
     void setOutlineStyle( Qt::PenStyle outlineStyle );
+
+    /** Get outline join style.
+     * @note added in 2.16 */
+    Qt::PenJoinStyle penJoinStyle() const;
+    /** Set outline join style.
+     * @note added in 2.16 */
+    void setPenJoinStyle( Qt::PenJoinStyle style );
 
     void setOutlineWidth( double w );
     double outlineWidth() const;

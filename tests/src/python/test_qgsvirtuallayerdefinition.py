@@ -12,18 +12,17 @@ __copyright__ = 'Copyright 2015, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
 
-from qgis.core import (QGis,
-                       QgsField,
+from qgis.core import (QgsField,
                        QgsWKBTypes,
                        QgsFields,
                        QgsVirtualLayerDefinition
                        )
 
-from qgis.testing import (TestCase, unittest)
-
-from PyQt4.QtCore import QVariant, QUrl
+from qgis.testing import unittest
+from qgis.PyQt.QtCore import QVariant, QUrl
+import os
 
 
 class TestQgsVirtualLayerDefinition(unittest.TestCase):
@@ -35,9 +34,9 @@ class TestQgsVirtualLayerDefinition(unittest.TestCase):
         self.assertEqual(d.toString(), "file:///file")
         self.assertEqual(QgsVirtualLayerDefinition.fromUrl(d.toUrl()).filePath(), "/file")
         self.assertEqual(QgsVirtualLayerDefinition.fromUrl(QUrl.fromEncoded(d.toString())).filePath(), "/file")
-        d.setFilePath("C:\\file")
-        self.assertEqual(d.toString(), "file:///C:%5Cfile")
-        self.assertEqual(QgsVirtualLayerDefinition.fromUrl(d.toUrl()).filePath(), "C:\\file")
+        d.setFilePath(os.path.join('C:/', 'file'))
+        self.assertEqual(d.toString(), "file:///C:/file")
+        self.assertEqual(QgsVirtualLayerDefinition.fromUrl(d.toUrl()).filePath(), os.path.join('C:/', 'file'))
         d.setQuery("SELECT * FROM mytable")
         self.assertEqual(QgsVirtualLayerDefinition.fromUrl(d.toUrl()).query(), "SELECT * FROM mytable")
         self.assertEqual(QgsVirtualLayerDefinition.fromUrl(QUrl.fromEncoded(d.toString())).query(), "SELECT * FROM mytable")

@@ -50,6 +50,8 @@ class QgsFeatureRendererV2
     sipType = sipType_QgsPointDisplacementRenderer;
   else if (sipCpp->type() == "25dRenderer")
     sipType = sipType_Qgs25DRenderer;
+  else if (sipCpp->type() == "nullSymbol")
+    sipType = sipType_QgsNullSymbolRenderer;
   else
     sipType = 0;
 %End
@@ -145,6 +147,11 @@ class QgsFeatureRendererV2
      * TODO QGIS3: Change QList to QSet
      */
     virtual QList<QString> usedAttributes() = 0;
+
+    /**
+     * Returns true if this renderer requires the geometry to apply the filter.
+     */
+    virtual bool filterNeedsGeometry() const;
 
     virtual ~QgsFeatureRendererV2();
 
@@ -384,6 +391,21 @@ class QgsFeatureRendererV2
      */
     void setOrderByEnabled( bool enabled );
 
+    /** Sets an embedded renderer (subrenderer) for this feature renderer. The base class implementation
+     * does nothing with subrenderers, but individual derived classes can use these to modify their behaviour.
+     * @param subRenderer the embedded renderer. Ownership will be transferred.
+     * @see embeddedRenderer()
+     * @note added in QGIS 2.16
+     */
+    virtual void setEmbeddedRenderer( QgsFeatureRendererV2* subRenderer /Transfer/ );
+
+    /** Returns the current embedded renderer (subrenderer) for this feature renderer. The base class
+     * implementation does not use subrenderers and will always return null.
+     * @see setEmbeddedRenderer()
+     * @note added in QGIS 2.16
+     */
+    virtual const QgsFeatureRendererV2* embeddedRenderer() const;
+
   protected:
     QgsFeatureRendererV2( const QString& type );
 
@@ -401,9 +423,23 @@ class QgsFeatureRendererV2
     //! render editing vertex marker for a polygon
     void renderVertexMarkerPolygon( QPolygonF& pts, QList<QPolygonF>* rings, QgsRenderContext& context );
 
-    static QgsConstWkbPtr _getPoint( QPointF& pt, QgsRenderContext& context, QgsConstWkbPtr wkb );
-    static QgsConstWkbPtr _getLineString( QPolygonF& pts, QgsRenderContext& context, QgsConstWkbPtr wkb, bool clipToExtent = true );
-    static QgsConstWkbPtr _getPolygon( QPolygonF& pts, QList<QPolygonF>& holes, QgsRenderContext& context, QgsConstWkbPtr wkb, bool clipToExtent = true );
+    /**
+     * Creates a point in screen coordinates from a wkb string in map
+     * coordinates
+     */
+    static QgsConstWkbPtr _getPoint( QPointF& pt, QgsRenderContext& context, QgsConstWkbPtr& wkb );
+
+    /**
+     * Creates a line string in screen coordinates from a wkb string in map
+     * coordinates
+     */
+    static QgsConstWkbPtr _getLineString( QPolygonF& pts, QgsRenderContext& context, QgsConstWkbPtr& wkb, bool clipToExtent = true );
+
+    /**
+     * Creates a polygon in screen coordinates from a wkb string in map
+     * coordinates
+     */
+    static QgsConstWkbPtr _getPolygon( QPolygonF& pts, QList<QPolygonF>& holes, QgsRenderContext& context, QgsConstWkbPtr& wkb, bool clipToExtent = true );
 
     void setScaleMethodToSymbol( QgsSymbolV2* symbol, int scaleMethod );
 

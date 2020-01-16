@@ -23,11 +23,12 @@ __copyright__ = '(C) 2013, Nyall Dawson, Massimo Endrighi'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
 
-from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QPainter, QColor
+from qgis.PyQt.QtCore import QSize
+from qgis.PyQt.QtGui import QPainter, QColor
 
 from qgis.core import (QgsVectorLayer,
                        QgsVectorSimplifyMethod,
@@ -38,15 +39,12 @@ from qgis.core import (QgsVectorLayer,
                        QgsRectangle
                        )
 
-from qgis.testing import (start_app,
-                          unittest
-                          )
+from qgis.testing import start_app, unittest
 
 from qgis.testing.mocked import get_iface
 
 from utilities import unitTestDataPath
-# Convenience instances in case you may need them
-start_app()
+
 TEST_DATA_DIR = unitTestDataPath()
 
 

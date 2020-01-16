@@ -30,7 +30,8 @@ class QgsExpressionContext;
 
 class QgsVectorLayerFeatureIterator;
 
-/** Partial snapshot of vector layer's state (only the members necessary for access to features)
+/** \ingroup core
+ * Partial snapshot of vector layer's state (only the members necessary for access to features)
  * @note not available in Python bindings
 */
 class QgsVectorLayerFeatureSource : public QgsAbstractFeatureSource
@@ -55,8 +56,6 @@ class QgsVectorLayerFeatureSource : public QgsAbstractFeatureSource
 
     bool mHasEditBuffer;
 
-    bool mCanBeSimplified;
-
     // A deep-copy is only performed, if the original maps change
     // see here https://github.com/qgis/Quantum-GIS/pull/673
     // for explanation
@@ -70,7 +69,8 @@ class QgsVectorLayerFeatureSource : public QgsAbstractFeatureSource
     long mCrsId;
 };
 
-
+/** \ingroup core
+ */
 class CORE_EXPORT QgsVectorLayerFeatureIterator : public QgsAbstractFeatureIteratorFromSource<QgsVectorLayerFeatureSource>
 {
   public:
@@ -84,23 +84,34 @@ class CORE_EXPORT QgsVectorLayerFeatureIterator : public QgsAbstractFeatureItera
     //! end of iterating: free the resources / lock
     virtual bool close() override;
 
+    virtual void setInterruptionChecker( QgsInterruptionChecker* interruptionChecker ) override;
+
   protected:
     //! fetch next feature, return true on success
     virtual bool fetchFeature( QgsFeature& feature ) override;
 
     //! Overrides default method as we only need to filter features in the edit buffer
     //! while for others filtering is left to the provider implementation.
-    inline virtual bool nextFeatureFilterExpression( QgsFeature &f ) override { return fetchFeature( f ); }
+    virtual bool nextFeatureFilterExpression( QgsFeature &f ) override { return fetchFeature( f ); }
 
     //! Setup the simplification of geometries to fetch using the specified simplify method
     virtual bool prepareSimplification( const QgsSimplifyMethod& simplifyMethod ) override;
 
     //! @note not available in Python bindings
     void rewindEditBuffer();
+
     //! @note not available in Python bindings
-    void prepareJoins();
+    void prepareJoin( int fieldIdx );
+
     //! @note not available in Python bindings
-    void prepareExpressions();
+    void prepareExpression( int fieldIdx );
+
+    //! @note not available in Python bindings
+    void prepareFields();
+
+    //! @note not available in Python bindings
+    void prepareField( int fieldIdx );
+
     //! @note not available in Python bindings
     bool fetchNextAddedFeature( QgsFeature& f );
     //! @note not available in Python bindings
@@ -126,6 +137,14 @@ class CORE_EXPORT QgsVectorLayerFeatureIterator : public QgsAbstractFeatureItera
      * @note not available in Python bindings
      */
     void addVirtualAttributes( QgsFeature &f );
+
+    /** Adds an expression based attribute to a feature
+     * @param f feature
+     * @param attrIndex attribute index
+     * @note added in QGIS 2.14
+     * @note not available in Python bindings
+     */
+    void addExpressionAttribute( QgsFeature& f, int attrIndex );
 
     /** Update feature with uncommited attribute updates.
      * @note not available in Python bindings
@@ -174,10 +193,12 @@ class CORE_EXPORT QgsVectorLayerFeatureIterator : public QgsAbstractFeatureItera
     bool mHasVirtualAttributes;
 
   private:
-    //! optional object to locally simplify edited (changed or added) geometries fetched by this feature iterator
-    QgsAbstractGeometrySimplifier* mEditGeometrySimplifier;
-
     QScopedPointer<QgsExpressionContext> mExpressionContext;
+
+    QgsInterruptionChecker* mInterruptionChecker;
+
+    QList< int > mPreparedFields;
+    QList< int > mFieldsToPrepare;
 
     /**
      * Will always return true. We assume that ordering has been done on provider level already.

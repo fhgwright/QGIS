@@ -25,6 +25,8 @@ __copyright__ = '(C) 2012, Victor Olaya'
 
 __revision__ = '$Format:%H$'
 
+import os
+
 from qgis.core import QgsFeature
 
 from processing.core.GeoAlgorithm import GeoAlgorithm
@@ -33,6 +35,8 @@ from processing.core.parameters import ParameterTable
 from processing.core.parameters import ParameterTableField
 from processing.core.outputs import OutputVector
 from processing.tools import dataobjects, vector
+
+pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
 
 
 class JoinAttributes(GeoAlgorithm):

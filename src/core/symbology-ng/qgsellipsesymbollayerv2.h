@@ -15,12 +15,15 @@
 #ifndef QGSELLIPSESYMBOLLAYERV2_H
 #define QGSELLIPSESYMBOLLAYERV2_H
 
+#define DEFAULT_ELLIPSE_JOINSTYLE    Qt::MiterJoin
+
 #include "qgsmarkersymbollayerv2.h"
 #include <QPainterPath>
 
 class QgsExpression;
 
-/** A symbol layer for rendering objects with major and minor axis (e.g. ellipse, rectangle )*/
+/** \ingroup core
+ * A symbol layer for rendering objects with major and minor axis (e.g. ellipse, rectangle )*/
 class CORE_EXPORT QgsEllipseSymbolLayerV2: public QgsMarkerSymbolLayerV2
 {
   public:
@@ -40,7 +43,7 @@ class CORE_EXPORT QgsEllipseSymbolLayerV2: public QgsMarkerSymbolLayerV2
     void toSld( QDomDocument& doc, QDomElement &element, const QgsStringMap& props ) const override;
     void writeSldMarker( QDomDocument& doc, QDomElement &element, const QgsStringMap& props ) const override;
 
-    bool writeDxf( QgsDxfExport& e, double mmMapUnitScaleFactor, const QString& layerName, QgsSymbolV2RenderContext* context, const QgsFeature* f, QPointF shift = QPointF( 0.0, 0.0 ) ) const override;
+    bool writeDxf( QgsDxfExport &e, double mmMapUnitScaleFactor, const QString &layerName, QgsSymbolV2RenderContext &context, QPointF shift = QPointF( 0.0, 0.0 ) ) const override;
 
     void setSymbolName( const QString& name ) { mSymbolName = name; }
     QString symbolName() const { return mSymbolName; }
@@ -53,6 +56,13 @@ class CORE_EXPORT QgsEllipseSymbolLayerV2: public QgsMarkerSymbolLayerV2
 
     Qt::PenStyle outlineStyle() const { return mOutlineStyle; }
     void setOutlineStyle( Qt::PenStyle outlineStyle ) { mOutlineStyle = outlineStyle; }
+
+    /** Get outline join style.
+     * @note added in 2.16 */
+    Qt::PenJoinStyle penJoinStyle() const { return mPenJoinStyle; }
+    /** Set outline join style.
+     * @note added in 2.16 */
+    void setPenJoinStyle( Qt::PenJoinStyle style ) { mPenJoinStyle = style; }
 
     void setOutlineWidth( double w ) { mOutlineWidth = w; }
     double outlineWidth() const { return mOutlineWidth; }
@@ -99,6 +109,7 @@ class CORE_EXPORT QgsEllipseSymbolLayerV2: public QgsMarkerSymbolLayerV2
     QgsMapUnitScale mSymbolHeightMapUnitScale;
     QColor mOutlineColor;
     Qt::PenStyle mOutlineStyle;
+    Qt::PenJoinStyle mPenJoinStyle;
     double mOutlineWidth;
     QgsSymbolV2::OutputUnit mOutlineWidthUnit;
     QgsMapUnitScale mOutlineWidthMapUnitScale;

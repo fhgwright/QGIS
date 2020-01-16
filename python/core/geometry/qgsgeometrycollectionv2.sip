@@ -46,11 +46,8 @@ class QgsGeometryCollectionV2: public QgsAbstractGeometryV2
      */
     virtual bool removeGeometry( int nr );
 
-    /** Transforms the geometry using a coordinate transform
-     * @param ct coordinate transform
-     * @param d transformation direction
-     */
-    virtual void transform( const QgsCoordinateTransform& ct, QgsCoordinateTransform::TransformDirection d = QgsCoordinateTransform::ForwardTransform );
+    void transform( const QgsCoordinateTransform& ct, QgsCoordinateTransform::TransformDirection d = QgsCoordinateTransform::ForwardTransform,
+                    bool transformZ = false );
     void transform( const QTransform& t );
 
     //virtual void clip( const QgsRectangle& rect );
@@ -83,8 +80,10 @@ class QgsGeometryCollectionV2: public QgsAbstractGeometryV2
 
     bool hasCurvedSegments() const;
 
-    /** Returns a geometry without curves. Caller takes ownership*/
-    QgsAbstractGeometryV2* segmentize() const;
+    /** Returns a geometry without curves. Caller takes ownership
+    * @param tolerance segmentation tolerance
+    * @param toleranceType maximum segmentation angle or maximum difference between approximation and curve*/
+    QgsAbstractGeometryV2* segmentize( double tolerance = M_PI_2 / 90, SegmentationToleranceType toleranceType = MaximumAngle ) const;
 
     /** Returns approximate rotation angle for a vertex. Usually average angle between adjacent segments.
      * @param vertex the vertex id

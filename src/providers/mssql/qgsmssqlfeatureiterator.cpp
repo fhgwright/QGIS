@@ -44,8 +44,7 @@ QgsMssqlFeatureIterator::QgsMssqlFeatureIterator( QgsMssqlFeatureSource* source,
   if ( !mDatabase.open() )
   {
     QgsDebugMsg( "Failed to open database" );
-    QString msg = mDatabase.lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( mDatabase.lastError().text() );
     return;
   }
 
@@ -128,7 +127,7 @@ void QgsMssqlFeatureIterator::BuildStatement( const QgsFeatureRequest& request )
     <<  qgsDoubleToString( request.filterRect().xMinimum() ) << ' ' <<  qgsDoubleToString( request.filterRect().yMaximum() ) << ", "
     <<  qgsDoubleToString( request.filterRect().xMinimum() ) << ' ' <<  qgsDoubleToString( request.filterRect().yMinimum() );
 
-    mStatement += QString( " where [%1].STIntersects([%2]::STGeomFromText('POLYGON((%3))',%4)) = 1" ).arg(
+    mStatement += QString( " where [%1].STIsValid() = 1 AND [%1].STIntersects([%2]::STGeomFromText('POLYGON((%3))',%4)) = 1" ).arg(
                     mSource->mGeometryColName, mSource->mGeometryColType, r, QString::number( mSource->mSRId ) );
     filterAdded = true;
   }
@@ -178,6 +177,7 @@ void QgsMssqlFeatureIterator::BuildStatement( const QgsFeatureRequest& request )
 
   //NOTE - must be last added!
   mExpressionCompiled = false;
+  mCompileStatus = NoCompilation;
   if ( request.filterType() == QgsFeatureRequest::FilterExpression )
   {
     if ( QSettings().value( "/qgis/compileExpressions", true ).toBool() )
@@ -191,10 +191,10 @@ void QgsMssqlFeatureIterator::BuildStatement( const QgsFeatureRequest& request )
           mStatement += " WHERE (" + compiler.result() + ')';
         else
           mStatement += " AND (" + compiler.result() + ')';
-        filterAdded = true;
 
         //if only partial success when compiling expression, we need to double-check results using QGIS' expressions
         mExpressionCompiled = ( result == QgsSqlExpressionCompiler::Complete );
+        mCompileStatus = ( mExpressionCompiled ? Compiled : PartiallyCompiled );
         limitAtProvider = mExpressionCompiled;
       }
       else
@@ -372,7 +372,10 @@ bool QgsMssqlFeatureIterator::rewind()
     //try with fallback statement
     result = mQuery->exec( mOrderByClause.isEmpty() ? mFallbackStatement : mFallbackStatement + mOrderByClause );
     if ( result )
+    {
       mExpressionCompiled = false;
+      mCompileStatus = NoCompilation;
+    }
   }
 
   if ( !result && !mOrderByClause.isEmpty() )
@@ -391,13 +394,13 @@ bool QgsMssqlFeatureIterator::rewind()
     {
       mExpressionCompiled = false;
       mOrderByCompiled = false;
+      mCompileStatus = NoCompilation;
     }
   }
 
   if ( !result )
   {
-    QString msg = mQuery->lastError().text();
-    QgsDebugMsg( msg );
+    QgsDebugMsg( mQuery->lastError().text() );
     delete mQuery;
     mQuery = nullptr;
     if ( mDatabase.isOpen() )

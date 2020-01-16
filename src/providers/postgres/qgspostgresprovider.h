@@ -175,7 +175,6 @@ class QgsPostgresProvider : public QgsVectorDataProvider
      */
     bool isValid() override;
 
-
     /**
      * It returns true. Saving style to db is supported by this provider
      */
@@ -197,15 +196,9 @@ class QgsPostgresProvider : public QgsVectorDataProvider
       @return true in case of success and false in case of failure*/
     bool deleteFeatures( const QgsFeatureIds & id ) override;
 
-    /** Adds new attributes
-      @param name map with attribute name as key and type as value
-      @return true in case of success and false in case of failure*/
     bool addAttributes( const QList<QgsField> &attributes ) override;
-
-    /** Deletes existing attributes
-      @param names of the attributes to delete
-      @return true in case of success and false in case of failure*/
     bool deleteAttributes( const QgsAttributeIds &name ) override;
+    virtual bool renameAttributes( const QgsFieldNameMap& renamedAttributes ) override;
 
     /** Changes attribute values of existing features
       @param attr_map a map containing the new attributes. The integer is the feature id,
@@ -359,6 +352,17 @@ class QgsPostgresProvider : public QgsVectorDataProvider
      */
     bool parseDomainCheckConstraint( QStringList& enumValues, const QString& attributeName ) const;
 
+    /** Return the type of primary key for a PK field
+     *
+     * @param fld the field to determine PK type of
+     * @return the PrimaryKeyType
+     *
+     * @note that this only makes sense for single-field primary keys,
+     *       whereas multi-field keys always need the pktFidMap
+     *       primary key type.
+     */
+    QgsPostgresPrimaryKeyType pkType( const QgsField& fld ) const;
+
     QgsFields mAttributeFields;
     QString mDataComment;
 
@@ -509,6 +513,21 @@ class QgsPostgresUtils
                                 QSharedPointer<QgsPostgresSharedData> sharedData );
 
     static QString andWhereClauses( const QString& c1, const QString& c2 );
+
+    static const qint64 int32pk_offset = 4294967296;
+
+    // We shift negative 32bit integers to above the max 32bit
+    // positive integer to support the whole range of int32 values
+    // See http://hub.qgis.org/issues/14262
+    static qint64 int32pk_to_fid( qint32 x )
+    {
+      return x >= 0 ? x : x + int32pk_offset;
+    }
+
+    static qint32 fid_to_int32pk( qint64 x )
+    {
+      return x <= (( int32pk_offset ) / 2.0 ) ? x : -( int32pk_offset - x );
+    }
 };
 
 /** Data shared between provider class and its feature sources. Ideally there should

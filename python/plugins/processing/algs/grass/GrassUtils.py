@@ -32,7 +32,7 @@ import subprocess
 import os
 import locale
 from qgis.core import QgsApplication
-from PyQt4.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication
 from processing.core.ProcessingConfig import ProcessingConfig
 from processing.core.ProcessingLog import ProcessingLog
 from processing.tools.system import userFolder, isWindows, isMac, tempFolder, mkdir
@@ -91,11 +91,14 @@ class GrassUtils:
             folder = None
         if folder is None:
             if isWindows():
-                testfolder = os.path.dirname(QgsApplication.prefixPath())
+                if "OSGEO4W_ROOT" in os.environ:
+                    testfolder = os.path.join(unicode(os.environ['OSGEO4W_ROOT']), "apps")
+                else:
+                    testfolder = unicode(QgsApplication.prefixPath())
                 testfolder = os.path.join(testfolder, 'grass')
                 if os.path.isdir(testfolder):
                     for subfolder in os.listdir(testfolder):
-                        if subfolder.startswith('grass'):
+                        if subfolder.startswith('grass-6'):
                             folder = os.path.join(testfolder, subfolder)
                             break
             else:
@@ -103,6 +106,8 @@ class GrassUtils:
                 if not os.path.isdir(folder):
                     folder = '/Applications/GRASS-6.4.app/Contents/MacOS'
 
+        if folder:
+            ProcessingConfig.setSettingValue(GrassUtils.GRASS_FOLDER, folder)
         return folder or ''
 
     @staticmethod

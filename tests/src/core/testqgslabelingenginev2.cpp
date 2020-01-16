@@ -127,7 +127,7 @@ void TestQgsLabelingEngineV2::testBasic()
 
   QgsLabelingEngineV2 engine;
   engine.setMapSettings( mapSettings );
-  engine.addProvider( new QgsVectorLayerLabelProvider( vl ) );
+  engine.addProvider( new QgsVectorLayerLabelProvider( vl, QString() ) );
   //engine.setFlags( QgsLabelingEngineV2::RenderOutlineLabels | QgsLabelingEngineV2::DrawLabelRectOnly );
   engine.run( context );
 
@@ -259,7 +259,7 @@ void TestQgsLabelingEngineV2::testRuleBased()
 
   delete rl2;
 
-  /*
+#if 0
   QPainter p( &img );
   QgsRenderContext context = QgsRenderContext::fromMapSettings( mapSettings );
   context.setPainter( &p );
@@ -267,7 +267,8 @@ void TestQgsLabelingEngineV2::testRuleBased()
   QgsLabelingEngineV2 engine;
   engine.setMapSettings( mapSettings );
   engine.addProvider( new QgsRuleBasedLabelProvider( , vl ) );
-  engine.run( context );*/
+  engine.run( context );
+#endif
 }
 
 void TestQgsLabelingEngineV2::zOrder()
@@ -301,7 +302,7 @@ void TestQgsLabelingEngineV2::zOrder()
   pls1.setDataDefinedProperty( QgsPalLayerSettings::Color, true, true, "case when \"Class\"='Jet' then '#ff5500' when \"Class\"='B52' then '#00ffff' else '#ff00ff' end", QString() );
   pls1.setDataDefinedProperty( QgsPalLayerSettings::Size, true, true, "case when \"Class\"='Jet' then 100 when \"Class\"='B52' then 30 else 50 end", QString() );
 
-  QgsVectorLayerLabelProvider* provider1 = new QgsVectorLayerLabelProvider( vl, true, &pls1 );
+  QgsVectorLayerLabelProvider* provider1 = new QgsVectorLayerLabelProvider( vl, QString(), true, &pls1 );
   QgsLabelingEngineV2 engine;
   engine.setMapSettings( mapSettings );
   engine.addProvider( provider1 );
@@ -317,7 +318,7 @@ void TestQgsLabelingEngineV2::zOrder()
 
   //test data defined z-index
   pls1.setDataDefinedProperty( QgsPalLayerSettings::ZIndex, true, true, "case when \"Class\"='Jet' then 3 when \"Class\"='B52' then 1 else 2 end", QString() );
-  provider1 = new QgsVectorLayerLabelProvider( vl, true, &pls1 );
+  provider1 = new QgsVectorLayerLabelProvider( vl, QString(), true, &pls1 );
   engine.addProvider( provider1 );
   p.begin( &img );
   engine.run( context );
@@ -331,7 +332,7 @@ void TestQgsLabelingEngineV2::zOrder()
   pls1.removeAllDataDefinedProperties();
   pls1.textColor = QColor( 255, 50, 100 );
   pls1.textFont.setPointSizeF( 30 );
-  provider1 = new QgsVectorLayerLabelProvider( vl, true, &pls1 );
+  provider1 = new QgsVectorLayerLabelProvider( vl, QString(), true, &pls1 );
   engine.addProvider( provider1 );
 
   //add a second layer
@@ -342,7 +343,7 @@ void TestQgsLabelingEngineV2::zOrder()
 
   QgsPalLayerSettings pls2( pls1 );
   pls2.textColor = QColor( 0, 0, 0 );
-  QgsVectorLayerLabelProvider* provider2 = new QgsVectorLayerLabelProvider( vl2, true, &pls2 );
+  QgsVectorLayerLabelProvider* provider2 = new QgsVectorLayerLabelProvider( vl2, QString(), true, &pls2 );
   engine.addProvider( provider2 );
 
   mapSettings.setLayers( QStringList() << vl->id() << vl2->id() );
@@ -370,7 +371,7 @@ void TestQgsLabelingEngineV2::zOrder()
   //try mixing layer order and z-index
   engine.removeProvider( provider1 );
   pls1.setDataDefinedProperty( QgsPalLayerSettings::ZIndex, true, true, "if(\"Class\"='Jet',3,0)", QString() );
-  provider1 = new QgsVectorLayerLabelProvider( vl, true, &pls1 );
+  provider1 = new QgsVectorLayerLabelProvider( vl, QString(), true, &pls1 );
   engine.addProvider( provider1 );
 
   p.begin( &img );

@@ -46,11 +46,13 @@ QgsOracleNewConnection::QgsOracleNewConnection( QWidget *parent, const QString& 
     }
     txtPort->setText( port );
     txtOptions->setText( settings.value( key + "/dboptions" ).toString() );
+    txtWorkspace->setText( settings.value( key + "/dbworkspace" ).toString() );
     cb_userTablesOnly->setChecked( settings.value( key + "/userTablesOnly", false ).toBool() );
     cb_geometryColumnsOnly->setChecked( settings.value( key + "/geometryColumnsOnly", true ).toBool() );
     cb_allowGeometrylessTables->setChecked( settings.value( key + "/allowGeometrylessTables", false ).toBool() );
     cb_useEstimatedMetadata->setChecked( settings.value( key + "/estimatedMetadata", false ).toBool() );
     cb_onlyExistingTypes->setChecked( settings.value( key + "/onlyExistingTypes", true ).toBool() );
+    cb_includeGeoAttributes->setChecked( settings.value( key + "/includeGeoAttributes", false ).toBool() );
 
     if ( settings.value( key + "/saveUsername" ).toString() == "true" )
     {
@@ -125,9 +127,11 @@ void QgsOracleNewConnection::accept()
   settings.setValue( baseKey + "/allowGeometrylessTables", cb_allowGeometrylessTables->isChecked() );
   settings.setValue( baseKey + "/estimatedMetadata", cb_useEstimatedMetadata->isChecked() ? "true" : "false" );
   settings.setValue( baseKey + "/onlyExistingTypes", cb_onlyExistingTypes->isChecked() ? "true" : "false" );
+  settings.setValue( baseKey + "/includeGeoAttributes", cb_includeGeoAttributes->isChecked() ? "true" : "false" );
   settings.setValue( baseKey + "/saveUsername", chkStoreUsername->isChecked() ? "true" : "false" );
   settings.setValue( baseKey + "/savePassword", chkStorePassword->isChecked() ? "true" : "false" );
   settings.setValue( baseKey + "/dboptions", txtOptions->text() );
+  settings.setValue( baseKey + "/dbworkspace", txtWorkspace->text() );
 
   QDialog::accept();
 }
@@ -138,8 +142,10 @@ void QgsOracleNewConnection::on_btnConnect_clicked()
   uri.setConnection( txtHost->text(), txtPort->text(), txtDatabase->text(), txtUsername->text(), txtPassword->text() );
   if ( !txtOptions->text().isEmpty() )
     uri.setParam( "dboptions", txtOptions->text() );
+  if ( !txtWorkspace->text().isEmpty() )
+    uri.setParam( "dbworkspace", txtWorkspace->text() );
 
-  QgsOracleConn *conn = QgsOracleConnPool::instance()->acquireConnection( uri.connectionInfo() );
+  QgsOracleConn *conn = QgsOracleConnPool::instance()->acquireConnection( QgsOracleConn::toPoolName( uri ) );
 
   if ( conn )
   {

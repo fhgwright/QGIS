@@ -291,7 +291,6 @@ void QgsComposerLegend::setRasterBorderWidth( double width ) { mSettings.setRast
 
 void QgsComposerLegend::synchronizeWithModel()
 {
-  QgsDebugMsg( "Entered" );
   adjustBoxSize();
   updateItem();
 }
@@ -306,7 +305,7 @@ void QgsComposerLegend::updateLegend()
 
 void QgsComposerLegend::updateItem()
 {
-  updateFilterByMap();
+  updateFilterByMap( false );
   QgsComposerItem::updateItem();
 }
 
@@ -605,7 +604,7 @@ void QgsComposerLegend::mapLayerStyleOverridesChanged()
   {
     // legend is being filtered by map, so we need to re run the hit test too
     // as the style overrides may also have affected the visible symbols
-    updateFilterByMap();
+    updateFilterByMap( false );
   }
   else
   {
@@ -619,7 +618,7 @@ void QgsComposerLegend::mapLayerStyleOverridesChanged()
   updateItem();
 }
 
-void QgsComposerLegend::updateFilterByMap()
+void QgsComposerLegend::updateFilterByMap( bool redraw )
 {
   if ( isRemoved() )
     return;
@@ -627,6 +626,9 @@ void QgsComposerLegend::updateFilterByMap()
   // the actual update will take place before the redraw.
   // This is to avoid multiple calls to the filter
   mFilterAskedForUpdate = true;
+
+  if ( redraw )
+    QgsComposerItem::updateItem();
 }
 
 void QgsComposerLegend::doUpdateFilterByMap()

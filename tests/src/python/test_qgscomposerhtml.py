@@ -12,11 +12,12 @@ __copyright__ = 'Copyright 2012, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
 
-from PyQt4.QtCore import QUrl, qDebug
-from PyQt4.QtXml import QDomDocument
+from qgis.PyQt.QtCore import QUrl, qDebug
+from qgis.PyQt.QtXml import QDomDocument
 from qgis.core import (QgsComposition,
                        QgsComposerHtml,
                        QgsComposerFrame,
@@ -26,13 +27,8 @@ from qgis.core import (QgsComposition,
 
 from qgscompositionchecker import QgsCompositionChecker
 
-from qgis.testing import (
-    start_app,
-    unittest
-)
-
+from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
-
 from utilities import unitTestDataPath
 
 start_app()
@@ -51,7 +47,7 @@ class TestQgsComposerHtml(unittest.TestCase):
 
     def tearDown(self):
         """Run after each test."""
-        print "Tear down"
+        print("Tear down")
 
     def htmlUrl(self):
         """Helper to get the url of the html doc."""
@@ -90,14 +86,14 @@ class TestQgsComposerHtml(unittest.TestCase):
         composerHtml.setUrl(self.htmlUrl())
         composerHtml.frame(0).setFrameEnabled(True)
 
-        print "Checking page 1"
+        print("Checking page 1")
         myPage = 0
         checker1 = QgsCompositionChecker('composerhtml_multiframe1', self.mComposition)
         checker1.setControlPathPrefix("composer_html")
         myTestResult, myMessage = checker1.testComposition(myPage)
         assert myTestResult, myMessage
 
-        print "Checking page 2"
+        print("Checking page 2")
         myPage = 1
         checker2 = QgsCompositionChecker('composerhtml_multiframe2', self.mComposition)
         checker2.setControlPathPrefix("composer_html")
@@ -121,14 +117,14 @@ class TestQgsComposerHtml(unittest.TestCase):
         composerHtml.setUrl(self.htmlUrl())
         composerHtml.frame(0).setFrameEnabled(True)
 
-        print "Checking page 1"
+        print("Checking page 1")
         myPage = 0
         checker1 = QgsCompositionChecker('composerhtml_smartbreaks1', self.mComposition)
         checker1.setControlPathPrefix("composer_html")
         myTestResult, myMessage = checker1.testComposition(myPage, 200)
         assert myTestResult, myMessage
 
-        print "Checking page 2"
+        print("Checking page 2")
         myPage = 1
         checker2 = QgsCompositionChecker('composerhtml_smartbreaks2', self.mComposition)
         checker2.setControlPathPrefix("composer_html")
@@ -146,16 +142,15 @@ class TestQgsComposerHtml(unittest.TestCase):
         myComposition = QgsComposition(self.iface.mapCanvas().mapRenderer())
         mySubstitutionMap = {'replace-me': 'Foo bar'}
         myFile = os.path.join(TEST_DATA_DIR, 'template.qpt')
-        myTemplateFile = file(myFile, 'rt')
-        myTemplateContent = myTemplateFile.read()
-        myTemplateFile.close()
+        with open(myFile, 'rt') as myTemplateFile:
+            myTemplateContent = myTemplateFile.read()
         myDocument = QDomDocument()
         myDocument.setContent(myTemplateContent)
         myComposition.loadFromTemplate(myDocument, mySubstitutionMap)
         myItem = myComposition.getComposerItemById('html-test')
         myComposerHtml = myComposition.getComposerHtmlByItem(myItem)
         myMessage = 'Could not retrieve the composer html given an item'
-        assert myComposerHtml is not None, myMessage
+        self.assertIsNotNone(myComposerHtml, myMessage)
 
 if __name__ == '__main__':
     unittest.main()

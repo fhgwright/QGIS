@@ -25,9 +25,11 @@
 
 import logging
 
-from PyQt4.QtCore import QCoreApplication
-from PyQt4.QtGui import QAction, QIcon
+from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtGui import QIcon
 
+from qgis.core import QgsApplication
 from MetaSearch.dialogs.maindialog import MetaSearchDialog
 from MetaSearch.util import get_help_url, open_url, StaticContext
 
@@ -67,7 +69,7 @@ class MetaSearchPlugin(object):
         self.iface.addPluginToWebMenu(self.web_menu, self.action_run)
 
         # help
-        help_icon = QIcon('%s/%s' % (self.context.ppath, 'images/help.png'))
+        help_icon = QgsApplication.getThemeIcon('/mActionHelpContents.svg')
         self.action_help = QAction(help_icon, 'Help', self.iface.mainWindow())
         self.action_help.setWhatsThis(QCoreApplication.translate('MetaSearch',
                                                                  'MetaSearch plugin help'))

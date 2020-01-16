@@ -28,8 +28,9 @@ __revision__ = ':%H$'
 import os
 import sys
 import difflib
+import functools
 
-from PyQt4.QtCore import QVariant
+from qgis.PyQt.QtCore import QVariant
 from qgis.core import QgsApplication, QgsFeatureRequest, QgsVectorLayer
 from nose2.compat import unittest
 
@@ -70,7 +71,7 @@ class TestCase(_TestCase):
         try:
             precision = compare['geometry']['precision']
         except KeyError:
-            precision = 17
+            precision = 14
 
         for feats in zip(layer_expected.getFeatures(request), layer_result.getFeatures(request)):
             if feats[0].geometry() is not None:
@@ -154,11 +155,75 @@ class TestCase(_TestCase):
                 self.assertEqual(0, len(diff), ''.join(diff))
 
 
+class _UnexpectedSuccess(Exception):
+
+    """
+    The test was supposed to fail, but it didn't!
+    """
+    pass
+
+
+def expectedFailure(*args):
+    """
+    Will decorate a unittest function as an expectedFailure. A function
+    flagged as expectedFailure will be succeed if it raises an exception.
+    If it does not raise an exception, this will throw an
+    `_UnexpectedSuccess` exception.
+
+        @expectedFailure
+        def my_test(self):
+            self.assertTrue(False)
+
+    The decorator also accepts a parameter to only expect a failure under
+    certain conditions.
+
+        @expectedFailure(time.localtime().tm_year < 2002)
+        def my_test(self):
+            self.assertTrue(qgisIsInvented())
+    """
+    if hasattr(args[0], '__call__'):
+        # We got a function as parameter: assume usage like
+        #   @expectedFailure
+        #   def testfunction():
+        func = args[0]
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                func(*args, **kwargs)
+            except Exception:
+                pass
+            else:
+                raise _UnexpectedSuccess
+        return wrapper
+    else:
+        # We got a function as parameter: assume usage like
+        #   @expectedFailure(failsOnThisPlatform)
+        #   def testfunction():
+        condition = args[0]
+
+        def realExpectedFailure(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                if condition:
+                    try:
+                        func(*args, **kwargs)
+                    except Exception:
+                        pass
+                    else:
+                        raise _UnexpectedSuccess
+                else:
+                    func(*args, **kwargs)
+            return wrapper
+
+        return realExpectedFailure
+
 # Patch unittest
 unittest.TestCase = TestCase
+unittest.expectedFailure = expectedFailure
 
 
-def start_app():
+def start_app(cleanup=True):
     """
     Will start a QgsApplication and call all initialization code like
     registering the providers and other infrastructure. It will not load
@@ -167,6 +232,11 @@ def start_app():
     You can always get the reference to a running app by calling `QgsApplication.instance()`.
 
     The initialization will only happen once, so it is safe to call this method repeatedly.
+
+        Parameters
+        ----------
+
+        cleanup: Do cleanup on exit. Defaults to true.
 
         Returns
         -------
@@ -193,8 +263,14 @@ def start_app():
         QGISAPP = QgsApplication(argvb, myGuiFlag)
 
         QGISAPP.initQgis()
-        s = QGISAPP.showSettings()
-        print(s)
+        print(QGISAPP.showSettings())
+
+        if cleanup:
+            import atexit
+
+            @atexit.register
+            def exitQgis():
+                QGISAPP.exitQgis()
 
     return QGISAPP
 

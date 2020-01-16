@@ -22,7 +22,7 @@ The content of this file is based on
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import QRegExp
+from qgis.PyQt.QtCore import QRegExp
 from qgis.core import QgsCredentials, QgsDataSourceURI
 
 from ..connector import DBConnector
@@ -125,8 +125,8 @@ class PostGisDBConnector(DBConnector):
 
         self.connection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
-        c = self._execute(None, u"SELECT current_user")
-        self.user = self._fetchone(c)
+        c = self._execute(None, u"SELECT current_user,current_database()")
+        self.user, self.dbname = self._fetchone(c)
         self._close_cursor(c)
 
         self._checkSpatial()
@@ -616,7 +616,7 @@ class PostGisDBConnector(DBConnector):
 
         try:
             c = self._execute(None, sql)
-        except DbError as e:  # no statistics for the current table
+        except DbError:  # No statistics for the current table
             return
         res = self._fetchone(c)
         self._close_cursor(c)
@@ -644,7 +644,7 @@ class PostGisDBConnector(DBConnector):
 
         try:
             c = self._execute(None, "SELECT srtext FROM spatial_ref_sys WHERE srid = '%d'" % srid)
-        except DbError as e:
+        except DbError:
             return
         sr = self._fetchone(c)
         self._close_cursor(c)
@@ -828,6 +828,12 @@ class PostGisDBConnector(DBConnector):
     def runVacuumAnalyze(self, table):
         """ run vacuum analyze on a table """
         sql = u"VACUUM ANALYZE %s" % self.quoteId(table)
+        self._execute(None, sql)
+        self._commit()
+
+    def runRefreshMaterializedView(self, table):
+        """ run refresh materialized view on a table """
+        sql = u"REFRESH MATERIALIZED VIEW %s" % self.quoteId(table)
         self._execute(None, sql)
         self._commit()
 

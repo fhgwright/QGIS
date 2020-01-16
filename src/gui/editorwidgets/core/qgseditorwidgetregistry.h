@@ -26,7 +26,7 @@ class QDomNode;
 class QgsMapCanvas;
 class QgsMessageBar;
 
-/**
+/** \ingroup gui
  * This class manages all known edit widget factories
  */
 class GUI_EXPORT QgsEditorWidgetRegistry : public QObject
@@ -172,6 +172,13 @@ class GUI_EXPORT QgsEditorWidgetRegistry : public QObject
      * @param mapLayer The layer to connect
      */
     void mapLayerAdded( QgsMapLayer* mapLayer );
+
+    /**
+     * Will disconnect to appropriate signals from map layers to load and save style
+     *
+     * @param mapLayer The layer to disconnect
+     */
+    void mapLayerWillBeRemoved( QgsMapLayer* mapLayer );
 
     /**
      * Loads layer symbology for the layer that emitted the signal

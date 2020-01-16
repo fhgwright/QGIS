@@ -17,7 +17,7 @@
 
 #include "qgsapplication.h"
 #include "qgscomposition.h"
-#include "qgscompositionchecker.h"
+#include "qgsmultirenderchecker.h"
 #include "qgscomposermap.h"
 #include "qgsmaplayerregistry.h"
 #include "qgsmaprenderer.h"
@@ -355,9 +355,16 @@ void TestQgsComposerMap::dataDefinedStyles()
 
   QgsProject::instance()->visibilityPresetCollection()->insert( "test preset", rec );
 
+  // test following of preset
+  mComposerMap->setFollowVisibilityPreset( true );
+  mComposerMap->setFollowVisibilityPresetName( "test preset" );
+  QSet<QString> result = mComposerMap->layersToRender().toSet();
+  QCOMPARE( result.count(), 2 );
+  mComposerMap->setFollowVisibilityPresetName( QString() );
+
   //test malformed style string
   mComposerMap->setDataDefinedProperty( QgsComposerObject::MapStylePreset, true, true, "5", QString() );
-  QSet<QString> result = mComposerMap->layersToRender().toSet();
+  result = mComposerMap->layersToRender().toSet();
   QCOMPARE( result, ms.layers().toSet() );
 
   //test valid preset

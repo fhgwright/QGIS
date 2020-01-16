@@ -1,11 +1,8 @@
 /** \ingroup core
   * A convenience class for writing vector files to disk.
  There are two possibilities how to use this class:
- 1. static call to QgsVectorFileWriter::writeAsShapefile(...) which saves the whole vector layer
+ 1. static call to QgsVectorFileWriter::writeAsVectorFormat(...) which saves the whole vector layer
  2. create an instance of the class and issue calls to addFeature(...)
-
- Currently supports only writing to shapefiles, but shouldn't be a problem to add capability
- to support other OGR-writable formats.
  */
 class QgsVectorFileWriter
 {
@@ -77,7 +74,7 @@ class QgsVectorFileWriter
     {
       MetaData();
 
-      MetaData( const QString& longName, const QString& trLongName, const QString& glob, const QString& ext, const QMap<QString, QgsVectorFileWriter::Option*>& driverOptions, const QMap<QString, QgsVectorFileWriter::Option*>& layerOptions );
+      MetaData( const QString& longName, const QString& trLongName, const QString& glob, const QString& ext, const QMap<QString, QgsVectorFileWriter::Option*>& driverOptions, const QMap<QString, QgsVectorFileWriter::Option*>& layerOptions, const QString& compulsoryEncoding = QString() );
 
       QString longName;
       QString trLongName;
@@ -85,6 +82,8 @@ class QgsVectorFileWriter
       QString ext;
       QMap<QString, QgsVectorFileWriter::Option*> driverOptions;
       QMap<QString, QgsVectorFileWriter::Option*> layerOptions;
+      /** Some formats require a compulsory encoding, typically UTF-8. If no compulsory encoding, empty string */
+      QString compulsoryEncoding;
     };
 
     enum WriterError
@@ -107,6 +106,32 @@ class QgsVectorFileWriter
       SymbolLayerSymbology //Exports one feature per symbol layer (considering symbol levels)
     };
 
+    /** Interface to convert raw field values to their user-friendly value.
+     * @note Added in QGIS 2.16
+     */
+    class FieldValueConverter
+    {
+      public:
+        /** Constructor */
+        FieldValueConverter();
+
+        /** Destructor */
+        virtual ~FieldValueConverter();
+
+        /** Return a possibly modified field definition. Default implementation will return provided field unmodified.
+         * @param field original field definition
+         * @return possibly modified field definition
+         */
+        virtual QgsField fieldDefinition( const QgsField& field );
+
+        /** Convert the provided value, for field fieldIdxInLayer. Default implementation will return provided value unmodified.
+         * @param fieldIdxInLayer field index
+         * @param value original raw value
+         * @return possibly modified value.
+         */
+        virtual QVariant convert( int fieldIdxInLayer, const QVariant& value );
+    };
+
     /** Write contents of vector layer to an (OGR supported) vector formt
      * @param layer layer to write
      * @param fileName file name to write to
@@ -126,6 +151,8 @@ class QgsVectorFileWriter
      * allows for conversion of geometryless tables to null geometries, etc (added in QGIS 2.14)
      * @param forceMulti set to true to force creation of multi* geometries (added in QGIS 2.14)
      * @param includeZ set to true to include z dimension in output. This option is only valid if overrideGeometryType is set. (added in QGIS 2.14)
+     * @param attributes attributes to export (empty means all unless skipAttributeCreation is set)
+     * @param fieldValueConverter field value converter (added in QGIS 2.16)
      */
     static WriterError writeAsVectorFormat( QgsVectorLayer* layer,
                                             const QString& fileName,
@@ -143,14 +170,16 @@ class QgsVectorFileWriter
                                             const QgsRectangle* filterExtent = 0,
                                             QgsWKBTypes::Type overrideGeometryType = QgsWKBTypes::Unknown,
                                             bool forceMulti = false,
-                                            bool includeZ = false
+                                            bool includeZ = false,
+                                            QgsAttributeList attributes = QgsAttributeList(),
+                                            FieldValueConverter* fieldValueConverter = nullptr
                                           );
 
     /** Writes a layer out to a vector file.
      * @param layer layer to write
      * @param fileName file name to write to
      * @param fileEncoding encoding to use
-     * @param ct
+     * @param ct pointer to coordinate transform to reproject exported geometries with
      * @param driverName OGR driver to use
      * @param onlySelected write only selected features of layer
      * @param errorMessage pointer to buffer fo error message
@@ -165,7 +194,9 @@ class QgsVectorFileWriter
      * allows for conversion of geometryless tables to null geometries, etc (added in QGIS 2.14)
      * @param forceMulti set to true to force creation of multi* geometries (added in QGIS 2.14)
      * @param includeZ set to true to include z dimension in output. This option is only valid if overrideGeometryType is set. (added in QGIS 2.14)
-     * @note added in v2.2
+     * @param attributes attributes to export (empty means all unless skipAttributeCreation is set)
+     * @param fieldValueConverter field value converter (added in QGIS 2.16)
+     * @note added in 2.2
      */
     static WriterError writeAsVectorFormat( QgsVectorLayer* layer,
                                             const QString& fileName,
@@ -183,7 +214,9 @@ class QgsVectorFileWriter
                                             const QgsRectangle* filterExtent = 0,
                                             QgsWKBTypes::Type overrideGeometryType = QgsWKBTypes::Unknown,
                                             bool forceMulti = false,
-                                            bool includeZ = false
+                                            bool includeZ = false,
+                                            QgsAttributeList attributes = QgsAttributeList(),
+                                            FieldValueConverter* fieldValueConverter = nullptr
                                           );
 
     /** Create a new vector file writer */

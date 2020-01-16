@@ -228,7 +228,7 @@ void QgsMapToolNodeTool::canvasPressEvent( QgsMapMouseEvent* e )
       QgsFeature feature = getFeatureAtPoint( e );
       if ( !feature.constGeometry() )
       {
-        emit messageEmitted( tr( "could not snap to a segment on the current layer." ) );
+        emit messageEmitted( tr( "Could not snap to a feature in the current layer." ) );
         return;
       }
       else
@@ -502,7 +502,7 @@ void QgsMapToolNodeTool::canvasReleaseEvent( QgsMapMouseEvent* e )
       }
 
       mSelectedFeature->moveSelectedVertexes( releaseLayerCoords - pressLayerCoords );
-      mCanvas->refresh();
+      vlayer->triggerRepaint();
     }
     else // selecting vertexes by rubberband
     {
@@ -646,7 +646,7 @@ void QgsMapToolNodeTool::canvasDoubleClickEvent( QgsMapMouseEvent* e )
   vlayer->endEditCommand();
 
   // make sure that new node gets its vertex marker
-  mCanvas->refresh();
+  vlayer->triggerRepaint();
 }
 
 void QgsMapToolNodeTool::deleteNodeSelection()
@@ -674,7 +674,7 @@ void QgsMapToolNodeTool::deleteNodeSelection()
 
       safeSelectVertex( nextVertexToSelect );
     }
-    mCanvas->refresh();
+    mSelectedFeature->vlayer()->triggerRepaint();
   }
 }
 
@@ -762,6 +762,11 @@ int QgsMapToolNodeTool::insertSegmentVerticesForSnap( const QList<QgsSnappingRes
   QList<QgsSnappingResult>::const_iterator it = snapResults.constBegin();
   for ( ; it != snapResults.constEnd(); ++it )
   {
+    //skip if snappingResult is in a different layer
+    //See http://hub.qgis.org/issues/13952#note-29
+    if ( it->layer != editedLayer )
+      continue;
+
     //skip if id is in skip list or we have already added a vertex to a feature
     if ( skipFids.contains( it->snappedAtGeometry ) || addedFeatures.contains( it->snappedAtGeometry ) )
       continue;

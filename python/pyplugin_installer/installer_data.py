@@ -23,18 +23,24 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import pyqtSignal, QObject, QCoreApplication, QFile, QDir, QDirIterator, QSettings, QDate, QUrl, QFileInfo, QLocale
-from PyQt4.QtXml import QDomDocument
-from PyQt4.QtNetwork import QNetworkRequest, QNetworkReply
+from qgis.PyQt.QtCore import (pyqtSignal, QObject, QCoreApplication, QFile,
+                              QDir, QDirIterator, QSettings, QDate, QUrl,
+                              QFileInfo, QLocale, QByteArray)
+from qgis.PyQt.QtXml import QDomDocument
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 import sys
 import os
 import codecs
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import qgis.utils
 from qgis.core import QGis, QgsNetworkAccessManager, QgsAuthManager
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface, plugin_paths
-from version_compare import compareVersions, normalizeVersion, isCompatible
+from .version_compare import compareVersions, normalizeVersion, isCompatible
+
 
 """
 Data structure:
@@ -73,6 +79,7 @@ mPlugins = dict of dicts {id : {
     "error_details" unicode,                    # error description
     "experimental" boolean,                     # true if experimental, false if stable
     "deprecated" boolean,                       # true if deprected, false if actual
+    "trusted" boolean,                          # true if trusted, false if not trusted
     "version_available" unicode,                # available version
     "zip_repository" unicode,                   # the remote repository id
     "download_url" unicode,                     # url for downloading the plugin
@@ -92,7 +99,7 @@ seenPluginGroup = "/Qgis/plugin-seen"
 
 
 # Repositories: (name, url, possible depreciated url)
-officialRepo = (QCoreApplication.translate("QgsPluginInstaller", "QGIS Official Plugin Repository"), "http://plugins.qgis.org/plugins/plugins.xml", "http://plugins.qgis.org/plugins")
+officialRepo = (QCoreApplication.translate("QgsPluginInstaller", "QGIS Official Plugin Repository"), "https://plugins.qgis.org/plugins/plugins.xml", "https://plugins.qgis.org/plugins")
 depreciatedRepos = [
     ("Old QGIS Official Repository", "http://pyqgis.org/repo/official"),
     ("Old QGIS Contributed Repository", "http://pyqgis.org/repo/contributed"),
@@ -117,7 +124,7 @@ def removeDir(path):
     result = ""
     if not QFile(path).exists():
         result = QCoreApplication.translate("QgsPluginInstaller", "Nothing to remove! Plugin directory doesn't exist:") + "\n" + path
-    elif QFile(path).remove(): # if it is only link, just remove it without resolving.
+    elif QFile(path).remove():  # if it is only link, just remove it without resolving.
         pass
     else:
         fltr = QDir.Dirs | QDir.Files | QDir.Hidden
@@ -313,7 +320,7 @@ class Repositories(QObject):
             if url == officialRepo[1]:
                 officialRepoPresent = True
             if url == officialRepo[2]:
-                settings.setValue(key + "/url", officialRepo[1]) # correct a depreciated url
+                settings.setValue(key + "/url", officialRepo[1])  # correct a depreciated url
                 officialRepoPresent = True
         if not officialRepoPresent:
             settings.setValue(officialRepo[0] + "/url", officialRepo[1])
@@ -385,7 +392,12 @@ class Repositories(QObject):
             reposXML = QDomDocument()
             content = reply.readAll()
             # Fix lonely ampersands in metadata
-            reposXML.setContent(content.replace("& ", "&amp; "))
+            a = QByteArray()
+            a.append("& ")
+            b = QByteArray()
+            b.append("&amp; ")
+            content = content.replace(a, b)
+            reposXML.setContent(content)
             pluginNodes = reposXML.elementsByTagName("pyqgis_plugin")
             if pluginNodes.size():
                 for i in range(pluginNodes.size()):
@@ -399,6 +411,9 @@ class Repositories(QObject):
                     deprecated = False
                     if pluginNodes.item(i).firstChildElement("deprecated").text().strip().upper() in ["TRUE", "YES"]:
                         deprecated = True
+                    trusted = False
+                    if pluginNodes.item(i).firstChildElement("trusted").text().strip().upper() in ["TRUE", "YES"]:
+                        trusted = True
                     icon = pluginNodes.item(i).firstChildElement("icon").text().strip()
                     if icon and not icon.startswith("http"):
                         icon = "http://%s/%s" % (QUrl(self.mRepositories[reposName]["url"]).host(), icon)
@@ -430,6 +445,7 @@ class Repositories(QObject):
                         "icon": icon,
                         "experimental": experimental,
                         "deprecated": deprecated,
+                        "trusted": trusted,
                         "filename": fileName,
                         "installed": False,
                         "available": True,
@@ -493,10 +509,10 @@ class Plugins(QObject):
 
     def __init__(self):
         QObject.__init__(self)
-        self.mPlugins = {}   # the dict of plugins (dicts)
-        self.repoCache = {}  # the dict of lists of plugins (dicts)
-        self.localCache = {} # the dict of plugins (dicts)
-        self.obsoletePlugins = [] # the list of outdated 'user' plugins masking newer 'system' ones
+        self.mPlugins = {}         # the dict of plugins (dicts)
+        self.repoCache = {}        # the dict of lists of plugins (dicts)
+        self.localCache = {}       # the dict of plugins (dicts)
+        self.obsoletePlugins = []  # the list of outdated 'user' plugins masking newer 'system' ones
 
     # ----------------------------------------- #
     def all(self):
@@ -554,13 +570,13 @@ class Plugins(QObject):
                 for better control on wchich module is examined
                 in case there is an installed plugin masking a core one """
             global errorDetails
-            cp = ConfigParser.ConfigParser()
+            cp = configparser.ConfigParser()
             try:
                 cp.readfp(codecs.open(metadataFile, "r", "utf8"))
                 return cp.get('general', fct)
             except Exception as e:
                 if not errorDetails:
-                    errorDetails = e.args[0] # set to the first problem
+                    errorDetails = e.args[0]  # set to the first problem
                 return ""
 
         def pluginMetadata(fct):
@@ -579,7 +595,7 @@ class Plugins(QObject):
         if not QDir(path).exists():
             return
 
-        global errorDetails # to communicate with the metadataParser fn
+        global errorDetails  # to communicate with the metadataParser fn
         plugin = dict()
         error = ""
         errorDetails = ""
@@ -658,6 +674,7 @@ class Plugins(QObject):
             "pythonic": True,
             "experimental": pluginMetadata("experimental").strip().upper() in ["TRUE", "YES"],
             "deprecated": pluginMetadata("deprecated").strip().upper() in ["TRUE", "YES"],
+            "trusted": False,
             "version_available": "",
             "zip_repository": "",
             "download_url": path,      # warning: local path as url!
@@ -722,7 +739,7 @@ class Plugins(QObject):
         allowDeprecated = settings.value(settingsGroup + "/allowDeprecated", False, type=bool)
         for i in self.repoCache.values():
             for j in i:
-                plugin = j.copy() # do not update repoCache elements!
+                plugin = j.copy()  # do not update repoCache elements!
                 key = plugin["id"]
                 # check if the plugin is allowed and if there isn't any better one added already.
                 if (allowExperimental or not plugin["experimental"]) \

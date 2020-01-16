@@ -12,22 +12,19 @@ __copyright__ = 'Copyright 2015, The QGIS Project'
 # This will get replaced with a git SHA1 when you do a git archive
 __revision__ = '$Format:%H$'
 
-import qgis
+import qgis  # NOQA
+
 import os
-import sys
-import SocketServer
+import socketserver
 import threading
 import SimpleHTTPServer
-from PyQt4.QtGui import QPainter, QColor
-from PyQt4.QtCore import QRectF, QCoreApplication
+from qgis.PyQt.QtCore import QRectF
 
 from qgis.core import (QgsComposerPicture,
                        QgsComposition,
                        QgsMapSettings
                        )
-from qgis.testing import (start_app,
-                          unittest
-                          )
+from qgis.testing import start_app, unittest
 from utilities import unitTestDataPath
 from qgscompositionchecker import QgsCompositionChecker
 
@@ -43,7 +40,7 @@ class TestQgsComposerPicture(unittest.TestCase):
         os.chdir(unitTestDataPath() + '')
         handler = SimpleHTTPServer.SimpleHTTPRequestHandler
 
-        cls.httpd = SocketServer.TCPServer(('localhost', 0), handler)
+        cls.httpd = socketserver.TCPServer(('localhost', 0), handler)
         cls.port = cls.httpd.server_address[1]
 
         cls.httpd_thread = threading.Thread(target=cls.httpd.serve_forever)

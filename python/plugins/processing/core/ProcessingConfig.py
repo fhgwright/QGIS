@@ -27,10 +27,18 @@ __revision__ = '$Format:%H$'
 
 import os
 
-from PyQt4.QtCore import QPyNullVariant, QCoreApplication, QSettings
-from PyQt4.QtGui import QIcon
+from qgis.PyQt.QtCore import QCoreApplication, QSettings, QObject, pyqtSignal
+from qgis.PyQt.QtGui import QIcon
+from qgis.core import NULL
 from processing.tools.system import defaultOutputFolder
 import processing.tools.dataobjects
+
+
+class SettingsWatcher(QObject):
+
+    settingsChanged = pyqtSignal()
+
+settingsWatcher = SettingsWatcher()
 
 
 class ProcessingConfig:
@@ -188,8 +196,11 @@ class ProcessingConfig:
     def getSetting(name):
         if name in ProcessingConfig.settings.keys():
             v = ProcessingConfig.settings[name].value
-            if isinstance(v, QPyNullVariant):
-                v = None
+            try:
+                if v == NULL:
+                    v = None
+            except:
+                pass
             return v
         else:
             return None
@@ -217,6 +228,7 @@ class Setting:
     SELECTION = 3
     FLOAT = 4
     INT = 5
+    MULTIPLE_FOLDERS = 6
 
     def __init__(self, group, name, description, default, hidden=False, valuetype=None,
                  validator=None, options=None):
@@ -253,8 +265,16 @@ class Setting:
                     if v and not os.path.exists(v):
                         raise ValueError(self.tr('Specified path does not exist:\n%s') % unicode(v))
                 validator = checkFileOrFolder
+            elif valuetype == self.MULTIPLE_FOLDERS:
+                def checkMultipleFolders(v):
+                    folders = v.split(';')
+                    for f in folders:
+                        if f and not os.path.exists(f):
+                            raise ValueError(self.tr('Specified path does not exist:\n%s') % unicode(f))
+                validator = checkMultipleFolders
             else:
-                validator = lambda x: True
+                def validator(x):
+                    return True
         self.validator = validator
         self.value = default
 
