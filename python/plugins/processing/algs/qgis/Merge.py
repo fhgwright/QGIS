@@ -35,6 +35,7 @@ from processing.core.GeoAlgorithm import GeoAlgorithm
 from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecutionException
 from processing.core.parameters import ParameterMultipleInput
 from processing.core.outputs import OutputVector
+from processing.tools import dataobjects
 
 pluginPath = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
 
@@ -57,13 +58,12 @@ class Merge(GeoAlgorithm):
 
     def processAlgorithm(self, progress):
         inLayers = self.getParameterValue(self.LAYERS)
-        paths = inLayers.split(';')
 
         layers = []
         fields = QgsFields()
         totalFeatureCount = 0
-        for x in xrange(len(paths)):
-            layer = QgsVectorLayer(paths[x], unicode(x), 'ogr')
+        for layerSource in inLayers.split(';'):
+            layer = dataobjects.getObjectFromUri(layerSource)
 
             if (len(layers) > 0):
                 if (layer.wkbType() != layers[0].wkbType()):

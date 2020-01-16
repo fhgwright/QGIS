@@ -3697,6 +3697,11 @@ QgsExpression::QgsExpression( const QgsExpression& other )
 
 QgsExpression& QgsExpression::operator=( const QgsExpression & other )
 {
+  if ( !d->ref.deref() )
+  {
+    delete d;
+  }
+
   d = other.d;
   d->ref.ref();
   return *this;
@@ -5206,6 +5211,10 @@ QString QgsExpression::formatPreviewString( const QVariant& value )
       return tr( "<i>&lt;empty geometry&gt;</i>" );
     else
       return tr( "<i>&lt;geometry: %1&gt;</i>" ).arg( QgsWKBTypes::displayString( geom.geometry()->wkbType() ) );
+  }
+  else if ( !value.isValid() )
+  {
+    return tr( "<i>NULL</i>" );
   }
   else if ( value.canConvert< QgsFeature >() )
   {

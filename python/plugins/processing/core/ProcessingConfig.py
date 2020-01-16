@@ -62,6 +62,7 @@ class ProcessingConfig:
     DEFAULT_OUTPUT_RASTER_LAYER_EXT = 'DEFAULT_OUTPUT_RASTER_LAYER_EXT'
     DEFAULT_OUTPUT_VECTOR_LAYER_EXT = 'DEFAULT_OUTPUT_VECTOR_LAYER_EXT'
     SHOW_PROVIDERS_TOOLTIP = "SHOW_PROVIDERS_TOOLTIP"
+    MODELS_SCRIPTS_REPO = 'MODELS_SCRIPTS_REPO'
 
     settings = {}
     settingIcons = {}
@@ -145,6 +146,11 @@ class ProcessingConfig:
             ProcessingConfig.tr('General'),
             ProcessingConfig.RECENT_ALGORITHMS,
             ProcessingConfig.tr('Recent algs'), '', hidden=True))
+        ProcessingConfig.addSetting(Setting(
+            ProcessingConfig.tr('General'),
+            ProcessingConfig.MODELS_SCRIPTS_REPO,
+            ProcessingConfig.tr('Scripts and models repository'),
+            'https://raw.githubusercontent.com/qgis/QGIS-Processing/master'))
         extensions = processing.tools.dataobjects.getSupportedOutputVectorLayerExtensions()
         ProcessingConfig.addSetting(Setting(
             ProcessingConfig.tr('General'),
@@ -287,16 +293,15 @@ class Setting:
         self.validator(value)
         self.value = value
 
-    def read(self):
-        qsettings = QSettings()
+    def read(self, qsettings=QSettings()):
         value = qsettings.value(self.qname, None)
         if value is not None:
             if isinstance(self.value, bool):
                 value = unicode(value).lower() == unicode(True).lower()
             self.value = value
 
-    def save(self):
-        QSettings().setValue(self.qname, self.value)
+    def save(self, qsettings=QSettings()):
+        qsettings.setValue(self.qname, self.value)
 
     def __str__(self):
         return self.name + '=' + unicode(self.value)

@@ -1426,14 +1426,9 @@ QgisAppStyleSheet* QgisApp::styleSheetBuilder()
   return mStyleSheetBuilder;
 }
 
-// restore any application settings stored in QSettings
-void QgisApp::readSettings()
+void QgisApp::readRecentProjects()
 {
   QSettings settings;
-  QString themename = settings.value( "UI/UITheme", "default" ).toString();
-  setTheme( themename );
-
-  // Read legacy settings
   mRecentProjects.clear();
 
   settings.beginGroup( "/UI" );
@@ -1477,6 +1472,16 @@ void QgisApp::readSettings()
     mRecentProjects.append( data );
   }
   settings.endGroup();
+}
+
+void QgisApp::readSettings()
+{
+  QSettings settings;
+  QString themename = settings.value( "UI/UITheme", "default" ).toString();
+  setTheme( themename );
+
+  // Read legacy settings
+  readRecentProjects();
 
   // this is a new session! reset enable macros value to "ask"
   // whether set to "just for this session"
@@ -1902,8 +1907,10 @@ void QgisApp::createMenus()
    */
 
   // Layer menu
-#ifndef SUPPORT_GEOPACKAGE
+#if !defined(GDAL_COMPUTE_VERSION) || GDAL_VERSION_NUM < GDAL_COMPUTE_VERSION(2,0,0)
   mProjectMenu->removeAction( mActionDwgImport );
+#endif
+#ifndef SUPPORT_GEOPACKAGE
   mNewLayerMenu->removeAction( mActionNewGeoPackageLayer );
 #endif
 
@@ -3256,6 +3263,10 @@ void QgisApp::updateRecentProjectPaths()
 // add this file to the recently opened/saved projects list
 void QgisApp::saveRecentProjectPath( const QString& projectPath, bool savePreviewImage )
 {
+  // first, re-read the recent project paths. This prevents loss of recent
+  // projects when multiple QGIS sessions are open
+  readRecentProjects();
+
   QSettings settings;
 
   // Get canonical absolute path
@@ -5103,6 +5114,9 @@ void QgisApp::dxfExport()
   if ( d.exec() == QDialog::Accepted )
   {
     QgsDxfExport dxfExport;
+    QgsMapSettings settings( mapCanvas()->mapSettings() );
+    settings.setLayerStyleOverrides( QgsProject::instance()->visibilityPresetCollection()->presetStyleOverrides( d.mapTheme() ) );
+    dxfExport.setMapSettings( settings );
     dxfExport.addLayers( d.layers() );
     dxfExport.setSymbologyScaleDenominator( d.symbologyScale() );
     dxfExport.setSymbologyExport( d.symbologyMode() );
@@ -10637,8 +10651,11 @@ void QgisApp::activateDeactivateLayerRelatedActions( QgsMapLayer* layer )
       mActionPasteFeatures->setEnabled( isEditable && canAddFeatures && !clipboard()->isEmpty() );
 
       mActionAddFeature->setEnabled( isEditable && canAddFeatures );
-      mActionCircularStringCurvePoint->setEnabled( isEditable && ( canAddFeatures || canChangeGeometry ) && vlayer->geometryType() != QGis::Point );
-      mActionCircularStringRadius->setEnabled( isEditable && ( canAddFeatures || canChangeGeometry ) );
+      mActionCircularStringCurvePoint->setEnabled( isEditable && ( canAddFeatures || canChangeGeometry )
+          && ( vlayer->geometryType() == QGis::Line || vlayer->geometryType() == QGis::Polygon ) );
+      mActionCircularStringRadius->setEnabled( isEditable && ( canAddFeatures || canChangeGeometry )
+          && ( vlayer->geometryType() == QGis::Line || vlayer->geometryType() == QGis::Polygon ) );
+
 
       //does provider allow deleting of features?
       mActionDeleteSelected->setEnabled( isEditable && canDeleteFeatures && layerHasSelection );

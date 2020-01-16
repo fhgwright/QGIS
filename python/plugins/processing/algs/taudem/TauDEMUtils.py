@@ -123,3 +123,15 @@ class TauDEMUtils:
         if context == '':
             context = 'TauDEMUtils'
         return QCoreApplication.translate(context, string)
+
+    @staticmethod
+    def escapeAndJoin(strList):
+        joined = ''
+        for s in strList:
+            if s[0] != '-' and ' ' in s:
+                escaped = '"' + s.replace('\\', '\\\\').replace('"', '\\"') \
+                    + '"'
+            else:
+                escaped = s
+            joined += escaped + ' '
+        return joined.strip()

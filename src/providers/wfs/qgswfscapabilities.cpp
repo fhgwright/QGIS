@@ -142,6 +142,32 @@ void QgsWFSCapabilities::capabilitiesReplyFinished()
   // Note: for conveniency, we do not use the elementsByTagNameNS() method as
   // the WFS and OWS namespaces URI are not the same in all versions
 
+  if ( mCaps.version.startsWith( QLatin1String( "1.0" ) ) )
+  {
+    QDomElement capabilityElem = doc.firstChildElement( "Capability" );
+    if ( !capabilityElem.isNull() )
+    {
+      QDomElement requestElem = capabilityElem.firstChildElement( "Request" );
+      if ( !requestElem.isNull() )
+      {
+        QDomElement getFeatureElem = requestElem.firstChildElement( "GetFeature" );
+        if ( !getFeatureElem.isNull() )
+        {
+          QDomElement resultFormatElem = getFeatureElem.firstChildElement( "ResultFormat" );
+          if ( !resultFormatElem.isNull() )
+          {
+            QDomElement child = resultFormatElem.firstChildElement();
+            while ( !child.isNull() )
+            {
+              mCaps.outputFormats << child.tagName();
+              child = child.nextSiblingElement();
+            }
+          }
+        }
+      }
+    }
+  }
+
   // find <ows:OperationsMetadata>
   QDomElement operationsMetadataElem = doc.firstChildElement( "OperationsMetadata" );
   if ( !operationsMetadataElem.isNull() )
@@ -231,6 +257,15 @@ void QgsWFSCapabilities::capabilitiesReplyFinished()
               }
             }
           }
+          else if ( parameter.attribute( "name" ) == QLatin1String( "outputFormat" ) )
+          {
+            QDomNodeList valueList = parameter.elementsByTagName( "Value" );
+            for ( int k = 0; k < valueList.size(); ++k )
+            {
+              QDomElement value = valueList.at( k ).toElement();
+              mCaps.outputFormats << value.text();
+            }
+          }
         }
 
         break;
@@ -247,11 +282,31 @@ void QgsWFSCapabilities::capabilitiesReplyFinished()
   }
 
   // Parse operations supported for all feature types
-  bool insertCap, updateCap, deleteCap;
-  parseSupportedOperations( featureTypeListElem.firstChildElement( "Operations" ),
-                            insertCap,
-                            updateCap,
-                            deleteCap );
+  bool insertCap = false;
+  bool updateCap = false;
+  bool deleteCap = false;
+  // WFS < 2
+  if ( mCaps.version.startsWith( "1" ) )
+  {
+    parseSupportedOperations( featureTypeListElem.firstChildElement( "Operations" ),
+                              insertCap,
+                              updateCap,
+                              deleteCap );
+  }
+  else // WFS 2.0.0 tested on GeoServer
+  {
+    QDomNodeList operationNodes = doc.elementsByTagName( "Operation" );
+    for ( int i = 0; i < operationNodes.count(); i++ )
+    {
+      QDomElement operationElement = operationNodes.at( i ).toElement( );
+      if ( operationElement.isElement( ) && "Transaction" == operationElement.attribute( "name" ) )
+      {
+        insertCap = true;
+        updateCap = true;
+        deleteCap = true;
+      }
+    }
+  }
 
   // get the <FeatureType> elements
   QDomNodeList featureTypeList = featureTypeListElem.elementsByTagName( "FeatureType" );
@@ -474,10 +529,6 @@ void QgsWFSCapabilities::parseSupportedOperations( const QDomElement& operations
   insertCap = false;
   updateCap = false;
   deleteCap = false;
-
-  // TODO: remove me when WFS-T 1.1 or 2.0 is done
-  if ( !mCaps.version.startsWith( "1.0" ) )
-    return;
 
   if ( operationsElem.isNull() )
   {

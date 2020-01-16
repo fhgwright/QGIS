@@ -30,6 +30,7 @@
 #include "qgsvectorlayereditbuffer.h"
 #include "qgsvectorlayerjoinbuffer.h"
 #include "qgsslconnect.h"
+#include "qgsvisibilitypresetcollection.h"
 
 #include <QDir>
 #include <QDomDocument>
@@ -256,6 +257,8 @@ void QgsOfflineEditing::synchronize()
 
       // copy style
       copySymbology( offlineLayer, remoteLayer );
+      updateRelations( offlineLayer, remoteLayer );
+      updateVisibilityPresets( offlineLayer, remoteLayer );
 
       // apply layer edit log
       QString qgisLayerId = layer->id();
@@ -525,7 +528,7 @@ QgsVectorLayer* QgsOfflineEditing::copyVectorLayer( QgsVectorLayer* layer, sqlit
   if ( layer->hasGeometryType() )
   {
     QString geomType = "";
-    switch ( layer->wkbType() )
+    switch ( QGis::flatType( layer->wkbType() ) )
     {
       case QGis::WKBPoint:
         geomType = "POINT";
@@ -549,6 +552,10 @@ QgsVectorLayer* QgsOfflineEditing::copyVectorLayer( QgsVectorLayer* layer, sqlit
         showWarning( tr( "QGIS wkbType %1 not supported" ).arg( layer->wkbType() ) );
         break;
     };
+
+    if ( QGis::flatType( layer->wkbType() ) != layer->wkbType() )
+      showWarning( tr( "Will drop Z and M values from layer %1 in offline copy." ).arg( layer->name() ) );
+
     QString sqlAddGeom = QString( "SELECT AddGeometryColumn('%1', 'Geometry', %2, '%3', 2)" )
                          .arg( tableName )
                          .arg( layer->crs().authid().startsWith( "EPSG:", Qt::CaseInsensitive ) ? layer->crs().authid().mid( 5 ).toLong() : 0 )
@@ -626,6 +633,8 @@ QgsVectorLayer* QgsOfflineEditing::copyVectorLayer( QgsVectorLayer* layer, sqlit
         copySymbology( layer, newLayer );
       }
 
+      updateRelations( layer, newLayer );
+      updateVisibilityPresets( layer, newLayer );
       // copy features
       newLayer->startEditing();
       QgsFeature f;
@@ -669,6 +678,15 @@ QgsVectorLayer* QgsOfflineEditing::copyVectorLayer( QgsVectorLayer* layer, sqlit
           newAttrs[column++] = attrs.at( it );
         }
         f.setAttributes( newAttrs );
+
+        // The spatialite provider doesn't properly handle Z and M values
+        if ( f.geometry() && f.geometry()->geometry() )
+        {
+          QgsAbstractGeometryV2* geom = f.geometry()->geometry()->clone();
+          geom->dropZValue();
+          geom->dropMValue();
+          f.geometry()->setGeometry( geom );
+        }
 
         newLayer->addFeature( f, false );
 
@@ -929,6 +947,59 @@ void QgsOfflineEditing::copySymbology( QgsVectorLayer* sourceLayer, QgsVectorLay
   if ( !error.isEmpty() )
   {
     showWarning( error );
+  }
+}
+
+void QgsOfflineEditing::updateRelations( QgsVectorLayer* sourceLayer, QgsVectorLayer* targetLayer )
+{
+  QgsRelationManager* relationManager = QgsProject::instance()->relationManager();
+  QList<QgsRelation> relations;
+  relations = relationManager->referencedRelations( sourceLayer );
+
+  Q_FOREACH ( QgsRelation relation, relations )
+  {
+    relationManager->removeRelation( relation );
+    relation.setReferencedLayer( targetLayer->id() );
+    relationManager->addRelation( relation );
+  }
+
+  relations = relationManager->referencingRelations( sourceLayer );
+
+  Q_FOREACH ( QgsRelation relation, relations )
+  {
+    relationManager->removeRelation( relation );
+    relation.setReferencingLayer( targetLayer->id() );
+    relationManager->addRelation( relation );
+  }
+}
+
+void QgsOfflineEditing::updateVisibilityPresets( QgsVectorLayer* sourceLayer, QgsVectorLayer* targetLayer )
+{
+  QgsVisibilityPresetCollection* presetCollection = QgsProject::instance()->visibilityPresetCollection();
+  QStringList visibilityPresets = presetCollection->presets();
+
+  Q_FOREACH ( const QString& preset, visibilityPresets )
+  {
+    QgsVisibilityPresetCollection::PresetRecord record = presetCollection->presetState( preset );
+
+    if ( record.mVisibleLayerIDs.removeOne( sourceLayer->id() ) )
+      record.mVisibleLayerIDs.append( targetLayer->id() );
+
+    QString style = record.mPerLayerCurrentStyle.value( sourceLayer->id() );
+    if ( !style.isNull() )
+    {
+      record.mPerLayerCurrentStyle.remove( sourceLayer->id() );
+      record.mPerLayerCurrentStyle.insert( targetLayer->id(), style );
+    }
+
+    if ( !record.mPerLayerCheckedLegendSymbols.contains( sourceLayer->id() ) )
+    {
+      QSet<QString> checkedSymbols = record.mPerLayerCheckedLegendSymbols.value( sourceLayer->id() );
+      record.mPerLayerCheckedLegendSymbols.remove( sourceLayer->id() );
+      record.mPerLayerCheckedLegendSymbols.insert( targetLayer->id(), checkedSymbols );
+    }
+
+    QgsProject::instance()->visibilityPresetCollection()->update( preset, record );
   }
 }
 

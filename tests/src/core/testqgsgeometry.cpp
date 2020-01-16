@@ -27,6 +27,7 @@
 
 //qgis includes...
 #include <qgsapplication.h>
+#include "qgscompoundcurvev2.h"
 #include <qgsgeometry.h>
 #include "qgsgeometryutils.h"
 #include <qgspoint.h>
@@ -67,6 +68,7 @@ class TestQgsGeometry : public QObject
     // geometry types
     void pointV2(); //test QgsPointV2
     void lineStringV2(); //test QgsLineStringV2
+    void compoundCurveV2(); //test QgsCompoundCurveV2
     void polygonV2(); //test QgsPolygonV2
     void multiPoint();
     void multiLineString();
@@ -1426,9 +1428,9 @@ void TestQgsGeometry::lineStringV2()
   QCOMPARE( elemToString( exportLineFloat.asGML2( doc, 3 ) ), expectedGML2prec3 );
 
   //asGML3
-  QString expectedGML3( "<Curve xmlns=\"gml\"><segments xmlns=\"gml\"><LineStringSegment xmlns=\"gml\"><posList xmlns=\"gml\" srsDimension=\"2\">31 32 41 42 51 52</posList></LineStringSegment></segments></Curve>" );
+  QString expectedGML3( "<LineString xmlns=\"gml\"><posList xmlns=\"gml\" srsDimension=\"2\">31 32 41 42 51 52</posList></LineString>" );
   QCOMPARE( elemToString( exportLine.asGML3( doc ) ), expectedGML3 );
-  QString expectedGML3prec3( "<Curve xmlns=\"gml\"><segments xmlns=\"gml\"><LineStringSegment xmlns=\"gml\"><posList xmlns=\"gml\" srsDimension=\"2\">0.333 0.667 1.333 1.667 2.333 2.667</posList></LineStringSegment></segments></Curve>" );
+  QString expectedGML3prec3( "<LineString xmlns=\"gml\"><posList xmlns=\"gml\" srsDimension=\"2\">0.333 0.667 1.333 1.667 2.333 2.667</posList></LineString>" );
   QCOMPARE( elemToString( exportLineFloat.asGML3( doc, 3 ) ), expectedGML3prec3 );
 
   //asJSON
@@ -2077,13 +2079,13 @@ void TestQgsGeometry::lineStringV2()
   QCOMPARE( area, 1.0 );
   l36.setPoints( QgsPointSequenceV2() << QgsPointV2( 5, 10 ) << QgsPointV2( 10, 10 ) );
   l36.sumUpArea( area );
-  QCOMPARE( area, 1.0 );
+  QVERIFY( qgsDoubleNear( area, -24 ) );
   l36.setPoints( QgsPointSequenceV2() << QgsPointV2( 0, 0 ) << QgsPointV2( 2, 0 ) << QgsPointV2( 2, 2 ) );
   l36.sumUpArea( area );
-  QVERIFY( qgsDoubleNear( area, 3.0 ) );
+  QVERIFY( qgsDoubleNear( area, -22 ) );
   l36.setPoints( QgsPointSequenceV2() << QgsPointV2( 0, 0 ) << QgsPointV2( 2, 0 ) << QgsPointV2( 2, 2 ) << QgsPointV2( 0, 2 ) );
   l36.sumUpArea( area );
-  QVERIFY( qgsDoubleNear( area, 7.0 ) );
+  QVERIFY( qgsDoubleNear( area, -18 ) );
 
   //boundingBox - test that bounding box is updated after every modification to the line string
   QgsLineStringV2 l37;
@@ -2198,6 +2200,31 @@ void TestQgsGeometry::lineStringV2()
   QCOMPARE( static_cast< QgsPointV2*>( mpBoundary->geometryN( 1 ) )->x(), 1.0 );
   QCOMPARE( static_cast< QgsPointV2*>( mpBoundary->geometryN( 1 ) )->y(), 1.0 );
   QCOMPARE( static_cast< QgsPointV2*>( mpBoundary->geometryN( 1 ) )->z(), 20.0 );
+}
+
+void TestQgsGeometry::compoundCurveV2()
+{
+  //test that area of a compound curve ring is equal to a closed linestring with the same vertices
+  QgsCompoundCurveV2 cc;
+  QgsLineStringV2* l1 = new QgsLineStringV2();
+  l1->setPoints( QgsPointSequenceV2() << QgsPointV2( 1, 1 ) << QgsPointV2( 0, 2 ) );
+  cc.addCurve( l1 );
+  QgsLineStringV2* l2 = new QgsLineStringV2();
+  l2->setPoints( QgsPointSequenceV2() << QgsPointV2( 0, 2 ) << QgsPointV2( -1, 0 ) << QgsPointV2( 0, -1 ) );
+  cc.addCurve( l2 );
+  QgsLineStringV2* l3 = new QgsLineStringV2();
+  l3->setPoints( QgsPointSequenceV2() << QgsPointV2( 0, -1 ) << QgsPointV2( 1, 1 ) );
+  cc.addCurve( l3 );
+
+  double ccArea = 0.0;
+  cc.sumUpArea( ccArea );
+
+  QgsLineStringV2 ls;
+  ls.setPoints( QgsPointSequenceV2() << QgsPointV2( 1, 1 ) << QgsPointV2( 0, 2 ) <<  QgsPointV2( -1, 0 ) << QgsPointV2( 0, -1 )
+                << QgsPointV2( 1, 1 ) );
+  double lsArea = 0.0;
+  ls.sumUpArea( lsArea );
+  QVERIFY( qgsDoubleNear( ccArea, lsArea ) );
 }
 
 void TestQgsGeometry::polygonV2()
@@ -2907,11 +2934,11 @@ void TestQgsGeometry::polygonV2()
   QCOMPARE( elemToString( exportPolygonFloat.asGML2( doc, 3 ) ), expectedGML2prec3 );
 
   //as GML3
-  QString expectedGML3( "<Polygon xmlns=\"gml\"><exterior xmlns=\"gml\"><LinearRing xmlns=\"gml\"><coordinates xmlns=\"gml\">0,0 0,10 10,10 10,0 0,0</coordinates></LinearRing></exterior>" );
-  expectedGML3 += QString( "<interior xmlns=\"gml\"><LinearRing xmlns=\"gml\"><coordinates xmlns=\"gml\">1,1 1,9 9,9 9,1 1,1</coordinates></LinearRing></interior></Polygon>" );
+  QString expectedGML3( "<Polygon xmlns=\"gml\"><exterior xmlns=\"gml\"><LinearRing xmlns=\"gml\"><posList xmlns=\"gml\" srsDimension=\"2\">0 0 0 10 10 10 10 0 0 0</posList></LinearRing></exterior>" );
+  expectedGML3 += QString( "<interior xmlns=\"gml\"><LinearRing xmlns=\"gml\"><posList xmlns=\"gml\" srsDimension=\"2\">1 1 1 9 9 9 9 1 1 1</posList></LinearRing></interior></Polygon>" );
   QCOMPARE( elemToString( exportPolygon.asGML3( doc ) ), expectedGML3 );
-  QString expectedGML3prec3( "<Polygon xmlns=\"gml\"><exterior xmlns=\"gml\"><LinearRing xmlns=\"gml\"><coordinates xmlns=\"gml\">1.111,1.111 1.111,11.111 11.111,11.111 11.111,1.111 1.111,1.111</coordinates></LinearRing></exterior>" );
-  expectedGML3prec3 += QString( "<interior xmlns=\"gml\"><LinearRing xmlns=\"gml\"><coordinates xmlns=\"gml\">0.667,0.667 0.667,1.333 1.333,1.333 1.333,0.667 0.667,0.667</coordinates></LinearRing></interior></Polygon>" );
+  QString expectedGML3prec3( "<Polygon xmlns=\"gml\"><exterior xmlns=\"gml\"><LinearRing xmlns=\"gml\"><posList xmlns=\"gml\" srsDimension=\"2\">1.111 1.111 1.111 11.111 11.111 11.111 11.111 1.111 1.111 1.111</posList></LinearRing></exterior>" );
+  expectedGML3prec3 += QString( "<interior xmlns=\"gml\"><LinearRing xmlns=\"gml\"><posList xmlns=\"gml\" srsDimension=\"2\">0.667 0.667 0.667 1.333 1.333 1.333 1.333 0.667 0.667 0.667</posList></LinearRing></interior></Polygon>" );
   QCOMPARE( elemToString( exportPolygonFloat.asGML3( doc, 3 ) ), expectedGML3prec3 );
 
   //removing the fourth to last vertex removes the whole ring

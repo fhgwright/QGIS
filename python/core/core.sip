@@ -1,9 +1,9 @@
 %Module(name=qgis._core,
-        version=0,
         keyword_arguments="Optional")
 
 %Feature QT5_SUPPORT
 
+%Import QtCore/QtCoremod.sip
 %Import QtXml/QtXmlmod.sip
 %Import QtNetwork/QtNetworkmod.sip
 %Import QtSql/QtSqlmod.sip

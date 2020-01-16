@@ -75,7 +75,7 @@ void QgsMapRendererCustomPainterJob::start()
 #ifndef QT_NO_DEBUG
   QPaintDevice* thePaintDevice = mPainter->device();
   QString errMsg = QString( "pre-set DPI not equal to painter's DPI (%1 vs %2)" ).arg( thePaintDevice->logicalDpiX() ).arg( mSettings.outputDpi() );
-  Q_ASSERT_X( thePaintDevice->logicalDpiX() == round( mSettings.outputDpi() ), "Job::startRender()", errMsg.toAscii().data() );
+  Q_ASSERT_X( thePaintDevice->logicalDpiX() == qgsRound( mSettings.outputDpi() ), "Job::startRender()", errMsg.toAscii().data() );
 #endif
 
   delete mLabelingEngine;
@@ -126,14 +126,7 @@ void QgsMapRendererCustomPainterJob::cancel()
 
   QgsDebugMsg( "QPAINTER cancelling" );
   disconnect( &mFutureWatcher, SIGNAL( finished() ), this, SLOT( futureFinished() ) );
-
-  mLabelingRenderContext.setRenderingStopped( true );
-  for ( LayerRenderJobs::iterator it = mLayerJobs.begin(); it != mLayerJobs.end(); ++it )
-  {
-    it->context.setRenderingStopped( true );
-    if ( it->renderer && it->renderer->feedback() )
-      it->renderer->feedback()->cancel();
-  }
+  cancelWithoutBlocking();
 
   QTime t;
   t.start();
@@ -144,7 +137,24 @@ void QgsMapRendererCustomPainterJob::cancel()
 
   futureFinished();
 
-  QgsDebugMsg( "QPAINTER cancelled" );
+  QgsDebugMsg( "QPAINTER canceled" );
+}
+
+void QgsMapRendererCustomPainterJob::cancelWithoutBlocking()
+{
+  if ( !isActive() )
+  {
+    QgsDebugMsg( "QPAINTER not running!" );
+    return;
+  }
+
+  mLabelingRenderContext.setRenderingStopped( true );
+  for ( LayerRenderJobs::iterator it = mLayerJobs.begin(); it != mLayerJobs.end(); ++it )
+  {
+    it->context.setRenderingStopped( true );
+    if ( it->renderer && it->renderer->feedback() )
+      it->renderer->feedback()->cancel();
+  }
 }
 
 void QgsMapRendererCustomPainterJob::waitForFinished()
