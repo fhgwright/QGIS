@@ -235,10 +235,16 @@ bool QgsSpatiaLiteFeatureIterator::rewind()
 
 bool QgsSpatiaLiteFeatureIterator::close()
 {
-  if ( !mHandle )
+  if ( mClosed )
     return false;
 
   iteratorClosed();
+
+  if ( !mHandle )
+  {
+    mClosed = true;
+    return false;
+  }
 
   if ( sqliteStatement )
   {
@@ -319,7 +325,7 @@ bool QgsSpatiaLiteFeatureIterator::prepareStatement( const QString& whereClause,
 
 QString QgsSpatiaLiteFeatureIterator::quotedPrimaryKey()
 {
-  return !( mSource->isQuery || mSource->mViewBased ) ? "ROWID" : QgsSpatiaLiteProvider::quotedIdentifier( mSource->mPrimaryKey );
+  return mSource->mPrimaryKey.isEmpty() ? "ROWID" : QgsSpatiaLiteProvider::quotedIdentifier( mSource->mPrimaryKey );
 }
 
 QString QgsSpatiaLiteFeatureIterator::whereClauseFid()
