@@ -20,10 +20,14 @@ set VERSION=%1
 set PACKAGE=%2
 set PACKAGENAME=%3
 set ARCH=%4
+set SHA=%5
+set SITE=%6
 if "%VERSION%"=="" goto usage
 if "%PACKAGE%"=="" goto usage
 if "%PACKAGENAME%"=="" goto usage
 if "%ARCH%"=="" goto usage
+if not "%SHA%"=="" set SHA=-%SHA%
+if "%SITE%"=="" set SITE=qgis.org
 
 set BUILDDIR=%CD%\build-nightly-%ARCH%
 
@@ -94,7 +98,7 @@ set CMAKE_OPT=^
 
 :devenv
 set PYTHONPATH=
-path %PF86%\CMake\bin;%PF86%\CMake 2.8\bin;%PATH%;c:\cygwin\bin
+path %PF86%\CMake\bin;%PATH%;c:\cygwin\bin
 
 PROMPT qgis%VERSION%$g 
 
@@ -141,7 +145,9 @@ set >buildenv.log
 
 if exist qgsversion.h del qgsversion.h
 
-if exist CMakeCache.txt goto skipcmake
+if exist CMakeCache.txt if exist skipcmake goto skipcmake
+
+touch %SRCDIR%\CMakeLists.txt
 
 echo CMAKE: %DATE% %TIME%
 if errorlevel 1 goto error
@@ -150,8 +156,8 @@ set LIB=%LIB%;%OSGEO4W_ROOT%\lib
 set INCLUDE=%INCLUDE%;%OSGEO4W_ROOT%\include
 
 cmake %CMAKE_OPT% ^
-	-D BUILDNAME="%PACKAGENAME%-%VERSION%-Nightly-VC10-%ARCH%" ^
-	-D SITE="qgis.org" ^
+	-D BUILDNAME="%PACKAGENAME%-%VERSION%%SHA%-Nightly-VC10-%ARCH%" ^
+	-D SITE="%SITE%" ^
 	-D PEDANTIC=TRUE ^
 	-D WITH_QSPATIALITE=TRUE ^
 	-D WITH_SERVER=TRUE ^
@@ -201,7 +207,15 @@ if exist ..\skiptests goto skiptests
 
 echo RUN_TESTS: %DATE% %TIME%
 
+set oldtemp=%TEMP%
+set oldtmp=%TMP%
 set oldpath=%PATH%
+
+set TEMP=%TEMP%\%PACKAGENAME%-%ARCH%
+set TMP=%TEMP%
+if exist "%TEMP%" rmdir /s /q "%TEMP%"
+mkdir "%TEMP%"
+
 for %%g IN (%GRASS_VERSIONS%) do (
 	set path=!path!;%OSGEO4W_ROOT%\apps\grass\grass-%%g\lib
 	set GISBASE=%OSGEO4W_ROOT%\apps\grass\grass-%%g
@@ -211,13 +225,15 @@ PATH %path%;%BUILDDIR%\output\plugins\%BUILDCONF%
 cmake --build %BUILDDIR% --target Nightly --config %BUILDCONF%
 if errorlevel 1 echo TESTS WERE NOT SUCCESSFUL.
 
+set TEMP=%oldtemp%
+set TMP=%oldtmp%
 PATH %oldpath%
 
 :skiptests
 
-if exist %PKGDIR% (
+if exist "%PKGDIR%" (
 	echo REMOVE: %DATE% %TIME%
-	rmdir /s /q %PKGDIR%
+	rmdir /s /q "%PKGDIR%"
 )
 
 echo INSTALL: %DATE% %TIME%
@@ -234,7 +250,7 @@ if errorlevel 1 (echo creation of desktop postinstall failed & goto error)
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' -e 's/@grassversions@/%GRASS_VERSIONS%/g' preremove-dev.bat >%OSGEO4W_ROOT%\etc\preremove\%PACKAGENAME%.bat
 if errorlevel 1 (echo creation of desktop preremove failed & goto error)
 
-sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' designer-qgis.bat.tmpl >%OSGEO4W_ROOT%\bin\designer-%PACKAGENAME%.bat.tmpl
+sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' designer.bat.tmpl >%OSGEO4W_ROOT%\bin\%PACKAGENAME%-designer.bat.tmpl
 if errorlevel 1 (echo creation of designer template failed & goto error)
 sed -e 's/@package@/%PACKAGENAME%/g' -e 's/@version@/%VERSION%/g' qgis.reg.tmpl >%PKGDIR%\bin\qgis.reg.tmpl
 if errorlevel 1 (echo creation of registry template & goto error)
@@ -287,7 +303,7 @@ tar -C %OSGEO4W_ROOT% -cjf %ARCH%/release/qgis/%PACKAGENAME%/%PACKAGENAME%-%VERS
 	bin/%PACKAGENAME%-bin.exe ^
 	bin/%PACKAGENAME%-browser-bin.exe ^
 	%batches% ^
-	bin/designer-%PACKAGENAME%.bat.tmpl ^
+	bin/%PACKAGENAME%-designer.bat.tmpl ^
 	bin/python-%PACKAGENAME%.bat.tmpl ^
 	etc/postinstall/%PACKAGENAME%.bat ^
 	etc/preremove/%PACKAGENAME%.bat
@@ -301,8 +317,8 @@ if errorlevel 1 (echo tar failed & goto error)
 goto end
 
 :usage
-echo usage: %0 version package packagename arch
-echo sample: %0 2.1.0 38 qgis-dev x86_64
+echo usage: %0 version package packagename arch [sha [site]]
+echo sample: %0 2.10.0 38 qgis-dev x86_64 339dbf1 qgis.org
 exit
 
 :error
