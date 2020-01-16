@@ -35,6 +35,10 @@ class QgsWMSConfigParser
     /** Fills a layer and a style list. The two list have the same number of entries and the style and the layer at a position belong together (similar to the HTTP parameters 'Layers' and 'Styles'. Returns 0 in case of success*/
     virtual int layersAndStyles( QStringList& layers, QStringList& styles ) const = 0;
 
+    /** Creates a layer set and returns a stringlist with layer ids that can be passed to a QgsMapRenderer. Usually used in conjunction with readLayersAndStyles
+       @param scaleDenominator Filter out layer if scale based visibility does not match (or use -1 if no scale restriction)*/
+    QStringList layerSet( const QStringList& layersList, const QStringList& stylesList, const QgsCoordinateReferenceSystem& destCRS, double scaleDenominator = -1 ) const;
+
     /** Returns the xml fragment of a style*/
     virtual QDomDocument getStyle( const QString& styleName, const QString& layerName ) const = 0;
 
@@ -122,6 +126,9 @@ class QgsWMSConfigParser
     virtual void serviceCapabilities( QDomElement& parentElement, QDomDocument& doc ) const = 0;
 
     virtual bool useLayerIDs() const = 0;
+
+    /** True if tile render mode is enabled in the configuration*/
+    virtual bool tileRenderMode() const = 0;
 
   private:
 

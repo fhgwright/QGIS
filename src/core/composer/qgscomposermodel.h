@@ -289,6 +289,7 @@ class CORE_EXPORT QgsComposerModel: public QAbstractItemModel
     void rebuildSceneItemList();
 
     friend class TestQgsComposerModel;
+    friend class TestQgsComposerGui;
 };
 
 
@@ -346,8 +347,7 @@ class CORE_EXPORT QgsComposerProxyModel: public QSortFilterProxyModel
     QgsComposerItem* itemFromSourceIndex( const QModelIndex& sourceIndex ) const;
 
   protected:
-    bool filterAcceptsRow( int source_row, const QModelIndex & source_parent ) const override;
-    bool lessThan( const QModelIndex &left, const QModelIndex &right ) const override;
+    bool filterAcceptsRow( int source_row, const QModelIndex &source_parent ) const override;
 
   private:
     QgsComposition* mComposition;

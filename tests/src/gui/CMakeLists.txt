@@ -14,8 +14,10 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/gui/editorwidgets/core
   ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/gui/symbology-ng
   ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/gui/raster
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/gui/attributetable
   ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/core
   ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/core/auth
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/core/composer
   ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/core/geometry
   ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/core/raster
   ${CMAKE_CURRENT_SOURCE_DIR}/../../../src/core/symbology-ng
@@ -142,4 +144,6 @@ ADD_QGIS_TEST(scalerangewidget testqgsscalerangewidget.cpp)
 ADD_QGIS_TEST(spinbox testqgsspinbox.cpp)
 ADD_QGIS_TEST(sqlcomposerdialog testqgssqlcomposerdialog.cpp)
 ADD_QGIS_TEST(filedownloader testqgsfiledownloader.cpp)
-
+ADD_QGIS_TEST(composergui testqgscomposergui.cpp)
+ADD_QGIS_TEST(valuerelationwidgetwrapper testqgsvaluerelationwidgetwrapper.cpp)
+ADD_QGIS_TEST(relationreferencewidget testqgsrelationreferencewidget.cpp)
