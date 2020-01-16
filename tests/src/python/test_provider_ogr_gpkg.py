@@ -21,9 +21,13 @@ import glob
 from osgeo import gdal, ogr
 
 from qgis.PyQt.QtCore import QCoreApplication, QSettings
-from qgis.core import QgsVectorLayer, QgsVectorLayerImport, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsRectangle
+from qgis.core import QgsVectorLayer, QgsVectorLayerImport, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsRectangle, QgsVectorDataProvider
 from qgis.testing import start_app, unittest
 from utilities import unitTestDataPath
+
+from utilities import unitTestDataPath
+
+TEST_DATA_DIR = unitTestDataPath()
 
 start_app()
 
@@ -385,6 +389,59 @@ class TestPyQgsOGRProviderGpkg(unittest.TestCase):
         self.assertEqual(got['attr'], 101)
         reference = QgsGeometry.fromWkt('Point (5 5)')
         self.assertEqual(got_geom.asWkb(), reference.asWkb(), 'Expected {}, got {}'.format(reference.exportToWkt(), got_geom.exportToWkt()))
+
+    @unittest.expectedFailure(int(gdal.VersionInfo('VERSION_NUM')) < GDAL_COMPUTE_VERSION(2, 0, 0))
+    def testGeopackageLargeFID(self):
+
+        tmpfile = os.path.join(self.basetestpath, 'testGeopackageLargeFID.gpkg')
+        ds = ogr.GetDriverByName('GPKG').CreateDataSource(tmpfile)
+        lyr = ds.CreateLayer('test', geom_type=ogr.wkbPoint)
+        lyr.CreateField(ogr.FieldDefn('str_field', ogr.OFTString))
+        ds = None
+
+        vl = QgsVectorLayer(u'{}'.format(tmpfile) + "|layername=" + "test", 'test', u'ogr')
+        f = QgsFeature()
+        f.setAttributes([1234567890123, None])
+        self.assertTrue(vl.startEditing())
+        self.assertTrue(vl.dataProvider().addFeatures([f]))
+        self.assertTrue(vl.commitChanges())
+
+        got = [feat for feat in vl.getFeatures()][0]
+        self.assertEqual(got['fid'], 1234567890123)
+
+        self.assertTrue(vl.startEditing())
+        self.assertTrue(vl.changeGeometry(1234567890123, QgsGeometry.fromWkt('Point (3 50)')))
+        self.assertTrue(vl.changeAttributeValue(1234567890123, 1, 'foo'))
+        self.assertTrue(vl.commitChanges())
+
+        got = [feat for feat in vl.getFeatures()][0]
+        self.assertEqual(got['str_field'], 'foo')
+        got_geom = got.geometry()
+        self.assertIsNotNone(got_geom)
+
+        self.assertTrue(vl.startEditing())
+        self.assertTrue(vl.deleteFeature(1234567890123))
+        self.assertTrue(vl.commitChanges())
+
+    def testSubSetStringEditable_bug17795(self):
+        """Test that a layer is not editable after setting a subset and it's reverted to editable after the filter is removed"""
+
+        isEditable = QgsVectorDataProvider.ChangeAttributeValues
+        testPath = TEST_DATA_DIR + '/' + 'provider/bug_17795.gpkg|layername=bug_17795'
+
+        vl = QgsVectorLayer(testPath, 'subset_test', 'ogr')
+        self.assertTrue(vl.isValid())
+        self.assertTrue(vl.dataProvider().capabilities() & isEditable)
+
+        vl = QgsVectorLayer(testPath, 'subset_test', 'ogr')
+        vl.setSubsetString('')
+        self.assertTrue(vl.isValid())
+        self.assertTrue(vl.dataProvider().capabilities() & isEditable)
+
+        vl = QgsVectorLayer(testPath, 'subset_test', 'ogr')
+        vl.setSubsetString('"category" = \'one\'')
+        self.assertTrue(vl.isValid())
+        self.assertFalse(vl.dataProvider().capabilities() & isEditable)
 
 
 if __name__ == '__main__':

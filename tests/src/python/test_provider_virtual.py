@@ -16,6 +16,7 @@ import qgis  # NOQA
 import os
 
 from qgis.core import (QgsVectorLayer,
+                       QgsField,
                        QgsFeature,
                        QgsFeatureRequest,
                        QgsGeometry,
@@ -85,6 +86,46 @@ class TestQgsVirtualLayerProvider(unittest.TestCase, ProviderTestCase):
     def tearDown(self):
         """Run after each test."""
         pass
+
+    def test_filterfid_crossjoin(self):
+        l0 = QgsVectorLayer(os.path.join(self.testDataDir, "france_parts.shp"), "france_parts", "ogr")
+        self.assertTrue(l0.isValid())
+        QgsMapLayerRegistry.instance().addMapLayer(l0)
+
+        l1 = QgsVectorLayer(os.path.join(self.testDataDir, "points.shp"), "points", "ogr")
+        self.assertTrue(l1.isValid())
+        QgsMapLayerRegistry.instance().addMapLayer(l1)
+
+        # cross join
+        query = QUrl.toPercentEncoding("SELECT * FROM france_parts,points")
+        vl = QgsVectorLayer("?query=%s" % query, "tt", "virtual")
+
+        self.assertEqual(vl.featureCount(), l0.featureCount() * l1.featureCount())
+
+        # test with FilterFid requests
+        f = next(vl.getFeatures(QgsFeatureRequest().setFilterFid(0)))
+        idx = f.fields().fieldNameIndex('Class')
+        self.assertEqual(f.id(), 0)
+        self.assertEqual(f.attributes()[idx], 'Jet')
+
+        f = next(vl.getFeatures(QgsFeatureRequest().setFilterFid(5)))
+        self.assertEqual(f.id(), 5)
+        self.assertEqual(f.attributes()[idx], 'Biplane')
+
+        # test with FilterFid requests
+        fit = vl.getFeatures(QgsFeatureRequest().setFilterFids([0, 3, 5]))
+
+        f = next(fit)
+        self.assertEqual(f.id(), 0)
+        self.assertEqual(f.attributes()[idx], 'Jet')
+
+        f = next(fit)
+        self.assertEqual(f.id(), 3)
+        self.assertEqual(f.attributes()[idx], 'Jet')
+
+        f = next(fit)
+        self.assertEqual(f.id(), 5)
+        self.assertEqual(f.attributes()[idx], 'Biplane')
 
     def test_CsvNoGeometry(self):
         l1 = QgsVectorLayer(QUrl.fromLocalFile(os.path.join(self.testDataDir, "delimitedtext/test.csv")).toString() + "?type=csv&geomType=none&subsetIndex=no&watchFile=no", "test", "delimitedtext", False)
@@ -800,6 +841,29 @@ class TestQgsVirtualLayerProvider(unittest.TestCase, ProviderTestCase):
                                       'LEFT JOIN {} AS j2 ON t."c_id"=j2."id"').format(v1.id(), v2.id(), v3.id()))
 
         QgsMapLayerRegistry.instance().removeMapLayers([v1, v2, v3])
+
+    def testFieldsWithSpecialCharacters(self):
+        ml = QgsVectorLayer("Point?srid=EPSG:4326&field=123:int", "mem_with_nontext_fieldnames", "memory")
+        self.assertEqual(ml.isValid(), True)
+        QgsMapLayerRegistry.instance().addMapLayer(ml)
+
+        ml.startEditing()
+        self.assertTrue(ml.addAttribute(QgsField('abc:123', QVariant.String)))
+        f1 = QgsFeature(ml.fields())
+        f1.setGeometry(QgsGeometry.fromWkt('POINT(0 0)'))
+        f2 = QgsFeature(ml.fields())
+        f2.setGeometry(QgsGeometry.fromWkt('POINT(1 1)'))
+        ml.addFeatures([f1, f2])
+        ml.commitChanges()
+
+        vl = QgsVectorLayer("?query=select * from mem_with_nontext_fieldnames", "vl", "virtual")
+        self.assertEqual(vl.isValid(), True)
+        self.assertEqual(vl.fields().at(0).name(), '123')
+        self.assertEqual(vl.fields().at(1).name(), 'abc:123')
+
+        self.assertEqual(vl.featureCount(), 2)
+
+        QgsMapLayerRegistry.instance().removeMapLayer(ml)
 
 
 if __name__ == '__main__':
